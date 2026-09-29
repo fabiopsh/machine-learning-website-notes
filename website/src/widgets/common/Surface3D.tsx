@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent as RKeyboardEvent, type PointerEvent as RPointerEvent } from 'react'
 import { useWidth } from '../../lib/useSize'
-import { cssVar, useTheme } from '../../lib/theme'
+import { cssVar, useLook, useTheme } from '../../lib/theme'
 
 /**
  * Superficie z = f(x, y) disegnata su canvas con proiezione ortografica
@@ -71,6 +71,7 @@ export function Surface3D({
   const [touched, setTouched] = useState(false)
   const drag = useRef<{ x: number; y: number; cam: Cam } | null>(null)
   const { theme } = useTheme()
+  const { look } = useLook()
 
   useEffect(() => {
     if (!spin || touched) return
@@ -98,7 +99,7 @@ export function Surface3D({
     ctx.clearRect(0, 0, w, h)
     draw(ctx, { w, h, f, xr, yr, zr, n, levels, overlays, cam, ramp, zScale, axisLabels, floorGap })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, f, xr[0], xr[1], yr[0], yr[1], zr[0], zr[1], n, levels, overlays, cam, ramp, zScale, theme, floorGap])
+  }, [w, h, f, xr[0], xr[1], yr[0], yr[1], zr[0], zr[1], n, levels, overlays, cam, ramp, zScale, theme, look, floorGap])
 
   const onDown = (e: RPointerEvent) => {
     ;(e.currentTarget as Element).setPointerCapture(e.pointerId)

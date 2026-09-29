@@ -1,15 +1,22 @@
 // Screenshot di una pagina o di un elemento, salvati in website/.shots/
 //
-//   npm run shot -- "#/lezione/03" nome                        viewport intera
-//   npm run shot -- "#/lezione/03" fig35 --sel "#fig-3-5"      solo la figura
-//   npm run shot -- "#/lezione/03" pag --pages 6               6 schermate scorrendo la pagina
+//   npm run shot -- lezione/03 nome                        viewport intera
+//   npm run shot -- lezione/03 fig35 --sel "#fig-3-5"      solo la figura
+//   npm run shot -- lezione/03 pag --pages 6               6 schermate scorrendo la pagina
+//   npm run shot -- home nome                              la home (anche "glossario", "lezione/03/sezione")
 //   opzioni: --w 1440 --h 900 --dpr 1 --theme light|dark --style classic|glass --base URL --wait ms
 import { baseUrl, newPage, openBrowser, opt, shotPath, wait } from './lib/browser.mjs'
 
 const args = process.argv.slice(2)
-const route = args[0] ?? '#/'
 const name = args[1] ?? 'shot'
-const url = baseUrl(args) + route.replace(/^\//, '')
+const url = baseUrl(args) + normRoute(args[0] ?? 'home')
+
+/** Accetta "lezione/03", "#/lezione/03" e anche la versione storpiata da Git Bash ("#C:/Program Files/Git/lezione/03"). */
+function normRoute(r) {
+  let s = r.replace(/^#?[A-Za-z]:[\/].*?[\/]Git[\/]/, '').replace(/^#?\/?/, '')
+  if (s === 'home') s = ''
+  return '#/' + s
+}
 
 const browser = await openBrowser()
 const { page, errors } = await newPage(browser, {

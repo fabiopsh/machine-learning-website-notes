@@ -3,6 +3,7 @@
 //   npm run smoke                      contro http://localhost:5173/
 //   npm run smoke -- --base https://fabiopsh.github.io/machine-learning-website-notes/
 //   npm run smoke -- --only 05         solo una lezione
+//   npm run smoke -- --style glass --theme dark   con un altro stile/tema
 //
 // Controlla: route principali, ogni lezione, ogni link a sezione (#/lezione/NN/slug),
 // che ogni <Figure> sia presente, che KaTeX non segnali errori, che trascinare/cliccare
@@ -40,7 +41,7 @@ const lessons = readdirSync(dir)
 
 const problems = []
 const browser = await openBrowser()
-const { page, errors } = await newPage(browser)
+const { page, errors } = await newPage(browser, { style: opt(args, 'style', 'classic'), theme: opt(args, 'theme', 'light') })
 const go = async (route, ms = 900) => {
   await page.goto(base + route, { waitUntil: 'networkidle0' })
   await wait(ms)

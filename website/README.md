@@ -43,7 +43,7 @@ plugins/lesson-index.ts   indice di titoli e figure generato a build time (ricer
 ```bash
 npm run verify                          # typecheck + lint + controllo contenuti
 npm run smoke                           # test nel browser (con npm run dev attivo)
-npm run shot -- "#/lezione/03" nome     # screenshot in .shots/
+npm run shot -- lezione/03 nome     # screenshot in .shots/
 ```
 
 ## Aggiungere una lezione

@@ -112,6 +112,20 @@ const paths = {
     </>
   ),
   plane: <path d="M3.5 17l5-10h12l-5 10z" />,
+  // lente di vetro con riflesso: interruttore Liquid Glass
+  glass: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M7.6 10.2a4.8 4.8 0 0 1 3.4-3.1" />
+      <path d="M14.8 16.4a4.8 4.8 0 0 0 2-2.2" opacity="0.55" />
+    </>
+  ),
+  paper: (
+    <>
+      <path d="M6 3.5h8.5L18 7v13.5H6z" />
+      <path d="M14 3.5V7.5h4" />
+    </>
+  ),
 } as const
 
 export type IconName = keyof typeof paths

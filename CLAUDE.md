@@ -32,7 +32,7 @@ Prendere come modello le lezioni 01–04 (`website/src/content/lessons/*.mdx`, `
 npm install && npm run dev            # sviluppo su http://localhost:5173
 npm run verify                        # typecheck + lint + controllo contenuti
 npm run smoke -- --only NN            # test nel browser (serve npm run dev attivo)
-npm run shot -- "#/lezione/NN" nome --sel "#fig-N-k"   # screenshot in website/.shots/
+npm run shot -- lezione/NN nome --sel "#fig-N-k"   # screenshot in website/.shots/
 npm run build                         # build di produzione (dist/)
 ```
 

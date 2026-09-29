@@ -32,6 +32,14 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 Decisioni di stile confermate dall'utente: **in attesa** della revisione della fase 1 (lezioni 01–04).
 Quando l'utente approva o chiede modifiche, annotarlo qui (data + cosa è cambiato).
 
+## Registro
+
+- 2026-09-29 — Fase 1: lezioni 01–04, glossario, ricerca, tema chiaro/scuro.
+- 2026-09-30 — Guida (`docs/GUIDA-LEZIONI.md`), skill `/nuova-lezione`, script di verifica;
+  pubblicazione automatica su GitHub Pages (`.github/workflows/deploy.yml`, `404.html` che
+  converte gli URL senza `#`); stile **Liquid Glass** attivabile dalla barra in alto
+  (`website/src/styles/glass.css`, attributo `data-style="glass"` su `<html>`).
+
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),

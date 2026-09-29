@@ -317,8 +317,11 @@ serie; il testo non prende il colore della serie; niente colori esadecimali nel 
 - `lessons.ts`: `eyebrow` + `summary` sulla voce della lezione (il caricamento è automatico).
 - `styles/lNN.css`: solo classi con prefisso del widget (es. `.knn__…`), token per i colori, versione
   scura automatica (i token cambiano da soli). Importarlo in `main.tsx`.
-- Se una figura ha bisogno di un colore nuovo, aggiungere un token in `styles/tokens.css` per **tutti**
-  i temi (chiaro, scuro, glass chiaro, glass scuro).
+- Se una figura ha bisogno di un colore nuovo, aggiungere un token in `styles/tokens.css` (chiaro e
+  scuro) e, se serve un valore diverso, in `styles/glass.css` (glass chiaro e glass scuro).
+- Nello stile Liquid Glass i contenitori (`.fig`, riquadri, schede) diventano vetro da soli: nei widget
+  usare le classi comuni (`wpanel`, `tasks`, `seg`, `btn`…) invece di stili propri per i riquadri, così
+  il vetro si applica senza lavoro in più. `--plot-bg` resta un colore pieno (la superficie 3D lo legge).
 
 ---
 
@@ -346,11 +349,11 @@ npm run verify                       # typecheck + lint + controllo contenuti (t
 npm run check -- --only NN           # solo la lezione NN (titoli, riquadri, immagini, domande)
 npm run dev                          # in un altro terminale, poi:
 npm run smoke -- --only NN           # route, sezioni, figure, KaTeX, interazioni senza errori
-npm run shot -- "#/lezione/NN" fig --sel "#fig-N-k"                 # una figura
-npm run shot -- "#/lezione/NN" fig-dark --sel "#fig-N-k" --theme dark
-npm run shot -- "#/lezione/NN" fig-glass --sel "#fig-N-k" --style glass
-npm run shot -- "#/lezione/NN" mobile --w 390 --h 844 --dpr 2
-npm run shot -- "#/lezione/NN" pagina --pages 40                    # tutta la pagina a schermate
+npm run shot -- lezione/NN fig --sel "#fig-N-k"                 # una figura
+npm run shot -- lezione/NN fig-dark --sel "#fig-N-k" --theme dark
+npm run shot -- lezione/NN fig-glass --sel "#fig-N-k" --style glass
+npm run shot -- lezione/NN mobile --w 390 --h 844 --dpr 2
+npm run shot -- lezione/NN pagina --pages 40                    # tutta la pagina a schermate
 npm run build                        # build di produzione
 ```
 

@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
 import { CommandPalette } from './components/shell/CommandPalette'
+import { GlassBackdrop } from './components/shell/GlassBackdrop'
 import { Sidebar } from './components/shell/Sidebar'
 import { Topbar } from './components/shell/Topbar'
 import { GlossaryPage } from './pages/GlossaryPage'
 import { Home } from './pages/Home'
 import { LessonPage } from './pages/LessonPage'
 import { useRoute } from './lib/router'
+import { useLook } from './lib/theme'
 import { getLesson } from './content/lessons'
 
 export default function App() {
   const route = useRoute()
+  const { look } = useLook()
   const [menu, setMenu] = useState(false)
   const [search, setSearch] = useState(false)
   const [toc, setToc] = useState(false)
@@ -52,6 +55,7 @@ export default function App() {
 
   return (
     <div className={`shell${menu ? ' menu-open' : ''}`}>
+      {look === 'glass' && <GlassBackdrop />}
       <div className="shell__side">
         <Sidebar route={route} onNavigate={() => setMenu(false)} />
       </div>

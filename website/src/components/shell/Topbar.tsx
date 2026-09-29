@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getLesson, partOf } from '../../content/lessons'
-import { useTheme } from '../../lib/theme'
+import { useLook, useTheme } from '../../lib/theme'
 import type { Route } from '../../lib/router'
 import { Icon } from '../ui/Icon'
 
@@ -36,6 +36,7 @@ type Props = {
 
 export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
   const { theme, toggle } = useTheme()
+  const { look, toggle: toggleLook } = useLook()
   const isLesson = route.name === 'lesson'
   const { pct, scrolled } = useScrollState(isLesson)
   const lesson = isLesson ? getLesson(route.id) : undefined
@@ -75,6 +76,15 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
             <Icon name="list" size={19} />
           </button>
         )}
+        <button
+          className={`icon-btn look-btn${look === 'glass' ? ' is-on' : ''}`}
+          onClick={toggleLook}
+          aria-pressed={look === 'glass'}
+          aria-label={look === 'glass' ? 'Passa allo stile classico' : 'Passa allo stile Liquid Glass'}
+          title={look === 'glass' ? 'Stile classico' : 'Stile Liquid Glass'}
+        >
+          <Icon name={look === 'glass' ? 'paper' : 'glass'} size={18} />
+        </button>
         <button
           className="icon-btn theme-btn"
           onClick={toggle}

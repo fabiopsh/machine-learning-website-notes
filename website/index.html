@@ -8,7 +8,7 @@
     <meta name="color-scheme" content="light dark" />
     <title>Machine Learning — Appunti interattivi</title>
     <script>
-      // applica il tema prima del primo paint, per evitare il lampo di colore sbagliato
+      // applica tema e stile prima del primo paint, per evitare il lampo di colore sbagliato
       ;(function () {
         try {
           var t = localStorage.getItem('ml-theme')
@@ -16,8 +16,10 @@
             t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
           }
           document.documentElement.dataset.theme = t
+          document.documentElement.dataset.style = localStorage.getItem('ml-style') === 'glass' ? 'glass' : 'classic'
         } catch (e) {
           document.documentElement.dataset.theme = 'light'
+          document.documentElement.dataset.style = 'classic'
         }
       })()
     </script>

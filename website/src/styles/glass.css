@@ -1,0 +1,650 @@
+/* ==================================================================
+   Stile "Liquid Glass" (html[data-style='glass'])
+   Superfici di vetro traslucido su uno sfondo di colore sfocato:
+   bordi luminosi, riflessi speculari, forme a pillola.
+   Tutti i ruoli di colore restano quelli dei token: cambia il materiale.
+   ================================================================== */
+
+:root[data-style='glass'] {
+  --bg: #edf1fa;
+  --bg-elev: rgba(255, 255, 255, 0.58);
+  --bg-sunken: rgba(236, 240, 250, 0.62);
+  --bg-hover: rgba(255, 255, 255, 0.55);
+  --bg-glass: rgba(255, 255, 255, 0.55);
+  --ink: #0f1424;
+  --ink-2: #262c3f;
+  --ink-3: #565d74;
+  --ink-4: #878da3;
+  --line: rgba(28, 36, 76, 0.1);
+  --line-2: rgba(28, 36, 76, 0.18);
+
+  --accent: #d0245e;
+  --accent-ink: #b41c50;
+  --accent-soft: rgba(208, 36, 94, 0.12);
+  --accent-line: rgba(208, 36, 94, 0.36);
+  --on-accent: #ffffff;
+  --focus: 0 0 0 3px rgba(208, 36, 94, 0.3);
+
+  --plot-bg: #f8f9fd;
+  --grid: rgba(28, 36, 76, 0.08);
+  --axis: rgba(28, 36, 76, 0.24);
+  --tick: #666d85;
+
+  /* il materiale */
+  --glass: linear-gradient(150deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.46));
+  --glass-strong: linear-gradient(150deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+  --glass-inner: linear-gradient(150deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5));
+  --glass-edge: rgba(255, 255, 255, 0.8);
+  --glass-rim: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(255, 255, 255, 0.4),
+    inset 1px 0 0 rgba(255, 255, 255, 0.45), inset -1px 0 0 rgba(255, 255, 255, 0.25);
+  --glass-drop: 0 1px 2px rgba(20, 30, 80, 0.05), 0 22px 60px -24px rgba(30, 44, 120, 0.38);
+  --glass-drop-sm: 0 1px 1px rgba(20, 30, 80, 0.04), 0 10px 26px -16px rgba(30, 44, 120, 0.32);
+  --glass-blur: blur(28px) saturate(185%);
+  --glass-light: rgba(255, 255, 255, 0.55);
+
+  --shadow-sm: var(--glass-drop-sm);
+  --shadow: var(--glass-drop);
+  --shadow-lg: 0 2px 6px rgba(20, 30, 80, 0.06), 0 34px 90px -30px rgba(30, 44, 120, 0.5);
+}
+
+:root[data-style='glass'][data-theme='dark'] {
+  --bg: #0b0e1b;
+  --bg-elev: rgba(44, 50, 80, 0.46);
+  --bg-sunken: rgba(8, 10, 22, 0.42);
+  --bg-hover: rgba(255, 255, 255, 0.07);
+  --bg-glass: rgba(26, 30, 50, 0.55);
+  --ink: #f3f5ff;
+  --ink-2: #d5d9ea;
+  --ink-3: #9ba2bd;
+  --ink-4: #6b7192;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-2: rgba(255, 255, 255, 0.17);
+
+  --accent: #ff6b9b;
+  --accent-ink: #ff8ab0;
+  --accent-soft: rgba(255, 107, 155, 0.15);
+  --accent-line: rgba(255, 107, 155, 0.42);
+  --on-accent: #1d0712;
+  --focus: 0 0 0 3px rgba(255, 107, 155, 0.34);
+
+  --plot-bg: #151a2c;
+  --grid: rgba(255, 255, 255, 0.06);
+  --axis: rgba(255, 255, 255, 0.2);
+  --tick: #8f96b2;
+
+  --glass: linear-gradient(150deg, rgba(62, 70, 108, 0.5), rgba(22, 26, 46, 0.42));
+  --glass-strong: linear-gradient(150deg, rgba(38, 44, 72, 0.84), rgba(16, 19, 34, 0.76));
+  --glass-inner: linear-gradient(150deg, rgba(58, 66, 104, 0.42), rgba(20, 24, 42, 0.36));
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-rim: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 1px 0 0 rgba(255, 255, 255, 0.08);
+  --glass-drop: 0 1px 2px rgba(0, 0, 0, 0.3), 0 26px 70px -26px rgba(0, 0, 0, 0.8);
+  --glass-drop-sm: 0 1px 1px rgba(0, 0, 0, 0.25), 0 12px 30px -18px rgba(0, 0, 0, 0.7);
+  --glass-light: rgba(255, 255, 255, 0.1);
+}
+
+/* ------------------------------------------------------------------ sfondo */
+
+:root[data-style='glass'] body {
+  background: var(--bg);
+}
+.glass-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.glass-bg__blob {
+  position: absolute;
+  width: 58vmax;
+  height: 58vmax;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.72;
+  will-change: transform;
+  animation: glass-drift 34s ease-in-out infinite alternate;
+}
+.glass-bg__blob--1 {
+  left: -18vmax;
+  top: -22vmax;
+  background: radial-gradient(circle, #86b3ff 0%, rgba(134, 179, 255, 0) 68%);
+}
+.glass-bg__blob--2 {
+  right: -20vmax;
+  top: -16vmax;
+  background: radial-gradient(circle, #cdb4ff 0%, rgba(205, 180, 255, 0) 68%);
+  animation-duration: 41s;
+  animation-delay: -12s;
+}
+.glass-bg__blob--3 {
+  right: -14vmax;
+  bottom: -26vmax;
+  background: radial-gradient(circle, #ffc0d2 0%, rgba(255, 192, 210, 0) 68%);
+  animation-duration: 38s;
+  animation-delay: -20s;
+}
+.glass-bg__blob--4 {
+  left: -20vmax;
+  bottom: -24vmax;
+  background: radial-gradient(circle, #9ee8d6 0%, rgba(158, 232, 214, 0) 68%);
+  animation-duration: 45s;
+  animation-delay: -6s;
+}
+.glass-bg__blob--5 {
+  left: 30vw;
+  top: 26vh;
+  width: 42vmax;
+  height: 42vmax;
+  background: radial-gradient(circle, #ffe3ad 0%, rgba(255, 227, 173, 0) 66%);
+  opacity: 0.55;
+  animation-duration: 52s;
+  animation-delay: -30s;
+}
+:root[data-theme='dark'] .glass-bg__blob {
+  opacity: 0.5;
+}
+:root[data-theme='dark'] .glass-bg__blob--1 {
+  background: radial-gradient(circle, #2f55ff 0%, rgba(47, 85, 255, 0) 68%);
+}
+:root[data-theme='dark'] .glass-bg__blob--2 {
+  background: radial-gradient(circle, #7c3aed 0%, rgba(124, 58, 237, 0) 68%);
+}
+:root[data-theme='dark'] .glass-bg__blob--3 {
+  background: radial-gradient(circle, #db2777 0%, rgba(219, 39, 119, 0) 68%);
+  opacity: 0.38;
+}
+:root[data-theme='dark'] .glass-bg__blob--4 {
+  background: radial-gradient(circle, #0f9f8f 0%, rgba(15, 159, 143, 0) 68%);
+  opacity: 0.4;
+}
+:root[data-theme='dark'] .glass-bg__blob--5 {
+  background: radial-gradient(circle, #1e3a8a 0%, rgba(30, 58, 138, 0) 66%);
+}
+.glass-bg__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+@keyframes glass-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6vw, 4vh, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-4vw, 7vh, 0) scale(0.96);
+  }
+}
+
+:root[data-style='glass'] .shell {
+  position: relative;
+}
+:root[data-style='glass'] .shell__side,
+:root[data-style='glass'] .shell__main {
+  position: relative;
+  z-index: 1;
+}
+:root[data-style='glass'] .shell__side {
+  position: sticky;
+  z-index: 40;
+}
+:root[data-style='glass'] {
+  scroll-padding-top: calc(var(--topbar-h) + 40px);
+}
+
+/* ------------------------------------------------------------------ superfici principali (con sfocatura) */
+
+:root[data-style='glass'] .sidebar,
+:root[data-style='glass'] .topbar,
+:root[data-style='glass'] .toc__inner,
+:root[data-style='glass'] .palette__box,
+:root[data-style='glass'] .term-pop,
+:root[data-style='glass'] .sheet__panel {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-rim), var(--glass-drop);
+}
+
+/* sidebar: pannello flottante */
+:root[data-style='glass'] .shell__side {
+  background: transparent;
+  border-right: 0;
+  padding: 12px 0 12px 12px;
+}
+:root[data-style='glass'] .sidebar {
+  border-radius: 26px;
+  height: 100%;
+}
+:root[data-style='glass'] .brand__bg {
+  fill: var(--accent);
+}
+:root[data-style='glass'] .brand__curve {
+  stroke: #fff;
+}
+:root[data-style='glass'] .brand__dot {
+  fill: #fff;
+}
+:root[data-style='glass'] .sidebar__links a.is-active,
+:root[data-style='glass'] .sidebar__lesson.is-active {
+  background: var(--glass-inner);
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+:root[data-style='glass'] .sidebar__lesson.is-active::before {
+  display: none;
+}
+:root[data-style='glass'] .sidebar__links a,
+:root[data-style='glass'] .sidebar__lesson {
+  border-radius: 14px;
+}
+:root[data-style='glass'] .sidebar__foot {
+  border-top-color: var(--line);
+}
+
+/* barra in alto: pillola flottante */
+:root[data-style='glass'] .topbar {
+  top: 12px;
+  margin: 12px 18px 0;
+  border-radius: 22px;
+  overflow: hidden;
+}
+:root[data-style='glass'] .topbar.is-scrolled {
+  border-color: var(--glass-edge);
+}
+:root[data-style='glass'] .topbar__progress {
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #7aa7ff));
+}
+:root[data-style='glass'] .icon-btn,
+:root[data-style='glass'] .search-btn {
+  border-radius: 999px;
+}
+:root[data-style='glass'] .search-btn {
+  background: var(--glass-inner);
+  border-color: var(--glass-edge);
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .look-btn.is-on {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] kbd {
+  background: var(--glass-inner);
+  border-color: var(--glass-edge);
+  box-shadow: none;
+}
+
+/* indice della lezione */
+:root[data-style='glass'] .toc__inner {
+  top: calc(var(--topbar-h) + 44px);
+  padding: 18px 18px 16px;
+  border-radius: 24px;
+}
+:root[data-style='glass'] .toc__list {
+  border-left-color: var(--line-2);
+}
+:root[data-style='glass'] .sheet {
+  background: rgba(10, 14, 30, 0.2);
+}
+:root[data-style='glass'] .sheet__panel {
+  margin: 12px;
+  height: calc(100% - 24px);
+  border-radius: 26px;
+}
+
+/* ------------------------------------------------------------------ fogli di contenuto */
+
+:root[data-style='glass'] .lesson,
+:root[data-style='glass'] .page--home > section,
+:root[data-style='glass'] .gloss,
+:root[data-style='glass'] .empty {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(32px) saturate(165%);
+  backdrop-filter: blur(32px) saturate(165%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-rim), var(--glass-drop);
+  border-radius: 34px;
+}
+:root[data-style='glass'] .page {
+  padding-top: 22px;
+}
+:root[data-style='glass'] .lesson {
+  padding: 0 44px 48px;
+  margin-bottom: 40px;
+}
+:root[data-style='glass'] .toc {
+  padding-top: 0;
+}
+:root[data-style='glass'] .page--home > section {
+  padding-left: 44px;
+  padding-right: 44px;
+  margin-top: 22px;
+}
+:root[data-style='glass'] .page--home > .hero {
+  border-bottom: 0;
+}
+:root[data-style='glass'] .index {
+  padding-top: 44px;
+  padding-bottom: 28px;
+}
+:root[data-style='glass'] .home-map,
+:root[data-style='glass'] .howto {
+  padding-top: 44px;
+  padding-bottom: 44px;
+}
+:root[data-style='glass'] .gloss {
+  padding: 0 40px 36px;
+  margin-top: 22px;
+}
+:root[data-style='glass'] .empty {
+  padding: 56px 44px;
+  margin-top: 22px;
+}
+:root[data-style='glass'] .lesson-head {
+  border-bottom-color: var(--line);
+}
+
+/* titoli di sezione: niente filetto, il numero diventa una pillola */
+:root[data-style='glass'] .prose h2 {
+  border-top: 0;
+  padding-top: 0.6em;
+}
+:root[data-style='glass'] .prose h2::before {
+  position: static;
+  display: inline-flex;
+  width: max-content;
+  margin-bottom: 14px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  box-shadow: var(--glass-rim);
+  display: block;
+}
+
+/* ------------------------------------------------------------------ superfici interne (senza sfocatura) */
+
+:root[data-style='glass'] .fig,
+:root[data-style='glass'] .deep,
+:root[data-style='glass'] .exam,
+:root[data-style='glass'] .card,
+:root[data-style='glass'] .pager__card,
+:root[data-style='glass'] .table-wrap,
+:root[data-style='glass'] .howto__grid li,
+:root[data-style='glass'] .cmap,
+:root[data-style='glass'] .hero__figure,
+:root[data-style='glass'] .gloss__search {
+  background:
+    radial-gradient(420px circle at var(--lx, -999px) var(--ly, -999px), var(--glass-light), transparent 62%),
+    var(--glass-inner);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+:root[data-style='glass'] .fig {
+  border-radius: 26px;
+}
+:root[data-style='glass'] .fig__caption {
+  border-top-color: var(--line);
+}
+:root[data-style='glass'] .deep,
+:root[data-style='glass'] .exam,
+:root[data-style='glass'] .card,
+:root[data-style='glass'] .pager__card,
+:root[data-style='glass'] .table-wrap,
+:root[data-style='glass'] .howto__grid li {
+  border-radius: 22px;
+}
+:root[data-style='glass'] .hero__figure {
+  border-radius: 28px;
+}
+:root[data-style='glass'] .callout {
+  border-radius: 22px;
+  border-color: color-mix(in srgb, var(--k) 30%, var(--glass-edge));
+  background:
+    radial-gradient(420px circle at var(--lx, -999px) var(--ly, -999px), var(--glass-light), transparent 62%),
+    linear-gradient(150deg, color-mix(in srgb, var(--k) 10%, rgba(255, 255, 255, 0.7)), color-mix(in srgb, var(--k) 6%, rgba(255, 255, 255, 0.42)));
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+:root[data-style='glass'][data-theme='dark'] .callout {
+  background:
+    radial-gradient(420px circle at var(--lx, -999px) var(--ly, -999px), var(--glass-light), transparent 62%),
+    linear-gradient(150deg, color-mix(in srgb, var(--k) 16%, rgba(40, 46, 74, 0.5)), color-mix(in srgb, var(--k) 8%, rgba(18, 22, 38, 0.4)));
+}
+:root[data-style='glass'] .callout--definition,
+:root[data-style='glass'] .callout--theorem {
+  border-left-width: 1px;
+  border-radius: 22px;
+}
+:root[data-style='glass'] .callout__label {
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--k) 12%, transparent);
+}
+:root[data-style='glass'] .index__row {
+  border-radius: 20px;
+}
+:root[data-style='glass'] a.index__row:hover,
+:root[data-style='glass'] .gloss__entry.is-target {
+  background:
+    radial-gradient(420px circle at var(--lx, -999px) var(--ly, -999px), var(--glass-light), transparent 62%),
+    var(--glass-inner);
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+:root[data-style='glass'] .index__part,
+:root[data-style='glass'] .gloss__group {
+  border-top-color: var(--line);
+}
+
+:root[data-style='glass'] .tasks,
+:root[data-style='glass'] .wpanel,
+:root[data-style='glass'] .digits__pipe,
+:root[data-style='glass'] .mls__info,
+:root[data-style='glass'] .cycle__info,
+:root[data-style='glass'] .sgraph,
+:root[data-style='glass'] .hchoice__row,
+:root[data-style='glass'] .croc__metrics li,
+:root[data-style='glass'] .exam__answer-body,
+:root[data-style='glass'] .formula__panel {
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+  border-radius: 16px;
+}
+:root[data-style='glass'] .formula:hover,
+:root[data-style='glass'] .formula.has-panel {
+  background: var(--glass-inner);
+  border-color: var(--glass-edge);
+  box-shadow: var(--glass-rim);
+  border-radius: 20px;
+}
+:root[data-style='glass'] .formula__panel {
+  border-radius: 0 0 20px 20px;
+}
+:root[data-style='glass'] .timeline__item::after {
+  background: var(--plot-bg);
+}
+
+/* ------------------------------------------------------------------ controlli: pillole di vetro */
+
+:root[data-style='glass'] .btn {
+  border-radius: 999px;
+}
+:root[data-style='glass'] .btn--ghost {
+  background: var(--glass-inner);
+  border-color: var(--glass-edge);
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+:root[data-style='glass'] .btn--soft {
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .btn--solid {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 82%, #fff), var(--accent));
+  color: var(--on-accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 10px 24px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+:root[data-style='glass'] .btn--solid:hover {
+  background: var(--accent);
+}
+:root[data-style='glass'] .btn:hover {
+  transform: translateY(-1px);
+}
+
+:root[data-style='glass'] .seg__track {
+  border-radius: 999px;
+  padding: 3px;
+  background: var(--bg-sunken);
+  border-color: var(--glass-edge);
+  box-shadow: inset 0 1px 2px rgba(20, 30, 80, 0.08);
+}
+:root[data-style='glass'] .seg__track button {
+  border-radius: 999px;
+}
+:root[data-style='glass'] .seg__track button.is-on {
+  background: var(--glass-strong);
+  box-shadow: var(--glass-rim), 0 4px 12px -4px rgba(30, 44, 120, 0.3);
+}
+
+:root[data-style='glass'] .slider input[type='range']::-webkit-slider-runnable-track {
+  height: 6px;
+  background: linear-gradient(to right, var(--accent) var(--p), var(--bg-sunken) var(--p));
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-style='glass'] .slider input[type='range']::-moz-range-track {
+  height: 6px;
+  background: linear-gradient(to right, var(--accent) var(--p), var(--bg-sunken) var(--p));
+}
+:root[data-style='glass'] .slider input[type='range']::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  background: #fff;
+  border: 0;
+  box-shadow:
+    0 0 0 1px rgba(20, 30, 80, 0.08),
+    0 3px 8px rgba(20, 30, 80, 0.25),
+    inset 0 -2px 4px rgba(20, 30, 80, 0.08);
+}
+:root[data-style='glass'] .slider input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border: 0;
+  box-shadow: 0 3px 8px rgba(20, 30, 80, 0.25);
+}
+:root[data-style='glass'] .toggle__track {
+  width: 40px;
+  height: 24px;
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root[data-style='glass'] .toggle__thumb {
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(20, 30, 80, 0.3);
+}
+:root[data-style='glass'] .toggle input:checked + .toggle__track .toggle__thumb {
+  transform: translateX(16px);
+}
+
+:root[data-style='glass'] .chip,
+:root[data-style='glass'] .lesson-head__tag,
+:root[data-style='glass'] .deep__kind {
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .chip {
+  background: var(--glass-inner);
+  border-color: var(--glass-edge);
+}
+
+/* ricerca e popover */
+:root[data-style='glass'] .palette {
+  background: rgba(12, 18, 40, 0.16);
+}
+:root[data-style='glass'] .palette__box {
+  border-radius: 26px;
+}
+:root[data-style='glass'] .palette__list li {
+  border-radius: 14px;
+}
+:root[data-style='glass'] .palette__icon {
+  border-radius: 10px;
+  background: var(--glass-inner);
+}
+:root[data-style='glass'] .term-pop {
+  border-radius: 20px;
+}
+
+/* ------------------------------------------------------------------ figure: dettagli */
+
+:root[data-style='glass'] .plot-label {
+  stroke: color-mix(in srgb, var(--plot-bg) 80%, transparent);
+}
+:root[data-style='glass'] .s3d canvas {
+  border-radius: 16px;
+}
+:root[data-style='glass'] .poly__cell,
+:root[data-style='glass'] .digits__pad {
+  border-radius: 18px;
+}
+:root[data-style='glass'] .kfold__row,
+:root[data-style='glass'] .kfold__mrow {
+  border-radius: 12px;
+}
+
+/* ------------------------------------------------------------------ mobile e riduzione del movimento */
+
+@media (max-width: 1023px) {
+  :root[data-style='glass'] .shell__side {
+    position: fixed;
+    padding: 10px;
+  }
+  :root[data-style='glass'] .topbar {
+    margin: 10px 10px 0;
+    top: 10px;
+  }
+}
+@media (max-width: 720px) {
+  :root[data-style='glass'] .lesson {
+    padding: 0 16px 32px;
+    border-radius: 26px;
+  }
+  :root[data-style='glass'] .page {
+    padding: 16px 10px 80px;
+  }
+  :root[data-style='glass'] .page--home > section,
+  :root[data-style='glass'] .gloss {
+    padding-left: 18px;
+    padding-right: 18px;
+    border-radius: 26px;
+  }
+  :root[data-style='glass'] .page--home,
+  :root[data-style='glass'] .page--glossary {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass-bg__blob {
+    animation: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-style='glass'] {
+    --glass: linear-gradient(150deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88));
+    --glass-strong: rgba(255, 255, 255, 0.96);
+  }
+  :root[data-style='glass'][data-theme='dark'] {
+    --glass: rgba(24, 28, 46, 0.96);
+    --glass-strong: rgba(20, 24, 40, 0.97);
+  }
+}
