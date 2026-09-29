@@ -1,0 +1,49 @@
+// Screenshot di una pagina o di un elemento, salvati in website/.shots/
+//
+//   npm run shot -- "#/lezione/03" nome                        viewport intera
+//   npm run shot -- "#/lezione/03" fig35 --sel "#fig-3-5"      solo la figura
+//   npm run shot -- "#/lezione/03" pag --pages 6               6 schermate scorrendo la pagina
+//   opzioni: --w 1440 --h 900 --dpr 1 --theme light|dark --style classic|glass --base URL --wait ms
+import { baseUrl, newPage, openBrowser, opt, shotPath, wait } from './lib/browser.mjs'
+
+const args = process.argv.slice(2)
+const route = args[0] ?? '#/'
+const name = args[1] ?? 'shot'
+const url = baseUrl(args) + route.replace(/^\//, '')
+
+const browser = await openBrowser()
+const { page, errors } = await newPage(browser, {
+  width: +opt(args, 'w', 1440),
+  height: +opt(args, 'h', 900),
+  dpr: +opt(args, 'dpr', 1),
+  theme: opt(args, 'theme', 'light'),
+  style: opt(args, 'style', 'classic'),
+})
+await page.goto(url, { waitUntil: 'networkidle0' })
+await wait(+opt(args, 'wait', 1200))
+
+const sel = opt(args, 'sel', null)
+const pages = +opt(args, 'pages', 0)
+if (sel) {
+  const el = await page.$(sel)
+  if (!el) throw new Error('Elemento non trovato: ' + sel)
+  await el.evaluate((e) => e.scrollIntoView({ block: 'start' }))
+  await wait(400)
+  await el.screenshot({ path: shotPath(name) })
+  console.log('salvato', shotPath(name))
+} else if (pages) {
+  const H = +opt(args, 'h', 900)
+  const total = await page.evaluate(() => document.documentElement.scrollHeight)
+  let k = 0
+  for (let y = 0; y < total && k < pages; y += H - 60, k++) {
+    await page.evaluate((v) => window.scrollTo(0, v), y)
+    await wait(350)
+    await page.screenshot({ path: shotPath(`${name}-${String(k).padStart(2, '0')}`) })
+  }
+  console.log(`salvate ${k} schermate (${name}-NN.png), altezza pagina ${total}px`)
+} else {
+  await page.screenshot({ path: shotPath(name) })
+  console.log('salvato', shotPath(name))
+}
+if (errors.length) console.log(errors.join('\n'))
+await browser.close()

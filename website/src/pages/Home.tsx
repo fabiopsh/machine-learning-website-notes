@@ -1,4 +1,4 @@
-import { getLesson, lessonStats, parts } from '../content/lessons'
+import { availableLessons, getLesson, lessonStats, lessons, parts } from '../content/lessons'
 import { lastVisited, useProgress } from '../lib/progress'
 import { glossaryHref, lessonHref } from '../lib/router'
 import { Icon } from '../components/ui/Icon'
@@ -52,8 +52,9 @@ export function Home() {
         <div className="section-head">
           <h2 id="idx-title">Le lezioni</h2>
           <p>
-            Il corso ha una struttura forte: si parte dai modelli semplici per arrivare allo stato dell’arte. Per ora sono
-            disponibili le prime quattro; le altre arriveranno presto.
+            Il corso ha una struttura forte: si parte dai modelli semplici per arrivare allo stato dell’arte.
+            {availableLessons.length < lessons.length &&
+              ` Per ora ne sono disponibili ${availableLessons.length} su ${lessons.length}; le altre arriveranno presto.`}
           </p>
         </div>
         {parts.map((part) => (

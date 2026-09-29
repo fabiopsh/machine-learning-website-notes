@@ -38,12 +38,27 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
   // posizionamento iniziale: sezione richiesta o inizio pagina
   useEffect(() => {
     if (!ready || route.silent) return
-    if (route.section) {
-      const s = route.section
-      requestAnimationFrame(() => scrollToSection(id, s, false))
-    } else {
+    if (!route.section) {
       window.scrollTo({ top: 0 })
+      return
     }
+    const s = route.section
+    scrollToSection(id, s, false)
+    // font, formule e figure possono spostare il layout dopo il primo scroll:
+    // si ricontrolla qualche volta, ma solo se nel frattempo l'utente non ha scrollato
+    let y = window.scrollY
+    const timers = [120, 450, 1100].map((ms) =>
+      window.setTimeout(() => {
+        const el = document.getElementById(s)
+        if (!el || Math.abs(window.scrollY - y) > 2) return
+        const want = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0
+        if (Math.abs(el.getBoundingClientRect().top - want) > 6) {
+          scrollToSection(id, s, false)
+          y = window.scrollY
+        }
+      }, ms),
+    )
+    return () => timers.forEach((t) => window.clearTimeout(t))
   }, [ready, id, route])
 
   // avanzamento di lettura
@@ -161,7 +176,7 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
             ) : (
               <a className="pager__card pager__card--next" href="#/">
                 <span className="pager__dir">
-                  Fine della prima parte <Icon name="arrowRight" size={15} />
+                  Ultima lezione disponibile <Icon name="arrowRight" size={15} />
                 </span>
                 <span className="pager__title">Torna all’indice del corso</span>
               </a>
