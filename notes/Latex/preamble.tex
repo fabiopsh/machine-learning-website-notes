@@ -1,0 +1,161 @@
+% ============================================================
+% Preambolo — Appunti di Machine Learning
+% ============================================================
+
+% --- Fonts (XeTeX/tectonic, unicode math) ---------------------------------
+\usepackage{amsmath}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+% (STIX Two Text su macOS è un font variabile: XeTeX non ne trova il grassetto)
+\setmainfont{Charter}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}[Scale=0.85]
+\setmathfont{STIX Two Math}
+\AtBeginDocument{\providecommand{\blacksquare}{\mdlgblksquare}}
+% glifi assenti in Charter: si prendono dal font matematico
+\usepackage{newunicodechar}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{−}{\ensuremath{-}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{₁}{\ensuremath{_1}}
+\newunicodechar{²}{\ensuremath{^2}}
+\newunicodechar{±}{\ensuremath{\pm}}
+
+% --- Italian language (chapter/contents names, \today, quoting) -----------
+\usepackage{polyglossia}
+\setmainlanguage{italian}
+
+% --- Page geometry ----------------------------------------------------------
+\usepackage[a4paper,margin=2.6cm,headheight=14pt]{geometry}
+% book class defaults to \flushbottom, which stretches vertical glue between
+% paragraphs to fill every page -- with many figures/boxes this produces huge
+% random gaps. Let pages run slightly short instead.
+\raggedbottom
+\setlength{\parskip}{3pt plus 1pt}
+% termini inglesi lunghi (es. "l'Authentication") non si sillabano in italiano:
+% un po' di spazio extra evita righe che escono dal margine
+\setlength{\emergencystretch}{3em}
+
+% --- Colors -----------------------------------------------------------------
+\usepackage{xcolor}
+\definecolor{inkblue}{HTML}{1B3A6B}
+\definecolor{accentblue}{HTML}{2F5FA8}
+\definecolor{defback}{HTML}{EDF2FB}
+\definecolor{defframe}{HTML}{2F5FA8}
+\definecolor{thmback}{HTML}{F1EDFA}
+\definecolor{thmframe}{HTML}{6A4C93}
+\definecolor{exback}{HTML}{EAF7EE}
+\definecolor{exframe}{HTML}{2E8B57}
+\definecolor{noteback}{HTML}{F2F2F2}
+\definecolor{noteframe}{HTML}{6B6B6B}
+\definecolor{tipback}{HTML}{E7F6F4}
+\definecolor{tipframe}{HTML}{1E8C7C}
+\definecolor{warnback}{HTML}{FDF1E4}
+\definecolor{warnframe}{HTML}{C0722A}
+\definecolor{absback}{HTML}{EFEFF5}
+\definecolor{absframe}{HTML}{4A4A68}
+\definecolor{qback}{HTML}{FBF6E3}
+\definecolor{qframe}{HTML}{A8861B}
+
+% --- Boxes for Obsidian callouts --------------------------------------------
+% \newcallout{env}{label}{back}{frame}: the box title is "label — title",
+% or just "label" when the callout has no title.
+\usepackage{etoolbox}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\newcommand{\newcallout}[4]{%
+  \newtcolorbox{#1}[1]{%
+    enhanced, breakable, colback=#3, colframe=#4,
+    boxrule=0.5pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
+    arc=2pt, before skip=8pt, after skip=8pt,
+    fonttitle=\bfseries, coltitle=white, colbacktitle=#4,
+    title={#2\ifblank{##1}{}{ — ##1}}}}
+\newcallout{boxdefinition}{Definizione}{defback}{defframe}
+\newcallout{boxtheorem}{Teorema}{thmback}{thmframe}
+\newcallout{boxexample}{Esempio}{exback}{exframe}
+\newcallout{boxnote}{Nota}{noteback}{noteframe}
+\newcallout{boxtip}{Suggerimento}{tipback}{tipframe}
+\newcallout{boxwarning}{Attenzione}{warnback}{warnframe}
+\newcallout{boxabstract}{In sintesi}{absback}{absframe}
+\newcallout{boxquestion}{Domande}{qback}{qframe}
+
+% --- Code blocks --------------------------------------------------------------
+\usepackage{fvextra}
+\fvset{breaklines=true,breakanywhere=true,fontsize=\small,frame=leftline,
+       rulecolor=\color{accentblue!50},framesep=6pt,xleftmargin=8pt}
+
+% --- Tables / figures ---------------------------------------------------------
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+% float: riempiono le pagine vicino al punto di inserimento, senza pagine semivuote
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+\setlength{\textfloatsep}{10pt plus 2pt minus 4pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\captionsetup{font=small,labelfont=bf,margin=1cm,skip=5pt}
+% pandoc helpers
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\newcommand{\real}[1]{#1}
+\newcounter{none} % usato da pandoc per le longtable senza didascalia
+
+% --- Lists ----------------------------------------------------------------
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=4pt}
+
+% --- Chapter / section styling ------------------------------------------------
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{inkblue}}
+  {\Large\color{accentblue}\chaptertitlename\ \thechapter}
+  {8pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{0pt}{28pt}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{inkblue}}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{accentblue}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\itshape\color{accentblue}}{\thesubsubsection}{0.6em}{}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+% --- Header / footer ----------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Chapter metadata line under chapter title --------------------------------
+\newcommand{\lecturemeta}[2]{%
+  \begingroup
+  \color{gray!70!black}\small
+  #1\\
+  \textit{Fonte: #2}
+  \endgroup
+  \bigskip\par
+}
+
+% --- Hyperref (load last) ----------------------------------------------------
+\usepackage[bookmarksnumbered,hidelinks]{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=accentblue,
+  citecolor=accentblue,
+  urlcolor=accentblue,
+  pdftitle={Machine Learning — Appunti},
+  pdfauthor={Fabio Piscitelli}
+}
+\usepackage{xurl}
