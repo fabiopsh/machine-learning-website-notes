@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex" />
+    <title>Machine Learning — Appunti interattivi</title>
+    <script>
+      // GitHub Pages serve questa pagina per ogni percorso sconosciuto.
+      // Il sito usa route con l'hash: /repo/lezione/03/sezione → /repo/#/lezione/03/sezione
+      ;(function () {
+        var parts = location.pathname.split('/').filter(Boolean)
+        var base = '/'
+        if (/\.github\.io$/.test(location.hostname) && parts.length) base = '/' + parts.shift() + '/'
+        if (parts[parts.length - 1] === 'index.html') parts.pop()
+        var route = parts.length ? '#/' + parts.join('/') : ''
+        location.replace(base + route)
+      })()
+    </script>
+  </head>
+  <body></body>
+</html>
