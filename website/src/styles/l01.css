@@ -1,0 +1,298 @@
+/* ------------------------------------------------------------------ 3D */
+
+.s3d {
+  position: relative;
+  width: 100%;
+}
+.s3d canvas {
+  display: block;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 10px;
+}
+.s3d canvas:active {
+  cursor: grabbing;
+}
+.s3d__hint {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  font-size: 11.5px;
+  color: var(--ink-4);
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease);
+}
+.s3d__hint.is-hidden {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------ cifre manoscritte */
+
+.digits {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.digits__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+.digits__row {
+  display: grid;
+  grid-template-columns: repeat(10, 42px);
+  gap: 4px;
+  justify-items: center;
+}
+.digits__cell {
+  padding: 3px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease);
+}
+.digits__cell:hover {
+  border-color: var(--line-2);
+}
+.digits__cell.is-col {
+  background: var(--accent-soft);
+}
+.digits__cell.is-sel {
+  border-color: var(--accent);
+}
+.digits__row--arrows span {
+  color: var(--c-blue);
+  opacity: 0.55;
+  transition: opacity 0.2s var(--ease);
+}
+.digits__row--arrows span svg path {
+  stroke: currentColor;
+}
+.digits__row--arrows span.is-col {
+  color: var(--accent);
+  opacity: 1;
+}
+.digits__row--labels span {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink-2);
+  transition: color 0.2s var(--ease);
+}
+.digits__row--labels span.is-col {
+  color: var(--accent-ink);
+}
+.digits__loading {
+  padding: 40px;
+  color: var(--ink-3);
+}
+.pix {
+  border-radius: 4px;
+}
+.pix__bg {
+  fill: var(--bg-sunken);
+}
+.pix__on {
+  fill: var(--ink);
+}
+.pix__hot {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 0.18;
+}
+
+.digits__pipe {
+  display: grid;
+  grid-template-columns: auto 24px auto 24px minmax(150px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg-sunken);
+}
+.digits__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.digits__stage-label {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.digits__arrow {
+  font-size: 20px;
+  color: var(--ink-4);
+  text-align: center;
+}
+.digits__pad {
+  width: 168px;
+  height: 168px;
+  border-radius: 12px;
+  background: #fcfbf8;
+  border: 1.5px dashed var(--accent-line);
+  cursor: crosshair;
+  touch-action: none;
+}
+:root[data-theme='dark'] .digits__pad {
+  filter: invert(0.9);
+}
+.digits__matrix {
+  display: grid;
+  grid-template-columns: repeat(8, 21px);
+  gap: 2px;
+}
+.digits__matrix span {
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  background: color-mix(in srgb, var(--ink) calc(var(--v) * 100%), var(--plot-bg));
+  color: var(--ink-3);
+  cursor: default;
+}
+.digits__matrix span.is-ink {
+  color: var(--bg);
+}
+.digits__matrix span.is-hot {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.digits__f {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: center;
+  gap: 4px 14px;
+}
+.digits__fbox {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-3);
+  font-size: 20px;
+  color: var(--ink);
+}
+.digits__out {
+  font-family: var(--font-sans);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-ink);
+}
+.digits__conf {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.digits__vector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.digits__xi {
+  color: var(--ink-2);
+}
+.digits__strip {
+  display: grid;
+  grid-template-columns: repeat(64, minmax(0, 1fr));
+  gap: 1px;
+  height: 22px;
+}
+.digits__strip span {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ink) calc(var(--v) * 100%), var(--bg-sunken));
+}
+.digits__strip span.is-row {
+  margin-left: 3px;
+}
+.digits__strip span.is-row:first-child {
+  margin-left: 0;
+}
+.digits__strip span.is-hot {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.digits__disclaimer {
+  margin-top: -4px;
+}
+
+@media (max-width: 700px) {
+  .digits__row {
+    grid-template-columns: repeat(10, 30px);
+    gap: 2px;
+  }
+  .digits__cell .pix {
+    width: 24px;
+    height: 24px;
+  }
+  .digits__pipe {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .digits__arrow {
+    transform: rotate(90deg);
+  }
+  .digits__stage {
+    align-items: center;
+  }
+}
+
+/* ------------------------------------------------------------------ gradiente, gaussiana, tensori */
+
+.gradx__btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+.gradx__verdict {
+  margin-top: 12px;
+}
+.gauss__formula {
+  margin-top: 4px;
+  text-align: center;
+}
+
+.tens__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 8px 0 4px;
+}
+.tens__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.tens__cell {
+  fill: color-mix(in srgb, var(--c-blue) 14%, var(--plot-bg));
+  stroke: color-mix(in srgb, var(--c-blue) 55%, var(--plot-bg));
+  stroke-width: 1.2;
+  cursor: default;
+  transition: fill 0.12s var(--ease);
+}
+.tens__cell.is-hot {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.tens__name {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.tens__tex {
+  min-height: 26px;
+  font-size: 17px;
+  color: var(--ink);
+}

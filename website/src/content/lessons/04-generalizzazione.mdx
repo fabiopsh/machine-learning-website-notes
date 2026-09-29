@@ -1,0 +1,423 @@
+import * as F from '../formulas/l04'
+import { SineTarget, PolyFit, RmsCurve, MoreData } from '../../widgets/l04/PolyLab'
+import { ComplexityCurve, VCBound } from '../../widgets/l04/VCBound'
+import { DataSplit } from '../../widgets/l04/DataSplit'
+import { KFold } from '../../widgets/l04/KFold'
+import { ConfusionROC } from '../../widgets/l04/ConfusionROC'
+import { DesignCycle } from '../../widgets/l04/DesignCycle'
+
+<Lead>La quarta lezione conclude l’introduzione al ML affrontando il tema centrale del corso: la **generalizzazione**. Attraverso un esempio concreto — il fitting di polinomi — si vedono i fenomeni di **underfitting** e **overfitting**, si dà una prima formalizzazione con la **Statistical Learning Theory** e la **VC-dimension**, e si introducono le tecniche di base di **validazione**, le misure di accuratezza per la classificazione e il ciclo di progettazione di un sistema di ML.</Lead>
+
+## Il ML in breve
+
+Riepiloghiamo gli ingredienti visti nelle [lezioni precedenti](#/lezione/03/gli-ingredienti-di-un-sistema-di-ml):
+
+- **Dati**: l’esperienza disponibile, rappresentata come vettori, strutture, ecc.
+- **Task**: supervisionato (classificazione, regressione), non supervisionato, … Ad esempio, dati esempi etichettati, trovare una buona approssimazione della $f$ sconosciuta.
+- **Modello**: descrive le relazioni tra i dati e definisce la classe di funzioni che la macchina può implementare (lo spazio delle ipotesi).
+- **Algoritmo di apprendimento**: dati task e modello, esegue una ricerca (euristica) nello spazio delle ipotesi valide sui dati, adattando i parametri liberi del modello.
+- **Validazione**: valuta la capacità di generalizzazione dell’ipotesi trovata.
+
+Il messaggio di fondo resta: *facile usare strumenti di ML* contro *uso corretto e consapevole del ML*.
+
+## I problemi fondamentali del ML
+
+### Un problema mal posto
+
+Inferire funzioni generali da dati noti è un **problema mal posto**: in linea di principio la soluzione non è unica, e con dati finiti non possiamo aspettarci di trovare la soluzione esatta. Per questo si lavora con uno **spazio delle ipotesi ristretto** (ricordiamo il <T id="bias-induttivo">bias induttivo</T>). Due domande guidano lo studio dei modelli:
+
+- **Cosa possiamo rappresentare?** (se una funzione non è rappresentabile, non può nemmeno essere appresa);
+- **Cosa possiamo apprendere?** (domanda secondaria rispetto alla prima).
+
+### Generalizzazione e overfitting
+
+Distinguiamo la **fase di apprendimento**, in cui si costruisce il modello (incluso il training), dalla **fase di predizione**, in cui si valuta la funzione appresa su campioni nuovi (la capacità di generalizzazione).
+
+<Callout type="definition" title="Ipotesi dell’apprendimento induttivo">
+
+*Qualsiasi ipotesi $h$ che approssima bene $f$ sugli esempi di training approssimerà bene $f$ anche su istanze nuove, mai viste.*
+
+</Callout>
+
+Il punto interrogativo che il professore mette accanto a questa ipotesi è voluto: **non è sempre vera**, ed è proprio qui che nasce l’overfitting.
+
+<Callout type="definition" title="Overfitting">
+
+Un learner fa <T id="overfitting">**overfitting**</T> sui dati se restituisce un’ipotesi $h \in H$ con errore vero (di generalizzazione, *rischio*) $R$ ed errore empirico (di training) $E$, quando esiste un’altra $h' \in H$ con
+
+<Formula f={F.overfit} />
+
+In altre parole, $h'$ si adatta *peggio* ai dati di training ma è *migliore* sui dati nuovi.
+
+</Callout>
+
+L’aspetto critico diventa quindi la **stima dell’accuratezza**, che si può affrontare in modo **teorico** (Statistical Learning Theory) o **empirico** (errore su training e test, tecniche di cross-validation).
+
+---
+
+## Un caso di studio: il fitting polinomiale
+
+Per vedere concretamente il ruolo della complessità del modello si usa un esempio di regressione con un modello parametrico: lo spazio delle ipotesi sono i **polinomi di grado $M$**,
+
+<Formula f={F.poly} />
+
+La complessità dell’ipotesi cresce con il grado $M$; $l$ è il numero di esempi.
+
+<Callout type="warning" title="Esempio artificiale">
+
+È un task semplificato e irrealistico: una sola variabile di input, e conosciamo in anticipo la funzione target. Serve solo a visualizzare i concetti.
+
+</Callout>
+
+La funzione target è $\sin(2\pi x)$ a cui si aggiunge **rumore gaussiano**: per questo i campioni non stanno esattamente sulla curva verde «vera».
+
+<Figure n="4.1" title="La funzione target e i campioni di training">
+  <SineTarget />
+  <Caption>La funzione target $\sin(2\pi x)$ (in verde) e i dieci campioni rumorosi di training (in blu). Il rumore sposta ogni campione in su o in giù rispetto alla curva.</Caption>
+</Figure>
+
+Per trovare i parametri migliori si minimizza la **somma degli errori quadratici**,
+
+<Formula f={F.sse} />
+
+dove $p$ indica l’esempio, $y_p$ il suo target, $h_\mathbf{w}(x_p)$ l’uscita del modello nel punto $x_p$ (qui $x$ è una sola variabile, $n = 1$).
+
+### Effetto del grado del polinomio
+
+<Figure n="4.2" title="Fitting con polinomi di grado diverso" size="wide">
+  <PolyFit />
+  <Caption>Fitting con polinomi di grado $M$ (in rosso) rispetto alla funzione vera (in verde). Il cursore di $M$ è condiviso con le figure 4.3 e 4.4 di questa sezione.</Caption>
+</Figure>
+
+- **$M = 0$** (costante) e **$M = 1$** (retta): il modello è **troppo semplice** rispetto alla funzione target e non riesce a coglierne l’andamento. È l’<T id="underfitting">**underfitting**</T>.
+- **$M = 3$**: più flessibilità è utile, e la curva approssima bene il seno.
+- **$M = 9$**: con 10 punti e 10 parametri il polinomio passa **esattamente** per tutti i dati: $E(\mathbf{w}) = 0$ sul training! Ma la curva oscilla violentemente tra i punti e rappresenta malissimo la funzione vera: il modello è troppo complesso e **impara anche il rumore**. È l’**overfitting**. E l’errore sul test set?
+
+<Deep title="Perché con 10 punti e 10 parametri l’errore è esattamente zero?" kind="intuizione">
+
+Un polinomio di grado 9 ha 10 coefficienti. Imporre che passi per 10 punti dà 10 equazioni lineari in 10 incognite: se le $x_p$ sono distinte il sistema ha una e una sola soluzione. Il polinomio può quindi «inseguire» ogni punto, rumore compreso — e non ha più alcun grado di libertà per essere liscio.
+
+</Deep>
+
+### Errore di training e di test al variare di $M$
+
+Per confrontare i modelli si usa il <T id="erms">**Root-Mean-Square error**</T>:
+
+<Formula f={F.erms} />
+
+dove $E(\mathbf{w}^*)$ è l’errore del modello addestrato. La divisione per $l$ permette di confrontare dataset di dimensione diversa, e la radice riporta l’errore sulla stessa scala del target.
+
+<Figure n="4.3" title="Errore RMS di training e di test al variare di M">
+  <RmsCurve />
+  <Caption>Zona di underfitting a sinistra, di overfitting a destra. L’errore di test è calcolato su 200 punti nuovi, estratti dalla stessa funzione con lo stesso rumore.</Caption>
+</Figure>
+
+L’errore di training **decresce sempre** all’aumentare di $M$, perché un modello più flessibile può adattarsi meglio ai dati. L’errore di test invece prima decresce, poi resta stabile e infine **esplode** per $M = 9$: è la firma dell’overfitting.
+
+Anche i **coefficienti** ottimi $\mathbf{w}^*$ sono rivelatori (valori della figura originale):
+
+| | $M=0$ | $M=1$ | $M=3$ | $M=9$ |
+|---|---|---|---|---|
+| $w_0^*$ | 0,19 | 0,82 | 0,31 | 0,35 |
+| $w_1^*$ | | −1,27 | 7,99 | 232,37 |
+| $w_2^*$ | | | −25,43 | −5321,83 |
+| $w_3^*$ | | | 17,37 | 48568,31 |
+| $w_4^*$ | | | | −231639,30 |
+| $w_5^*$ | | | | 640042,26 |
+| $w_6^*$ | | | | −1061800,52 |
+| $w_7^*$ | | | | 1042400,18 |
+| $w_8^*$ | | | | −557682,99 |
+| $w_9^*$ | | | | 125201,43 |
+
+<Callout type="tip" title="Pesi enormi = overfitting">
+
+Nel polinomio di grado 9 i coefficienti diventano **enormi** e di segno alterno: si compensano a vicenda per far passare la curva esattamente per ogni punto, producendo oscillazioni fortissime. Questa osservazione è alla base della <T id="regolarizzazione">**regolarizzazione**</T> (che vedremo con i modelli lineari e le reti neurali): penalizzare pesi grandi è un modo per controllare la complessità.
+
+</Callout>
+
+Nella figura 4.2 le barre dei coefficienti sono in scala logaritmica: passando da $M = 3$ a $M = 9$ si vede lo stesso fenomeno della tabella (i valori esatti dipendono dai dati usati).
+
+### Effetto della quantità di dati
+
+Cosa succede se, a parità di modello ($M = 9$), aumentiamo i dati?
+
+<Figure n="4.4" title="Polinomio di grado 9 con più dati">
+  <MoreData />
+  <Caption>Polinomio di grado 9 con $l = 10$, $l = 15$ e $l = 100$ esempi: con più dati l’overfitting si riduce.</Caption>
+</Figure>
+
+Con 15 esempi il polinomio di grado 9 oscilla ancora, ma molto meno; con 100 esempi segue quasi perfettamente il seno. **Con più dati si possono usare modelli più complessi** senza cadere nell’overfitting.
+
+<Callout type="abstract" title="Cosa abbiamo imparato">
+
+La capacità di generalizzazione (misurata come rischio o errore di test) va studiata in relazione a:
+
+- l’**errore di training** e le zone di underfitting e overfitting;
+- la **complessità del modello**;
+- il **numero di dati**.
+
+La **Statistical Learning Theory** è la teoria generale che lega questi tre elementi.
+
+</Callout>
+
+---
+
+## Verso la Statistical Learning Theory
+
+### Il setting formale (semplificato)
+
+Vogliamo approssimare una funzione sconosciuta $f(\mathbf{x})$, dove il target è $d = f(\mathbf{x}) + \text{rumore}$.
+
+Idealmente vorremmo minimizzare la <T id="rischio">**funzione di rischio**</T> (errore vero), calcolata su **tutti** i dati possibili:
+
+<Formula f={F.risk} />
+
+dove $P(\mathbf{x}, d)$ è la distribuzione di probabilità (sconosciuta) dei dati e $L$ è una loss, ad esempio $L(h(\mathbf{x}), d) = (d - h(\mathbf{x}))^2$. Si cerca quindi $h \in H$ che minimizzi $R$.
+
+Ma abbiamo solo un dataset finito $TR = \{(\mathbf{x}_p, d_p)\}_{p=1}^{l}$. Allora si minimizza il <T id="rischio-empirico">**rischio empirico**</T> (errore di training), trovando i valori migliori dei parametri liberi:
+
+<Formula f={F.remp} />
+
+Questo è il principio induttivo di <T id="erm">**Empirical Risk Minimization**</T> (ERM). La domanda cruciale è: **possiamo usare $R_{emp}$ per approssimare $R$?**
+
+<Figure n="4.5" title="Comportamento tipico dell’apprendimento">
+  <ComplexityCurve />
+  <Caption>Al crescere della complessità del modello, l’errore sul training set decresce continuamente; quello sul test set decresce e poi risale. A sinistra la zona di underfitting, a destra quella di overfitting (andamenti illustrativi).</Caption>
+</Figure>
+
+### VC-dimension e bound sul rischio
+
+La <T id="vc-dimension">**VC-dimension**</T> (Vapnik-Chervonenkis) è una misura della **complessità** di $H$, cioè della sua flessibilità nell’adattarsi ai dati (per modelli lineari o polinomi è legata al numero di parametri; sarà definita formalmente più avanti).
+
+<Callout type="theorem" title="VC-bound">
+
+Con probabilità $1 - \delta$ vale:
+
+<Formula f={F.vcBound} />
+
+dove la <T id="vc-confidence">**VC-confidence**</T> $\varepsilon$ è una funzione che **cresce con la VC-dimension** e **decresce con il numero di dati $l$** (e con $\delta$).
+
+</Callout>
+
+Il parametro $\delta$ è la **confidenza**: regola la probabilità che il bound valga (ad esempio $\delta = 0{,}01$ significa che il bound vale con probabilità $0{,}99$).
+
+Questo bound **spiega** underfitting e overfitting:
+
+- **più dati** ($l$ alto) → VC-confidence più bassa, e il bound si avvicina a $R$: il rischio empirico diventa una buona stima di quello vero;
+- **modello troppo semplice** (VC-dim bassa) → $\varepsilon$ piccolo, ma $R_{emp}$ alto: **underfitting**;
+- **modello troppo complesso** (VC-dim alta, $l$ fissato) → $R_{emp}$ basso, ma $\varepsilon$ cresce, e con esso il bound su $R$: **overfitting**.
+
+<Figure n="4.6" title="Structural Risk Minimization" size="wide">
+  <VCBound />
+  <Caption>A $l$ fissato, il bound su $R$ (viola) è la somma dell’errore di training (blu) e della VC-confidence (arancione); il suo minimo è il miglior compromesso. L’errore di training è illustrativo; $\varepsilon$ usa la forma classica di Vapnik.</Caption>
+</Figure>
+
+<Callout type="definition" title="Structural Risk Minimization (SRM)">
+
+Invece di minimizzare solo $R_{emp}$, si **minimizza il bound**, cioè la somma di errore di training e VC-confidence. Questo formalizza il concetto di **controllo della complessità del modello**: un compromesso tra complessità (VC-dim) e accuratezza sul training (fitting).
+
+</Callout>
+
+Un esempio concreto di bound è
+
+<Formula f={F.vcConcrete} />
+
+e ne esistono diverse formulazioni per diverse classi di funzioni e task. In parole semplici: **si può approssimare bene $f$ dagli esempi purché si abbia un buon numero di dati e la complessità del modello sia adatta al problema**. Bisogna adattarsi ai dati il più possibile per evitare l’underfitting (alto $R_{emp}$), ma non troppo, per evitare l’overfitting (dovuto alla crescita della VC-confidence).
+
+<Callout type="note" title="Oltre il compromesso classico">
+
+Fenomeni più recenti come la **double descent**, la sovra-parametrizzazione e il *benign overfitting* (tipici delle reti profonde) sembrano sfidare questa visione e verranno discussi più avanti nel corso.
+
+</Callout>
+
+### Perché la SLT è importante
+
+La SLT permette di inquadrare formalmente il problema della generalizzazione e dell’overfitting, fornendo **upper bound analitici** al rischio $R$ indipendentemente dal tipo di algoritmo o dai dettagli del modello. Mostra che il ML è **ben fondato**: il rischio si può limitare analiticamente, e pochi concetti sono fondamentali. Ha inoltre portato a nuovi modelli (le **SVM**) che considerano direttamente il controllo della complessità, e spiega la differenza principale tra il ML e i metodi di ottimizzazione puri (che forniscono le tecniche per fare *fitting*): nel ML l’obiettivo non è minimizzare l’errore sui dati, ma sui dati *futuri*.
+
+Restano aperte domande pratiche: come misurare la complessità? Come trovare il miglior compromesso tra fitting e complessità?
+
+<Callout type="question" title="Esercizi proposti dal professore" label="Esercizi">
+
+- Perché un errore di training nullo non implica necessariamente una buona soluzione?
+- Collegare underfitting e overfitting all’interpretazione della disuguaglianza della SLT e all’esempio dei polinomi.
+- Guardando la definizione di overfitting, individuare $h$ e $h'$ sul grafico del bound SLT. *(Suggerimento: $h$ sta a destra del minimo, con $R_{emp}$ più basso ma bound più alto; $h'$ sta vicino al minimo. Puoi mostrarli nella figura 4.6.)*
+- Il rumore è la causa dell’overfitting, o lo è il compromesso di complessità? Si può avere overfitting anche con dati perfettamente puliti? *(Sì: anche senza rumore, un polinomio di grado molto alto interpolando pochi punti di una funzione liscia può oscillare molto tra un punto e l’altro; il problema è la complessità eccessiva rispetto ai dati disponibili.)*
+
+</Callout>
+
+<Deep title="Traccia per il primo esercizio: errore di training nullo" kind="esempio">
+
+Guarda la figura 4.2 con $M = 9$: l’errore di training è zero, ma la curva rossa è lontanissima dal seno tra un punto e l’altro, e nella figura 4.3 l’errore di test esplode. Un errore di training nullo dice solo che il modello ha **memorizzato** i dati (rumore compreso), non che ha colto la funzione. Nella lettura della SLT: $R_{emp} = 0$ ma la VC-confidence di un modello così complesso, con così pochi dati, è enorme — e il bound su $R$ non garantisce nulla.
+
+</Deep>
+
+---
+
+## Validazione
+
+La valutazione delle prestazioni di un sistema di ML è la valutazione della sua **accuratezza predittiva**. Attenzione: **le prestazioni sui dati di training danno una valutazione troppo ottimistica**. Da qui il mantra «validazione, validazione, validazione». Qui si dà un’introduzione; la validazione sarà ripresa in lezioni dedicate.
+
+### I due obiettivi della validazione
+
+<Callout type="definition" title="Model selection e model assessment">
+
+- <T id="model-selection">**Model selection**</T>: stimare le prestazioni (errore di generalizzazione) di **diversi modelli** per scegliere il migliore. Include la ricerca dei migliori <T id="iperparametri">**iperparametri**</T> (es. il grado del polinomio). *Restituisce un modello.*
+- <T id="model-assessment">**Model assessment**</T>: scelto il modello finale, stimarne l’errore di predizione (rischio) su **nuovi dati di test**, come misura della qualità del modello scelto. *Restituisce una stima.*
+
+</Callout>
+
+<Callout type="warning" title="Regola d’oro">
+
+Tenere **separati gli obiettivi** e usare **insiemi di dati separati** per ciascuno. Se il test set viene usato per scegliere il modello, la stima finale non è più affidabile (è ottimistica).
+
+</Callout>
+
+<Deep title="Perché la stima diventa ottimistica?" kind="intuizione">
+
+Se provi tanti modelli e tieni quello con l’errore di test più basso, stai scegliendo anche in base alla **fortuna**: tra molti candidati, qualcuno andrà bene sul test set per caso, per come sono capitati quei particolari esempi. L’errore di quel modello sullo stesso test set sottostima quindi l’errore che avrà su dati davvero nuovi. Il test set è diventato, di fatto, parte dei dati usati per costruire il modello.
+
+</Deep>
+
+Nel mondo ideale avremmo un grande training set (per trovare l’ipotesi migliore), un grande validation set per la model selection e un test set esterno molto grande. Con dataset finiti, spesso piccoli, si può solo **stimare** la generalizzazione.
+
+### Hold-out
+
+Nella tecnica di base, <T id="hold-out">**hold-out**</T>, il dataset $D$ viene partizionato in tre insiemi **disgiunti**:
+
+- <T id="training-set">**Training set (TR)**</T>: usato per eseguire l’algoritmo di apprendimento;
+- <T id="validation-set">**Validation set (VL)**</T> o *selection set*: usato per scegliere il modello migliore (es. tuning degli iperparametri);
+- **Test set (TS)**: usato **solo** per la model assessment, mai per scegliere o regolare $h$.
+
+TR e VL insieme formano il **development/design set**; il test set (ad esempio il 25–30% dei dati) viene tenuto da parte.
+
+<Figure n="4.7" title="Ruolo di TR, VL e TS" size="wide">
+  <DataSplit />
+  <Caption>Sviluppo del modello lato sviluppatore (training su TR, selezione su VL, valutazione del modello finale su TS) e uso in inferenza lato cliente, dove i nuovi dati passano al modello rilasciato per le predizioni.</Caption>
+</Figure>
+
+### K-fold cross-validation (anticipazione)
+
+L’hold-out può sfruttare male i dati, soprattutto se sono pochi. Nella <T id="k-fold">**K-fold cross-validation**</T>:
+
+1. si divide $D$ in $k$ sottoinsiemi mutuamente esclusivi $D_1, \dots, D_k$;
+2. per ogni $i$ si addestra su $D \setminus D_i$ e si valuta su $D_i$;
+3. si combinano i $k$ risultati.
+
+<Figure n="4.8" title="K-fold cross-validation" size="wide">
+  <KFold />
+  <Caption>A turno ogni fold fa da insieme di validazione (evidenziato) e gli altri da training. Qui il modello è un polinomio di grado $M$ su 20 punti; l’errore di cross-validation, media dei $k$ errori, permette di confrontare gradi diversi.</Caption>
+</Figure>
+
+Così tutti i dati vengono usati sia per l’addestramento sia per la validazione (o il test). Si può applicare sia per lo split di validazione sia per quello di test. Le questioni aperte sono quante fold usare (3, 5, 10, fino a *leave-one-out*), il costo computazionale spesso elevato e la combinazione con altri schemi (validation set, doppia K-fold). Sarà ripresa in dettaglio più avanti.
+
+<Deep title="Quanto costa la K-fold?" kind="approfondimento">
+
+Per ogni configurazione da valutare (ad esempio ogni grado $M$) l’algoritmo di apprendimento va eseguito $k$ volte, una per fold. Con leave-one-out, $k = l$: tanti addestramenti quanti sono gli esempi. È il prezzo da pagare per usare tutti i dati sia in training sia in validazione.
+
+</Deep>
+
+---
+
+## Accuratezza nella classificazione
+
+### Matrice di confusione
+
+Per un classificatore binario si confrontano classe reale e classe predetta nella <T id="matrice-di-confusione">matrice di confusione</T>:
+
+| Reale \ Predetto | Positivo | Negativo |
+|---|---|---|
+| **Positivo** | TP (veri positivi) | FN (falsi negativi) |
+| **Negativo** | FP (falsi positivi) | TN (veri negativi) |
+
+Da cui:
+
+- <T id="accuratezza">**Accuratezza**</T> $= \dfrac{TP + TN}{\text{totale}}$: percentuale di pattern classificati correttamente;
+- <T id="sensibilita">**Sensibilità**</T> (*True Positive rate*, *Recall*) $= \dfrac{TP}{TP + FN}$: quanti positivi veri vengono riconosciuti;
+- <T id="specificita">**Specificità**</T> (*True Negative rate*) $= \dfrac{TN}{FP + TN} = 1 - FPR$: quanti negativi veri vengono riconosciuti;
+- <T id="precisione">**Precisione**</T> $= \dfrac{TP}{TP + FP}$: quanti dei predetti positivi sono davvero positivi.
+
+Un falso positivo equivale a un **falso allarme**.
+
+<Callout type="warning" title="Attenzione all’accuratezza">
+
+- Per la classificazione binaria, un’accuratezza del 50% è quella di un predittore **casuale** (lancio di una moneta).
+- Con **dati sbilanciati** (es. 99% di positivi) esiste un classificatore banale che risponde sempre «positivo» e ha il 99% di accuratezza senza aver imparato nulla. In questi casi l’accuratezza da sola è fuorviante.
+
+</Callout>
+
+### Curva ROC
+
+La <T id="curva-roc">**curva ROC**</T> mostra il *True Positive rate* (sensibilità) in funzione del *False Positive rate* ($1 -$ specificità) al variare della soglia di decisione del classificatore.
+
+<Figure n="4.9" title="Matrice di confusione e curva ROC" size="wide">
+  <ConfusionROC />
+  <Caption>Il classificatore assegna un punteggio a ogni esempio e dice «positivo» sopra la soglia. Spostando la soglia cambiano i conteggi della matrice e il punto sulla curva ROC. La diagonale corrisponde al classificatore casuale; curve migliori hanno un’area sottesa (AUC) maggiore.</Caption>
+</Figure>
+
+La **diagonale** corrisponde al classificatore peggiore (casuale). Le curve migliori salgono rapidamente verso l’angolo in alto a sinistra (TPR alto con FPR basso) e hanno un’**AUC** (*Area Under the Curve*) più alta: il classificatore ideale ha AUC $= 1$, quello casuale $0{,}5$.
+
+---
+
+## Il ciclo di progettazione
+
+<Figure n="4.10" title="Il ciclo di progettazione di un sistema di ML">
+  <DesignCycle />
+  <Caption>Un processo iterativo guidato dalla conoscenza a priori, che influenza le fasi centrali; dall’ultima fase si può tornare alle precedenti.</Caption>
+</Figure>
+
+1. **Raccolta dei dati**: selezione, integrazione, pulizia. Serve un insieme di esempi abbastanza **grande e rappresentativo** per training e test.
+2. **Rappresentazione dei dati**: dipende dal dominio e sfrutta la conoscenza a priori dell’esperto; comprende feature selection, rilevamento degli outlier, scalatura delle variabili, gestione dei dati mancanti. **Spesso è la fase più critica** per il successo complessivo.
+3. **Scelta del modello**: formulazione del problema e delle ipotesi. Bisogna conoscere i **limiti di applicabilità** del modello e controllarne la complessità.
+4. **Costruzione del modello** (il cuore del ML): tramite l’algoritmo di apprendimento sui dati di training.
+5. **Valutazione**: la prestazione è l’**accuratezza predittiva**; si aggiungono l’interpretazione dei risultati, la spiegazione dei dati e l’estrazione di conoscenza.
+6. **Deployment**.
+
+Il ciclo è iterativo: i risultati della valutazione possono richiedere di tornare alle fasi precedenti.
+
+## Errori di interpretazione
+
+Per ogni modello statistico (inclusi Data Mining e ML):
+
+- si assume (spesso) una **causalità** e serve un insieme di dati **rappresentativo** del fenomeno. Il ML non funziona con variabili scorrelate o fenomeni casuali (lotterie); input non informativi portano a modelli e risultati scadenti;
+- **la causalità non si può inferire dalla sola analisi dei dati**: in Florida le persone sono in media più anziane che negli altri stati USA, ma non è il clima a farle vivere più a lungo (ci si trasferisce lì da pensionati). La dipendenza statistica può avere ragioni esterne ai dati.
+
+Specifico per il ML: **modelli potenti aumentano il rischio**, perché si adattano anche a dati «spazzatura»; e risultati **non validati bene** possono portare a predizioni e interpretazioni fuorvianti.
+
+<Callout type="abstract" title="Sintesi">
+
+La generalizzazione dipende dal compromesso tra **complessità del modello** e **quantità di dati**. Modelli troppo semplici fanno **underfitting**, troppo complessi fanno **overfitting** (errore di training basso, di test alto). La SLT formalizza tutto con il **VC-bound** $R \le R_{emp} + \varepsilon(1/l, VC, 1/\delta)$ e suggerisce la **Structural Risk Minimization**. In pratica la generalizzazione si stima con la **validazione**: *model selection* (su VL) e *model assessment* (su TS), sempre su dati separati.
+
+</Callout>
+
+<Exam>
+<Q q="Definire formalmente l’overfitting.">
+
+Un learner fa overfitting se restituisce $h \in H$ con errore empirico $E$ e rischio $R$ quando esiste un’altra $h' \in H$ con $E' > E$ ma $R' < R$: un’ipotesi che si adatta peggio al training ma generalizza meglio.
+
+</Q>
+<Q q="Descrivere l’esempio del fitting polinomiale: cosa succede al variare di $M$ e di $l$?">
+
+Target $\sin(2\pi x)$ più rumore gaussiano, 10 punti, polinomi di grado $M$ fittati minimizzando la somma degli errori quadratici. $M = 0, 1$: underfitting. $M = 3$: buona approssimazione. $M = 9$: il polinomio passa per tutti i punti (errore di training nullo) ma oscilla violentemente, con coefficienti enormi e di segno alterno: overfitting, errore di test che esplode. A parità di $M = 9$, aumentando i dati ($l = 15$, $l = 100$) le oscillazioni si riducono: con più dati si possono usare modelli più complessi.
+
+</Q>
+<Q q="Scrivere il VC-bound e spiegare come giustifica underfitting e overfitting.">
+
+Con probabilità $1-\delta$: $R \le R_{emp} + \varepsilon(1/l, VC, 1/\delta)$, con $\varepsilon$ crescente nella VC-dim e decrescente in $l$. VC-dim bassa: $\varepsilon$ piccolo ma $R_{emp}$ alto (underfitting). VC-dim alta a $l$ fissato: $R_{emp}$ basso ma $\varepsilon$ grande, quindi bound alto (overfitting). Più dati abbassano $\varepsilon$. La SRM minimizza la somma, cercando il compromesso.
+
+</Q>
+<Q q="Differenza tra rischio $R$ e rischio empirico $R_{emp}$; cos’è il principio ERM?">
+
+$R = \int L(d, h(\mathbf{x}))\,dP(\mathbf{x}, d)$ è l’errore atteso su tutti i dati possibili, secondo la distribuzione sconosciuta $P$: non calcolabile. $R_{emp} = \frac1l\sum_p (d_p - h(\mathbf{x}_p))^2$ è l’errore medio sul training set finito. L’ERM sceglie i parametri minimizzando $R_{emp}$ come approssimazione di $R$; la SLT dice quando questa approssimazione è lecita.
+
+</Q>
+<Q q="Differenza tra model selection e model assessment; perché servono insiemi separati?">
+
+La model selection confronta modelli e iperparametri per sceglierne uno (restituisce un modello, usa il validation set); la model assessment stima l’errore del modello finale su dati nuovi (restituisce una stima, usa il test set). Se lo stesso insieme serve per scegliere e per stimare, la scelta sfrutta anche le fluttuazioni casuali di quei dati e la stima diventa ottimistica.
+
+</Q>
+<Q q="Definire accuratezza, sensibilità, specificità, precisione; cos’è la curva ROC?">
+
+Accuratezza $(TP+TN)/\text{totale}$; sensibilità (TP rate, recall) $TP/(TP+FN)$; specificità (TN rate) $TN/(FP+TN) = 1 - FPR$; precisione $TP/(TP+FP)$. La curva ROC traccia TPR contro FPR al variare della soglia di decisione: la diagonale è il classificatore casuale, le curve migliori salgono verso l’angolo in alto a sinistra; l’AUC vale 1 per il classificatore ideale e 0,5 per quello casuale.
+
+</Q>
+</Exam>

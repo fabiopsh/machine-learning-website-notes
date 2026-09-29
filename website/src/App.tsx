@@ -1,122 +1,79 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'
+import { CommandPalette } from './components/shell/CommandPalette'
+import { Sidebar } from './components/shell/Sidebar'
+import { Topbar } from './components/shell/Topbar'
+import { GlossaryPage } from './pages/GlossaryPage'
+import { Home } from './pages/Home'
+import { LessonPage } from './pages/LessonPage'
+import { useRoute } from './lib/router'
+import { getLesson } from './content/lessons'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const route = useRoute()
+  const [menu, setMenu] = useState(false)
+  const [search, setSearch] = useState(false)
+  const [toc, setToc] = useState(false)
+
+  // scorciatoie: Ctrl/⌘+K oppure "/" per cercare
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)
+      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !typing)) {
+        e.preventDefault()
+        setSearch(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // chiude i pannelli quando si cambia pagina (aggiornamento durante il render, senza effetti)
+  const pageKey = route.name === 'lesson' ? `lesson:${route.id}` : route.name
+  const [prevPage, setPrevPage] = useState(pageKey)
+  if (prevPage !== pageKey) {
+    setPrevPage(pageKey)
+    setMenu(false)
+    setToc(false)
+  }
+
+  useEffect(() => {
+    const t =
+      route.name === 'lesson'
+        ? `${getLesson(route.id)?.title ?? 'Lezione'} — ML`
+        : route.name === 'glossary'
+          ? 'Glossario — ML'
+          : 'Machine Learning — Appunti interattivi'
+    document.title = t
+  }, [route])
+
+  useEffect(() => {
+    document.body.style.overflow = menu || search ? 'hidden' : ''
+  }, [menu, search])
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <div className={`shell${menu ? ' menu-open' : ''}`}>
+      <div className="shell__side">
+        <Sidebar route={route} onNavigate={() => setMenu(false)} />
+      </div>
+      <div className="shell__scrim" onClick={() => setMenu(false)} />
+      <div className="shell__main">
+        <Topbar
+          route={route}
+          onMenu={() => setMenu(true)}
+          onSearch={() => setSearch(true)}
+          onToc={route.name === 'lesson' ? () => setToc(true) : undefined}
+        />
+        <main id="contenuto">
+          {route.name === 'lesson' ? (
+            <LessonPage route={route} tocOpen={toc} onCloseToc={() => setToc(false)} />
+          ) : route.name === 'glossary' ? (
+            <GlossaryPage term={route.term} />
+          ) : (
+            <Home />
+          )}
+        </main>
+      </div>
+      {search && <CommandPalette onClose={() => setSearch(false)} />}
+    </div>
   )
 }
-
-export default App

@@ -1,0 +1,430 @@
+/* ------------------------------------------------------------------ grafici */
+
+.plot {
+  position: relative;
+  width: 100%;
+  font-family: var(--font-sans);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+.plot svg {
+  overflow: visible;
+}
+.plot__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.axes__grid line {
+  stroke: var(--grid);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.axes__line {
+  stroke: var(--axis);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.axes__tick {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--tick);
+}
+.axes__label {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  fill: var(--ink-2);
+}
+.plot-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--ink-2);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.plot-label--muted {
+  fill: var(--ink-3);
+}
+.plot-label--math {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+}
+.plot-label--strong {
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.handle {
+  --h: var(--accent);
+  cursor: grab;
+  outline: none;
+  touch-action: none;
+}
+.handle.is-drag {
+  cursor: grabbing;
+}
+.handle--x {
+  cursor: ew-resize;
+}
+.handle--y {
+  cursor: ns-resize;
+}
+.handle__hit {
+  fill: transparent;
+}
+.handle__halo {
+  fill: var(--h);
+  opacity: 0.14;
+  transform: scale(0.6);
+  transition:
+    transform 0.2s var(--ease-out),
+    opacity 0.2s var(--ease);
+}
+.handle:hover .handle__halo,
+.handle.is-drag .handle__halo,
+.handle:focus-visible .handle__halo {
+  transform: scale(1);
+  opacity: 0.2;
+}
+.handle:focus-visible .handle__halo {
+  opacity: 0.32;
+}
+.handle__dot {
+  fill: var(--h);
+  stroke: var(--plot-bg);
+  stroke-width: 2.5;
+  transition: r 0.15s var(--ease);
+}
+
+.dot {
+  transition:
+    cx 0.35s var(--ease-out),
+    cy 0.35s var(--ease-out);
+}
+
+/* suggerimento flottante nei grafici */
+.ptip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 12px));
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow);
+}
+.ptip b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+/* layout comuni dentro le figure */
+.wgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.wgrid--even {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.wside {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 6px;
+}
+.wpanel {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.wpanel__title {
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+.wnote {
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+.wbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 18px;
+  margin-bottom: 8px;
+}
+.wmath {
+  font-size: 15px;
+  color: var(--ink);
+  overflow-x: auto;
+}
+.wmath .katex {
+  font-size: 1.05em;
+}
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 550;
+  background: var(--bg-sunken);
+  color: var(--ink-2);
+}
+.verdict::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vk, var(--ink-3));
+}
+.verdict--good {
+  --vk: var(--c-green);
+}
+.verdict--warn {
+  --vk: var(--c-orange);
+}
+.verdict--bad {
+  --vk: var(--c-red);
+}
+.verdict--info {
+  --vk: var(--c-blue);
+}
+
+@media (max-width: 700px) {
+  .wgrid,
+  .wgrid--even {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------------ mappa del corso */
+
+.cmap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--plot-bg);
+  overflow: hidden;
+}
+.fig .cmap {
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.cmap__scroll {
+  overflow-x: auto;
+  padding: 18px 18px 6px;
+}
+.cmap__svg {
+  width: 100%;
+  min-width: 640px;
+  height: auto;
+  font-family: var(--font-serif);
+}
+.cmap__theory {
+  fill: color-mix(in srgb, var(--c-blue) 4%, transparent);
+  stroke: var(--c-blue);
+  stroke-width: 1.4;
+  stroke-dasharray: 6 5;
+  opacity: 0.7;
+}
+.cmap__theory-label {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--c-blue);
+}
+.cmap__edge {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  transition:
+    stroke 0.2s var(--ease),
+    opacity 0.2s var(--ease),
+    stroke-width 0.2s var(--ease);
+}
+.cmap__edge--main {
+  stroke-width: 3.2;
+  stroke: var(--ink-3);
+}
+.cmap__edge--dash {
+  stroke-dasharray: 5 5;
+}
+.cmap__edge.is-dim {
+  opacity: 0.35;
+}
+.cmap__edge.is-hot {
+  stroke: var(--accent);
+  opacity: 1;
+}
+.cmap__arrowhead {
+  fill: var(--ink-3);
+}
+.cmap__arrowhead--hot {
+  fill: var(--accent);
+}
+.cmap__elabel {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  fill: var(--ink-3);
+}
+.cmap__node {
+  cursor: pointer;
+  outline: none;
+}
+.cmap__node rect {
+  fill: var(--plot-bg);
+  stroke: var(--line-2);
+  stroke-width: 1.6;
+  transition:
+    fill 0.2s var(--ease),
+    stroke 0.2s var(--ease);
+}
+.cmap__node.is-avail rect {
+  stroke: color-mix(in srgb, var(--c-orange) 70%, var(--line-2));
+}
+.cmap__node text {
+  font-size: 24px;
+  fill: var(--ink);
+  transition: fill 0.2s var(--ease);
+}
+.cmap__node text.cmap__small {
+  font-size: 17px;
+  fill: var(--ink-3);
+}
+.cmap__node:hover rect,
+.cmap__node.is-near rect {
+  stroke: var(--ink-3);
+}
+.cmap__node.is-active rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+.cmap__node:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.cmap__node.is-struck text {
+  fill: var(--ink-3);
+}
+.cmap__strike {
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+}
+.cmap__badge {
+  fill: var(--ink);
+  stroke: var(--plot-bg);
+  stroke-width: 3;
+}
+.cmap__node.is-active .cmap__badge {
+  fill: var(--accent);
+}
+.cmap__badge-num {
+  font-family: var(--font-mono);
+  font-size: 14px !important;
+  font-weight: 600;
+  fill: var(--bg) !important;
+}
+.cmap__node.is-active .cmap__badge-num {
+  fill: var(--on-accent) !important;
+}
+.cmap__ext path {
+  fill: color-mix(in srgb, var(--c-orange) 7%, var(--plot-bg));
+  stroke: var(--c-orange);
+  stroke-width: 1.4;
+  stroke-dasharray: 5 4;
+}
+.cmap__ext text {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  fill: var(--c-orange);
+}
+.cmap__ext.is-active path {
+  stroke-width: 2.2;
+}
+
+.cmap__info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 20px;
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-sans);
+  min-height: 132px;
+}
+.cmap__info-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  grid-column: 1;
+}
+.cmap__info-num {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+.cmap__info-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--ink);
+}
+.cmap__info p {
+  grid-column: 1;
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.cmap__lessons {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.cmap__actions {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: start;
+}
+@media (max-width: 640px) {
+  .cmap__info {
+    grid-template-columns: 1fr;
+  }
+  .cmap__actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}

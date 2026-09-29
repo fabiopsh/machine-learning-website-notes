@@ -1,0 +1,654 @@
+/* ------------------------------------------------------------------ sistema di ML */
+
+.mls__svg {
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.mls__frame {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1.4;
+}
+.mls__flow {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  animation: dash-flow 1.2s linear infinite;
+}
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+.mls__head {
+  fill: var(--ink-3);
+}
+.mls__box {
+  cursor: pointer;
+  outline: none;
+}
+.mls__box rect {
+  fill: var(--plot-bg);
+  stroke: color-mix(in srgb, var(--c-orange) 65%, var(--line-2));
+  stroke-width: 1.8;
+  transition:
+    fill 0.2s var(--ease),
+    stroke 0.2s var(--ease);
+}
+.mls__box--data rect,
+.mls__box--model rect {
+  stroke: color-mix(in srgb, var(--c-red) 75%, var(--line-2));
+  stroke-width: 2.2;
+}
+.mls__box--pred rect {
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+}
+.mls__box text {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  fill: var(--ink);
+}
+.mls__box text.mls__big {
+  font-size: 22px;
+  font-weight: 700;
+}
+.mls__box text.mls__pred {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.mls__box.is-sel rect,
+.mls__box:focus-visible rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.mls__learn {
+  fill: none;
+  stroke: var(--c-yellow);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.5;
+}
+.mls__brace {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 1.4;
+}
+.mls__small {
+  font-size: 13px;
+  fill: var(--ink-3);
+}
+.mls__info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  min-height: 52px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+}
+.mls__info-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.mls__info-text {
+  font-size: 14px;
+  color: var(--ink-2);
+  flex: 1;
+  min-width: 200px;
+}
+.mls__info-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+/* ------------------------------------------------------------------ one-hot */
+
+.onehot__svg {
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.onehot__edge line,
+.onehot__edge path {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 2;
+  transition: stroke 0.2s var(--ease);
+}
+.onehot__edge.is-hot line,
+.onehot__edge.is-hot path {
+  stroke: var(--accent);
+}
+.onehot__dist {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 15px;
+  color: var(--ink);
+}
+.onehot__dist .katex {
+  background: var(--plot-bg);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+.onehot__sym circle {
+  fill: color-mix(in srgb, var(--c-blue) 14%, var(--plot-bg));
+  stroke: var(--c-blue);
+  stroke-width: 2;
+}
+.onehot__sym text {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.onehot__sym text.is-small {
+  font-size: 11.5px;
+  font-family: var(--font-sans);
+}
+.onehot__table,
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+.onehot__table th,
+.mini-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.onehot__table td,
+.mini-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.onehot__table td:first-child {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+}
+.mini-table td.is-small {
+  color: var(--c-green);
+}
+
+/* ------------------------------------------------------------------ dati strutturati */
+
+.sdata {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.sgraph {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--bg-sunken);
+}
+.sgraph__title {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.sgraph__svg {
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.sgraph__edge line {
+  stroke: var(--ink-3);
+  stroke-width: 1.8;
+  transition: stroke 0.15s var(--ease);
+}
+.sgraph__edge.is-hot line {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.sgraph__head {
+  fill: var(--ink-3);
+}
+.sgraph__node {
+  cursor: default;
+}
+.sgraph__node circle,
+.sgraph__node rect {
+  fill: var(--plot-bg);
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+  transition:
+    fill 0.15s var(--ease),
+    stroke 0.15s var(--ease);
+}
+.sgraph__node--c circle {
+  fill: var(--ink-3);
+  stroke: none;
+}
+.sgraph__node--page line {
+  stroke: var(--ink-4);
+  stroke-width: 1.4;
+}
+.sgraph__node text {
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.sgraph__node.is-hot circle,
+.sgraph__node.is-hot rect {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.sgraph__node.is-hot text {
+  fill: var(--on-accent);
+}
+.sgraph__node.is-nbr circle,
+.sgraph__node.is-nbr rect {
+  stroke: var(--accent);
+  fill: var(--accent-soft);
+}
+.sgraph__node--c.is-nbr circle {
+  fill: var(--accent);
+}
+.sgraph__sub {
+  min-height: 34px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+@media (max-width: 720px) {
+  .sdata {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------------------------------------------ separatore lineare */
+
+.lsep__pt text {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  fill: #fff;
+  pointer-events: none;
+}
+.lsep__ring {
+  fill: none;
+  stroke: var(--c-red);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+  animation: spin 6s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------------------------------ scelta tra ipotesi */
+
+.hchoice__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 8px;
+}
+.hchoice__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--bg-sunken);
+}
+.hchoice__err {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.hchoice__err b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ ricerca in H */
+
+.hsearch__svg {
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+  font-family: var(--font-sans);
+}
+.hsearch__space {
+  fill: color-mix(in srgb, var(--c-blue) 12%, var(--plot-bg));
+  stroke: color-mix(in srgb, var(--c-blue) 60%, var(--plot-bg));
+  stroke-width: 1.6;
+}
+.hsearch__contour {
+  fill: none;
+  stroke: var(--c-blue);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+.hsearch__ok {
+  fill: color-mix(in srgb, var(--c-red) 26%, var(--plot-bg));
+  stroke: var(--c-red);
+  stroke-width: 1.4;
+}
+.hsearch__lbl {
+  font-size: 14px;
+  fill: var(--ink-2);
+}
+.hsearch__lbl--sub {
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+.hsearch__lbl--ok {
+  font-size: 12.5px;
+  fill: var(--ink-2);
+}
+.hsearch__lbl--strong {
+  font-weight: 600;
+  fill: var(--ink);
+  font-size: 13px;
+}
+.hsearch__step {
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+.hsearch__head {
+  fill: var(--ink-2);
+}
+.hsearch__pt {
+  fill: var(--ink);
+  stroke: var(--plot-bg);
+  stroke-width: 2;
+  animation: pop 0.3s var(--ease-out);
+}
+.hsearch__pt.is-start {
+  fill: var(--accent);
+}
+@keyframes pop {
+  from {
+    r: 0;
+  }
+}
+.hsearch__opt {
+  fill: var(--ink);
+  stroke: var(--plot-bg);
+  stroke-width: 2.5;
+  transition: r 0.3s var(--ease-out);
+}
+.hsearch__opt.is-reached {
+  fill: var(--accent);
+}
+.hsearch__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  flex: 1;
+}
+.hsearch__status b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ funzioni booleane */
+
+.bool__stats {
+  margin: 4px 0 14px;
+}
+.bool__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.bool__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.bool__table th {
+  text-transform: none;
+  position: sticky;
+  top: 0;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  padding: 7px 8px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.bool__table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.bool__table tr:last-child td {
+  border-bottom: 0;
+}
+.bool__table tr.is-train {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.bool__no {
+  width: 34px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--accent-ink);
+}
+.bool__bit {
+  width: 34px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+.bool__y {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--plot-bg);
+}
+.bool__y--1 {
+  border-color: var(--c-blue);
+  color: var(--c-blue);
+}
+.bool__y--0 {
+  border-color: var(--c-orange);
+  color: var(--c-orange);
+}
+.bool__none {
+  font-size: 12px;
+  color: var(--c-red);
+}
+.bool__act {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+.bool__mini {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 7px;
+  margin-left: 4px;
+  border-radius: 6px;
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+}
+.bool__mini:hover {
+  color: var(--accent-ink);
+  border-color: var(--accent-line);
+}
+.vote {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.vote__bar {
+  position: relative;
+  width: 110px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--c-orange);
+  overflow: hidden;
+  opacity: 0.8;
+}
+.vote__one {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--c-blue);
+  transition: width 0.35s var(--ease-out);
+}
+.vote__txt {
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.vote.is-certain .vote__txt {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--ink);
+}
+.bool__vs {
+  margin-top: 12px;
+}
+.bool__hyps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ------------------------------------------------------------------ induttivo / deduttivo */
+
+.ind__svg {
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.ind__title {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--ink-3);
+}
+.ind__box {
+  fill: var(--plot-bg);
+  stroke: var(--ink-2);
+  stroke-width: 2;
+}
+.ind__boxtxt {
+  font-size: 17px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.ind__boxsub {
+  font-size: 14px;
+  fill: var(--ink-3);
+}
+.ind__in text {
+  font-size: 15px;
+  fill: var(--ink-2);
+}
+.ind__in line {
+  stroke: var(--ink-2);
+  stroke-width: 2.2;
+}
+.ind__head {
+  fill: var(--ink-2);
+}
+.ind__in--bias text {
+  fill: var(--accent-ink);
+  font-weight: 600;
+}
+.ind__in--bias line {
+  stroke: var(--accent);
+  stroke-width: 2.8;
+  stroke-dasharray: 7 5;
+  animation: dash-flow 1.2s linear infinite;
+}
+.ind__in.is-hot line {
+  stroke: var(--accent);
+}
+.ind__in.is-hot text {
+  fill: var(--accent-ink);
+}
+.ind__eq {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  fill: var(--ink-4);
+}
+.ind__tip {
+  min-height: 44px;
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ Kanizsa */
+
+.kan__svg {
+  display: block;
+  width: min(100%, 360px);
+  height: auto;
+  margin: 0 auto;
+}
+.kan__pac {
+  fill: var(--ink);
+}
+.kan__line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 4;
+}
+.kan__ghost {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  animation: fade-in 0.4s var(--ease);
+}
+
+.mse__calc {
+  font-size: 13px;
+}

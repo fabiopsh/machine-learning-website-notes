@@ -18,5 +18,10 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // i file dei widget esportano anche piccole utilità accanto ai componenti:
+      // costa solo un ricaricamento completo in sviluppo, non un bug
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ])

@@ -1,0 +1,117 @@
+/* ------------------------------------------------------------------
+   Design tokens
+   Carta + inchiostro + un solo accento (carminio) per tutto ciò che è
+   interattivo. I colori dei grafici hanno ruoli fissi (vedi --c-*).
+   ------------------------------------------------------------------ */
+
+:root {
+  --font-serif: 'Newsreader Variable', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-sans: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Consolas, monospace;
+
+  --sidebar-w: 284px;
+  --toc-w: 216px;
+  --topbar-h: 56px;
+  --measure: 690px;
+  --col: 800px;
+
+  --radius: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  color-scheme: light;
+  --bg: #f6f4ef;
+  --bg-elev: #fcfbf8;
+  --bg-sunken: #eeebe3;
+  --bg-hover: rgba(28, 27, 24, 0.05);
+  --bg-glass: rgba(246, 244, 239, 0.82);
+  --ink: #1c1b18;
+  --ink-2: #34322d;
+  --ink-3: #69655c;
+  --ink-4: #9a958a;
+  --line: #e3dfd5;
+  --line-2: #d2ccbf;
+
+  --accent: #b8284a;
+  --accent-ink: #a01f3f;
+  --accent-soft: rgba(184, 40, 74, 0.08);
+  --accent-line: rgba(184, 40, 74, 0.32);
+  --on-accent: #ffffff;
+  --focus: 0 0 0 3px rgba(184, 40, 74, 0.28);
+
+  /* ruoli nei grafici (palette categoriale validata, slot 1-3 + violet/red) */
+  --c-blue: #2a78d6;
+  --c-orange: #eb6834;
+  --c-green: #1baf7a;
+  --c-violet: #4a3aa7;
+  --c-red: #e34948;
+  --c-yellow: #eda100;
+  --c-magenta: #e87ba4;
+  --plot-bg: #fcfbf8;
+  --grid: #ebe7de;
+  --axis: #c3bdb0;
+  --tick: #8d887e;
+
+  /* tipi di riquadro */
+  --k-def: #2459a8;
+  --k-thm: #5a3fae;
+  --k-ex: #13795b;
+  --k-note: #6b675e;
+  --k-tip: #976200;
+  --k-warn: #c2410c;
+  --k-sum: #a01f3f;
+  --k-q: #2f5f73;
+
+  --shadow-sm: 0 1px 2px rgba(40, 30, 10, 0.06);
+  --shadow: 0 1px 2px rgba(40, 30, 10, 0.04), 0 12px 32px -16px rgba(40, 30, 10, 0.18);
+  --shadow-lg: 0 2px 6px rgba(40, 30, 10, 0.06), 0 24px 64px -24px rgba(40, 30, 10, 0.32);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #131311;
+  --bg-elev: #1b1a18;
+  --bg-sunken: #0e0e0c;
+  --bg-hover: rgba(255, 250, 240, 0.055);
+  --bg-glass: rgba(19, 19, 17, 0.8);
+  --ink: #f3f0e8;
+  --ink-2: #d9d5cb;
+  --ink-3: #a29d91;
+  --ink-4: #6e6a61;
+  --line: #2a2926;
+  --line-2: #3b3934;
+
+  --accent: #f0718e;
+  --accent-ink: #f58aa3;
+  --accent-soft: rgba(240, 113, 142, 0.11);
+  --accent-line: rgba(240, 113, 142, 0.38);
+  --on-accent: #1d0a10;
+  --focus: 0 0 0 3px rgba(240, 113, 142, 0.3);
+
+  --c-blue: #3987e5;
+  --c-orange: #d95926;
+  --c-green: #199e70;
+  --c-violet: #9085e9;
+  --c-red: #e66767;
+  --c-yellow: #c98500;
+  --c-magenta: #d55181;
+  --plot-bg: #1b1a18;
+  --grid: #272623;
+  --axis: #403e39;
+  --tick: #8a857a;
+
+  --k-def: #7fa9ee;
+  --k-thm: #aa9af0;
+  --k-ex: #4cc39a;
+  --k-note: #a29d91;
+  --k-tip: #e3b24c;
+  --k-warn: #f08a5d;
+  --k-sum: #f58aa3;
+  --k-q: #7fc1d8;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.35), 0 24px 64px -24px rgba(0, 0, 0, 0.75);
+}
