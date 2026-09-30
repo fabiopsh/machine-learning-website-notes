@@ -66,17 +66,14 @@ main {
   text-decoration: none;
   color: var(--ink);
 }
-.brand__bg {
-  fill: var(--ink);
-}
-.brand__curve {
-  fill: none;
-  stroke: var(--bg);
-  stroke-width: 2.4;
-  stroke-linecap: round;
-}
-.brand__dot {
-  fill: var(--accent);
+/* sigillo dell'Università di Pisa, colorato con il token dell'inchiostro */
+.brand__mark {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  background: var(--ink);
+  -webkit-mask: url('../assets/unipi-seal.svg') center / contain no-repeat;
+  mask: url('../assets/unipi-seal.svg') center / contain no-repeat;
 }
 .brand__text {
   display: flex;
@@ -311,6 +308,12 @@ a.sidebar__lesson:hover {
 .icon-btn:hover {
   background: var(--bg-hover);
   color: var(--ink);
+}
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: none;
+  color: var(--ink-2);
 }
 
 .search-btn {

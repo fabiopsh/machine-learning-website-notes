@@ -27,13 +27,7 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
     <nav className="sidebar" aria-label="Lezioni del corso">
       <div className="sidebar__scroll">
         <a className="brand" href="#/" onClick={onNavigate}>
-          <span className="brand__mark" aria-hidden="true">
-            <svg viewBox="0 0 32 32" width="30" height="30">
-              <rect width="32" height="32" rx="9" className="brand__bg" />
-              <path d="M7 21.5 C 11 21.5, 12 10.5, 16 10.5 S 21 21.5, 25 21.5" className="brand__curve" />
-              <circle cx="16" cy="10.5" r="2.6" className="brand__dot" />
-            </svg>
-          </span>
+          <span className="brand__mark" aria-hidden="true" />
           <span className="brand__text">
             <span className="brand__title">Machine Learning</span>
             <span className="brand__sub">Appunti interattivi · 654AA</span>

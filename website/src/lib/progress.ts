@@ -35,6 +35,17 @@ export function recordProgress(id: string, pct: number) {
   listeners.forEach((l) => l())
 }
 
+/** Azzera l'avanzamento di tutte le lezioni. */
+export function clearProgress() {
+  store = {}
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    /* storage non disponibile */
+  }
+  listeners.forEach((l) => l())
+}
+
 export function useProgress(): Store {
   return useSyncExternalStore(
     (cb) => {

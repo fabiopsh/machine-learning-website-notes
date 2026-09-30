@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getLesson, partOf } from '../../content/lessons'
+import { clearProgress, useProgress } from '../../lib/progress'
 import { useLook, useTheme } from '../../lib/theme'
 import type { Route } from '../../lib/router'
 import { Icon } from '../ui/Icon'
@@ -37,6 +38,7 @@ type Props = {
 export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
   const { theme, toggle } = useTheme()
   const { look, toggle: toggleLook } = useLook()
+  const hasProgress = Object.keys(useProgress()).length > 0
   const isLesson = route.name === 'lesson'
   const { pct, scrolled } = useScrollState(isLesson)
   const lesson = isLesson ? getLesson(route.id) : undefined
@@ -76,6 +78,17 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
             <Icon name="list" size={19} />
           </button>
         )}
+        <button
+          className="icon-btn progress-btn"
+          onClick={() => {
+            if (window.confirm('Azzerare l’avanzamento di lettura di tutte le lezioni?')) clearProgress()
+          }}
+          disabled={!hasProgress}
+          aria-label="Azzera l’avanzamento di lettura"
+          title="Azzera l’avanzamento di lettura"
+        >
+          <Icon name="reset" size={18} />
+        </button>
         <button
           className={`icon-btn look-btn${look === 'glass' ? ' is-on' : ''}`}
           onClick={toggleLook}

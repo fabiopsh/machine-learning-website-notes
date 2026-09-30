@@ -221,15 +221,6 @@
 :root[data-style='glass'] .sidebar__scroll {
   padding: 2px 9px 12px 14px;
 }
-:root[data-style='glass'] .brand__bg {
-  fill: var(--accent);
-}
-:root[data-style='glass'] .brand__curve {
-  stroke: #fff;
-}
-:root[data-style='glass'] .brand__dot {
-  fill: #fff;
-}
 :root[data-style='glass'] .sidebar__links a.is-active,
 :root[data-style='glass'] .sidebar__lesson.is-active {
   background: var(--glass-inner);
