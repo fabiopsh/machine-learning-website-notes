@@ -12,7 +12,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 03 | 03 - Concetti fondamentali del ML.md | ✅ fatta | Lezioni 2–3 | 3.1–3.14 |
 | 04 | 04 - Generalizzazione e validazione (introduzione).md | ✅ fatta | Lezione 4 | 4.1–4.10 |
 | 05 | 05 - Modelli lineari e K-nearest neighbors.md | ✅ fatta | (non indicato) | 5.1–5.23 |
-| 06 | 06 - Reti neurali (parte 1) - dal neurone al MLP.md | ⏳ da fare | | |
+| 06 | 06 - Reti neurali (parte 1) - dal neurone al MLP.md | ✅ fatta | (non indicato) | 6.1–6.15 |
 | 07 | 07 - Note sulla backpropagation.md | ⏳ da fare | | |
 | 08 | 08 - Reti neurali (parte 2) - addestramento in pratica.md | ⏳ da fare | | |
 | 09 | 09 - Validazione (parte 1) - model selection e assessment.md | ⏳ da fare | | |
@@ -49,6 +49,7 @@ Decisioni di stile confermate dall'utente:
   TR/VL/TS in token (`--split-*`). `Surface3D` accetta `plane` (piano orizzontale ordinato in profondità) e
   `floor={false}`; `lib/math.ts` ha `lstsq` e `ridgePolyfit`.
 - 2026-09-30 — Lezione 05 (modelli lineari e K-NN), 23 figure.
+- 2026-09-30 — Lezione 06 (reti neurali, parte 1), 15 figure; componente comune `widgets/l06/NetSvg.tsx` per disegnare reti a strati.
 
 ## Immagini degli appunti → figure del sito
 
@@ -122,6 +123,24 @@ abla E$ sulla superficie, retta e residui corrispondenti.
 - `05-knn_scala.png` → Fig. 5.22 `ScaleNN` — riscalando $x_1$ cambia il vicino più prossimo.
 - `05-knn_curse.png` → Fig. 5.23 `Curse` — sottocubo nel cubo unitario e curve lato $= r^{1/n}$ per $n = 1, 2, 3, 10$; modalità «frazione» e «lato».
 
+### 06 — Reti neurali (parte 1)
+
+- `06-nn1_neurone-biologico.png` → Fig. 6.1 `BioNeuron` — schema del neurone con le parti spiegate al passaggio, sinapsi eccitatorie/inibitoria cliccabili, potenziale con soglia, spike lungo l’assone, plasticità hebbiana.
+- `06-nn1_unita.png` → Fig. 6.2 `Unit` — unità con input, pesi, bias $x_0 = 1$, $\Sigma$ e $f$ selezionabile.
+- `06-nn1_attivazioni.png` → Fig. 6.3 `Activations` — lineare, soglia e logistica applicate allo stesso input netto.
+- `06-nn1_perceptron-rosenblatt.png` → Fig. 6.4 `Rosenblatt` — retina 8 × 8 disegnabile, 16 unità associative, risposta Ψ con pesi appresi dal Perceptron (X contro O).
+- `06-nn1_and-or.png` → Fig. 6.5 `BoolPerceptron` — AND, OR e NOT con rete, tabella di verità e retta; pesi regolabili.
+- `06-nn1_xor-rete.png` → Fig. 6.6 `XorNetwork` — rete AND/OR per lo XOR, trasformazione continua dallo spazio degli input allo spazio $(h_1, h_2)$.
+- `06-nn1_perceptron-geometria.png` → Fig. 6.7 `PerceptronStep` — $\mathbf{w}$, $\eta d\mathbf{x}$ e $\mathbf{w}_{new}$ come somma di vettori, confini prima/dopo, epoca completa.
+- `06-nn1_convergenza.png` → Fig. 6.8 `ConvergenceBound` — limiti $(q\alpha)^2/\|\mathbf{w}^*\|^2$ e $q\beta$, $q_{max}$, esecuzione reale del Perceptron, separazione regolabile.
+- `06-nn1_lms-vs-perc.png` → Fig. 6.9 `LmsVsPerceptron` — soluzione LMS che sbaglia un punto di un problema separabile, due Perceptron che separano; punto lontano trascinabile.
+- `06-nn1_sigmoidi.png` → Fig. 6.10 `Sigmoids` — logistica con $a = 0{,}5; 1; 2$ più $a$ a scelta, tangente iperbolica, limiti $a \to 0$ e $a \to \infty$.
+- `06-nn1_derivate-sigmoide.png` → Fig. 6.11 `SigmoidDerivatives` — $f_\sigma$, $f'_\sigma$, $f''_\sigma$, zone di saturazione, ampiezza della correzione.
+- `06-nn1_due-viste.png` → Fig. 6.12 `TwoViews` — rete 2-3-1 e formula annidata con i valori per l’input scelto, collegate al passaggio.
+- `06-nn1_architettura.png` → Fig. 6.13 `Architectures` — MLP a due strati e a tre strati con connessioni che saltano, elaborazione feedforward passo passo.
+- `06-nn1_multi-output.png` → Fig. 6.14 `MultiOutput` — tre uscite ($0{,}2;\ 0{,}7;\ 0{,}1$ all’inizio) e classe vincente.
+- Figura aggiunta: 6.15 `UniversalApprox` — costruzione «a gradini» con unità logistiche (seno o gobba), errore massimo al variare delle unità.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -130,6 +149,12 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 06: lettura della disuguaglianza di Cauchy-Schwarz ($\cos^2\theta \le 1$); intuizione della costruzione a
+  gradini per l’approssimazione universale (con la figura 6.15, dichiarata come non-dimostrazione); letture e
+  spiegazioni delle formule; tracce di risposta. Nelle figure: parametri del neurone biologico illustrativi
+  (soglia, perdita di potenziale, rinforzo hebbiano); nel Perceptron di Rosenblatt le unità associative sono
+  blocchi 2 × 2 (in origine collegamenti casuali) e i pesi sono appresi su lettere X/O generate; i dati di
+  6.7–6.9 sono costruiti (6.9 imita Hastie et al. Fig. 4.14); pesi della rete di 6.12 e 6.14 scelti a mano.
 - 05: derivazione della soluzione in forma chiusa dal gradiente nullo; valori di $\delta$ ed $\eta$
   nell’esempio della delta rule ($\eta = 0{,}3/1{,}4$); perché $X^TX + \lambda I$ è sempre invertibile;
   «lettura» e spiegazione delle formule con anatomia; tracce di risposta (per lo XOR l’argomento del punto

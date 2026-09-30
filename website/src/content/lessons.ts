@@ -53,7 +53,9 @@ export const parts: LessonPart[] = [
       L('05', 'Modelli lineari e K-nearest neighbors', {
         summary: 'Regressione e classificazione lineare con LMS, equazioni normali e discesa del gradiente, regolarizzazione; poi il K-NN, il classificatore di Bayes e la maledizione della dimensionalità.',
       }),
-      L('06', 'Reti neurali (parte 1) — dal neurone al MLP'),
+      L('06', 'Reti neurali (parte 1) — dal neurone al MLP', {
+        summary: 'Dal neurone biologico al Perceptron e al suo teorema di convergenza, le sigmoidi, il Multi-Layer Perceptron come espansione in basi adattiva e approssimatore universale.',
+      }),
       L('07', 'Note sulla backpropagation'),
       L('08', 'Reti neurali (parte 2) — addestramento in pratica'),
     ],

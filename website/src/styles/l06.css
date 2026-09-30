@@ -1,0 +1,548 @@
+/* ------------------------------------------------------------------ reti disegnate (NetSvg) */
+
+.net {
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+  overflow: visible;
+}
+.net__arrowhead {
+  fill: var(--ink-3);
+}
+.net__edge line {
+  stroke: var(--ink-4);
+  transition:
+    stroke 0.2s var(--ease),
+    opacity 0.2s var(--ease);
+}
+.net__edge.is-pos line {
+  stroke: color-mix(in srgb, var(--c-blue) 70%, var(--ink-4));
+}
+.net__edge.is-neg line {
+  stroke: color-mix(in srgb, var(--c-orange) 75%, var(--ink-4));
+}
+.net__edge.is-hot line {
+  stroke: var(--accent);
+}
+.net__edge.is-dim {
+  opacity: 0.25;
+}
+.net__elabel {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  fill: var(--ink-2);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.net__side {
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+.net__out {
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+}
+.net__node circle:first-child {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+  transition:
+    stroke 0.2s var(--ease),
+    opacity 0.2s var(--ease);
+}
+.net__node--input circle:first-child {
+  stroke: var(--ink-4);
+}
+.net__node--hidden circle:first-child {
+  stroke: var(--c-yellow);
+  stroke-width: 2;
+}
+.net__node--output circle:first-child {
+  stroke: var(--ink);
+  stroke-width: 2.2;
+}
+.net__node--bias circle:first-child {
+  stroke-dasharray: 3 3;
+}
+.net__node.is-hot circle:first-child {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.net__node.is-dim {
+  opacity: 0.35;
+}
+.net__fill {
+  fill: var(--c-blue);
+  transition: opacity 0.2s var(--ease);
+}
+.net__fill.is-neg {
+  fill: var(--c-orange);
+}
+.net__label {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 3px;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ neurone biologico */
+
+.wscroll {
+  overflow-x: auto;
+}
+.bio__svg {
+  display: block;
+  min-width: 540px;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.bio__part {
+  cursor: help;
+}
+.bio__dend path,
+.bio__axon path,
+.bio__term path {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  transition: stroke 0.2s var(--ease);
+}
+.bio__term circle {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+  stroke-width: 2.4;
+}
+.bio__soma ellipse {
+  fill: color-mix(in srgb, var(--c-yellow) 14%, var(--surface));
+  stroke: var(--ink-3);
+  stroke-width: 2.4;
+  transition:
+    fill 0.2s var(--ease),
+    stroke 0.2s var(--ease);
+}
+.bio__soma.is-firing ellipse {
+  fill: color-mix(in srgb, var(--accent) 28%, var(--surface));
+  stroke: var(--accent);
+}
+.bio__nucleus {
+  fill: color-mix(in srgb, var(--ink) 18%, var(--surface));
+}
+.bio__myelin rect {
+  fill: color-mix(in srgb, var(--c-blue) 22%, var(--surface));
+  stroke: color-mix(in srgb, var(--c-blue) 55%, var(--line-2));
+  stroke-width: 1.4;
+}
+.bio__part.is-hot path,
+.bio__part.is-hot rect,
+.bio__part.is-hot circle,
+.bio__part.is-hot ellipse {
+  stroke: var(--accent);
+}
+.bio__syn {
+  cursor: pointer;
+  outline: none;
+}
+.bio__syn circle {
+  fill: color-mix(in srgb, var(--c-blue) 18%, var(--surface));
+  stroke: var(--c-blue);
+  stroke-width: 2;
+  transition: r 0.25s var(--ease-out);
+}
+.bio__syn.is-inh circle {
+  fill: color-mix(in srgb, var(--c-orange) 18%, var(--surface));
+  stroke: var(--c-orange);
+}
+.bio__syn:hover circle,
+.bio__syn:focus-visible circle {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.bio__syn text {
+  font-size: 16px;
+  font-weight: 700;
+  fill: var(--ink);
+  pointer-events: none;
+}
+.bio__spike {
+  fill: var(--accent);
+  offset-distance: 0%;
+  animation: bio-spike 0.8s var(--ease) forwards;
+}
+@keyframes bio-spike {
+  from {
+    offset-distance: 0%;
+    opacity: 1;
+  }
+  to {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+.bio__meter {
+  fill: var(--surface);
+  stroke: var(--line-2);
+}
+.bio__level {
+  fill: var(--c-green);
+}
+.bio__thresh {
+  stroke: var(--c-red);
+  stroke-width: 1.6;
+  stroke-dasharray: 4 3;
+}
+.bio__lbl {
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+.bio__lbl--io {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  fill: var(--k-def);
+}
+.bio__info {
+  min-height: 2.8em;
+  margin: 4px 0 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+/* ------------------------------------------------------------------ unità artificiale */
+
+.unit__svg {
+  display: block;
+  min-width: 520px;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+  margin-bottom: 6px;
+}
+.unit__head,
+.unit__sym {
+  font-size: 12.5px;
+  fill: var(--ink-3);
+}
+.unit__edge {
+  stroke: var(--ink-4);
+}
+.unit__edge.is-pos {
+  stroke: color-mix(in srgb, var(--c-blue) 70%, var(--ink-4));
+}
+.unit__edge.is-neg {
+  stroke: color-mix(in srgb, var(--c-orange) 75%, var(--ink-4));
+}
+.unit__edge.is-out {
+  stroke: var(--ink-3);
+  stroke-width: 2;
+}
+.unit__arrow {
+  fill: var(--ink-3);
+}
+.unit__in circle {
+  fill: var(--surface);
+  stroke: var(--ink-4);
+  stroke-width: 1.6;
+}
+.unit__in.is-bias circle {
+  stroke-dasharray: 3 3;
+}
+.unit__in text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--ink);
+}
+.unit__in text.unit__sym {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--ink-2);
+}
+.unit__w {
+  fill: var(--surface);
+  stroke: var(--line-2);
+}
+.unit__wtxt {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  fill: var(--ink-2);
+}
+.unit__node circle {
+  fill: var(--surface);
+  stroke: var(--ink-2);
+  stroke-width: 2;
+}
+.unit__split {
+  stroke: var(--ink-3);
+  stroke-dasharray: 4 3;
+}
+.unit__big {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  fill: var(--ink);
+}
+.unit__big--f {
+  font-style: italic;
+  fill: var(--accent-ink);
+}
+.unit__out {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  fill: var(--accent-ink);
+}
+.unit__sliders {
+  display: grid;
+  gap: 8px;
+}
+.act3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .act3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------------------------------------------ Perceptron di Rosenblatt */
+
+.ros {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.ros__col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.ros__col--out {
+  flex: 0 1 140px;
+  align-items: flex-start;
+}
+.ros__arrow {
+  align-self: center;
+  font-size: 22px;
+  color: var(--ink-4);
+}
+.ros__retina {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  touch-action: none;
+}
+.ros__cell {
+  border-radius: 3px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  cursor: crosshair;
+}
+.ros__cell.is-on {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.ros__phi {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  max-width: 200px;
+}
+.ros__unit {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1.5px solid var(--line-2);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-4);
+}
+.ros__unit.is-on.is-pos {
+  background: color-mix(in srgb, var(--c-blue) 22%, var(--surface));
+  border-color: var(--c-blue);
+  color: var(--ink);
+}
+.ros__unit.is-on.is-neg {
+  background: color-mix(in srgb, var(--c-orange) 22%, var(--surface));
+  border-color: var(--c-orange);
+  color: var(--ink);
+}
+.ros__out {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 18px;
+  border: 2px solid var(--ink-2);
+  background: var(--surface);
+  font-family: var(--font-serif);
+  font-size: 54px;
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ funzioni booleane e XOR */
+
+.bool6 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+.bool6__left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .bool6 {
+    grid-template-columns: 1fr;
+  }
+}
+.bool6__net {
+  max-width: 300px;
+}
+.bool6__halo {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+
+/* ------------------------------------------------------------------ Perceptron: passi e convergenza */
+
+.pl__pt {
+  outline: none;
+}
+.pl__name {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 3px;
+}
+
+/* ------------------------------------------------------------------ sigmoidi */
+
+.sig6__zone rect {
+  fill: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.sig6__bar {
+  display: block;
+  height: 10px;
+  margin: 4px 0 8px;
+  border-radius: 99px;
+  background: var(--line);
+  overflow: hidden;
+}
+.sig6__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--c-red);
+  transition: width 0.15s var(--ease);
+}
+
+/* ------------------------------------------------------------------ MLP */
+
+.two6__formula {
+  margin: 4px 0 12px;
+}
+.two6__table tr.is-hot td {
+  background: var(--accent-soft);
+}
+.two6__table {
+  margin-bottom: 12px;
+}
+.arch6__steps {
+  margin: 0;
+  padding-left: 1.3em;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.arch6__steps li {
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition:
+    background-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+.arch6__steps li.is-on {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.arch6__steps li.is-skip {
+  text-decoration: line-through;
+  color: var(--ink-4);
+}
+.multi6__val {
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+.multi6__val.is-best {
+  fill: var(--accent-ink);
+  font-weight: 650;
+}
+.multi6__bars {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.multi6__bars li {
+  display: grid;
+  grid-template-columns: 70px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-3);
+}
+.multi6__bars li.is-best {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.multi6__bars b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink);
+  text-align: right;
+}
+.multi6__bar {
+  display: block;
+  height: 10px;
+  border-radius: 99px;
+  background: var(--line);
+  overflow: hidden;
+}
+.multi6__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--c-violet);
+}
+.multi6__bars li.is-best .multi6__bar span {
+  background: var(--accent);
+}

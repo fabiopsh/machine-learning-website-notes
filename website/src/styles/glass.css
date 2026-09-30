@@ -794,6 +794,44 @@
   rx: 14px;
 }
 
+/* lezione 6: retina, unità associative, barre, passi del feedforward */
+:root[data-style='glass'] .ros__retina {
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-style='glass'] .ros__cell {
+  border-radius: 4px;
+}
+:root[data-style='glass'] .ros__unit,
+:root[data-style='glass'] .ros__out {
+  border-radius: 14px;
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .ros__out {
+  border-radius: 22px;
+  background: var(--glass-inner);
+}
+:root[data-style='glass'] .ros__unit.is-on,
+:root[data-style='glass'] .sig6__bar span,
+:root[data-style='glass'] .multi6__bar span {
+  background-image: var(--gloss);
+  box-shadow: var(--gloss-rim);
+}
+:root[data-style='glass'] .sig6__bar,
+:root[data-style='glass'] .multi6__bar {
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-style='glass'] .arch6__steps li {
+  border-radius: 12px;
+}
+:root[data-style='glass'] .arch6__steps li.is-on {
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+:root[data-style='glass'] .bio__myelin rect {
+  rx: 10px;
+}
+
 /* ------------------------------------------------------------------ mobile e riduzione del movimento */
 
 @media (max-width: 1023px) {
