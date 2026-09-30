@@ -877,6 +877,52 @@ export const glossary: GlossaryEntry[] = [
     lesson: '09',
     section: 'Misure d’errore per la valutazione',
   },
+  // ------------------------------------------------------------------ 10
+  {
+    id: 'iid',
+    term: 'i.i.d.',
+    en: 'indipendenti e identicamente distribuiti',
+    def: 'Dati estratti tutti dalla stessa distribuzione $p(z)$, ciascuno indipendentemente dagli altri: l’ipotesi su cui poggiano le stime del rischio.',
+    lesson: '10',
+    section: 'Notazione',
+  },
+  {
+    id: 'leave-one-out',
+    term: 'Leave-one-out CV',
+    en: 'LOOCV',
+    def: 'La K-fold cross-validation con $K = l$: ogni fold contiene un solo esempio, che a turno viene lasciato fuori.',
+    lesson: '10',
+    section: 'K-fold cross-validation',
+  },
+  {
+    id: 'design-set',
+    term: 'Design set',
+    def: 'La parte dei dati usata per costruire il modello finale (training e validazione), separata dal test set.',
+    lesson: '10',
+    section: 'K-fold CV per la selezione + hold-out per il test',
+  },
+  {
+    id: 'double-cv',
+    term: 'Double (nested) cross-validation',
+    def: 'Per ogni fold esterno, una cross-validation interna sugli altri dati sceglie gli iperparametri; la media degli errori sui fold esterni stima il rischio della classe di modelli. Non restituisce un modello unico.',
+    lesson: '10',
+    section: 'Double (nested) K-fold CV',
+  },
+  // ------------------------------------------------------------------ 11
+  {
+    id: 'ensemble',
+    term: 'Ensemble',
+    def: 'Uso di più modelli insieme, combinandone le uscite (media o voto) invece di sceglierne uno.',
+    lesson: '11',
+    section: 'Inizializzazione casuale e model selection',
+  },
+  {
+    id: 'selezione-sequenziale',
+    term: 'Selezione sequenziale degli iperparametri',
+    def: 'Scegliere gli iperparametri uno alla volta (es. prima $\\eta$, poi il numero di unità): introduce un bias legato all’ordine, perché ignora gli effetti incrociati. Va evitata a favore di una griglia su tutte le combinazioni.',
+    lesson: '11',
+    section: 'Selezione sequenziale degli iperparametri',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

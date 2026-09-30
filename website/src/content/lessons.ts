@@ -71,8 +71,12 @@ export const parts: LessonPart[] = [
       L('09', 'Validazione (parte 1) — model selection e assessment', {
         summary: 'Perché le stime sbagliano: model selection contro model assessment, il controesempio del target casuale, grid e random search, K-fold CV, campionamento e misure d’errore.',
       }),
-      L('10', 'Validazione (parte 2) — schemi formali'),
-      L('11', 'Validazione (parte 3) — errori tipici e FAQ'),
+      L('10', 'Validazione (parte 2) — schemi formali', {
+        summary: 'Rischio e rischio empirico, poi gli schemi rigorosi: model selection e model assessment con hold-out e K-fold CV, e come combinarli (TR–VL–TS, CV + test, double CV).',
+      }),
+      L('11', 'Validazione (parte 3) — errori tipici e FAQ', {
+        summary: 'Gli errori più frequenti: epoche fisse, early stopping nella CV, inizializzazioni casuali, selezione sequenziale, test usato per riprogettare, CV in overfitting; quale CV scegliere ed esempi.',
+      }),
       L('12', 'Statistical Learning Theory e VC-dimension'),
     ],
   },

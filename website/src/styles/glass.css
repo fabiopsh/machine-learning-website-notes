@@ -855,6 +855,41 @@
   background-image: var(--gloss);
 }
 
+/* lezione 10: blocchi dei fold, tabella, rami della nested CV */
+:root[data-style='glass'] .cv10__seg:not(.cv10__seg--gap),
+:root[data-style='glass'] .cv10__mbar span {
+  background-image: var(--gloss);
+  box-shadow: var(--gloss-rim);
+}
+:root[data-style='glass'] .cv10__seg--fold {
+  box-shadow: var(--gloss-rim), inset 0 0 0 1px var(--line-2);
+}
+:root[data-style='glass'] .cv10__seg {
+  border-radius: 8px;
+}
+:root[data-style='glass'] .cv10__bar--thin .cv10__seg {
+  border-radius: 5px;
+}
+:root[data-style='glass'] .cv10__bar,
+:root[data-style='glass'] .cv10__line {
+  border-radius: 12px;
+}
+:root[data-style='glass'] .cv10__mbar {
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-style='glass'] .cv10__mrow,
+:root[data-style='glass'] .nf10__box {
+  border-radius: 12px;
+}
+:root[data-style='glass'] .nf10__branch {
+  border-radius: 18px;
+  background: var(--surface);
+}
+:root[data-style='glass'] .nf10__branch.is-on {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
 /* ------------------------------------------------------------------ mobile e riduzione del movimento */
 
 @media (max-width: 1023px) {

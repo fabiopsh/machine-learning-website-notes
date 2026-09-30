@@ -16,7 +16,7 @@ const meta: Record<CalloutType, { label: string; icon: IconName }> = {
 
 type CalloutProps = {
   type?: CalloutType
-  title?: string
+  title?: ReactNode
   /** etichetta alternativa (es. "Esercizio") */
   label?: string
   children: ReactNode

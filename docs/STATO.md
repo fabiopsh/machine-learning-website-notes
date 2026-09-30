@@ -16,7 +16,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 07 | 07 - Note sulla backpropagation.md | ✅ fatta | (non indicato) | 7.1–7.5 |
 | 08 | 08 - Reti neurali (parte 2) - addestramento in pratica.md | ✅ fatta | (non indicato) | 8.1–8.13 |
 | 09 | 09 - Validazione (parte 1) - model selection e assessment.md | ✅ fatta | (non indicato) | 9.1–9.4 |
-| 10 | 10 - Validazione (parte 2) - schemi formali.md | ⏳ da fare | | |
+| 10 | 10 - Validazione (parte 2) - schemi formali.md | ✅ fatta | (non indicato) | 10.1–10.5 |
 | 11 | 11 - Validazione (parte 3) - errori tipici e FAQ.md | ⏳ da fare | | |
 | 12 | 12 - Statistical Learning Theory e VC-dimension.md | ⏳ da fare | | |
 | 13 | 13 - Support Vector Machines.md | ⏳ da fare | | |
@@ -70,6 +70,8 @@ Decisioni di stile confermate dall'utente:
   Deciso con l’utente: niente `npm run smoke` (lento e inutile); si verifica con `npm run verify` e screenshot.
 - 2026-09-30 — Lezione 09 (validazione, parte 1), 4 figure. Indicazione dell’utente: aggiunte solo se aiutano
   a capire gli appunti (spiegazioni migliori sì, dettagli o curiosità no).
+- 2026-09-30 — Lezione 10 (validazione, parte 2), 5 figure con blocchi dei fold comuni (`widgets/l10/Schemes.tsx`,
+  dati e CV in `widgets/l10/cv.ts`). `Callout` accetta un titolo JSX (per le formule nei titoli dei riquadri).
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),
@@ -190,6 +192,14 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `09-val1_grid-random.png` → Fig. 9.4 `GridRandom` — grid search e random search con lo stesso budget, curve di livello della prestazione, tacche dei valori provati, variante in cui conta un solo iperparametro.
 - Figura aggiunta: 9.3 `RandomTarget` — il controesempio del target casuale con dati veri (1000 variabili casuali, selezione su tutti i dati contro test separato prima).
 
+### 10 — Validazione (parte 2)
+
+- `10-val2_kfold-selezione.png` → Fig. 10.1 `CvSelection` — l’algoritmo di model selection con K-fold CV eseguito passo passo (24 punti, θ = grado M), tabella degli errori sui fold e medie, scelta di θ*, riaddestramento su tutti i dati.
+- `10-val2_kfold-holdout.png` → Fig. 10.2 `CvHoldout` — K-fold esterna per il test con hold-out TR/VL interno: M scelto e errore di test di ogni riga, rimescolamento di TR e VL, stima media ± dev. std.
+- `10-val2_double-cv.png` → Fig. 10.3 `DoubleCv` — quattro split esterni, CV interna ($K'$ = 3 o 4) dello split scelto con gli errori medi per M, scelta e test.
+- `10-val2_double-cv-2.png` → Fig. 10.4 `NestedResampling` — resampling esterno e interno a blocchi, ruolo di ogni blocco al clic, «test» interno = validation set.
+- `10-val2_nested-cv.png` → Fig. 10.5 `NestedFlow` — diagramma della nested CV con $k_{out}$, $k_{inn}$ e selezione interna per hold-out o K-fold.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -198,6 +208,10 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 10: letture e spiegazioni delle formule (rischio, rischio empirico, stima della K-fold); tracce di risposta.
+  Nelle figure: dati costruiti (24 punti da $\sin(2\pi x)$ con rumore, θ = grado del polinomio); nella 10.2 il
+  modello di ogni riga è riaddestrato su TR ∪ VL prima del test; nella 10.5 il conteggio degli addestramenti
+  (griglia di 9 configurazioni), per rendere concreto il «costo computazionale elevato».
 - 09: la figura 9.3 (il controesempio dal vivo, con la stima su 1000 pattern nuovi); il conteggio degli
   addestramenti dell’esempio completo (griglia 3 × 3 e K = 5); la spiegazione di $R$ (confronto con chi
   risponde sempre la media); tracce di risposta. Nella 9.1 la complessità è il grado del polinomio invece
