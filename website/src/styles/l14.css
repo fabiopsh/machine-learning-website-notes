@@ -1,1 +1,143 @@
-/* lezione 14 */
+/* ------------------------------------------------------------------ lezione 14: SVM sul problema a due classi (14.1–14.3) */
+
+.svm14__cells rect.is-1 {
+  fill: color-mix(in srgb, var(--c-blue) 11%, transparent);
+}
+.svm14__cells rect.is-0 {
+  fill: color-mix(in srgb, var(--c-orange) 11%, transparent);
+}
+.svm14__boundary {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.2;
+}
+.svm14__margin {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.3;
+  stroke-dasharray: 5 4;
+}
+.svm14__bayes {
+  fill: none;
+  stroke: var(--c-violet);
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+}
+
+.cg14__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+.cg14__panel {
+  min-width: 0;
+}
+.cg14__title {
+  text-align: center;
+  font-size: 14px;
+}
+.cg14__val {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------------ kernel come similarità tra oggetti (14.4) */
+
+.ko14 {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 6px 0 10px;
+}
+.ko14__cap {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  fill: var(--ink-3);
+}
+.ko14__axes line {
+  stroke: var(--axis);
+  stroke-width: 1.2;
+}
+.ko14__obj {
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+}
+.ko14__obj--oct,
+.ko14__dot--oct {
+  fill: var(--c-violet);
+}
+.ko14__obj--cross,
+.ko14__dot--cross {
+  fill: var(--c-green);
+}
+.ko14__obj--bar,
+.ko14__dot--bar {
+  fill: var(--c-blue);
+}
+.ko14__obj--trap,
+.ko14__dot--trap {
+  fill: color-mix(in srgb, var(--c-violet) 40%, var(--surface-solid));
+}
+.ko14__obj--tri,
+.ko14__dot--tri {
+  fill: var(--c-orange);
+}
+.ko14__obj--rhomb,
+.ko14__dot--rhomb {
+  fill: var(--c-magenta);
+}
+.ko14__pick {
+  cursor: pointer;
+}
+.ko14__pick:hover .ko14__obj,
+.ko14__pick.is-on .ko14__obj {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.ko14__pick:focus-visible {
+  outline: none;
+}
+.ko14__pick:focus-visible .ko14__obj {
+  stroke: var(--accent);
+}
+.ko14__dot {
+  stroke: var(--plot-bg);
+  stroke-width: 1.4;
+  transition: transform 0.5s var(--ease);
+}
+.ko14__dot.is-on {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.ko14__group {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+.ko14__arrow {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  marker-end: none;
+}
+.ko14__phi {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 20px;
+  fill: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .cg14__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ko14__dot {
+    transition: none;
+  }
+}

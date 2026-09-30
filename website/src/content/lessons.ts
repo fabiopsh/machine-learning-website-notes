@@ -89,7 +89,9 @@ export const parts: LessonPart[] = [
       L('13', 'Support Vector Machines', {
         summary: 'Margine massimo e support vector, il problema quadratico (primale e duale), soft margin e variabili slack, kernel e kernel trick, SVM per la regressione con la loss ε-insensitive.',
       }),
-      L('14', 'SVM e kernel — aspetti pratici e visione critica'),
+      L('14', 'SVM e kernel — aspetti pratici e visione critica', {
+        summary: 'Pregi e difetti delle SVM, i risultati sul problema delle due classi, il ruolo critico di C e dei parametri del kernel, i luoghi comuni da sfatare e i metodi kernel come misure di similarità.',
+      }),
       L('15', 'Bias-varianza ed ensemble'),
     ],
   },

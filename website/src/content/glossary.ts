@@ -1020,6 +1020,15 @@ export const glossary: GlossaryEntry[] = [
     lesson: '13',
     section: 'La matrice kernel',
   },
+  // ------------------------------------------------------------------ 14
+  {
+    id: 'metodi-kernel',
+    term: 'Metodi kernel',
+    en: 'kernelizzazione',
+    def: 'Modelli in cui ogni prodotto scalare o misura di similarità è sostituito da un kernel: lavorano in uno spazio delle feature implicito cambiando solo il kernel, anche su stringhe, alberi e grafi.',
+    lesson: '14',
+    section: 'Metodi kernel',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))
