@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import avatar from '../assets/avatar.png'
 import { availableLessons, getLesson, lessonStats, lessons, parts } from '../content/lessons'
 import { lastVisited, useProgress } from '../lib/progress'
 import { glossaryHref, lessonHref } from '../lib/router'
@@ -5,7 +7,46 @@ import { Icon } from '../components/ui/Icon'
 import { CourseMap } from '../widgets/l01/CourseMap'
 import { HeroFit } from '../widgets/HeroFit'
 
+const PROFILE = 'https://github.com/fabiopsh'
+const REPO = 'https://github.com/fabiopsh/machine-learning-website-notes'
+const STARS_KEY = 'ml-stars'
+
+/** Numero di stelle della repository (API pubblica di GitHub, memorizzato per la sessione). */
+function useStars() {
+  const [stars, setStars] = useState<number | null>(() => {
+    try {
+      const v = sessionStorage.getItem(STARS_KEY)
+      return v === null ? null : Number(v)
+    } catch {
+      return null
+    }
+  })
+  useEffect(() => {
+    if (stars !== null) return
+    let alive = true
+    fetch('https://api.github.com/repos/fabiopsh/machine-learning-website-notes')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { stargazers_count?: number } | null) => {
+        if (!alive || typeof d?.stargazers_count !== 'number') return
+        setStars(d.stargazers_count)
+        try {
+          sessionStorage.setItem(STARS_KEY, String(d.stargazers_count))
+        } catch {
+          /* storage non disponibile */
+        }
+      })
+      .catch(() => {
+        /* offline o limite dell'API: il bottone resta senza contatore */
+      })
+    return () => {
+      alive = false
+    }
+  }, [stars])
+  return stars
+}
+
 export function Home() {
+  const stars = useStars()
   const progress = useProgress()
   const last = lastVisited(progress)
   const lastLesson = last ? getLesson(last) : undefined
@@ -41,7 +82,22 @@ export function Home() {
               Glossario
             </a>
           </div>
-          <p className="hero__credits">Appunti di Fabio Piscitelli</p>
+          <div className="author">
+            <a className="author__who" href={PROFILE} target="_blank" rel="noreferrer">
+              <img className="author__avatar" src={avatar} alt="" width={40} height={40} />
+              <span className="author__text">
+                <span className="author__name">Appunti di Fabio Piscitelli</span>
+                <span className="author__handle">
+                  <Icon name="github" size={13} /> fabiopsh
+                </span>
+              </span>
+            </a>
+            <a className="btn btn--ghost author__star" href={REPO} target="_blank" rel="noreferrer">
+              <Icon name="star" size={15} />
+              Lascia una stella su GitHub
+              {stars !== null && stars > 0 && <span className="author__count">{stars}</span>}
+            </a>
+          </div>
         </div>
         <div className="hero__figure">
           <HeroFit />

@@ -1274,12 +1274,65 @@
   gap: 10px;
   margin-top: 32px;
 }
-.hero__credits {
+/* autore + invito a lasciare una stella alla repository */
+.author {
   margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+.author__who {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  color: var(--ink-3);
+}
+.author__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--line-2);
+}
+.author__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.author__name {
   font-family: var(--font-serif);
   font-style: italic;
   font-size: 15.5px;
-  color: var(--ink-3);
+  color: var(--ink-2);
+}
+.author__handle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+}
+.author__who:hover .author__name {
+  color: var(--ink);
+}
+.author__who:hover .author__handle {
+  color: var(--ink-2);
+}
+.author__star svg {
+  color: var(--accent);
+}
+.author__star:hover svg {
+  fill: var(--accent);
+}
+.author__count {
+  margin-left: 2px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 .hero__figure {
   padding: 18px 18px 14px;
