@@ -79,6 +79,11 @@ Decisioni di stile confermate dall'utente:
   Attenzione su Windows: `svm.ts` e `Svm.tsx` nella stessa cartella collidono (file system senza maiuscole).
 - 2026-09-30 — Lezione 14 (SVM e kernel, visione critica), 4 figure (`widgets/l14/Kernels.tsx`): SVM vere sul
   problema a due classi della lezione 5 (`l05/htf.ts`) con il risolutore della lezione 13.
+- 2026-09-30 — Consumo di batteria del Liquid Glass: le macchie dello sfondo erano animate all'infinito e, sotto
+  le superfici con `backdrop-filter`, costringevano il browser a ridisegnare tutte le sfocature ~60 volte al
+  secondo anche a pagina ferma. Ora le macchie sono ferme (a riposo nessun frame). Inoltre `Figure` mette in
+  pausa le animazioni CSS delle figure fuori dallo schermo (attributo `data-away`): gli anelli e le frecce
+  tratteggiate della lezione 3 costavano ~50% di CPU anche nello stile classico.
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),

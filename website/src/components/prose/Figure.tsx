@@ -1,4 +1,4 @@
-import { Children, isValidElement, useState, type ReactNode } from 'react'
+import { Children, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Icon } from '../ui/Icon'
 import { Rich } from './Tex'
 
@@ -15,12 +15,29 @@ export function Caption({ children }: { children: ReactNode }) {
   return <figcaption className="fig__caption">{children}</figcaption>
 }
 
+/**
+ * Mette in pausa le animazioni CSS di una figura quando è fuori dallo schermo: altrimenti le
+ * animazioni infinite (anelli, frecce tratteggiate) fanno ridisegnare la pagina a ogni frame.
+ */
+function usePauseWhenAway() {
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => el.toggleAttribute('data-away', !e.isIntersecting), { rootMargin: '100px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  return ref
+}
+
 export function Figure({ n, title, size = 'normal', children }: FigureProps) {
+  const ref = usePauseWhenAway()
   const items = Children.toArray(children)
   const caption = items.find((c) => isValidElement(c) && c.type === Caption)
   const body = items.filter((c) => c !== caption)
   return (
-    <figure className={`fig fig--${size}`} id={`fig-${n.replace('.', '-')}`}>
+    <figure ref={ref} className={`fig fig--${size}`} id={`fig-${n.replace('.', '-')}`}>
       <div className="fig__head">
         <span className="fig__num">Fig. {n}</span>
         <span className="fig__title">{title}</span>

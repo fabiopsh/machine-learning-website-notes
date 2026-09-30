@@ -4,8 +4,9 @@ import { useEffect } from 'react'
 const LIT = '.fig, .callout, .deep, .exam, .card, .pager__card, .index__row, .howto__grid li, .cmap, .gloss__entry, .hero__figure'
 
 /**
- * Sfondo dello stile Liquid Glass: macchie di colore sfocate che si muovono lentamente
- * dietro le superfici di vetro, più un riflesso che segue il puntatore sulle superfici.
+ * Sfondo dello stile Liquid Glass: macchie di colore sfocate, ferme, dietro le superfici di vetro,
+ * più un riflesso che segue il puntatore sulle superfici. Le macchie non sono animate: muoverle
+ * costringerebbe il browser a ridisegnare ogni frame tutte le sfocature (anche a pagina ferma).
  */
 export function GlassBackdrop() {
   useEffect(() => {

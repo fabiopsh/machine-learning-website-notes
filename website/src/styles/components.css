@@ -472,6 +472,12 @@
   line-height: 1.5;
   scroll-margin-top: calc(var(--topbar-h) + 20px);
 }
+/* figura fuori dallo schermo: animazioni ferme (vedi Figure.tsx) */
+.fig[data-away] *,
+.fig[data-away] *::before,
+.fig[data-away] *::after {
+  animation-play-state: paused !important;
+}
 .fig__head {
   display: flex;
   align-items: baseline;

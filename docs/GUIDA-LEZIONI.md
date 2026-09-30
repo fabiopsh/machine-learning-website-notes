@@ -366,6 +366,9 @@ Testo nelle figure:
   chiave ocra, attenzione arancio, sintesi carminio. Etichetta maiuscoletta + icona sottile.
 - **Tono**: pulito ed editoriale, ispirato ai libri di testo e agli «explorable explanations». Niente
   emoji, niente effetti vistosi, animazioni brevi e utili.
+- **Animazioni e batteria**: niente animazioni infinite fuori dalle figure (sfondo, pagina); dentro una
+  `Figure` vanno in pausa da sole quando la figura esce dallo schermo. Nel Liquid Glass tutto ciò che si muove
+  sotto il vetro fa ricalcolare le sfocature a ogni frame.
 
 ---
 
