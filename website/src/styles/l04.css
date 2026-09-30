@@ -16,7 +16,7 @@
   padding: 6px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: var(--plot-bg);
+  background: var(--surface);
   transition: border-color 0.15s var(--ease);
 }
 .poly__cell:hover {
@@ -88,7 +88,7 @@
   gap: 6px;
   font-family: var(--font-mono);
   font-size: 12.5px;
-  color: #1c1b18;
+  color: var(--split-ink);
   white-space: nowrap;
   overflow: hidden;
   transition:
@@ -106,13 +106,13 @@
   font-weight: 700;
 }
 .split__seg--tr {
-  background: #c79a57;
+  background: var(--split-tr);
 }
 .split__seg--vl {
-  background: #f1d57a;
+  background: var(--split-vl);
 }
 .split__seg--ts {
-  background: #9fd07a;
+  background: var(--split-ts);
 }
 .split__seg.is-dim {
   opacity: 0.45;
@@ -164,28 +164,28 @@
 }
 .split__cyl--all path,
 .split__cyl--all ellipse {
-  fill: var(--plot-bg);
+  fill: var(--surface);
 }
 .split__cyl--tr path,
 .split__cyl--tr ellipse {
-  fill: #c79a57;
+  fill: var(--split-tr);
 }
 .split__cyl--vl path,
 .split__cyl--vl ellipse {
-  fill: #f1d57a;
+  fill: var(--split-vl);
 }
 .split__cyl--ts path,
 .split__cyl--ts ellipse {
-  fill: #9fd07a;
+  fill: var(--split-ts);
 }
 .split__cyl--new path,
 .split__cyl--new ellipse {
-  fill: #6ec3ea;
+  fill: var(--split-new);
 }
 .split__cyl text {
   font-size: 13px;
   font-weight: 600;
-  fill: #1c1b18;
+  fill: var(--split-ink);
 }
 .split__cyl--all text {
   fill: var(--ink);
@@ -203,7 +203,7 @@
   stroke-width: 2.4;
 }
 .split__box rect {
-  fill: var(--plot-bg);
+  fill: var(--surface);
   stroke: var(--ink-2);
   stroke-width: 1.6;
 }
@@ -227,10 +227,10 @@
     stroke 0.2s var(--ease);
 }
 .split__data--ts {
-  stroke: #5e9e37;
+  stroke: var(--split-ts-line);
 }
 .split__data--new {
-  stroke: #1f9bd1;
+  stroke: var(--split-new-line);
 }
 .split__data.is-hot {
   stroke: var(--accent);
@@ -259,7 +259,7 @@
   fill: var(--ink-3);
 }
 .split__out--new {
-  fill: #1f9bd1;
+  fill: var(--split-new-line);
   font-weight: 600;
 }
 .split__cheat path {
@@ -316,15 +316,15 @@
   border-radius: 5px;
   font-family: var(--font-serif);
   font-size: 13px;
-  color: #1c1b18;
-  background: #c79a57;
+  color: var(--split-ink);
+  background: var(--split-tr);
   opacity: 0.55;
 }
 .kfold__row.is-cur .kfold__blk {
   opacity: 1;
 }
 .kfold__blk.is-val {
-  background: #8a9a1c;
+  background: var(--split-val);
   color: #fff;
   opacity: 1;
 }
@@ -418,10 +418,10 @@
   vertical-align: middle;
 }
 .cm__cell--good {
-  background: color-mix(in srgb, var(--c-green) 16%, var(--plot-bg));
+  background: color-mix(in srgb, var(--c-green) 16%, var(--surface));
 }
 .cm__cell--bad {
-  background: color-mix(in srgb, var(--c-red) 14%, var(--plot-bg));
+  background: color-mix(in srgb, var(--c-red) 14%, var(--surface));
 }
 .cm__n {
   display: block;
@@ -546,7 +546,7 @@
   padding: 9px 12px;
   border-radius: 10px;
   border: 1.5px solid color-mix(in srgb, var(--c-yellow) 75%, var(--line));
-  background: var(--plot-bg);
+  background: var(--surface);
   font-size: 14px;
   font-weight: 550;
   color: var(--ink);

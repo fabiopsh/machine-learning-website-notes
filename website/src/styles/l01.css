@@ -133,7 +133,7 @@
   width: 168px;
   height: 168px;
   border-radius: 12px;
-  background: #fcfbf8;
+  background: var(--surface);
   border: 1.5px dashed var(--accent-line);
   cursor: crosshair;
   touch-action: none;
@@ -277,7 +277,7 @@
   gap: 6px;
 }
 .tens__cell {
-  fill: color-mix(in srgb, var(--c-blue) 14%, var(--plot-bg));
+  fill: color-mix(in srgb, var(--c-blue) 14%, var(--surface));
   stroke: color-mix(in srgb, var(--c-blue) 55%, var(--plot-bg));
   stroke-width: 1.2;
   cursor: default;

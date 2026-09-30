@@ -30,7 +30,7 @@
   outline: none;
 }
 .mls__box rect {
-  fill: var(--plot-bg);
+  fill: var(--surface);
   stroke: color-mix(in srgb, var(--c-orange) 65%, var(--line-2));
   stroke-width: 1.8;
   transition:
@@ -148,7 +148,7 @@
   border-radius: 4px;
 }
 .onehot__sym circle {
-  fill: color-mix(in srgb, var(--c-blue) 14%, var(--plot-bg));
+  fill: color-mix(in srgb, var(--c-blue) 14%, var(--surface));
   stroke: var(--c-blue);
   stroke-width: 2;
 }
@@ -348,7 +348,7 @@
   font-family: var(--font-sans);
 }
 .hsearch__space {
-  fill: color-mix(in srgb, var(--c-blue) 12%, var(--plot-bg));
+  fill: color-mix(in srgb, var(--c-blue) 12%, var(--surface));
   stroke: color-mix(in srgb, var(--c-blue) 60%, var(--plot-bg));
   stroke-width: 1.6;
 }
@@ -359,7 +359,7 @@
   stroke-dasharray: 4 4;
 }
 .hsearch__ok {
-  fill: color-mix(in srgb, var(--c-red) 26%, var(--plot-bg));
+  fill: color-mix(in srgb, var(--c-red) 26%, var(--surface));
   stroke: var(--c-red);
   stroke-width: 1.4;
 }
@@ -484,7 +484,7 @@
   padding: 3px 9px;
   border-radius: 6px;
   border: 1px solid var(--line-2);
-  background: var(--plot-bg);
+  background: var(--surface);
 }
 .bool__y--1 {
   border-color: var(--c-blue);
@@ -572,7 +572,7 @@
   fill: var(--ink-3);
 }
 .ind__box {
-  fill: var(--plot-bg);
+  fill: var(--surface);
   stroke: var(--ink-2);
   stroke-width: 2;
 }

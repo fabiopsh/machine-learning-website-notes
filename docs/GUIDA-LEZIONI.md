@@ -322,6 +322,16 @@ serie; il testo non prende il colore della serie; niente colori esadecimali nel 
 - Nello stile Liquid Glass i contenitori (`.fig`, riquadri, schede) diventano vetro da soli: nei widget
   usare le classi comuni (`wpanel`, `tasks`, `seg`, `btn`…) invece di stili propri per i riquadri, così
   il vetro si applica senza lavoro in più. `--plot-bg` resta un colore pieno (la superficie 3D lo legge).
+- **Ogni widget nuovo nasce già "glass"** (regole in fondo a `styles/glass.css`):
+  - riempimenti di riquadri, nodi di schemi SVG, celle e schede → `var(--surface)` (pieno nel classico,
+    vetro traslucido nel glass); tinte → `color-mix(in srgb, var(--c-…) 14%, var(--surface))`.
+    `--plot-bg` solo per aloni delle etichette, bordo dei punti e maschere che devono coprire linee;
+  - i grafici con `<Axes>` hanno già la lastra di vetro (`.axes__frame`), niente da fare;
+  - blocchi colorati HTML (barre, segmenti, celle piene) → aggiungere la classe del widget alla regola
+    «blocchi colorati» di `glass.css` (riflesso `--gloss` + bordo `--gloss-rim`);
+  - riquadri SVG → aggiungerli alla regola `rx: 14px` degli schemi; tabelle → come `.bool__table-wrap`;
+  - controllare sempre il glass **chiaro e scuro**: un bordo `--glass-edge` è bianco e sparisce sul chiaro
+    (per i bordi usare `--line`/`--line-2`).
 
 ---
 

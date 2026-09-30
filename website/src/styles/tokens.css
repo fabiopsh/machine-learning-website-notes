@@ -53,6 +53,18 @@
   --grid: #ebe7de;
   --axis: #c3bdb0;
   --tick: #8d887e;
+  /* superfici dentro le figure (riquadri degli schemi, celle, schede): nel tema glass diventano vetro.
+     Usare --surface per i riempimenti, --plot-bg solo per aloni, bordi dei punti e maschere opache. */
+  --surface: var(--plot-bg);
+  /* divisione TR / VL / TS: i colori della figura degli appunti (lezione 4) */
+  --split-tr: #c79a57;
+  --split-vl: #f1d57a;
+  --split-ts: #9fd07a;
+  --split-new: #6ec3ea;
+  --split-val: #8a9a1c;
+  --split-ink: #1c1b18;
+  --split-ts-line: #5e9e37;
+  --split-new-line: #1f9bd1;
 
   /* tipi di riquadro */
   --k-def: #2459a8;
@@ -101,6 +113,7 @@
   --grid: #272623;
   --axis: #403e39;
   --tick: #8a857a;
+  --surface: var(--plot-bg);
 
   --k-def: #7fa9ee;
   --k-thm: #aa9af0;

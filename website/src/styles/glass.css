@@ -30,6 +30,13 @@
   --axis: rgba(28, 36, 76, 0.24);
   --tick: #666d85;
 
+  /* figure: riquadri, lastra dei grafici, riflesso sui blocchi colorati */
+  --surface: rgba(255, 255, 255, 0.64);
+  --plot-pane: rgba(255, 255, 255, 0.52);
+  --plot-pane-edge: rgba(28, 36, 76, 0.1);
+  --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1) 52%, rgba(255, 255, 255, 0));
+  --gloss-rim: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+
   /* il materiale */
   --glass: linear-gradient(150deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.46));
   --glass-strong: linear-gradient(150deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
@@ -71,6 +78,12 @@
   --grid: rgba(255, 255, 255, 0.06);
   --axis: rgba(255, 255, 255, 0.2);
   --tick: #8f96b2;
+
+  --surface: rgba(78, 88, 136, 0.3);
+  --plot-pane: rgba(255, 255, 255, 0.035);
+  --plot-pane-edge: rgba(255, 255, 255, 0.12);
+  --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.05) 52%, rgba(255, 255, 255, 0));
+  --gloss-rim: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 
   --glass: linear-gradient(150deg, rgba(62, 70, 108, 0.5), rgba(22, 26, 46, 0.42));
   --glass-strong: linear-gradient(150deg, rgba(38, 44, 72, 0.84), rgba(16, 19, 34, 0.76));
@@ -604,21 +617,157 @@
   border-radius: 20px;
 }
 
-/* ------------------------------------------------------------------ figure: dettagli */
+/* ------------------------------------------------------------------ figure: grafici, schemi, tabelle
+   Regola per i widget nuovi: riempimenti con var(--surface), blocchi colorati con
+   background-image: var(--gloss) + box-shadow: var(--gloss-rim) (qui sotto), niente colori fissi. */
 
+/* grafici: l'area dei dati è una lastra di vetro; gli assi sul bordo li disegna la lastra */
+:root[data-style='glass'] .axes__frame {
+  fill: var(--plot-pane);
+  stroke: var(--plot-pane-edge);
+  stroke-width: 1;
+  rx: 12px;
+}
+:root[data-style='glass'] .axes__line--edge {
+  stroke: none;
+}
 :root[data-style='glass'] .plot-label {
   stroke: color-mix(in srgb, var(--plot-bg) 80%, transparent);
 }
+:root[data-style='glass'] .handle__dot {
+  stroke: #fff;
+  stroke-width: 3;
+}
+:root[data-style='glass'][data-theme='dark'] .handle__dot {
+  stroke: rgba(255, 255, 255, 0.92);
+}
+:root[data-style='glass'] .ptip {
+  color: var(--bg);
+  background: color-mix(in srgb, var(--ink) 80%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), var(--glass-drop-sm);
+}
 :root[data-style='glass'] .s3d canvas {
   border-radius: 16px;
+}
+
+/* schemi in SVG: riquadri di vetro con angoli più morbidi */
+:root[data-style='glass'] .cmap__node rect,
+:root[data-style='glass'] .mls__box rect,
+:root[data-style='glass'] .split__box rect,
+:root[data-style='glass'] .curmap__node rect,
+:root[data-style='glass'] .ind__box {
+  rx: 14px;
+}
+:root[data-style='glass'] .fig .cmap {
+  border-radius: 20px;
+}
+
+/* blocchi colorati (barre, celle, segmenti): riflesso e bordo luminoso */
+:root[data-style='glass'] .split__seg,
+:root[data-style='glass'] .kfold__blk,
+:root[data-style='glass'] .cm__cell--good,
+:root[data-style='glass'] .cm__cell--bad,
+:root[data-style='glass'] .plan__seg,
+:root[data-style='glass'] .bool__y,
+:root[data-style='glass'] .coef__bar span,
+:root[data-style='glass'] .kfold__mbar span,
+:root[data-style='glass'] .vote__bar,
+:root[data-style='glass'] .cycle__n,
+:root[data-style='glass'] .cmap__info-num {
+  background-image: var(--gloss);
+  box-shadow: var(--gloss-rim);
+}
+:root[data-style='glass'] .kfold__blk {
+  border-radius: 9px;
+}
+:root[data-style='glass'] .split__bar {
+  border-radius: 14px;
+}
+:root[data-style='glass'] .split__seg:first-child {
+  border-radius: 14px 0 0 14px;
+}
+:root[data-style='glass'] .split__seg:nth-child(3) {
+  border-radius: 0 14px 14px 0;
+}
+:root[data-style='glass'] .split__knob {
+  border-color: #fff;
+  box-shadow: 0 2px 8px rgba(20, 30, 80, 0.3);
+}
+:root[data-style='glass'] .prose .cm td.cm__cell {
+  border-radius: 14px;
+}
+:root[data-style='glass'] .coef__bar,
+:root[data-style='glass'] .kfold__mbar {
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* righe selezionabili e riquadri nelle figure */
+:root[data-style='glass'] .kfold__row,
+:root[data-style='glass'] .kfold__mrow {
+  border-radius: 12px;
+}
+:root[data-style='glass'] .kfold__row.is-cur,
+:root[data-style='glass'] .kfold__mrow.is-on {
+  box-shadow: inset 0 0 0 1px var(--accent-line);
 }
 :root[data-style='glass'] .poly__cell,
 :root[data-style='glass'] .digits__pad {
   border-radius: 18px;
 }
-:root[data-style='glass'] .kfold__row,
-:root[data-style='glass'] .kfold__mrow {
-  border-radius: 12px;
+:root[data-style='glass'] .poly__cell,
+:root[data-style='glass'] .cycle__step {
+  border-color: var(--glass-edge);
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+:root[data-style='glass'] .cycle__step {
+  border-radius: 14px;
+  border-color: color-mix(in srgb, var(--c-yellow) 55%, var(--glass-edge));
+}
+:root[data-style='glass'] .cycle__step.is-sel {
+  border-color: var(--accent);
+}
+:root[data-style='glass'] .poly__cell.is-on {
+  border-color: var(--accent);
+  box-shadow: var(--glass-rim), 0 0 0 3px var(--accent-soft);
+}
+:root[data-style='glass'] .verdict {
+  border-radius: 999px;
+  background: var(--glass-inner);
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .croc__metrics li {
+  border-radius: 999px;
+}
+
+/* tabelle interattive */
+:root[data-style='glass'] .bool__table-wrap {
+  border-color: var(--glass-edge);
+  border-radius: 20px;
+  background: var(--glass-inner);
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+:root[data-style='glass'] .bool__table th {
+  background: var(--bg-sunken);
+}
+:root[data-style='glass'] .bool__y {
+  border-radius: 999px;
+}
+:root[data-style='glass'] .bool__mini {
+  border-radius: 999px;
+  background: var(--glass-inner);
+  border-color: var(--line-2);
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .bool__mini:hover {
+  border-color: var(--accent-line);
+}
+:root[data-style='glass'] .onehot__table th,
+:root[data-style='glass'] .mini-table th {
+  background: transparent;
 }
 
 /* ------------------------------------------------------------------ mobile e riduzione del movimento */

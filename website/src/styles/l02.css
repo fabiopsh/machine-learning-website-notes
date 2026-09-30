@@ -11,7 +11,7 @@
   transition: stroke 0.2s var(--ease);
 }
 .curmap__node rect {
-  fill: var(--plot-bg);
+  fill: var(--surface);
   stroke: var(--line-2);
   stroke-width: 1.5;
   transition:
@@ -89,17 +89,17 @@
   border-radius: 8px;
   text-align: left;
   color: var(--ink);
-  background: color-mix(in srgb, var(--k-def) 16%, var(--plot-bg));
+  background: color-mix(in srgb, var(--k-def) 16%, var(--surface));
   transition:
     background-color 0.2s var(--ease),
     transform 0.2s var(--ease);
   overflow: hidden;
 }
 .plan__seg--grp {
-  background: color-mix(in srgb, var(--k-def) 30%, var(--plot-bg));
+  background: color-mix(in srgb, var(--k-def) 30%, var(--surface));
 }
 .plan__seg--free {
-  background: color-mix(in srgb, var(--k-def) 46%, var(--plot-bg));
+  background: color-mix(in srgb, var(--k-def) 46%, var(--surface));
 }
 .plan__seg.is-hot {
   outline: 2px solid var(--accent);

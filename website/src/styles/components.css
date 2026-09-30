@@ -808,6 +808,9 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /* dentro una riga flex può restringersi: la traccia scorre invece di allargare la pagina */
+  min-width: 0;
+  max-width: 100%;
 }
 .seg__track {
   display: inline-flex;

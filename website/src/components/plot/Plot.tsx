@@ -177,8 +177,11 @@ export function Axes({
   const yt = typeof yTicks === 'number' ? y.ticks(yTicks) : yTicks
   const x0 = origin ? clamp(x(0), m.l, m.l + iw) : m.l
   const y0 = origin ? clamp(y(0), m.t, m.t + ih) : m.t + ih
+  const edge = origin ? '' : ' axes__line--edge'
   return (
     <g className="axes">
+      {/* pannello dell'area del grafico: invisibile nello stile classico, lastra di vetro nel glass */}
+      <rect className="axes__frame" x={m.l} y={m.t} width={iw} height={ih} />
       {grid && (
         <g className="axes__grid">
           {xt.map((v) => (
@@ -189,8 +192,8 @@ export function Axes({
           ))}
         </g>
       )}
-      {!hideX && <line className="axes__line" x1={m.l} x2={m.l + iw} y1={y0} y2={y0} />}
-      {!hideY && <line className="axes__line" x1={x0} x2={x0} y1={m.t} y2={m.t + ih} />}
+      {!hideX && <line className={'axes__line' + edge} x1={m.l} x2={m.l + iw} y1={y0} y2={y0} />}
+      {!hideY && <line className={'axes__line' + edge} x1={x0} x2={x0} y1={m.t} y2={m.t + ih} />}
       {!hideX &&
         xt.map((v) => (
           <text key={`tx${v}`} className="axes__tick" x={x(v)} y={m.t + ih + 16} textAnchor="middle">
