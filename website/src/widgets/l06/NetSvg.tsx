@@ -49,12 +49,13 @@ type Props = {
   /** strati attivi (per l'animazione feedforward): i nodi degli altri strati sono attenuati */
   dimOthers?: boolean
   onNodeEnter?: (id: NodeId | null) => void
+  onNodeClick?: (id: NodeId) => void
   className?: string
   ariaLabel: string
   children?: ReactNode
 }
 
-export function NetSvg({ W, H, nodes, edges, r = 18, hot, dimOthers, onNodeEnter, className, ariaLabel, children }: Props) {
+export function NetSvg({ W, H, nodes, edges, r = 18, hot, dimOthers, onNodeEnter, onNodeClick, className, ariaLabel, children }: Props) {
   const pos = new Map(nodes.map((n) => [n.id, n]))
   const maxW = Math.max(1, ...edges.map((e) => Math.abs(e.w ?? 0)))
   return (
@@ -108,6 +109,8 @@ export function NetSvg({ W, H, nodes, edges, r = 18, hot, dimOthers, onNodeEnter
             transform={`translate(${n.x} ${n.y})`}
             onPointerEnter={onNodeEnter ? () => onNodeEnter(n.id) : undefined}
             onPointerLeave={onNodeEnter ? () => onNodeEnter(null) : undefined}
+            onClick={onNodeClick ? () => onNodeClick(n.id) : undefined}
+            style={onNodeClick ? { cursor: 'pointer' } : undefined}
           >
             <circle r={r} />
             {v !== undefined && (

@@ -736,6 +736,37 @@ export const glossary: GlossaryEntry[] = [
     lesson: '06',
     section: 'L’idea chiave: estendere la discesa del gradiente',
   },
+  // ------------------------------------------------------------------ 07
+  {
+    id: 'regola-della-catena',
+    term: 'Regola della catena',
+    en: 'chain rule',
+    def: '$\\frac{\\partial f}{\\partial x} = \\frac{\\partial f}{\\partial g}\\cdot\\frac{\\partial g}{\\partial x}$: la derivata di una funzione composta si scompone in derivate più semplici. È lo strumento di tutta la backpropagation.',
+    lesson: '07',
+    section: 'Strumenti di calcolo differenziale',
+  },
+  {
+    id: 'regola-delta-generalizzata',
+    term: 'Regola delta generalizzata',
+    en: 'Generalized Delta Rule',
+    def: 'La delta rule estesa a tutte le unità di una rete: $\\Delta w_{tu} = \\eta\\,\\delta_t\\,o_u$, con il delta delle unità nascoste ottenuto propagando all’indietro quello delle uscite.',
+    lesson: '07',
+    section: 'Il problema',
+  },
+  {
+    id: 'delta-unita',
+    term: 'Delta di un’unità',
+    def: '$\\delta_t = -\\partial E_p/\\partial net_t$. Per un’uscita $\\delta_k = (d_k - o_k)f\'_k(net_k)$; per un’unità nascosta $\\delta_j = (\\sum_k \\delta_k w_{kj}) f\'_j(net_j)$.',
+    lesson: '07',
+    section: 'Il gradiente per un peso generico',
+  },
+  {
+    id: 'fattorizzazione-delta',
+    term: 'Fattorizzazione dei delta',
+    def: 'Ogni $\\delta_t$ si calcola una sola volta e si riusa per tutti i pesi dell’unità: il costo della backpropagation è proporzionale al numero di pesi, non al suo quadrato.',
+    lesson: '07',
+    section: 'Proprietà e interpretazione',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

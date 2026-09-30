@@ -13,7 +13,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 04 | 04 - Generalizzazione e validazione (introduzione).md | ✅ fatta | Lezione 4 | 4.1–4.10 |
 | 05 | 05 - Modelli lineari e K-nearest neighbors.md | ✅ fatta | (non indicato) | 5.1–5.23 |
 | 06 | 06 - Reti neurali (parte 1) - dal neurone al MLP.md | ✅ fatta | (non indicato) | 6.1–6.15 |
-| 07 | 07 - Note sulla backpropagation.md | ⏳ da fare | | |
+| 07 | 07 - Note sulla backpropagation.md | ✅ fatta | (non indicato) | 7.1–7.5 |
 | 08 | 08 - Reti neurali (parte 2) - addestramento in pratica.md | ⏳ da fare | | |
 | 09 | 09 - Validazione (parte 1) - model selection e assessment.md | ⏳ da fare | | |
 | 10 | 10 - Validazione (parte 2) - schemi formali.md | ⏳ da fare | | |
@@ -49,6 +49,7 @@ Decisioni di stile confermate dall'utente:
   TR/VL/TS in token (`--split-*`). `Surface3D` accetta `plane` (piano orizzontale ordinato in profondità) e
   `floor={false}`; `lib/math.ts` ha `lstsq` e `ridgePolyfit`.
 - 2026-09-30 — Lezione 05 (modelli lineari e K-NN), 23 figure.
+- 2026-09-30 — Lezione 07 (backpropagation), 5 figure; `NetSvg` accetta `onNodeClick`.
 - 2026-09-30 — Lezione 06 (reti neurali, parte 1), 15 figure; componente comune `widgets/l06/NetSvg.tsx` per disegnare reti a strati.
 
 ## Immagini degli appunti → figure del sito
@@ -141,6 +142,14 @@ abla E$ sulla superficie, retta e residui corrispondenti.
 - `06-nn1_multi-output.png` → Fig. 6.14 `MultiOutput` — tre uscite ($0{,}2;\ 0{,}7;\ 0{,}1$ all’inizio) e classe vincente.
 - Figura aggiunta: 6.15 `UniversalApprox` — costruzione «a gradini» con unità logistiche (seno o gobba), errore massimo al variare delle unità.
 
+### 07 — Note sulla backpropagation
+
+- `07-bp_rete.png` → Fig. 7.1 `BpNetwork` — MLP con input $i$, nascoste $j$, uscite $k$ e target $d_k$; pesi $w_{ji}$ e $w_{kj}$ evidenziati, unità selezionabili.
+- `07-bp_superficie.png` → Fig. 7.2 `NonConvexSurface` — superficie non convessa con più minimi in 3D e a curve di livello, $\nabla E$ e $-\nabla E$, discesa dal punto $Z$ trascinabile.
+- `07-bp_localita.png` → Fig. 7.3 `Locality` — porzione $i \to j \to k$: per ogni calcolo ($\Delta w_{kj}$, $\delta_j$, $\Delta w_{ji}$) si evidenziano le sole unità e i pesi coinvolti.
+- `07-bp_retropropagazione.png` → Fig. 7.4 `BackpropFlow` — rete 2-3-2 con il ciclo di addestramento fase per fase: uscite, delta di uscita, delta retropropagati (frecce rosse), aggiornamento, 50 cicli.
+- Figura aggiunta: 7.5 `NumericExample` — l’esempio numerico degli appunti calcolato dal vivo, con valori modificabili e aggiornamenti ripetibili.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -149,6 +158,10 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 07: svolgimento dell’esercizio «caso 2 direttamente dalla definizione di $E_p$»; letture e spiegazioni
+  delle formule; tracce di risposta (compresa la domanda su loss diverse e più strati). Nelle figure: funzione
+  d’errore della 7.2 costruita come somma di gaussiane (illustrativa); rete, pattern, target e $\eta$ della
+  7.4 scelti per l’esempio; la 7.5 riproduce l’esempio numerico degli appunti.
 - 06: lettura della disuguaglianza di Cauchy-Schwarz ($\cos^2\theta \le 1$); intuizione della costruzione a
   gradini per l’approssimazione universale (con la figura 6.15, dichiarata come non-dimostrazione); letture e
   spiegazioni delle formule; tracce di risposta. Nelle figure: parametri del neurone biologico illustrativi

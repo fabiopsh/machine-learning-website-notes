@@ -56,7 +56,9 @@ export const parts: LessonPart[] = [
       L('06', 'Reti neurali (parte 1) — dal neurone al MLP', {
         summary: 'Dal neurone biologico al Perceptron e al suo teorema di convergenza, le sigmoidi, il Multi-Layer Perceptron come espansione in basi adattiva e approssimatore universale.',
       }),
-      L('07', 'Note sulla backpropagation'),
+      L('07', 'Note sulla backpropagation', {
+        summary: 'La derivazione completa della backpropagation: il delta di ogni unità, la retropropagazione dall’uscita agli strati nascosti, il ciclo di addestramento e il suo costo lineare.',
+      }),
       L('08', 'Reti neurali (parte 2) — addestramento in pratica'),
     ],
   },
