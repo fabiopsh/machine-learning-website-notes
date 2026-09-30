@@ -188,7 +188,9 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
       <aside className="toc" aria-label="Indice della lezione">
         <div className="toc__inner">
           <div className="toc__label">In questa lezione</div>
-          <TocList items={items} active={active} lessonId={id} />
+          <div className="toc__scroll">
+            <TocList items={items} active={active} lessonId={id} />
+          </div>
           <button className="toc__top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             Torna su
           </button>
@@ -204,7 +206,9 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
                 <Icon name="close" size={18} />
               </button>
             </div>
-            <TocList items={items} active={active} lessonId={id} onPick={onCloseToc} />
+            <div className="toc__scroll">
+              <TocList items={items} active={active} lessonId={id} onPick={onCloseToc} />
+            </div>
           </div>
         </div>
       )}

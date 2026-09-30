@@ -42,8 +42,14 @@ export function opt(args, key, def) {
 
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
-export async function openBrowser() {
-  return puppeteer.launch({ executablePath: chromePath(), headless: 'new', args: ['--hide-scrollbars'] })
+/** `scrollbars: true` mostra le barre di scorrimento (per controllare come si vedono nei pannelli). */
+export async function openBrowser({ scrollbars = false } = {}) {
+  return puppeteer.launch({
+    executablePath: chromePath(),
+    headless: 'new',
+    args: scrollbars ? [] : ['--hide-scrollbars'],
+    ignoreDefaultArgs: scrollbars ? ['--hide-scrollbars'] : [],
+  })
 }
 
 /** Nuova pagina con tema impostato e raccolta degli errori di console. */

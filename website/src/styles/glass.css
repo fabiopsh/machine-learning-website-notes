@@ -219,6 +219,12 @@
 :root[data-style='glass'] .sidebar {
   border-radius: 26px;
   height: 100%;
+  overflow: hidden;
+  /* la barra di scorrimento resta nel tratto dritto del bordo, lontana dagli angoli */
+  padding: 16px 5px 16px 0;
+}
+:root[data-style='glass'] .sidebar__scroll {
+  padding: 2px 9px 12px 14px;
 }
 :root[data-style='glass'] .brand__bg {
   fill: var(--accent);
@@ -284,8 +290,12 @@
 /* indice della lezione */
 :root[data-style='glass'] .toc__inner {
   top: calc(var(--topbar-h) + 44px);
-  padding: 18px 18px 16px;
+  padding: 18px 6px 16px 18px;
   border-radius: 24px;
+  overflow: hidden;
+}
+:root[data-style='glass'] .toc__scroll {
+  padding-right: 10px;
 }
 :root[data-style='glass'] .toc__list {
   border-left-color: var(--line-2);
@@ -297,6 +307,13 @@
   margin: 12px;
   height: calc(100% - 24px);
   border-radius: 26px;
+  padding: 16px 6px 18px 22px;
+}
+:root[data-style='glass'] .sheet__head {
+  margin-right: 16px;
+}
+:root[data-style='glass'] .sheet__panel .toc__scroll {
+  padding-right: 12px;
 }
 
 /* ------------------------------------------------------------------ fogli di contenuto */
@@ -572,6 +589,9 @@
 }
 :root[data-style='glass'] .palette__box {
   border-radius: 26px;
+}
+:root[data-style='glass'] .palette__list {
+  margin: 0 4px 12px 0;
 }
 :root[data-style='glass'] .palette__list li {
   border-radius: 14px;

@@ -5,6 +5,7 @@
 //   npm run shot -- lezione/03 pag --pages 6               6 schermate scorrendo la pagina
 //   npm run shot -- home nome                              la home (anche "glossario", "lezione/03/sezione")
 //   opzioni: --w 1440 --h 900 --dpr 1 --theme light|dark --style classic|glass --base URL --wait ms
+//            --scrollbars (mostra le barre di scorrimento, nascoste per default)
 import { baseUrl, newPage, openBrowser, opt, shotPath, wait } from './lib/browser.mjs'
 
 const args = process.argv.slice(2)
@@ -18,7 +19,7 @@ function normRoute(r) {
   return '#/' + s
 }
 
-const browser = await openBrowser()
+const browser = await openBrowser({ scrollbars: args.includes('--scrollbars') })
 const { page, errors } = await newPage(browser, {
   width: +opt(args, 'w', 1440),
   height: +opt(args, 'h', 900),

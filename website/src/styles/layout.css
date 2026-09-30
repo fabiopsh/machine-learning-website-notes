@@ -43,12 +43,19 @@ main {
 
 .sidebar {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+/* lo scroll vive in un contenitore interno: nel tema glass resta lontano dagli angoli arrotondati */
+.sidebar__scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 18px 14px 28px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  font-size: 14px;
 }
 
 .brand {
@@ -365,8 +372,17 @@ kbd {
   position: sticky;
   top: calc(var(--topbar-h) + 36px);
   max-height: calc(100vh - var(--topbar-h) - 60px);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   padding: 0 4px 16px 0;
+}
+.toc__scroll {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.toc__top {
+  align-self: flex-start;
 }
 .toc__label {
   font-size: 11.5px;
@@ -430,7 +446,9 @@ kbd {
 .sheet__panel {
   width: min(360px, 90vw);
   height: 100%;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--bg);
   border-left: 1px solid var(--line);
   padding: 16px 22px 32px;
