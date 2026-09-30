@@ -181,7 +181,8 @@ export function DigitsFigure() {
   }
   const stroke = (a: { x: number; y: number }, b: { x: number; y: number }) => {
     const ctx = padCtx()
-    ctx.strokeStyle = '#000'
+    // colore dell'inchiostro del tema (la riduzione a 8 × 8 legge solo l'opacità)
+    ctx.strokeStyle = getComputedStyle(pad.current!).color
     ctx.lineWidth = 15
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'

@@ -59,7 +59,7 @@
   stroke-width: 3;
 }
 .loc7__node circle {
-  fill: var(--surface);
+  fill: var(--surface-solid);
   stroke: var(--ink-4);
   stroke-width: 1.8;
   transition:
@@ -69,7 +69,7 @@
 .loc7__node.is-hot circle {
   stroke: var(--accent);
   stroke-width: 2.6;
-  fill: var(--accent-soft);
+  fill: color-mix(in srgb, var(--accent) 10%, var(--surface-solid));
 }
 .loc7__node text {
   font-family: var(--font-serif);

@@ -348,7 +348,7 @@
   font-family: var(--font-sans);
 }
 .hsearch__space {
-  fill: color-mix(in srgb, var(--c-blue) 12%, var(--surface));
+  fill: color-mix(in srgb, var(--c-blue) 12%, var(--surface-solid));
   stroke: color-mix(in srgb, var(--c-blue) 60%, var(--plot-bg));
   stroke-width: 1.6;
 }
@@ -359,7 +359,7 @@
   stroke-dasharray: 4 4;
 }
 .hsearch__ok {
-  fill: color-mix(in srgb, var(--c-red) 26%, var(--surface));
+  fill: color-mix(in srgb, var(--c-red) 26%, var(--surface-solid));
   stroke: var(--c-red);
   stroke-width: 1.4;
 }
@@ -379,6 +379,11 @@
   font-weight: 600;
   fill: var(--ink);
   font-size: 13px;
+  /* alone del colore della regione: copre i passi della ricerca che passano sotto */
+  paint-order: stroke;
+  stroke: color-mix(in srgb, var(--c-red) 26%, var(--surface-solid));
+  stroke-width: 5px;
+  stroke-linejoin: round;
 }
 .hsearch__step {
   stroke: var(--ink-2);

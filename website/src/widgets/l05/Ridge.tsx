@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { Axes, Dot, FnPath, Handle, Label, Plot, Polyline, usePlot } from '../../components/plot/Plot'
 import { fmt } from '../../components/plot/scale'
+import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
@@ -37,6 +38,11 @@ const lambdaOf = (ln: number) => (ln === -Infinity ? 0 : Math.exp(ln))
 const fitAt = (ln: number) => ridgePolyfit(TR.xs, TR.ts, M, lambdaOf(ln))
 
 const fmtLn = (v: number) => (v === -Infinity ? '−∞' : fmt(v, 0))
+/** notazione scientifica leggibile: 1,5 · 10⁻⁸ invece di 1,5e-8 */
+const sci = (v: number) => {
+  const [m, e] = v.toExponential(1).split('e')
+  return <Tex>{`${m.replace('.', '{,}')} \\cdot 10^{${Number(e)}}`}</Tex>
+}
 
 function Presets({ ln }: { ln: number }) {
   return (
@@ -93,8 +99,8 @@ export function RidgeFit() {
             <Readout label="errore RMS di test" tone="orange" value={fmt(te, 3)} />
             <Readout
               label={<Tex>{'\\|\\mathbf{w}\\|'}</Tex>}
-              value={norm > 1e5 ? norm.toExponential(1).replace('.', ',') : fmt(norm, 2)}
-              sub={`λ = ${ln === -Infinity ? '0' : lambdaOf(ln).toExponential(1).replace('.', ',')}`}
+              value={norm > 1e5 ? sci(norm) : fmt(norm, 2)}
+              sub={<>λ = {ln === -Infinity ? '0' : sci(lambdaOf(ln))}</>}
             />
           </div>
           <Coefs w={w} />
@@ -146,7 +152,7 @@ function Coefs({ w }: { w: number[] }) {
               <span className="coef__bar">
                 <span className={v < 0 ? 'is-neg' : undefined} style={{ width: `${Math.min(100, (mag / max) * 100)}%` }} />
               </span>
-              <span className="coef__val">{Math.abs(v) >= 1e5 ? v.toExponential(1).replace('.', ',').replace('-', '−') : fmt(v, 2)}</span>
+              <span className="coef__val">{Math.abs(v) >= 1e5 ? sci(v) : fmt(v, 2)}</span>
             </li>
           )
         })}
@@ -187,15 +193,18 @@ export function RidgeRms() {
         />
         <Presets ln={ln} />
       </div>
-      <Plot xDomain={[LN_MIN, 0]} yDomain={[0, 1.2]} aspect={0.5} margin={{ b: 40 }}>
-        <Axes xTicks={[-40, -35, -30, -25, -20, -15, -10, -5, 0]} yTicks={[0, 0.5, 1]} xLabel="ln λ" yLabel="E_RMS" />
+      {/* spazio sopra le curve per le due etichette, così nessuna curva le attraversa (anche su mobile) */}
+      <Plot xDomain={[LN_MIN, 0]} yDomain={[0, 1.36]} aspect={0.5} margin={{ b: 40 }}>
+        <Axes xTicks={[-40, -35, -30, -25, -20, -15, -10, -5, 0]} yTicks={[0, 0.5, 1]} xLabel="ln λ"
+          yLabel={svgScript('E', 'RMS')}
+        />
         <Polyline pts={curves.tr} color="var(--c-blue)" width={2.4} />
         <Polyline pts={curves.te} color="var(--c-orange)" width={2.4} />
         <GoodZone x={best.x} y={best.y} />
-        <Label x={-39} y={1.1} className="plot-label--muted">
+        <Label x={-39.5} y={1.28} className="plot-label--muted">
           λ piccolo → overfitting
         </Label>
-        <Label x={-1} y={1.1} anchor="end" className="plot-label--muted">
+        <Label x={-0.5} y={1.28} anchor="end" className="plot-label--muted">
           λ grande → underfitting
         </Label>
         <Polyline

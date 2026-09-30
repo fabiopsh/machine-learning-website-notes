@@ -301,7 +301,7 @@
   outline: none;
 }
 .cmap__node rect {
-  fill: var(--surface);
+  fill: var(--surface-solid);
   stroke: var(--line-2);
   stroke-width: 1.6;
   transition:
@@ -325,7 +325,7 @@
   stroke: var(--ink-3);
 }
 .cmap__node.is-active rect {
-  fill: var(--accent-soft);
+  fill: color-mix(in srgb, var(--accent) 9%, var(--surface-solid));
   stroke: var(--accent);
   stroke-width: 2.2;
 }

@@ -64,15 +64,15 @@ export function InductiveDeductive() {
   )
   return (
     <div className="ind">
-      <svg viewBox="0 0 760 400" className="ind__svg" role="img" aria-label="Sistema induttivo e sistema deduttivo equivalente">
+      <svg viewBox="0 0 760 404" className="ind__svg" role="img" aria-label="Sistema induttivo e sistema deduttivo equivalente">
         <defs>
           <marker id="ind-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
             <path d="M0,0L10,5L0,10z" className="ind__head" />
           </marker>
         </defs>
         {row(34, 'sistema induttivo', 'algoritmo di apprendimento', false)}
-        {row(212, 'sistema deduttivo equivalente', 'dimostratore di teoremi', true)}
-        <text x={380} y={196} textAnchor="middle" className="ind__eq">
+        {row(228, 'sistema deduttivo equivalente', 'dimostratore di teoremi', true)}
+        <text x={365} y={197} textAnchor="middle" className="ind__eq">
           ≡
         </text>
       </svg>

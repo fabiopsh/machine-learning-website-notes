@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { useWidth } from '../../lib/useSize'
 import { clamp, fmtTick, scaleLinear, type Scale } from './scale'
+import { subDigits } from './svgText'
 
 export type Margin = { t: number; r: number; b: number; l: number }
 export type Pt = { x: number; y: number }
@@ -208,12 +209,13 @@ export function Axes({
         ))}
       {xLabel && (
         <text className="axes__label" x={m.l + iw} y={m.t + ih + 32} textAnchor="end">
-          {xLabel}
+          {subDigits(xLabel)}
         </text>
       )}
+      {/* sopra l'asse y, a destra delle etichette dei tick: non si sovrappone al tick più alto */}
       {yLabel && (
-        <text className="axes__label" x={m.l - 6} y={m.t - 4} textAnchor="start" transform={`translate(${-m.l + 10} 0)`}>
-          {yLabel}
+        <text className="axes__label" x={m.l} y={m.t - 6} textAnchor="start">
+          {subDigits(yLabel)}
         </text>
       )}
     </g>
@@ -440,7 +442,7 @@ export function Label({
   const { x, y } = usePlot()
   return (
     <text className={`plot-label${className ? ' ' + className : ''}`} x={x(xv) + dx} y={y(yv) + dy} textAnchor={anchor}>
-      {children}
+      {subDigits(children)}
     </text>
   )
 }

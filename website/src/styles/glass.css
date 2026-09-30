@@ -32,6 +32,8 @@
 
   /* figure: riquadri, lastra dei grafici, riflesso sui blocchi colorati */
   --surface: rgba(255, 255, 255, 0.64);
+  /* il colore che --surface assume sopra il vetro di una figura, ma opaco */
+  --surface-solid: #fbfcff;
   --plot-pane: rgba(255, 255, 255, 0.52);
   --plot-pane-edge: rgba(28, 36, 76, 0.1);
   --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1) 52%, rgba(255, 255, 255, 0));
@@ -80,6 +82,7 @@
   --tick: #8f96b2;
 
   --surface: rgba(78, 88, 136, 0.3);
+  --surface-solid: #2f3657;
   --plot-pane: rgba(255, 255, 255, 0.035);
   --plot-pane-edge: rgba(255, 255, 255, 0.12);
   --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.05) 52%, rgba(255, 255, 255, 0));

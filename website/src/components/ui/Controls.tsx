@@ -149,7 +149,7 @@ export function Controls({ children, align }: { children: ReactNode; align?: 'en
   return <div className={`controls${align ? ' controls--' + align : ''}`}>{children}</div>
 }
 
-export function Legend({ items }: { items: { label: ReactNode; color: string; kind?: 'line' | 'dot' | 'dash' | 'area' }[] }) {
+export function Legend({ items }: { items: { label: ReactNode; color: string; kind?: 'line' | 'dot' | 'square' | 'dash' | 'area' }[] }) {
   return (
     <ul className="legend">
       {items.map((it, i) => (

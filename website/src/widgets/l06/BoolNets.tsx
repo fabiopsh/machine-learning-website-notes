@@ -235,10 +235,10 @@ export function XorNetwork() {
     { id: '2:0', x: 220, y: 45, label: 'o', kind: 'output', value: o },
   ]
   const edges: NetEdge[] = [
-    { from: '0:0', to: '1:0', w: 1, label: '1' },
-    { from: '0:1', to: '1:0', w: 1, label: '1' },
-    { from: '0:0', to: '1:1', w: 1, label: '1' },
-    { from: '0:1', to: '1:1', w: 1, label: '1' },
+    { from: '0:0', to: '1:0', w: 1, label: '1', at: 0.3 },
+    { from: '0:1', to: '1:0', w: 1, label: '1', at: 0.3 },
+    { from: '0:0', to: '1:1', w: 1, label: '1', at: 0.3 },
+    { from: '0:1', to: '1:1', w: 1, label: '1', at: 0.3 },
     { from: '1:0', to: '2:0', w: -1, label: '−1' },
     { from: '1:1', to: '2:0', w: 1, label: '1' },
   ]

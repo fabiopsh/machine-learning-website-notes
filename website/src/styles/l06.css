@@ -116,12 +116,12 @@
   transition: stroke 0.2s var(--ease);
 }
 .bio__term circle {
-  fill: var(--surface);
+  fill: var(--surface-solid);
   stroke: var(--ink-3);
   stroke-width: 2.4;
 }
 .bio__soma ellipse {
-  fill: color-mix(in srgb, var(--c-yellow) 14%, var(--surface));
+  fill: color-mix(in srgb, var(--c-yellow) 14%, var(--surface-solid));
   stroke: var(--ink-3);
   stroke-width: 2.4;
   transition:
@@ -129,14 +129,14 @@
     stroke 0.2s var(--ease);
 }
 .bio__soma.is-firing ellipse {
-  fill: color-mix(in srgb, var(--accent) 28%, var(--surface));
+  fill: color-mix(in srgb, var(--accent) 28%, var(--surface-solid));
   stroke: var(--accent);
 }
 .bio__nucleus {
-  fill: color-mix(in srgb, var(--ink) 18%, var(--surface));
+  fill: color-mix(in srgb, var(--ink) 18%, var(--surface-solid));
 }
 .bio__myelin rect {
-  fill: color-mix(in srgb, var(--c-blue) 22%, var(--surface));
+  fill: color-mix(in srgb, var(--c-blue) 22%, var(--surface-solid));
   stroke: color-mix(in srgb, var(--c-blue) 55%, var(--line-2));
   stroke-width: 1.4;
 }
@@ -151,13 +151,13 @@
   outline: none;
 }
 .bio__syn circle {
-  fill: color-mix(in srgb, var(--c-blue) 18%, var(--surface));
+  fill: color-mix(in srgb, var(--c-blue) 18%, var(--surface-solid));
   stroke: var(--c-blue);
   stroke-width: 2;
   transition: r 0.25s var(--ease-out);
 }
 .bio__syn.is-inh circle {
-  fill: color-mix(in srgb, var(--c-orange) 18%, var(--surface));
+  fill: color-mix(in srgb, var(--c-orange) 18%, var(--surface-solid));
   stroke: var(--c-orange);
 }
 .bio__syn:hover circle,
@@ -267,7 +267,7 @@
   fill: var(--ink-2);
 }
 .unit__w {
-  fill: var(--surface);
+  fill: var(--surface-solid);
   stroke: var(--line-2);
 }
 .unit__wtxt {
@@ -337,6 +337,21 @@
   align-self: center;
   font-size: 22px;
   color: var(--ink-4);
+}
+/* quando le tre colonne non stanno in una riga: una sotto l'altra, frecce verso il basso */
+@media (max-width: 760px) {
+  .ros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ros__col,
+  .ros__col--out {
+    flex: none;
+  }
+  .ros__arrow {
+    transform: rotate(90deg);
+    line-height: 1;
+  }
 }
 .ros__retina {
   display: grid;

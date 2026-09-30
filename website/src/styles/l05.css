@@ -138,12 +138,12 @@
   fill: var(--ink-3);
 }
 .delta__w {
-  fill: var(--surface);
+  fill: var(--surface-solid);
   stroke: var(--line-2);
   stroke-width: 1.2;
 }
 .delta__w.is-changed {
-  fill: color-mix(in srgb, var(--c-green) 16%, var(--surface));
+  fill: color-mix(in srgb, var(--c-green) 16%, var(--surface-solid));
   stroke: var(--c-green);
 }
 .delta__wtxt {
@@ -156,6 +156,10 @@
   font-size: 11px;
   fill: var(--ink-4);
   text-decoration: line-through;
+  paint-order: stroke;
+  stroke: var(--surface-solid);
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }
 .delta__node {
   fill: var(--surface);

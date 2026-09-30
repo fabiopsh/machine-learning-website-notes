@@ -134,7 +134,14 @@ export function TwoViews() {
       </div>
       <Tasks
         items={[
-          { label: 'Passa su un’unità nascosta (o su una riga della tabella): è un termine f_j(·) della funzione.', done: seen.hover },
+          {
+            label: (
+              <>
+                Passa su un’unità nascosta (o su una riga della tabella): è un termine <Tex>{'f_j(\\cdot)'}</Tex> della funzione.
+              </>
+            ),
+            done: seen.hover,
+          },
           { label: 'Cambia l’input: i valori scorrono dalla rete alla formula, strato dopo strato.', done: seen.moved },
         ]}
       />
@@ -396,7 +403,7 @@ export function UniversalApprox() {
       </div>
       <div className="readouts">
         <Readout label="errore massimo |f − h|" tone="red" value={fmt(err, 3)} />
-        <Readout label="bias dell’uscita" value={fmt(w0, 2)} sub="h(x) = w₀ + Σ w_j σ(a(x − c_j))" />
+        <Readout label="bias dell’uscita" value={fmt(w0, 2)} sub={<Tex>{'h(x) = w_0 + \\sum_j w_j\\, \\sigma(a(x - c_j))'}</Tex>} />
       </div>
       <Tasks
         items={[

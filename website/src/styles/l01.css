@@ -134,12 +134,10 @@
   height: 168px;
   border-radius: 12px;
   background: var(--surface);
+  color: var(--ink);
   border: 1.5px dashed var(--accent-line);
   cursor: crosshair;
   touch-action: none;
-}
-:root[data-theme='dark'] .digits__pad {
-  filter: invert(0.9);
 }
 .digits__matrix {
   display: grid;
@@ -277,11 +275,14 @@
   gap: 6px;
 }
 .tens__cell {
-  fill: color-mix(in srgb, var(--c-blue) 14%, var(--surface));
+  fill: color-mix(in srgb, var(--c-blue) 14%, var(--surface-solid));
   stroke: color-mix(in srgb, var(--c-blue) 55%, var(--plot-bg));
   stroke-width: 1.2;
   cursor: default;
   transition: fill 0.12s var(--ease);
+}
+.tens__back {
+  fill: var(--surface-solid);
 }
 .tens__cell.is-hot {
   fill: var(--accent);

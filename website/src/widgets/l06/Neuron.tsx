@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Axes, Dot, FnPath, Handle, Label, Plot, Polyline } from '../../components/plot/Plot'
 import { fmt } from '../../components/plot/scale'
+import { subDigits } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
@@ -204,7 +205,7 @@ export function Unit() {
     <div>
       <div className="wscroll">
         <svg
-          viewBox="0 0 640 230"
+          viewBox="-18 0 658 230"
           className="unit__svg"
           role="img"
           aria-label="Unità artificiale: input, pesi, somma pesata e funzione di attivazione"
@@ -233,11 +234,12 @@ export function Unit() {
                     {fmt(val, 1)}
                   </text>
                   <text x={-28} y={5} textAnchor="end" className="unit__sym">
-                    {isBias ? 'x₀' : `x${'₁₂₃'[i - 1]}`}
+                    {subDigits(isBias ? 'x₀' : `x${'₁₂₃'[i - 1]}`)}
                   </text>
                 </g>
-                <g transform={`translate(${170} ${yv + (116 - yv) * 0.45 - 6})`}>
-                  <rect x={-34} y={-13} width={68} height={24} rx={12} className="unit__w" />
+                {/* il peso sta sul proprio arco (stessa frazione di percorso per tutti, così non si sovrappongono) */}
+                <g transform={`translate(${66 + 272 * 0.14} ${yv + (116 - yv) * 0.14})`}>
+                  <rect x={-34} y={-12} width={68} height={24} rx={12} className="unit__w" />
                   <text y={4} textAnchor="middle" className="unit__wtxt">
                     {isBias ? 'w₀' : `w${'₁₂₃'[i - 1]}`} {fmt(wv, 1)}
                   </text>

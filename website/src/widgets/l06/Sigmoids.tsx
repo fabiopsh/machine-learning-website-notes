@@ -89,9 +89,9 @@ function Tangent({ a }: { a: number }) {
         { x: -half, y: 0.5 - k * half },
         { x: half, y: 0.5 + k * half },
       ]}
-      color="var(--ink-4)"
-      width={1}
-      dash="3 4"
+      color="var(--ink-3)"
+      width={1.4}
+      dash="5 4"
     />
   )
 }

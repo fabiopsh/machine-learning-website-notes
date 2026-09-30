@@ -266,7 +266,8 @@ function KSlider({ k, width = 260 }: { k: number; width?: number }) {
       marks={[
         { value: 0, label: '1' },
         { value: K_STEPS.indexOf(15), label: '15' },
-        { value: K_STEPS.length - 1, label: 'l' },
+        // l in corsivo matematico: in un carattere senza grazie si confonde con 1
+        { value: K_STEPS.length - 1, label: <Tex>l</Tex> },
       ]}
     />
   )
@@ -347,7 +348,7 @@ export function KnnCurves({ variant }: { variant: 'u' | 'htf' }) {
             { label: 'errore di test', color: 'var(--c-orange)' },
             ...(variant === 'htf'
               ? [
-                  { label: 'modello lineare', color: 'var(--c-red)', kind: 'dot' as const },
+                  { label: 'modello lineare', color: 'var(--ink-3)', kind: 'square' as const },
                   { label: 'errore di Bayes', color: 'var(--c-violet)' },
                 ]
               : []),
@@ -355,7 +356,7 @@ export function KnnCurves({ variant }: { variant: 'u' | 'htf' }) {
         />
         {variant === 'htf' && <ScenarioSwitch value={scenario} />}
       </div>
-      <Plot xDomain={[-0.05, LOGL + 0.05]} yDomain={[0, yMax]} aspect={0.5} margin={{ t: variant === 'htf' ? 30 : 16, b: 40 }}>
+      <Plot xDomain={[-0.05, LOGL + 0.05]} yDomain={[0, yMax]} aspect={0.5} margin={{ t: variant === 'htf' ? 36 : 16, b: 40 }}>
         <Axes
           xTicks={variant === 'u' ? [200, 45, 15, 5, 1].map(pos) : dofTicks.map((d) => Math.log10(d))}
           xFormat={(v) => String(Math.round(variant === 'u' ? L / 10 ** v : 10 ** v))}
@@ -405,7 +406,7 @@ export function KnnCurves({ variant }: { variant: 'u' | 'htf' }) {
         <Readout label="errore di training" tone="blue" value={pct(m.errTrain[k])} />
         <Readout label="errore di test" tone="orange" value={pct(m.errTest[k])} />
         {variant === 'htf' ? (
-          <Readout label="modello lineare (test)" tone="red" value={pct(m.lin.errTest)} sub={`Bayes: ${pct(m.bayesErr)}`} />
+          <Readout label="modello lineare (test)" value={pct(m.lin.errTest)} sub={`Bayes: ${pct(m.bayesErr)}`} />
         ) : (
           <Readout label="minimo dell’errore di test" value={`k = ${best}`} />
         )}
@@ -427,7 +428,7 @@ function TopKTicks() {
   return (
     <g className="htf__top">
       {[151, 83, 45, 25, 15, 9, 5, 3, 1].map((kk) => (
-        <text key={kk} x={x(pos(kk))} y={m.t - 10} textAnchor="middle" className="axes__tick">
+        <text key={kk} x={x(pos(kk))} y={m.t - 22} textAnchor="middle" className="axes__tick">
           {kk}
         </text>
       ))}

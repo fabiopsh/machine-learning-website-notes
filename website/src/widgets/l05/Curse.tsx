@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Axes, Dot, FnPath, Label, Plot, Polyline } from '../../components/plot/Plot'
 import { fmt } from '../../components/plot/scale'
+import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Legend, Segmented, Slider } from '../../components/ui/Controls'
 import { useLatch } from '../../lib/useLatch'
@@ -83,8 +84,9 @@ export function Curse() {
               ))}
             </>
           )}
-          <Label x={0.62} y={0.97} className="plot-label--muted">
-            lato = r^(1/n)
+          {/* sotto la diagonale non passa nessuna curva */}
+          <Label x={0.97} y={0.1} anchor="end" className="plot-label--muted">
+            {svgScript('lato = r', '1/n', 'sup')}
           </Label>
         </Plot>
       </div>

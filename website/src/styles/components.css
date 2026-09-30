@@ -1043,6 +1043,12 @@
   border-radius: 50%;
   background: var(--k);
 }
+.legend__key--square {
+  width: 9px;
+  height: 9px;
+  border-radius: 1.5px;
+  background: var(--k);
+}
 .legend__key--area {
   width: 12px;
   height: 12px;

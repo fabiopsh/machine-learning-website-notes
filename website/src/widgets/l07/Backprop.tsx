@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Arrow, Axes, Dot, Handle, Plot, Polyline, usePlot } from '../../components/plot/Plot'
 import { fmt } from '../../components/plot/scale'
+import { subDigits, svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
@@ -65,7 +66,7 @@ export function BpNetwork() {
                 <g key={n.id}>
                   <line x1={n.x} y1={n.y - 15} x2={n.x} y2={22} className="net__out" markerEnd="url(#net-arrow)" />
                   <text x={n.x} y={13} textAnchor="middle" className="bp7__lbl">
-                    {`o${sub(a + 1)} → d${sub(a + 1)}`}
+                    {subDigits(`o${sub(a + 1)} → d${sub(a + 1)}`)}
                   </text>
                 </g>
               ))}
@@ -94,7 +95,18 @@ export function BpNetwork() {
           <p className="wnote">Clicca un’unità di uno strato per cambiare i, j o k. Il primo indice di ogni peso è l’unità che riceve.</p>
         </div>
       </div>
-      <Tasks items={[{ label: 'Scegli un’altra unità nascosta j: cambiano sia wⱼᵢ sia wₖⱼ.', done: seen.moved }]} />
+      <Tasks
+        items={[
+          {
+            label: (
+              <>
+                Scegli un’altra unità nascosta j: cambiano sia <Tex>{'w_{ji}'}</Tex> sia <Tex>{'w_{kj}'}</Tex>.
+              </>
+            ),
+            done: seen.moved,
+          },
+        ]}
+      />
     </div>
   )
 }
@@ -244,12 +256,17 @@ function Levels() {
 
 /* ------------------------------------------------------------------ Fig. 7.3 */
 
+
 type Focus = 'wkj' | 'dj' | 'wji'
-const FOCUS: Record<Focus, { tex: string; hot: string[]; note: string }> = {
+const FOCUS: Record<Focus, { tex: string; hot: string[]; note: ReactNode }> = {
   wkj: {
     tex: '\\Delta w_{kj} = \\eta\\,\\delta_k\\, o_j',
     hot: ['j', 'k', 'jk'],
-    note: 'Servono solo il delta dell’unità k (che riceve) e l’uscita oⱼ dell’unità j (che invia).',
+    note: (
+      <>
+        Servono solo il delta dell’unità k (che riceve) e l’uscita <Tex>{'o_j'}</Tex> dell’unità j (che invia).
+      </>
+    ),
   },
   dj: {
     tex: "\\delta_j = \\Big(\\sum_k \\delta_k\\, w_{kj}\\Big)\\, f'_j(net_j)",
@@ -259,7 +276,11 @@ const FOCUS: Record<Focus, { tex: string; hot: string[]; note: string }> = {
   wji: {
     tex: '\\Delta w_{ji} = \\eta\\,\\delta_j\\, o_i',
     hot: ['i', 'j', 'ij'],
-    note: 'Servono solo il delta di j e l’uscita oᵢ dell’unità di input i: ancora quantità adiacenti al peso.',
+    note: (
+      <>
+        Servono solo il delta di j e l’uscita <Tex>{'o_i'}</Tex> dell’unità di input i: ancora quantità adiacenti al peso.
+      </>
+    ),
   },
 }
 
@@ -275,9 +296,30 @@ export function Locality() {
           value={focus}
           onChange={setFocus}
           options={[
-            { value: 'wkj', label: 'aggiornare wₖⱼ' },
-            { value: 'dj', label: 'calcolare δⱼ' },
-            { value: 'wji', label: 'aggiornare wⱼᵢ' },
+            {
+              value: 'wkj',
+              label: (
+                <>
+                  aggiornare <Tex>{'w_{kj}'}</Tex>
+                </>
+              ),
+            },
+            {
+              value: 'dj',
+              label: (
+                <>
+                  calcolare <Tex>{'\\delta_j'}</Tex>
+                </>
+              ),
+            },
+            {
+              value: 'wji',
+              label: (
+                <>
+                  aggiornare <Tex>{'w_{ji}'}</Tex>
+                </>
+              ),
+            },
           ]}
         />
       </div>
@@ -310,25 +352,25 @@ export function Locality() {
             </g>
           ))}
           <text x={108} y={205} className="loc7__lbl">
-            wⱼᵢ
+            {svgScript('w', 'ji')}
           </text>
           <text x={100} y={100} className="loc7__lbl">
-            wₖⱼ
+            {svgScript('w', 'kj')}
           </text>
           <text x={40} y={286} className="loc7__lbl">
-            oᵢ
+            {svgScript('o', 'i')}
           </text>
           <text x={214} y={160} className="loc7__lbl">
-            oⱼ
+            {svgScript('o', 'j')}
           </text>
           {focus !== 'wji' && (
             <text x={100} y={30} className="loc7__lbl loc7__lbl--d">
-              δₖ
+              {svgScript('δ', 'k')}
             </text>
           )}
           {focus !== 'wkj' && (
             <text x={214} y={134} className="loc7__lbl loc7__lbl--d">
-              δⱼ
+              {svgScript('δ', 'j')}
             </text>
           )}
         </svg>
@@ -343,8 +385,22 @@ export function Locality() {
       </div>
       <Tasks
         items={[
-          { label: 'Guarda cosa serve per calcolare δⱼ: le unità sopra j e i pesi che le collegano.', done: seen.dj },
-          { label: 'Passa a wⱼᵢ: di nuovo solo unità e pesi adiacenti.', done: seen.wji },
+          {
+            label: (
+              <>
+                Guarda cosa serve per calcolare <Tex>{'\\delta_j'}</Tex>: le unità sopra j e i pesi che le collegano.
+              </>
+            ),
+            done: seen.dj,
+          },
+          {
+            label: (
+              <>
+                Passa a <Tex>{'w_{ji}'}</Tex>: di nuovo solo unità e pesi adiacenti.
+              </>
+            ),
+            done: seen.wji,
+          },
         ]}
       />
     </div>
@@ -379,11 +435,17 @@ function update(n: Net): Net {
     wh: n.wh.map((w, j) => w.map((v, u) => v + ETA4 * f.dj[j] * (u === 0 ? 1 : X4[u - 1]))),
   }
 }
-const PHASES = [
+const PHASES: ReactNode[] = [
   'Calcolo in avanti: le uscite di tutte le unità, strato per strato.',
-  'Errori e delta nello strato di uscita: δₖ = (dₖ − oₖ) f′ₖ(netₖ).',
-  'Propagazione all’indietro: δⱼ = (Σₖ δₖ wₖⱼ) f′ⱼ(netⱼ).',
-  'Aggiornamento dei pesi (bias compresi): wₜᵤ ← wₜᵤ + η δₜ oᵤ.',
+  <>
+    Errori e delta nello strato di uscita: <Tex>{"\\delta_k = (d_k - o_k)\\, f'_k(net_k)"}</Tex>.
+  </>,
+  <>
+    Propagazione all’indietro: <Tex>{"\\delta_j = \\big(\\sum_k \\delta_k\\, w_{kj}\\big)\\, f'_j(net_j)"}</Tex>.
+  </>,
+  <>
+    Aggiornamento dei pesi (bias compresi): <Tex>{'w_{tu} \\leftarrow w_{tu} + \\eta\\, \\delta_t\\, o_u'}</Tex>.
+  </>,
 ]
 
 export function BackpropFlow() {
@@ -500,7 +562,7 @@ export function BackpropFlow() {
             ))}
           {[0, 1].map((k) => (
             <text key={k} x={pos.get(`2:${k}`)!.x} y={18} textAnchor="middle" className="bp7__lbl">
-              d{sub(k + 1)} = {fmt(D4[k], 1)}
+              {subDigits(`d${sub(k + 1)} = ${fmt(D4[k], 1)}`)}
             </text>
           ))}
         </NetSvg>
@@ -545,7 +607,14 @@ export function BackpropFlow() {
       <Tasks
         items={[
           { label: 'Avanza fino alla propagazione all’indietro: i delta delle uscite scendono verso le unità nascoste.', done: seen.back },
-          { label: 'Completa un ciclo con l’aggiornamento dei pesi: Eₚ diminuisce.', done: seen.one },
+          {
+            label: (
+              <>
+                Completa un ciclo con l’aggiornamento dei pesi: <Tex>{'E_p'}</Tex> diminuisce.
+              </>
+            ),
+            done: seen.one,
+          },
           { label: 'Esegui 50 cicli: le uscite si avvicinano ai target.', done: seen.many },
         ]}
       />
@@ -643,7 +712,14 @@ export function NumericExample() {
       <Tasks
         items={[
           { label: 'Applica l’aggiornamento una volta: entrambi i pesi aumentano e l’uscita sale verso il target.', done: seen.one },
-          { label: 'Continua ad applicarlo finché oₖ dista meno di 0,05 dal target.', done: seen.close },
+          {
+            label: (
+              <>
+                Continua ad applicarlo finché <Tex>{'o_k'}</Tex> dista meno di 0,05 dal target.
+              </>
+            ),
+            done: seen.close,
+          },
         ]}
       />
     </div>

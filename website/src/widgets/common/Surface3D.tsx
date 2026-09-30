@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent as RKeyboardEvent, type PointerEvent as RPointerEvent } from 'react'
 import { useWidth } from '../../lib/useSize'
 import { cssVar, useLook, useTheme } from '../../lib/theme'
+import { splitSubDigits } from '../../components/plot/svgText'
 
 /**
  * Superficie z = f(x, y) disegnata su canvas con proiezione ortografica
@@ -383,8 +384,8 @@ function draw(ctx: CanvasRenderingContext2D, a: DrawArgs) {
     [xr[0] - sx * 0.16, cy, zl],
     [xr[1] + sx * 0.16, cy, zl],
   ])
-  ctx.fillText(a.axisLabels[0], lx.x, lx.y + 5)
-  ctx.fillText(a.axisLabels[1], ly.x, ly.y + 5)
+  axisLabel(ctx, a.axisLabels[0], lx.x, lx.y + 5)
+  axisLabel(ctx, a.axisLabels[1], ly.x, ly.y + 5)
   // asse z nell'angolo più lontano, così non attraversa la superficie
   const far = (
     [
@@ -402,7 +403,25 @@ function draw(ctx: CanvasRenderingContext2D, a: DrawArgs) {
   ctx.moveTo(bot.x, bot.y)
   ctx.lineTo(top.x, top.y)
   ctx.stroke()
-  ctx.fillText(a.axisLabels[2], top.x, top.y - 8)
+  axisLabel(ctx, a.axisLabels[2], top.x, top.y - 8)
+}
+
+/** etichetta di un asse centrata in (x, y), con le cifre in pedice (x₁) disegnate come pedice vero */
+function axisLabel(ctx: CanvasRenderingContext2D, label: string, x: number, y: number) {
+  const [base, sub] = splitSubDigits(label)
+  if (!sub) {
+    ctx.fillText(label, x, y)
+    return
+  }
+  const font = ctx.font
+  const wb = ctx.measureText(base).width
+  ctx.font = font.replace('14px', '10px')
+  const ws = ctx.measureText(sub).width
+  ctx.textAlign = 'left'
+  ctx.fillText(sub, x - (wb + ws) / 2 + wb + 0.5, y + 3)
+  ctx.font = font
+  ctx.fillText(base, x - (wb + ws) / 2, y)
+  ctx.textAlign = 'center'
 }
 
 function isFloor(o: Overlay, zf: number) {

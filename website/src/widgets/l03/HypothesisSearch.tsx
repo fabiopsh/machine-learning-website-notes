@@ -160,7 +160,8 @@ export function HypothesisSearch() {
           <circle key={`p${i}`} cx={p.x} cy={p.y} r={i === 0 ? 7 : 4.5} className={`hsearch__pt${i === 0 ? ' is-start' : ''}`} />
         ))}
         <circle cx={OPT.x} cy={OPT.y} r={arrived ? 10 : 7} className={`hsearch__opt${arrived ? ' is-reached' : ''}`} />
-        <text x={OPT.x + 16} y={OPT.y + 5} className="hsearch__lbl hsearch__lbl--strong">
+        {/* sotto il punto: la ricerca di partenza arriva dall'alto a destra */}
+        <text x={OPT.x} y={OPT.y + 30} textAnchor="middle" className="hsearch__lbl hsearch__lbl--strong">
           soluzione ottima (errore minimo)
         </text>
       </svg>

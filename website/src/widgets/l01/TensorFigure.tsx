@@ -41,11 +41,22 @@ export function TensorFigure() {
               {k === 2 &&
                 [1, 2, 3, 4].map((i) => [1, 2, 3, 4].map((j) => sq(2, [i, j], 5 + (j - 1) * cell, 10 + (i - 1) * cell, `m${i}${j}`)))}
               {k === 3 &&
-                [3, 2, 1].map((kk) =>
-                  [1, 2, 3].map((i) =>
-                    [1, 2, 3].map((j) => sq(3, [i, j, kk], 5 + (j - 1) * cell + (kk - 1) * 16, 36 + (i - 1) * cell - (kk - 1) * 14, `t${i}${j}${kk}`)),
-                  ),
-                )}
+                [3, 2, 1].map((kk) => (
+                  <g key={kk}>
+                    {/* fondo pieno sotto ogni strato: copre gli strati dietro, che si vedono solo dove sporgono */}
+                    <rect
+                      x={4 + (kk - 1) * 16}
+                      y={35 - (kk - 1) * 14}
+                      width={3 * cell - 1}
+                      height={3 * cell - 1}
+                      rx={4}
+                      className="tens__back"
+                    />
+                    {[1, 2, 3].map((i) =>
+                      [1, 2, 3].map((j) => sq(3, [i, j, kk], 5 + (j - 1) * cell + (kk - 1) * 16, 36 + (i - 1) * cell - (kk - 1) * 14, `t${i}${j}${kk}`)),
+                    )}
+                  </g>
+                ))}
             </svg>
             <div className="tens__name">
               {it.name} · {it.axes} {it.axes === 1 ? 'asse' : 'assi'}

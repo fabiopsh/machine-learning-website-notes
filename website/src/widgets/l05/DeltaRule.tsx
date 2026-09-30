@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { fmt } from '../../components/plot/scale'
+import { svgScript, subDigits } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Segmented, Slider } from '../../components/ui/Controls'
@@ -49,14 +50,15 @@ export function DeltaRule() {
   }
 
   const Y_IN = [58, 130, 202]
+  const WX = 150
   return (
     <div className="delta">
       <div className="delta__scroll">
-        <svg viewBox="0 0 660 262" className="delta__svg" role="img" aria-label="Unità a soglia con tre input, i pesi e l’uscita">
+        <svg viewBox="-28 0 688 262" className="delta__svg" role="img" aria-label="Unità a soglia con tre input, i pesi e l’uscita">
           <text x={46} y={22} className="delta__head" textAnchor="middle">
             input
           </text>
-          <text x={210} y={22} className="delta__head" textAnchor="middle">
+          <text x={WX} y={22} className="delta__head" textAnchor="middle">
             pesi (w₀ = 0)
           </text>
           {Y_IN.map((yy, j) => {
@@ -77,10 +79,11 @@ export function DeltaRule() {
                     {x[j]}
                   </text>
                   <text x={10} y={yy + 5} textAnchor="end" className="delta__sub">
-                    x{'₁₂₃'[j]}
+                    {subDigits(`x${'₁₂₃'[j]}`)}
                   </text>
                 </g>
-                <g transform={`translate(${210} ${yy + (130 - yy) * 0.45 - 12})`}>
+                {/* il peso sta sul proprio arco, che lo attraversa al centro */}
+                <g transform={`translate(${WX} ${yy + ((130 - yy) * (WX - 78)) / (330 - 78)})`}>
                   <rect x={-44} y={-15} width={88} height={30} rx={15} className={`delta__w${changed ? ' is-changed' : ''}`} />
                   <text y={5} textAnchor="middle" className="delta__wtxt">
                     {fmtW(w[j])}
@@ -96,7 +99,7 @@ export function DeltaRule() {
           })}
           <rect x={330} y={92} width={170} height={76} rx={14} className="delta__node" />
           <text x={415} y={126} textAnchor="middle" className="delta__node-t">
-            h(x) = sign(wᵀx)
+            {svgScript('h(x) = sign(w', 'T', 'sup', 'x)')}
           </text>
           <text x={415} y={150} textAnchor="middle" className="delta__sub">
             wᵀx = {fmt(net, 2)}

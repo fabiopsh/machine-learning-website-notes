@@ -11,7 +11,7 @@
   transition: stroke 0.2s var(--ease);
 }
 .curmap__node rect {
-  fill: var(--surface);
+  fill: var(--surface-solid);
   stroke: var(--line-2);
   stroke-width: 1.5;
   transition:
@@ -31,7 +31,7 @@
   stroke-width: 2.5;
 }
 .curmap__node.is-hot rect {
-  fill: var(--accent-soft);
+  fill: color-mix(in srgb, var(--accent) 9%, var(--surface-solid));
   stroke: var(--accent);
 }
 .curmap__node.is-hot .curmap__edge {

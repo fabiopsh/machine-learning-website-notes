@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { subDigits } from '../../components/plot/svgText'
 
 /**
  * Disegno di una rete a strati in SVG (viewBox fisso, scala con la larghezza).
@@ -16,7 +17,8 @@ export type NetNode = {
   value?: number
   kind?: 'input' | 'hidden' | 'output' | 'bias'
 }
-export type NetEdge = { from: NodeId; to: NodeId; w?: number; label?: ReactNode; dash?: boolean }
+/** `at`: frazione dell'arco (da `from`) a cui si mette l'etichetta, 0,42 se non indicata */
+export type NetEdge = { from: NodeId; to: NodeId; w?: number; label?: ReactNode; at?: number; dash?: boolean }
 
 export function layout(sizes: number[], W: number, H: number, padX = 60, padY = 36): NetNode[] {
   const nodes: NetNode[] = []
@@ -91,11 +93,7 @@ export function NetSvg({ W, H, nodes, edges, r = 18, hot, dimOthers, onNodeEnter
               strokeDasharray={e.dash ? '5 4' : undefined}
               markerEnd="url(#net-arrow)"
             />
-            {e.label !== undefined && (
-              <text x={a.x + dx * 0.42} y={a.y + dy * 0.42} className="net__elabel" textAnchor="middle" dy={-4}>
-                {e.label}
-              </text>
-            )}
+            {e.label !== undefined && <EdgeLabel ax={a.x} ay={a.y} dx={dx} dy={dy} at={e.at ?? 0.42} label={e.label} />}
           </g>
         )
       })}
@@ -118,7 +116,7 @@ export function NetSvg({ W, H, nodes, edges, r = 18, hot, dimOthers, onNodeEnter
             )}
             {n.label !== undefined && (
               <text y={4.5} textAnchor="middle" className="net__label">
-                {n.label}
+                {subDigits(n.label)}
               </text>
             )}
           </g>
@@ -126,6 +124,27 @@ export function NetSvg({ W, H, nodes, edges, r = 18, hot, dimOthers, onNodeEnter
       })}
       {children}
     </svg>
+  )
+}
+
+/**
+ * Etichetta di un arco, spostata di lato (sopra, o a sinistra se l'arco è verticale) quanto basta
+ * perché la linea non attraversi il testo, anche se l'arco è inclinato.
+ */
+function EdgeLabel({ ax, ay, dx, dy, at, label }: { ax: number; ay: number; dx: number; dy: number; at: number; label: ReactNode }) {
+  const L = Math.hypot(dx, dy) || 1
+  let nx = -dy / L
+  let ny = dx / L
+  if (ny > 0 || (Math.abs(ny) < 1e-6 && nx > 0)) {
+    nx = -nx
+    ny = -ny
+  }
+  const halfW = (typeof label === 'string' ? label.length : 2) * 3.5
+  const d = halfW * Math.abs(dy / L) + 6 * Math.abs(dx / L) + 3
+  return (
+    <text x={ax + dx * at + nx * d} y={ay + dy * at + ny * d + 4} className="net__elabel" textAnchor="middle">
+      {label}
+    </text>
   )
 }
 

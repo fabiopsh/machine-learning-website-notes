@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Arrow, Axes, Dot, FnPath, Handle, Label, Plot, Polyline, usePlot } from '../../components/plot/Plot'
 import { fmt } from '../../components/plot/scale'
+import { svgScript, subDigits } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Slider } from '../../components/ui/Controls'
@@ -40,7 +41,7 @@ function Mark({ p, bad, sel, name, onClick }: { p: LP; bad: boolean; sel?: boole
       )}
       {name && (
         <text x={10} y={-8} className="pl__name">
-          {name}
+          {subDigits(name)}
         </text>
       )}
     </g>
@@ -269,7 +270,7 @@ export function ConvergenceBound() {
             dash="4 4"
           />
           <Label x={qm} y={D.beta * qm * 0.06} dx={-6} anchor="end" className="plot-label--math">
-            q_max
+            {svgScript('q', 'max')}
           </Label>
           <Polyline pts={D.norms} color="var(--c-red)" width={1.4} />
           {D.norms.map((p, i) => (
@@ -304,7 +305,14 @@ export function ConvergenceBound() {
       </div>
       <Tasks
         items={[
-          { label: 'Avvicina le classi (separazione piccola): α cala e il limite q_max esplode.', done: seen.small },
+          {
+            label: (
+              <>
+                Avvicina le classi (separazione piccola): α cala e il limite <Tex>{'q_{max}'}</Tex> esplode.
+              </>
+            ),
+            done: seen.small,
+          },
           { label: 'Allontanale al massimo: bastano pochi errori per convergere.', done: seen.big },
         ]}
       />

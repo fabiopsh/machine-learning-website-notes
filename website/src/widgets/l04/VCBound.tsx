@@ -137,7 +137,7 @@ export function VCBound() {
           dash="4 4"
         />
         <Dot x={best.h} y={best.v} r={5} color="var(--c-violet)" />
-        <Label x={best.h} y={0} dy={-8} dx={6} className="plot-label--strong">
+        <Label x={best.h} y={best.v} dy={-12} dx={8} className="plot-label--strong">
           miglior compromesso
         </Label>
         {marks && (
@@ -169,7 +169,17 @@ export function VCBound() {
           <Readout label={<>bound su <Tex>R</Tex></>} tone="violet" value={fmt(bound(h), 3)} />
         </div>
         <span className={`verdict ${zone === 'ok' ? 'verdict--good' : zone === 'under' ? 'verdict--warn' : 'verdict--bad'}`}>
-          {zone === 'under' ? 'VC-dim bassa: ε piccolo ma R_emp alto (underfitting)' : zone === 'over' ? 'VC-dim alta: R_emp basso ma ε cresce (overfitting)' : 'Vicino al minimo del bound'}
+          {zone === 'under' ? (
+            <>
+              VC-dim bassa: <Tex>{'\\varepsilon'}</Tex> piccolo ma <Tex>{'R_{emp}'}</Tex> alto (underfitting)
+            </>
+          ) : zone === 'over' ? (
+            <>
+              VC-dim alta: <Tex>{'R_{emp}'}</Tex> basso ma <Tex>{'\\varepsilon'}</Tex> cresce (overfitting)
+            </>
+          ) : (
+            'Vicino al minimo del bound'
+          )}
         </span>
       </div>
       <div className="controls">

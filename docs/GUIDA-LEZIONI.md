@@ -310,6 +310,15 @@ Regole: linee 2–2,5 px, punti r ≥ 4 con anello `--plot-bg`, griglia sottile;
 serie; il testo non prende il colore della serie; niente colori esadecimali nel codice dei widget
 (solo token `var(--…)`), così i temi funzionano da soli.
 
+Testo nelle figure:
+- **pedici e apici**: mai `q_max`, `R_emp`, `r^(1/n)` scritti così, e mai lettere Unicode in pedice come
+  `ⱼ`, `ᵢ`, `ₖ` (i font del sito non le hanno: escono da un font di ripiego). Nell'HTML (didascalie dei
+  controlli, «Prova a…», note) usare `<Tex>{'q_{max}'}</Tex>`; nell'SVG un `<tspan baselineShift="sub"
+  fontSize="0.7em">max</tspan>` (`"super"` per gli apici). Le cifre in pedice `₀ ₁ ₂` vanno bene;
+- **etichette sopra le linee**: una `Label`/`.plot-label` ha già un alone, ma se una curva le corre accanto
+  va spostata dove non passa nulla (controllare anche su mobile, dove il grafico è più stretto);
+- l'etichetta dell'asse y (`yLabel`) sta sopra l'asse, a destra dei tick: non serve spazio in più.
+
 ---
 
 ## 7. Registrare lezione e stili
@@ -326,6 +335,11 @@ serie; il testo non prende il colore della serie; niente colori esadecimali nel 
   - riempimenti di riquadri, nodi di schemi SVG, celle e schede → `var(--surface)` (pieno nel classico,
     vetro traslucido nel glass); tinte → `color-mix(in srgb, var(--c-…) 14%, var(--surface))`.
     `--plot-bg` solo per aloni delle etichette, bordo dei punti e maschere che devono coprire linee;
+  - **nodi e riquadri disegnati sopra linee** (archi di una rete, frecce, un asse che li attraversa, un
+    riquadro del peso sul proprio arco) → `var(--surface-solid)`, anche nelle tinte
+    (`color-mix(…, var(--surface-solid))`): `--surface` nel glass è traslucido e lascerebbe vedere la linea
+    sotto. Stesso motivo per `--accent-soft` (traslucido in tutti i temi): per un nodo evidenziato usare
+    `color-mix(in srgb, var(--accent) 10%, var(--surface-solid))`;
   - i grafici con `<Axes>` hanno già la lastra di vetro (`.axes__frame`), niente da fare;
   - blocchi colorati HTML (barre, segmenti, celle piene) → aggiungere la classe del widget alla regola
     «blocchi colorati» di `glass.css` (riflesso `--gloss` + bordo `--gloss-rim`);

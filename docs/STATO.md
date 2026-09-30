@@ -51,6 +51,17 @@ Decisioni di stile confermate dall'utente:
 - 2026-09-30 — Lezione 05 (modelli lineari e K-NN), 23 figure.
 - 2026-09-30 — Lezione 07 (backpropagation), 5 figure; `NetSvg` accetta `onNodeClick`.
 - 2026-09-30 — Lezione 06 (reti neurali, parte 1), 15 figure; componente comune `widgets/l06/NetSvg.tsx` per disegnare reti a strati.
+- 2026-09-30 — Revisione visiva di tutte le figure 1.1–7.5 (chiaro, scuro, glass chiaro e scuro, mobile).
+  Token `--surface-solid`: nodi e riquadri opachi sopra le linee, che nel glass si vedevano in trasparenza
+  (1.2, 1.4, 2.1, 3.8, 5.10, 6.1, 6.2, 7.3). L'etichetta dell'asse y ora sta sopra l'asse e non copre il tick
+  più alto (tutti i grafici). Pedici veri nel testo SVG e nelle superfici 3D (`components/plot/svgText.tsx`:
+  il serif disegnava x₁ come «x1»; poi $w_{ji}$, $E_{RMS}$, $q_{max}$, $r^{1/n}$) e KaTeX al posto di pedici
+  Unicode o `_` nei testi (4.6, 6.8, 6.12, 6.15, 7.1, 7.3, 7.4, 7.5). Etichette dei pesi di `NetSvg` spostate
+  di lato rispetto all'arco (6.5, 6.6); pesi centrati sul proprio arco (5.10, 6.2) e ingressi non più tagliati;
+  ≡ di 3.10 non più sopra il titolo; etichette spostate dove non passano curve (3.8, 4.6, 5.15, 5.23); tick di
+  $k$ in 5.20 sopra l'etichetta e legenda dei quadratini del modello lineare; notazione $1{,}5 \cdot 10^{-8}$ in
+  5.14; tacca $l$ in corsivo nel cursore di $k$ (5.17, 5.21); tangente in zero più visibile (6.10); riquadro di
+  disegno di 1.1 senza inversione dei colori nel tema scuro; 6.4 in colonna sugli schermi stretti.
 
 ## Immagini degli appunti → figure del sito
 
@@ -105,8 +116,7 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `05-lin_proprieta.png` → Fig. 5.4 `SeparatorProps` — retta trascinabile, $\mathbf{w}$ ortogonale, altre soluzioni, scala $K$, passaggio per l’origine.
 - `05-lin_loss-smooth.png` → Fig. 5.5 `LossSmooth` — loss 0/1 e quadratica in funzione di $\mathbf{w}^T\mathbf{x}$, target $\pm1$, tangente e verso di discesa.
 - `05-lin_discesa-1d.png` → Fig. 5.6 `Descent1D` — passi $w_0, w_1, \dots$ con tangenti, $\eta$, oscillazione e divergenza.
-- `05-lin_superficie-errore.png` → Fig. 5.7 `ErrorSurface` — paraboloide $E(w_0,w_1)$ sui dati dell’esercizio, $-
-abla E$ sulla superficie, retta e residui corrispondenti.
+- `05-lin_superficie-errore.png` → Fig. 5.7 `ErrorSurface` — paraboloide $E(w_0,w_1)$ sui dati dell’esercizio, $-\nabla E$ sulla superficie, retta e residui corrispondenti.
 - `05-lin_batch-online.png` → Fig. 5.8 `BatchOnline` — percorsi batch (blu) e on-line (viola, arancione) sulle curve di livello.
 - `05-lin_curve-apprendimento.png` → Fig. 5.9 `LearningCurves` — curve verde/rossa/blu (tre $\eta$) più una curva con $\eta$ scelto dallo studente.
 - `05-lin_delta-rule.png` → Fig. 5.10 `DeltaRule` — LTU con input cliccabili, pesi, target, passo della delta rule con i calcoli.
