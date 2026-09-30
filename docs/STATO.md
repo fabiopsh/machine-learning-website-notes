@@ -14,7 +14,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 05 | 05 - Modelli lineari e K-nearest neighbors.md | ✅ fatta | (non indicato) | 5.1–5.23 |
 | 06 | 06 - Reti neurali (parte 1) - dal neurone al MLP.md | ✅ fatta | (non indicato) | 6.1–6.15 |
 | 07 | 07 - Note sulla backpropagation.md | ✅ fatta | (non indicato) | 7.1–7.5 |
-| 08 | 08 - Reti neurali (parte 2) - addestramento in pratica.md | ⏳ da fare | | |
+| 08 | 08 - Reti neurali (parte 2) - addestramento in pratica.md | ✅ fatta | (non indicato) | 8.1–8.13 |
 | 09 | 09 - Validazione (parte 1) - model selection e assessment.md | ⏳ da fare | | |
 | 10 | 10 - Validazione (parte 2) - schemi formali.md | ⏳ da fare | | |
 | 11 | 11 - Validazione (parte 3) - errori tipici e FAQ.md | ⏳ da fare | | |
@@ -63,6 +63,11 @@ Decisioni di stile confermate dall'utente:
   5.14; tacca $l$ in corsivo nel cursore di $k$ (5.17, 5.21); tangente in zero più visibile (6.10); riquadro di
   disegno di 1.1 senza inversione dei colori nel tema scuro; 6.4 in colonna sugli schermi stretti.
 
+- 2026-09-30 — Lezione 08 (reti neurali, parte 2), 13 figure, già scritte con le regole della revisione
+  (pedici con `svgScript`/`Tex`, `--surface-solid` sotto le linee). Nuovo `widgets/l08/mlp.ts`: MLP con uno
+  strato nascosto addestrato **dal vivo** nel browser (batch, momentum, weight decay separato, addestramento
+  progressivo a pezzi per frame, storico degli errori, copie della rete) usato da 8.6–8.9 e 8.11–8.13.
+  Deciso con l’utente: niente `npm run smoke` (lento e inutile); si verifica con `npm run verify` e screenshot.
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),
@@ -160,6 +165,22 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `07-bp_retropropagazione.png` → Fig. 7.4 `BackpropFlow` — rete 2-3-2 con il ciclo di addestramento fase per fase: uscite, delta di uscita, delta retropropagati (frecce rosse), aggiornamento, 50 cicli.
 - Figura aggiunta: 7.5 `NumericExample` — l’esempio numerico degli appunti calcolato dal vivo, con valori modificabili e aggiornamenti ripetibili.
 
+### 08 — Reti neurali (parte 2)
+
+- `08-nn2_mappa.png` → Fig. 8.1 `CourseZoom` — mappa cliccabile del blocco reti neurali, argomenti già visti spuntati, «siamo qui», link alle sezioni.
+- `08-nn2_sgd-vs-batch.png` → Fig. 8.2 `SgdBatch` — percorsi batch e stocastico sulle curve di livello di una regressione lineare (40 esempi), $\eta$, epoche, ordine casuale, shuffling.
+- `08-nn2_minibatch.png` → Fig. 8.3 `MiniBatch` — epoca divisa in mini-batch con $mb$ a scelta, aggiornamento passo passo e percorso.
+- `08-nn2_eta.png` → Fig. 8.4 `EtaCurves` — curve molto alto/molto basso/basso/alto/buono più un $\eta$ a scelta (mini-batch, errore in eccesso in scala log) e vista con una curva irregolare.
+- `08-nn2_momentum.png` → Fig. 8.5 `MomentumCanyon` — canyon di una quadratica mal condizionata, gradiente puro contro momentum, $\eta$, $\alpha$, Nesterov, passi necessari.
+- `08-nn2_early-stopping.png` → Fig. 8.6 `EarlyStopping` — rete 1-40-1 addestrata dal vivo su 12 punti rumorosi: curve di training e validazione (epoche in scala log), zona buona, uscita della rete all’epoca scelta.
+- `08-nn2_weight-decay.png` → Fig. 8.7 `WeightDecayClassifier` — due reti da 10 unità sul problema delle due classi della lezione 5, senza e con weight decay, confini ed errori (con Bayes).
+- `08-nn2_regressione-reg.png` → Fig. 8.8 `RegRegression` — la stessa regressione con $\lambda = 0$ e con $\lambda$ a scelta (0,01 all’inizio).
+- `08-nn2_pesi-reg.png` → Fig. 8.9 `WeightsViz` — i pesi delle due reti della 8.8 colorati per segno e intensità, anche sulla stessa scala.
+- `08-nn2_cascade.png` → Fig. 8.10 `CascadeCorrelation` — Cascade Correlation vero su una regressione 1D (pool di 6 candidate, ascesa su $S$, uscita ai minimi quadrati), schema a cascata con pesi congelati, curva dell’errore.
+- `08-nn2_monk2-mse.png` → Fig. 8.11 `Monk2Mse` — MONK2 addestrato dal vivo (2 unità, $\eta = 0{,}1$, $\alpha = 0{,}5$, batch): MSE di training e test; unità, inizializzazione, codifica one-hot on/off.
+- `08-nn2_monk2-acc.png` → Fig. 8.12 `Monk2Acc` — accuratezza della stessa rete.
+- `08-nn2_monk3.png` → Fig. 8.13 `Monk3` — MONK3 con 4 unità e weight decay a scelta, minimo del test.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -168,6 +189,16 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 08: perché con i pesi tutti a zero la rete non impara; di quanto accelera il momentum (fattore
+  $1/(1-\alpha)$ sui plateau, $1/(1+\alpha)$ sulle oscillazioni); letture e spiegazioni delle formule;
+  tracce di risposta. Nelle figure: **i dati MONK sono generati dalle regole ufficiali del benchmark** (non
+  presenti negli appunti: MONK-2 «esattamente due attributi valgono 1»; MONK-3 «(a5 = 3 e a4 = 1) oppure (a5 ≠ 4
+  e a2 ≠ 3)», con il 5% di etichette di training sbagliate; training estratto a caso, test = le 432 combinazioni);
+  tutte le reti sono addestrate con la regola «a iperparametri indipendenti» della lezione e il weight decay
+  come $w \leftarrow w - \lambda w$ a ogni epoca, quindi i valori di $\lambda$ non coincidono con quelli delle
+  slide (dichiarato nelle didascalie); le reti di 8.6–8.9 hanno un solo strato nascosto (40 unità) invece dei
+  5 strati della figura originale 8.9; i dati di 8.2–8.4 sono una regressione lineare costruita; la 8.5 una
+  quadratica; i numeri delle curve differiscono da quelli delle slide.
 - 07: svolgimento dell’esercizio «caso 2 direttamente dalla definizione di $E_p$»; letture e spiegazioni
   delle formule; tracce di risposta (compresa la domanda su loss diverse e più strati). Nelle figure: funzione
   d’errore della 7.2 costruita come somma di gaussiane (illustrativa); rete, pattern, target e $\eta$ della

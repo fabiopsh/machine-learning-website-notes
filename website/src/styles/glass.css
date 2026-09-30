@@ -835,6 +835,20 @@
   rx: 10px;
 }
 
+/* lezione 8: mappa del corso, epoca divisa in mini-batch */
+:root[data-style='glass'] .zoom8__node rect {
+  rx: 12px;
+}
+:root[data-style='glass'] .mb8__chunk {
+  border-radius: 10px;
+  border-color: var(--line-2);
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .mb8__chunk.is-on,
+:root[data-style='glass'] .mb8__chunk.is-done {
+  background-image: var(--gloss);
+}
+
 /* ------------------------------------------------------------------ mobile e riduzione del movimento */
 
 @media (max-width: 1023px) {

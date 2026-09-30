@@ -767,6 +767,72 @@ export const glossary: GlossaryEntry[] = [
     lesson: '07',
     section: 'Proprietà e interpretazione',
   },
+  // ------------------------------------------------------------------ 08
+  {
+    id: 'mini-batch',
+    term: 'Mini-batch',
+    def: 'Si sommano i gradienti di $mb$ pattern ($1 < mb < l$) prima di aggiornare i pesi, e si ripete finché l’epoca è finita. Compromesso tra on-line e batch, adatto alla memoria della GPU.',
+    lesson: '08',
+    section: 'Mini-batch',
+  },
+  {
+    id: 'shuffling',
+    term: 'Shuffling',
+    def: 'Presentare i pattern in ordine casuale diverso a ogni epoca (on-line e mini-batch), per evitare derive sistematiche della discesa.',
+    lesson: '08',
+    section: 'On-line, batch e mini-batch',
+  },
+  {
+    id: 'momentum',
+    term: 'Momentum',
+    en: 'heavy ball',
+    def: '$\\Delta\\mathbf{w}_{new} = -\\eta\\,\\partial E/\\partial\\mathbf{w} + \\alpha\\,\\Delta\\mathbf{w}_{old}$: a ogni passo si aggiunge una frazione dello spostamento precedente. Accelera nei plateau e smorza le oscillazioni.',
+    lesson: '08',
+    section: 'Momentum (!)',
+  },
+  {
+    id: 'early-stopping',
+    term: 'Early stopping',
+    def: 'Fermare l’addestramento quando l’errore su un validation set comincia a salire (con una certa *patience*): poiché la complessità effettiva della rete cresce durante il training, fermarsi prima la limita.',
+    lesson: '08',
+    section: 'Come nasce l’overfitting in una rete',
+  },
+  {
+    id: 'cascade-correlation',
+    term: 'Cascade Correlation',
+    en: 'Fahlman e Lebiere, 1990',
+    def: 'Algoritmo costruttivo che apprende pesi e numero di unità: aggiunge una unità alla volta, addestrata a massimizzare la correlazione con l’errore residuo, e ne congela i pesi in ingresso.',
+    lesson: '08',
+    section: 'Cascade Correlation',
+  },
+  {
+    id: 'softmax',
+    term: 'Softmax',
+    def: '$o_k = e^{net_k}/\\sum_j e^{net_j}$: uscite positive che sommano a 1, interpretabili come probabilità delle classi.',
+    lesson: '08',
+    section: 'Input e output',
+  },
+  {
+    id: 'cross-entropy',
+    term: 'Cross-entropy',
+    def: 'Loss alternativa all’errore quadratico per la classificazione (stima di massima verosimiglianza): per un’unità $-\\sum_i \\{d_i\\log out(\\mathbf{x}_i) + (1-d_i)\\log(1 - out(\\mathbf{x}_i))\\}$.',
+    lesson: '08',
+    section: 'Input e output',
+  },
+  {
+    id: 'standardizzazione',
+    term: 'Standardizzazione',
+    def: 'Pre-processing che porta ogni feature a media 0 e deviazione standard 1: $(v - \\text{media})/\\text{dev. std}$.',
+    lesson: '08',
+    section: 'Input e output',
+  },
+  {
+    id: 'monk',
+    term: 'MONK',
+    def: 'Tre piccoli problemi artificiali di classificazione binaria (UCI) con 6 attributi simbolici, 17 input con la codifica 1-of-k: il primo collaudo di un’implementazione di una rete.',
+    lesson: '08',
+    section: 'Verso il progetto: il benchmark MONK',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

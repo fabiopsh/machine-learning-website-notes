@@ -1,0 +1,213 @@
+/* ------------------------------------------------------------------ comuni */
+
+.l8__prog {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+}
+
+/* ------------------------------------------------------------------ mappa del blocco reti neurali (8.1) */
+
+.zoom8__scroll {
+  overflow-x: auto;
+}
+.zoom8 {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.zoom8__area {
+  fill: none;
+  stroke: var(--c-blue);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 5;
+  opacity: 0.6;
+}
+.zoom8__area-lbl {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  fill: var(--c-blue);
+}
+.zoom8__edge {
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+}
+.zoom8__head {
+  fill: var(--ink-3);
+}
+.zoom8__node {
+  cursor: pointer;
+  outline: none;
+}
+.zoom8__node rect {
+  fill: var(--surface-solid);
+  stroke: color-mix(in srgb, var(--c-orange) 70%, var(--line-2));
+  stroke-width: 1.5;
+  transition:
+    stroke 0.2s var(--ease),
+    fill 0.2s var(--ease);
+}
+.zoom8__node text {
+  font-size: 12.5px;
+  fill: var(--ink);
+  pointer-events: none;
+}
+.zoom8__node.is-here rect {
+  stroke: var(--c-green);
+  stroke-width: 2.4;
+}
+.zoom8__node:hover rect,
+.zoom8__node:focus-visible rect {
+  stroke: var(--accent);
+}
+.zoom8__node.is-sel rect {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  fill: color-mix(in srgb, var(--accent) 10%, var(--surface-solid));
+}
+.zoom8__badge {
+  fill: var(--surface-solid);
+  stroke: var(--c-green);
+  stroke-width: 1.4;
+}
+.zoom8__check {
+  fill: none;
+  stroke: var(--c-green);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.zoom8__here {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--c-green);
+}
+.zoom8__info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 2.6em;
+  margin: 8px 0 4px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+/* ------------------------------------------------------------------ mini-batch (8.3) */
+
+.mb8__bar {
+  display: flex;
+  gap: 3px;
+  height: 40px;
+  margin: 4px 0 2px;
+}
+.mb8__chunk {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  border-radius: 6px;
+  border: 1.5px solid var(--line-2);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  overflow: hidden;
+  transition:
+    background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+.mb8__chunk.is-done {
+  background: color-mix(in srgb, var(--c-blue) 14%, var(--surface));
+}
+.mb8__chunk.is-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  color: var(--ink);
+}
+.mb8__brace {
+  margin-bottom: 10px;
+  padding-top: 4px;
+  border-top: 1.5px solid var(--ink-4);
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------------ pesi della rete (8.9) */
+
+.w8__net {
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.w8__unit {
+  fill: var(--surface-solid);
+  stroke: var(--c-yellow);
+  stroke-width: 1.4;
+}
+.w8__io {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.6;
+}
+
+/* ------------------------------------------------------------------ Cascade Correlation (8.10) */
+
+.cc8 {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.cc8__inbox {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 4;
+}
+.cc8__edge {
+  stroke: var(--ink-3);
+  stroke-width: 1.3;
+}
+.cc8__edge.is-frozen {
+  stroke: var(--c-blue);
+}
+.cc8__head {
+  fill: var(--ink-3);
+}
+.cc8__star {
+  font-size: 15px;
+  font-weight: 700;
+  fill: var(--c-blue);
+}
+.cc8__node {
+  fill: var(--surface-solid);
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+}
+.cc8__node--h {
+  stroke: var(--c-yellow);
+  stroke-width: 2;
+}
+.cc8__node--h.is-new {
+  stroke: var(--accent);
+  stroke-width: 2.6;
+}
+.cc8__node--out {
+  stroke: var(--ink);
+  stroke-width: 2.2;
+}
+.cc8__lbl {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  fill: var(--ink);
+  pointer-events: none;
+}
+.cc8__steps {
+  margin: 10px 0;
+}

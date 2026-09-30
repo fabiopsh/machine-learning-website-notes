@@ -59,7 +59,9 @@ export const parts: LessonPart[] = [
       L('07', 'Note sulla backpropagation', {
         summary: 'La derivazione completa della backpropagation: il delta di ogni unità, la retropropagazione dall’uscita agli strati nascosti, il ciclo di addestramento e il suo costo lineare.',
       }),
-      L('08', 'Reti neurali (parte 2) — addestramento in pratica'),
+      L('08', 'Reti neurali (parte 2) — addestramento in pratica', {
+        summary: 'Come si addestra davvero un MLP: inizializzazione, on-line/batch/mini-batch, learning rate e momentum, early stopping e weight decay, Cascade Correlation, input e output, il benchmark MONK.',
+      }),
     ],
   },
   {

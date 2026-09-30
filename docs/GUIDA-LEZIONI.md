@@ -275,7 +275,11 @@ Nell'MDX:
 | `components/prose/Figure.tsx` | `Figure`, `Caption`, `Tasks`, `Exam`, `Q` |
 | `widgets/common/Surface3D.tsx` | superficie z = f(x,y) su canvas, ruotabile, curve di livello sul pavimento, overlay 3D (`floorGap`, `ramp`) |
 | `widgets/common/contours.ts` | curve di livello (marching squares) → path SVG |
-| `lib/math.ts` | `rng`, `gauss`, `polyfit` (minimi quadrati con QR), `polyval`, `sse`, `normPdf`, `normCdf`, `mean` |
+| `lib/math.ts` | `rng`, `gauss`, `lstsq` (minimi quadrati generici con QR), `polyfit`, `ridgePolyfit` (Tikhonov), `polyval`, `sse`, `normPdf`, `normCdf`, `mean`, `lerp` |
+| `components/plot/svgText.tsx` | `svgScript(base, pedice)` e `subDigits` per pedici/apici veri nel testo SVG |
+| `widgets/l06/NetSvg.tsx` | reti a strati in SVG (`layout`, `fullEdges`, nodi con valore, archi pesati con etichette, `hot`, `onNodeClick`), `sigmoid` |
+| `widgets/l08/mlp.ts` | MLP a uno strato nascosto addestrato dal vivo: `trainer(cfg, epoche, ogni, conAccuratezza, conCopie)` + `useTrainer`, addestramento progressivo per frame, `restart({…})` |
+| `widgets/l05/htf.ts` | il problema a due classi di Hastie-Tibshirani-Friedman (due scenari, K-NN precalcolato, Bayes) |
 | `lib/useLatch.ts` | flag «a scatto» per i «Prova a…» |
 | `components/ui/Icon.tsx` | icone disegnate a mano (aggiungerne qui, stesso stile: tratto 1.6, griglia 24) |
 
