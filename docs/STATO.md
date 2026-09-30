@@ -18,7 +18,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 09 | 09 - Validazione (parte 1) - model selection e assessment.md | ✅ fatta | (non indicato) | 9.1–9.4 |
 | 10 | 10 - Validazione (parte 2) - schemi formali.md | ✅ fatta | (non indicato) | 10.1–10.5 |
 | 11 | 11 - Validazione (parte 3) - errori tipici e FAQ.md | ✅ fatta | (non indicato) | 11.1–11.3 |
-| 12 | 12 - Statistical Learning Theory e VC-dimension.md | ⏳ da fare | | |
+| 12 | 12 - Statistical Learning Theory e VC-dimension.md | ✅ fatta | (non indicato) | 12.1–12.5 |
 | 13 | 13 - Support Vector Machines.md | ⏳ da fare | | |
 | 14 | 14 - SVM e kernel - aspetti pratici e visione critica.md | ⏳ da fare | | |
 | 15 | 15 - Bias-varianza ed ensemble.md | ⏳ da fare | | |
@@ -73,6 +73,7 @@ Decisioni di stile confermate dall'utente:
 - 2026-09-30 — Lezione 10 (validazione, parte 2), 5 figure con blocchi dei fold comuni (`widgets/l10/Schemes.tsx`,
   dati e CV in `widgets/l10/cv.ts`). `Callout` accetta un titolo JSX (per le formule nei titoli dei riquadri).
 - 2026-09-30 — Lezione 11 (validazione, parte 3), 3 figure (`widgets/l11/Choice.tsx`, tabella di scelta comune).
+- 2026-09-30 — Lezione 12 (SLT e VC-dimension), 5 figure (`widgets/l12/Vc.tsx`; riusa `separate` della lezione 5).
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),
@@ -207,6 +208,14 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `11-val3_es-unita.png` → Fig. 11.2 `UnitsTable` — la stessa tabella per 0–5 unità nascoste, scelta di 2 unità.
 - `11-val3_es-knn.png` → Fig. 11.3 `KnnLoo` — K-NN per la regressione su 40 punti con errore di training e di leave-one-out calcolati, K = 1…6 o valori esponenziali, curva completa fino a K = 20.
 
+### 12 — Statistical Learning Theory e VC-dimension
+
+- `12-slt_dicotomie.png` → Fig. 12.1 `Dichotomies` — le $2^N$ dicotomie di $N = 1 \dots 4$ punti, pieni ($+1$) e vuoti ($-1$).
+- `12-slt_shattering.png` → Fig. 12.2 `ShatterLines` — tre punti trascinabili, le 8 dicotomie con la retta separatrice e la freccia di $\mathbf{w}$, conteggio delle dicotomie rappresentate, allineamento.
+- `12-slt_quattro-punti.png` → Fig. 12.3 `FourPoints` — quattro punti trascinabili: etichettature separabili su 16, caso quadrilatero convesso (diagonali che si incrociano) o punto interno, etichettature impossibili.
+- `12-slt_srm.png` → Fig. 12.4 `SrmStructure` — errore empirico, VC-confidence e bound su sei spazi annidati cliccabili, numero di dati a scelta.
+- `12-slt_srm-tabella.png` → Fig. 12.5 `SrmTable` — tabella $H_1 \dots H_6$ con errore di training, VC-confidence e bound (somma), scelta di $H_3$; cambia con il numero di dati.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -215,6 +224,10 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 12: letture e spiegazioni delle formule (VC-bound, VC-confidence, struttura annidata); tracce di risposta.
+  Nelle figure: nella 12.2 anche le dicotomie con tutte le etichette uguali hanno una retta (messa a lato dei
+  punti); in 12.4 e 12.5 la VC-confidence è quella di Vapnik ($\delta = 0{,}05$) con VC-dim 4, 8, …, 128,
+  l’errore empirico è un andamento illustrativo scelto perché con $l = 200$ vinca $H_3$ come nella slide.
 - 11: approfondimento sul perché la soglia sull’errore di training è migliore della media delle epoche; tracce
   di risposta. Nelle figure: 11.1 e 11.2 riproducono le lunghezze delle barre delle slide (nessun valore numerico
   negli appunti); nella 11.3 i dati sono costruiti (seno con rumore, K-NN per la regressione) e l’errore è

@@ -1,0 +1,136 @@
+/* ------------------------------------------------------------------ lezione 12: dicotomie e shattering (12.1–12.3) */
+
+.vc12__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+.vc12__grid--dense {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+.vc12__grid--side {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 10px;
+}
+.vc12__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.vc12__cell svg {
+  max-width: 100%;
+  height: auto;
+}
+.vc12__cell--btn {
+  cursor: pointer;
+}
+.vc12__cell--btn:hover {
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+.vc12__cell--btn.is-on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  color: var(--accent-ink);
+}
+.vc12__cell--btn.is-no {
+  background: color-mix(in srgb, var(--c-red) 8%, var(--surface));
+}
+.vc12__pt {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.6;
+}
+.vc12__pt.is-pos {
+  fill: var(--c-blue);
+  stroke: var(--c-blue);
+}
+.vc12__line {
+  stroke: var(--c-red);
+  stroke-width: 1.8;
+}
+.vc12__w line {
+  stroke: var(--c-red);
+  stroke-width: 1.6;
+}
+.vc12__w circle {
+  fill: var(--c-red);
+}
+.vc12__x {
+  fill: none;
+  stroke: var(--c-red);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.vc12__big {
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------------ SRM (12.4, 12.5) */
+
+.srm12__nest {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+.srm12__set {
+  cursor: pointer;
+}
+.srm12__set ellipse {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+}
+.srm12__set:hover ellipse {
+  stroke: var(--ink);
+}
+.srm12__set.is-on ellipse {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  fill: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.srm12__set text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--ink-2);
+}
+.srm12__set.is-on text {
+  fill: var(--accent-ink);
+  font-weight: 600;
+}
+.srm12__set:focus-visible {
+  outline: none;
+}
+.srm12__set:focus-visible ellipse {
+  stroke: var(--accent);
+}
+.srm12__stack {
+  display: flex;
+  width: 100%;
+}
+.srm12__stack .ch11__bar--tr {
+  border-radius: 4px 0 0 4px;
+}
+.srm12__stack .ch11__bar--cv {
+  border-radius: 0 4px 4px 0;
+}
+.srm12__table thead th:first-child {
+  width: 12%;
+}
+
+@media (max-width: 640px) {
+  .vc12__grid,
+  .vc12__grid--dense {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

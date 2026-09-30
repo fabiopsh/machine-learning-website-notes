@@ -923,6 +923,29 @@ export const glossary: GlossaryEntry[] = [
     lesson: '11',
     section: 'Selezione sequenziale degli iperparametri',
   },
+  // ------------------------------------------------------------------ 12
+  {
+    id: 'dicotomia',
+    term: 'Dicotomia',
+    def: 'Una delle $2^N$ possibili etichettature ($-1$ o $+1$) di $N$ punti. È rappresentata in $H$ se qualche ipotesi di $H$ la realizza.',
+    lesson: '12',
+    section: 'Shattering',
+  },
+  {
+    id: 'shattering',
+    term: 'Shattering',
+    en: 'frammentazione',
+    def: '$H$ frammenta un insieme di punti se rappresenta tutte le sue dicotomie, cioè classifica senza errori i punti per ogni possibile etichettatura.',
+    lesson: '12',
+    section: 'Shattering',
+  },
+  {
+    id: 'rischio-garantito',
+    term: 'Rischio garantito',
+    def: 'Il membro destro del VC-bound, $R_{emp} + \\varepsilon$: con probabilità almeno $1-\\delta$ il rischio vero non lo supera.',
+    lesson: '12',
+    section: 'Il bound analitico sul rischio',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

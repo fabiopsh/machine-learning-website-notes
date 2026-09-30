@@ -77,7 +77,9 @@ export const parts: LessonPart[] = [
       L('11', 'Validazione (parte 3) — errori tipici e FAQ', {
         summary: 'Gli errori più frequenti: epoche fisse, early stopping nella CV, inizializzazioni casuali, selezione sequenziale, test usato per riprogettare, CV in overfitting; quale CV scegliere ed esempi.',
       }),
-      L('12', 'Statistical Learning Theory e VC-dimension'),
+      L('12', 'Statistical Learning Theory e VC-dimension', {
+        summary: 'Shattering e VC-dimension (le rette nel piano ne hanno 3), VC-dim e numero di parametri, il VC-bound sul rischio e la Structural Risk Minimization su strutture annidate.',
+      }),
     ],
   },
   {
