@@ -1,1 +1,125 @@
-/* lezione 13 */
+/* ------------------------------------------------------------------ lezione 13: SVM */
+
+.svm13__band {
+  fill: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.svm13__pt {
+  cursor: pointer;
+}
+.svm13__hit {
+  fill: transparent;
+}
+.svm13__ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+.svm13__gone {
+  stroke: var(--ink-4);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.svm13__pt:hover .svm13__hit,
+.svm13__pt:focus-visible .svm13__hit {
+  fill: var(--accent-soft);
+}
+.svm13__pt:focus-visible {
+  outline: none;
+}
+.svm13__alphas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.svm13__cells rect.is-pos {
+  fill: color-mix(in srgb, var(--c-blue) 13%, transparent);
+}
+.svm13__cells rect.is-neg {
+  fill: color-mix(in srgb, var(--c-orange) 13%, transparent);
+}
+.svm13__tube {
+  fill: color-mix(in srgb, var(--c-red) 12%, transparent);
+  stroke: color-mix(in srgb, var(--c-red) 45%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+/* spazio delle feature in 3D (13.6) */
+.fm13__svg {
+  display: block;
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  margin: 0 auto;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.fm13__svg:active {
+  cursor: grabbing;
+}
+.fm13__axis line {
+  stroke: var(--axis);
+  stroke-width: 1.4;
+}
+.fm13__axis text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--ink-2);
+}
+.fm13__plane {
+  fill: color-mix(in srgb, var(--c-red) 16%, transparent);
+  stroke: var(--c-red);
+  stroke-width: 1.4;
+}
+
+/* architettura (13.7) */
+.arch13 {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 0 auto;
+}
+.arch13__edge {
+  stroke: var(--line-2);
+  stroke-width: 1.2;
+}
+.arch13__node circle,
+.arch13__node rect {
+  fill: var(--surface-solid);
+  stroke: var(--ink-3);
+  stroke-width: 1.3;
+}
+.arch13__node .arch13__fill {
+  fill: color-mix(in srgb, var(--c-violet) 30%, var(--surface-solid));
+  stroke: none;
+}
+.arch13__node text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink);
+}
+.arch13__node circle + text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+}
+.arch13__w {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--ink-3);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 3px;
+}
+.arch13__lbl {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink-2);
+}

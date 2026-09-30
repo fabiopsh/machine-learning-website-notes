@@ -19,7 +19,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 10 | 10 - Validazione (parte 2) - schemi formali.md | ✅ fatta | (non indicato) | 10.1–10.5 |
 | 11 | 11 - Validazione (parte 3) - errori tipici e FAQ.md | ✅ fatta | (non indicato) | 11.1–11.3 |
 | 12 | 12 - Statistical Learning Theory e VC-dimension.md | ✅ fatta | (non indicato) | 12.1–12.5 |
-| 13 | 13 - Support Vector Machines.md | ⏳ da fare | | |
+| 13 | 13 - Support Vector Machines.md | ✅ fatta | (non indicato) | 13.1–13.9 |
 | 14 | 14 - SVM e kernel - aspetti pratici e visione critica.md | ⏳ da fare | | |
 | 15 | 15 - Bias-varianza ed ensemble.md | ⏳ da fare | | |
 | 16 | 16 - Reti neurali convoluzionali (CNN).md | ⏳ da fare | | |
@@ -74,6 +74,9 @@ Decisioni di stile confermate dall'utente:
   dati e CV in `widgets/l10/cv.ts`). `Callout` accetta un titolo JSX (per le formule nei titoli dei riquadri).
 - 2026-09-30 — Lezione 11 (validazione, parte 3), 3 figure (`widgets/l11/Choice.tsx`, tabella di scelta comune).
 - 2026-09-30 — Lezione 12 (SLT e VC-dimension), 5 figure (`widgets/l12/Vc.tsx`; riusa `separate` della lezione 5).
+- 2026-09-30 — Lezione 13 (SVM), 9 figure. Nuovo `widgets/l13/solver.ts`: SVM risolta davvero nel browser (SMO
+  con coppia di massima violazione come libsvm; classificazione con kernel lineare/polinomiale/RBF ed ε-SVR).
+  Attenzione su Windows: `svm.ts` e `Svm.tsx` nella stessa cartella collidono (file system senza maiuscole).
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),
@@ -216,6 +219,18 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `12-slt_srm.png` → Fig. 12.4 `SrmStructure` — errore empirico, VC-confidence e bound su sei spazi annidati cliccabili, numero di dati a scelta.
 - `12-slt_srm-tabella.png` → Fig. 12.5 `SrmTable` — tabella $H_1 \dots H_6$ con errore di training, VC-confidence e bound (somma), scelta di $H_3$; cambia con il numero di dati.
 
+### 13 — Support Vector Machines
+
+- `13-svm_separabili.png` → Fig. 13.1 `Separable` — dati separabili e dati nel cerchio, una retta trascinabile per pannello, errori.
+- `13-svm_margine.png` + `13-svm_margini-diversi.png` → Fig. 13.2 `MarginExplorer` — iperpiano trascinabile con la sua zona di margine, margine a confronto con il massimo, iperpiano ottimo calcolato.
+- `13-svm_support-vectors.png` → Fig. 13.3 `SupportVectors` — rette $g = 0, \pm 1$, support vector cerchiati, moltiplicatori; clic su un punto per toglierlo e riaddestrare.
+- `13-svm_distanza.png` → Fig. 13.4 `Distance` — punto trascinabile, proiezione $\mathbf{x}_p$, $\mathbf{w}_o$, $r = g(\mathbf{x})/\|\mathbf{w}_o\|$.
+- `13-svm_soft-margin.png` + `13-svm_slack.png` → Fig. 13.5 `SoftMargin` — SVM soft margin con $C$ a scelta, due punti trascinabili, variabili slack disegnate, support vector.
+- `13-svm_mapping.png` + `13-svm_esempio-phi.png` → Fig. 13.6 `FeatureMap` — ellisse nello spazio di input e piano nello spazio $(x_1^2, \sqrt2 x_1x_2, x_2^2)$ ruotabile in 3D, semiassi a scelta.
+- `13-svm_architettura.png` → Fig. 13.7 `Architecture` — SVM con kernel RBF su 10 punti: regioni, pattern trascinabile, unità nascoste = support vector con i valori del kernel, pesi $lpha_i d_i$, uscita.
+- `13-svm_eps-loss.png` → Fig. 13.8 `EpsLoss` — loss ε-insensitive con ε a scelta e residuo trascinabile.
+- `13-svm_eps-tube.png` → Fig. 13.9 `EpsTube` — ε-SVR con kernel RBF su 26 punti, tubo, slack, support vector; ε e $C$ a scelta.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -224,6 +239,10 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 13: letture e spiegazioni delle formule (margine, primale e duale hard margin, primale soft margin, decisione
+  con kernel, loss ε-insensitive). Nelle figure: dati costruiti; tutte le SVM sono risolte davvero (SMO), con
+  «hard margin» realizzato come $C = 10^5$; nella 13.2 il margine di una retta qualsiasi è il doppio della distanza
+  dal punto più vicino; kernel RBF con $\sigma$ scelto per la figura (13.7) e $\sigma = 0{,}12$ (13.9).
 - 12: letture e spiegazioni delle formule (VC-bound, VC-confidence, struttura annidata); tracce di risposta.
   Nelle figure: nella 12.2 anche le dicotomie con tutte le etichette uguali hanno una retta (messa a lato dei
   punti); in 12.4 e 12.5 la VC-confidence è quella di Vapnik ($\delta = 0{,}05$) con VC-dim 4, 8, …, 128,

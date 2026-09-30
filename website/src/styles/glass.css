@@ -903,6 +903,22 @@
   box-shadow: var(--glass-rim);
 }
 
+/* lezione 12–13: dicotomie, spazio delle feature, architettura SVM */
+:root[data-style='glass'] .vc12__cell {
+  border-radius: 14px;
+  box-shadow: var(--glass-rim), inset 0 0 0 1px var(--line);
+}
+:root[data-style='glass'] .vc12__cell--btn.is-on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+:root[data-style='glass'] .fm13__svg {
+  border-radius: 18px;
+  box-shadow: var(--glass-rim), inset 0 0 0 1px var(--line);
+}
+:root[data-style='glass'] .arch13__node rect {
+  rx: 10px;
+}
+
 /* ------------------------------------------------------------------ mobile e riduzione del movimento */
 
 @media (max-width: 1023px) {

@@ -86,7 +86,9 @@ export const parts: LessonPart[] = [
     roman: 'IV',
     title: 'SVM ed ensemble',
     lessons: [
-      L('13', 'Support Vector Machines'),
+      L('13', 'Support Vector Machines', {
+        summary: 'Margine massimo e support vector, il problema quadratico (primale e duale), soft margin e variabili slack, kernel e kernel trick, SVM per la regressione con la loss ε-insensitive.',
+      }),
       L('14', 'SVM e kernel — aspetti pratici e visione critica'),
       L('15', 'Bias-varianza ed ensemble'),
     ],
