@@ -36,6 +36,11 @@ type Props = {
   spin?: boolean
   /** distanza del "pavimento" sotto la superficie, in frazioni dell'intervallo z */
   floorGap?: number
+  /** piano orizzontale semitrasparente a questa quota, ordinato in profondità con la superficie
+   *  (es. il piano degli input z = 0 attraversato dall'iperpiano); di solito insieme a floor={false} */
+  plane?: number
+  /** disegna il pavimento (default true) */
+  floor?: boolean
 }
 
 type Cam = { yaw: number; pitch: number }
@@ -62,6 +67,8 @@ export function Surface3D({
   ariaLabel,
   spin,
   floorGap = 0,
+  plane,
+  floor = true,
 }: Props) {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -97,9 +104,9 @@ export function Surface3D({
     if (!ctx) return
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, w, h)
-    draw(ctx, { w, h, f, xr, yr, zr, n, levels, overlays, cam, ramp, zScale, axisLabels, floorGap })
+    draw(ctx, { w, h, f, xr, yr, zr, n, levels, overlays, cam, ramp, zScale, axisLabels, floorGap, plane, floor })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, f, xr[0], xr[1], yr[0], yr[1], zr[0], zr[1], n, levels, overlays, cam, ramp, zScale, theme, look, floorGap])
+  }, [w, h, f, xr[0], xr[1], yr[0], yr[1], zr[0], zr[1], n, levels, overlays, cam, ramp, zScale, theme, look, floorGap, plane, floor])
 
   const onDown = (e: RPointerEvent) => {
     ;(e.currentTarget as Element).setPointerCapture(e.pointerId)
@@ -167,6 +174,8 @@ type DrawArgs = {
   zScale: number
   axisLabels: [string, string, string]
   floorGap: number
+  plane?: number
+  floor: boolean
 }
 
 function hexToRgb(c: string): [number, number, number] {
@@ -231,18 +240,20 @@ function draw(ctx: CanvasRenderingContext2D, a: DrawArgs) {
     [xr[1], yr[1], zf],
     [xr[0], yr[1], zf],
   ].map((c) => c as V3)
-  ctx.beginPath()
-  corners.forEach((c, i) => {
-    const p = proj(c)
-    if (i) ctx.lineTo(p.x, p.y)
-    else ctx.moveTo(p.x, p.y)
-  })
-  ctx.closePath()
-  ctx.fillStyle = floorC
-  ctx.fill()
-  ctx.strokeStyle = line
-  ctx.lineWidth = 1
-  ctx.stroke()
+  if (a.floor) {
+    ctx.beginPath()
+    corners.forEach((c, i) => {
+      const p = proj(c)
+      if (i) ctx.lineTo(p.x, p.y)
+      else ctx.moveTo(p.x, p.y)
+    })
+    ctx.closePath()
+    ctx.fillStyle = floorC
+    ctx.fill()
+    ctx.strokeStyle = line
+    ctx.lineWidth = 1
+    ctx.stroke()
+  }
 
   // campionamento
   const gx = (i: number) => xr[0] + ((xr[1] - xr[0]) * i) / n
@@ -280,8 +291,26 @@ function draw(ctx: CanvasRenderingContext2D, a: DrawArgs) {
   drawOverlays(ctx, floorOverlays, proj)
 
   // quadrilateri della superficie, dal più lontano al più vicino
-  type Quad = { pts: { x: number; y: number }[]; d: number; t: number; shade: number }
+  type Quad = { pts: { x: number; y: number }[]; d: number; t: number; shade: number; plane?: boolean }
   const quads: Quad[] = []
+  if (a.plane !== undefined) {
+    const zp = a.plane
+    const m = Math.max(4, Math.round(n / 2))
+    const px = (i: number) => xr[0] + ((xr[1] - xr[0]) * i) / m
+    const py = (j: number) => yr[0] + ((yr[1] - yr[0]) * j) / m
+    for (let i = 0; i < m; i++)
+      for (let j = 0; j < m; j++) {
+        const P = (
+          [
+            [px(i), py(j), zp],
+            [px(i + 1), py(j), zp],
+            [px(i + 1), py(j + 1), zp],
+            [px(i), py(j + 1), zp],
+          ] as V3[]
+        ).map(proj)
+        quads.push({ pts: P, d: (P[0].d + P[1].d + P[2].d + P[3].d) / 4, t: 0, shade: 1, plane: true })
+      }
+  }
   const light = normalize([-0.4, -0.5, 0.9])
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
@@ -305,6 +334,20 @@ function draw(ctx: CanvasRenderingContext2D, a: DrawArgs) {
   }
   quads.sort((a, b) => b.d - a.d)
   for (const q of quads) {
+    if (q.plane) {
+      ctx.beginPath()
+      ctx.moveTo(q.pts[0].x, q.pts[0].y)
+      for (let s = 1; s < 4; s++) ctx.lineTo(q.pts[s].x, q.pts[s].y)
+      ctx.closePath()
+      ctx.globalAlpha = 0.72
+      ctx.fillStyle = floorC
+      ctx.fill()
+      ctx.globalAlpha = 1
+      ctx.strokeStyle = line
+      ctx.lineWidth = 0.5
+      ctx.stroke()
+      continue
+    }
     let c: number[]
     if (ramp === 'step') {
       c = q.t > 0.5 ? mix(orange, [255, 255, 255], dark ? 0.2 : 0.35) : mix(lowC, bg, 0.2)
@@ -331,13 +374,14 @@ function draw(ctx: CanvasRenderingContext2D, a: DrawArgs) {
   ctx.fillStyle = ink
   ctx.textAlign = 'center'
   const pick = (c: V3[]) => c.map(proj).reduce((best, p) => (p.d < best.d ? p : best))
+  const zl = a.plane ?? zf
   const lx = pick([
-    [cx, yr[0] - sy * 0.16, zf],
-    [cx, yr[1] + sy * 0.16, zf],
+    [cx, yr[0] - sy * 0.16, zl],
+    [cx, yr[1] + sy * 0.16, zl],
   ])
   const ly = pick([
-    [xr[0] - sx * 0.16, cy, zf],
-    [xr[1] + sx * 0.16, cy, zf],
+    [xr[0] - sx * 0.16, cy, zl],
+    [xr[1] + sx * 0.16, cy, zl],
   ])
   ctx.fillText(a.axisLabels[0], lx.x, lx.y + 5)
   ctx.fillText(a.axisLabels[1], ly.x, ly.y + 5)

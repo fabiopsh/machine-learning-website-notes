@@ -1,0 +1,304 @@
+/* ------------------------------------------------------------------ problema di esempio (HTF) e K-NN */
+
+.htf__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.htf__title {
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+.htf__dots path {
+  opacity: 0.55;
+}
+.htf__pts circle {
+  paint-order: stroke;
+}
+
+/* ------------------------------------------------------------------ tabelline nelle figure */
+
+.hyp__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.hyp__table th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--ink-3);
+  padding: 6px 10px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.hyp__table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+}
+.hyp__table tr:last-child td {
+  border-bottom: 0;
+}
+.hyp__table tr.is-bad td {
+  background: color-mix(in srgb, var(--c-red) 9%, transparent);
+}
+.hyp__num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.curse__table {
+  margin-top: 12px;
+}
+.curse__table td:first-child {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+@media (max-width: 640px) {
+  .curse__table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+/* ------------------------------------------------------------------ delta rule */
+
+.delta__scroll {
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+.delta__svg {
+  display: block;
+  width: 100%;
+  min-width: 540px;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.delta__head {
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--ink-3);
+}
+.delta__edge {
+  stroke: var(--line-2);
+  stroke-width: 1.6;
+}
+.delta__edge.is-on {
+  stroke: var(--ink-3);
+  stroke-width: 2.2;
+}
+.delta__in {
+  cursor: pointer;
+  outline: none;
+}
+.delta__in rect {
+  fill: var(--surface);
+  stroke: var(--accent-line);
+  stroke-width: 1.6;
+  transition:
+    fill 0.15s var(--ease),
+    stroke 0.15s var(--ease);
+}
+.delta__in rect.is-on {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.delta__in:hover rect,
+.delta__in:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.delta__in text {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.delta__in text.delta__sub {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 400;
+}
+.delta__sub {
+  font-size: 12.5px;
+  fill: var(--ink-3);
+}
+.delta__w {
+  fill: var(--surface);
+  stroke: var(--line-2);
+  stroke-width: 1.2;
+}
+.delta__w.is-changed {
+  fill: color-mix(in srgb, var(--c-green) 16%, var(--surface));
+  stroke: var(--c-green);
+}
+.delta__wtxt {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.delta__old {
+  font-size: 11px;
+  fill: var(--ink-4);
+  text-decoration: line-through;
+}
+.delta__node {
+  fill: var(--surface);
+  stroke: var(--ink-2);
+  stroke-width: 1.6;
+}
+.delta__node-t {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  fill: var(--ink);
+}
+.delta__arrow {
+  fill: var(--ink-3);
+}
+.delta__out {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+}
+.delta__out.is-ok,
+.delta__verdict.is-ok {
+  fill: var(--c-green);
+}
+.delta__out.is-bad,
+.delta__verdict.is-bad {
+  fill: var(--c-red);
+}
+.delta__verdict {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.delta__btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------------ separabilità */
+
+.sep__click {
+  cursor: pointer;
+  outline: none;
+}
+.sep__click:hover circle,
+.sep__click:focus-visible circle {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.sep__bits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.sep__bit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink-2);
+}
+.sep__bit.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.sep__thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0;
+}
+.sep__thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px 3px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.sep__thumb svg {
+  width: 100%;
+  max-width: 64px;
+  height: auto;
+}
+.sep__thumb.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  color: var(--accent-ink);
+}
+.sep__thumb.is-no {
+  background: color-mix(in srgb, var(--c-red) 8%, var(--surface));
+}
+.sep__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* ------------------------------------------------------------------ K-NN */
+
+.knn__sign circle {
+  transition: r 0.15s var(--ease);
+}
+.knn__sign.is-in circle {
+  stroke: var(--ink);
+  stroke-width: 2.4;
+}
+
+/* ------------------------------------------------------------------ maledizione della dimensionalità */
+
+.curse__cube {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.curse__big {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+}
+.curse__small {
+  fill: color-mix(in srgb, var(--c-red) 10%, transparent);
+  stroke: var(--c-red);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.curse__lbl {
+  font-size: 12.5px;
+  fill: var(--ink-2);
+}
+.curse__lbl--muted {
+  fill: var(--ink-4);
+}

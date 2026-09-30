@@ -50,7 +50,9 @@ export const parts: LessonPart[] = [
     roman: 'II',
     title: 'Modelli lineari e reti neurali',
     lessons: [
-      L('05', 'Modelli lineari e K-nearest neighbors'),
+      L('05', 'Modelli lineari e K-nearest neighbors', {
+        summary: 'Regressione e classificazione lineare con LMS, equazioni normali e discesa del gradiente, regolarizzazione; poi il K-NN, il classificatore di Bayes e la maledizione della dimensionalità.',
+      }),
       L('06', 'Reti neurali (parte 1) — dal neurone al MLP'),
       L('07', 'Note sulla backpropagation'),
       L('08', 'Reti neurali (parte 2) — addestramento in pratica'),

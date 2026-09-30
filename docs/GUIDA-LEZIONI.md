@@ -59,7 +59,7 @@ Fonti di una lezione:
 6. Termini nuovi → `website/src/content/glossary.ts` (§5).
 7. Widget → `website/src/widgets/lNN/*.tsx`, stili → `website/src/styles/lNN.css`, importato in
    `website/src/main.tsx` dopo gli altri `lNN.css`.
-8. Verificare (§9): `npm run verify`, `npm run smoke -- --only NN`, screenshot di ogni figura in chiaro,
+8. Verificare (§9): `npm run verify` e screenshot di ogni figura in chiaro,
    scuro, mobile e tema Liquid Glass. Guardare gli screenshot e correggere.
 9. Aggiornare `docs/STATO.md` (riga della lezione, immagini → figure, aggiunte).
 10. Commit e push su `main`: la GitHub Action pubblica il sito (§10).
@@ -358,7 +358,7 @@ cd website
 npm run verify                       # typecheck + lint + controllo contenuti (tutte le lezioni)
 npm run check -- --only NN           # solo la lezione NN (titoli, riquadri, immagini, domande)
 npm run dev                          # in un altro terminale, poi:
-npm run smoke -- --only NN           # route, sezioni, figure, KaTeX, interazioni senza errori
+# npm run smoke esiste ma NON va usato: l'utente lo ritiene lento e inutile (2026-09-30)
 npm run shot -- lezione/NN fig --sel "#fig-N-k"                 # una figura
 npm run shot -- lezione/NN fig-dark --sel "#fig-N-k" --theme dark
 npm run shot -- lezione/NN fig-glass --sel "#fig-N-k" --style glass

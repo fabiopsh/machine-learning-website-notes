@@ -21,15 +21,14 @@ export function gauss(rand: () => number) {
 }
 
 /**
- * Minimi quadrati per un polinomio di grado M: w = argmin Σ (y_p − Σ_j w_j x_p^j)².
- * Householder QR sulla matrice di Vandermonde (stabile anche per M = 9).
- * Se M+1 > l il sistema è sottodeterminato: si limita il grado a l−1.
+ * Minimi quadrati generici: w = argmin ‖A w − b‖² con la QR di Householder
+ * (stabile anche con colonne quasi dipendenti). A ha l righe e n ≤ l colonne.
  */
-export function polyfit(xs: number[], ys: number[], M: number): number[] {
-  const l = xs.length
-  const n = Math.min(M + 1, l)
-  const A: number[][] = xs.map((x) => Array.from({ length: n }, (_, j) => x ** j))
-  const b = ys.slice()
+export function lstsq(A0: number[][], b0: number[]): number[] {
+  const A = A0.map((r) => r.slice())
+  const b = b0.slice()
+  const l = A.length
+  const n = A[0]?.length ?? 0
   for (let k = 0; k < n; k++) {
     let norm = 0
     for (let i = k; i < l; i++) norm += A[i][k] * A[i][k]
@@ -59,8 +58,38 @@ export function polyfit(xs: number[], ys: number[], M: number): number[] {
     for (let j = k + 1; j < n; j++) s -= A[k][j] * w[j]
     w[k] = Math.abs(A[k][k]) < 1e-14 ? 0 : s / A[k][k]
   }
+  return w
+}
+
+/**
+ * Minimi quadrati per un polinomio di grado M: w = argmin Σ (y_p − Σ_j w_j x_p^j)².
+ * QR sulla matrice di Vandermonde. Se M+1 > l il sistema è sottodeterminato: si limita il grado a l−1.
+ */
+export function polyfit(xs: number[], ys: number[], M: number): number[] {
+  const n = Math.min(M + 1, xs.length)
+  const w = lstsq(
+    xs.map((x) => Array.from({ length: n }, (_, j) => x ** j)),
+    ys,
+  )
   while (w.length < M + 1) w.push(0)
   return w
+}
+
+/**
+ * Ridge regression (Tikhonov) per un polinomio di grado M:
+ * w = argmin Σ (y_p − h_w(x_p))² + λ‖w‖², cioè w = (XᵀX + λI)⁻¹Xᵀy.
+ * Si risolve come minimi quadrati sulla matrice aumentata [X; √λ I], [y; 0].
+ */
+export function ridgePolyfit(xs: number[], ys: number[], M: number, lambda: number): number[] {
+  const n = M + 1
+  const A = xs.map((x) => Array.from({ length: n }, (_, j) => x ** j))
+  const b = ys.slice()
+  const s = Math.sqrt(Math.max(0, lambda))
+  for (let j = 0; j < n; j++) {
+    A.push(Array.from({ length: n }, (_, i) => (i === j ? s : 0)))
+    b.push(0)
+  }
+  return lstsq(A, b)
 }
 
 export function polyval(w: number[], x: number) {
@@ -79,10 +108,7 @@ export function sse(w: number[], xs: number[], ys: number[]) {
 /** Funzione di ripartizione della normale standard (erf di Abramowitz–Stegun, errore < 1.5e-7). */
 export function normCdf(z: number) {
   const t = 1 / (1 + 0.3275911 * (Math.abs(z) / Math.SQRT2))
-  const y =
-    1 -
-    (((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t) *
-      Math.exp(-(z * z) / 2)
+  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2)
   return z >= 0 ? (1 + y) / 2 : (1 - y) / 2
 }
 

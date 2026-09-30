@@ -770,6 +770,30 @@
   background: transparent;
 }
 
+/* lezione 5: tabelline, miniature, schema della delta rule */
+:root[data-style='glass'] .hyp__table {
+  border-radius: 16px;
+  background: var(--glass-inner);
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+:root[data-style='glass'] .hyp__table th {
+  background: var(--bg-sunken);
+}
+:root[data-style='glass'] .sep__thumb {
+  border-radius: 14px;
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .sep__bit {
+  border-radius: 999px;
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .delta__node {
+  rx: 18px;
+}
+:root[data-style='glass'] .delta__in rect {
+  rx: 14px;
+}
+
 /* ------------------------------------------------------------------ mobile e riduzione del movimento */
 
 @media (max-width: 1023px) {

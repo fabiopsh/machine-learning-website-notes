@@ -33,7 +33,6 @@ tutti i passi (verifica compresa) prima di passare alla successiva.
 cd website
 npm run verify                    # deve essere pulito; leggere anche gli AVVISI di check
 npm run dev                       # in background
-npm run smoke -- --only NN        # nessun problema
 ```
 
 Poi screenshot di ogni figura in chiaro, scuro, `--style glass` e mobile (`--w 390 --h 844 --dpr 2`),
