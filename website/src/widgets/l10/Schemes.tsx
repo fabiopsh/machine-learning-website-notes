@@ -167,7 +167,9 @@ export function CvSelection() {
           </Btn>
         </div>
       </div>
-      <div className="verdict verdict--info cv10__status">{status}</div>
+      <div className="verdict verdict--info cv10__status">
+        <span>{status}</span>
+      </div>
 
       <div className="wgrid wgrid--even">
         <div className="cv10__rows">
@@ -310,9 +312,11 @@ export function CvHoldout() {
         />
       </div>
       <div className={`verdict ${distinct > 1 ? 'verdict--warn' : 'verdict--info'}`}>
-        {distinct > 1
-          ? 'Righe diverse scelgono modelli diversi: nessun modello finale, solo una stima del rischio della classe di modelli.'
-          : 'Anche se stavolta ogni riga sceglie lo stesso M, nulla lo garantisce: la procedura stima il rischio della classe di modelli.'}
+        <span>
+          {distinct > 1
+            ? 'Righe diverse scelgono modelli diversi: nessun modello finale, solo una stima del rischio della classe di modelli.'
+            : 'Anche se stavolta ogni riga sceglie lo stesso M, nulla lo garantisce: la procedura stima il rischio della classe di modelli.'}
+        </span>
       </div>
       <Tasks
         items={[

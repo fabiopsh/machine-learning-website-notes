@@ -1,1 +1,96 @@
-/* lezione 11 */
+/* ------------------------------------------------------------------ lezione 11: tabelle di scelta (11.1–11.3) */
+
+.ch11__wrap {
+  overflow-x: auto;
+  margin: 6px 0 12px;
+}
+.ch11 {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  table-layout: fixed;
+}
+.ch11 th,
+.ch11 td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+.ch11 thead th {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.ch11 thead th:first-child {
+  width: 22%;
+}
+.ch11 thead th:last-child {
+  width: 15%;
+}
+.ch11 tbody th {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+.ch11 td {
+  position: relative;
+}
+.ch11 tr.is-chosen th,
+.ch11 tr.is-chosen td {
+  background: var(--accent-soft);
+}
+.ch11__cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ch11__bar {
+  display: block;
+  flex: none;
+  height: 14px;
+  border-radius: 4px;
+}
+.ch11__bar--tr {
+  background: var(--c-blue);
+}
+.ch11__bar--cv {
+  background: var(--c-orange);
+}
+.ch11__val {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.ch11__mark {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+
+@media (max-width: 520px) {
+  .ch11 th:last-child,
+  .ch11 td:last-child {
+    display: none;
+  }
+  .ch11__cell {
+    gap: 5px;
+  }
+  .ch11__val {
+    font-size: 10.5px;
+  }
+  .ch11 th,
+  .ch11 td {
+    padding: 5px 6px;
+  }
+  .ch11 thead th:first-child {
+    width: 24%;
+  }
+}

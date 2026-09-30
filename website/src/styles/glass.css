@@ -890,6 +890,19 @@
   background: color-mix(in srgb, var(--accent) 6%, var(--surface));
 }
 
+/* lezione 11: barre delle tabelle di scelta */
+:root[data-style='glass'] .ch11__bar {
+  border-radius: 7px;
+  background-image: var(--gloss);
+  box-shadow: var(--gloss-rim);
+}
+:root[data-style='glass'] .ch11__wrap {
+  padding: 4px 10px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--glass-rim);
+}
+
 /* ------------------------------------------------------------------ mobile e riduzione del movimento */
 
 @media (max-width: 1023px) {

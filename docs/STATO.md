@@ -17,7 +17,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 08 | 08 - Reti neurali (parte 2) - addestramento in pratica.md | ✅ fatta | (non indicato) | 8.1–8.13 |
 | 09 | 09 - Validazione (parte 1) - model selection e assessment.md | ✅ fatta | (non indicato) | 9.1–9.4 |
 | 10 | 10 - Validazione (parte 2) - schemi formali.md | ✅ fatta | (non indicato) | 10.1–10.5 |
-| 11 | 11 - Validazione (parte 3) - errori tipici e FAQ.md | ⏳ da fare | | |
+| 11 | 11 - Validazione (parte 3) - errori tipici e FAQ.md | ✅ fatta | (non indicato) | 11.1–11.3 |
 | 12 | 12 - Statistical Learning Theory e VC-dimension.md | ⏳ da fare | | |
 | 13 | 13 - Support Vector Machines.md | ⏳ da fare | | |
 | 14 | 14 - SVM e kernel - aspetti pratici e visione critica.md | ⏳ da fare | | |
@@ -72,6 +72,7 @@ Decisioni di stile confermate dall'utente:
   a capire gli appunti (spiegazioni migliori sì, dettagli o curiosità no).
 - 2026-09-30 — Lezione 10 (validazione, parte 2), 5 figure con blocchi dei fold comuni (`widgets/l10/Schemes.tsx`,
   dati e CV in `widgets/l10/cv.ts`). `Callout` accetta un titolo JSX (per le formule nei titoli dei riquadri).
+- 2026-09-30 — Lezione 11 (validazione, parte 3), 3 figure (`widgets/l11/Choice.tsx`, tabella di scelta comune).
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),
@@ -200,6 +201,12 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `10-val2_double-cv-2.png` → Fig. 10.4 `NestedResampling` — resampling esterno e interno a blocchi, ruolo di ogni blocco al clic, «test» interno = validation set.
 - `10-val2_nested-cv.png` → Fig. 10.5 `NestedFlow` — diagramma della nested CV con $k_{out}$, $k_{inn}$ e selezione interna per hold-out o K-fold.
 
+### 11 — Validazione (parte 3)
+
+- `11-val3_es-modelli.png` → Fig. 11.1 `ModelsTable` — tabella $f_1 \dots f_6$ con barre dell’errore di training e di 10-fold CV, scelta di $f_3$; criterio di scelta commutabile (CV o training).
+- `11-val3_es-unita.png` → Fig. 11.2 `UnitsTable` — la stessa tabella per 0–5 unità nascoste, scelta di 2 unità.
+- `11-val3_es-knn.png` → Fig. 11.3 `KnnLoo` — K-NN per la regressione su 40 punti con errore di training e di leave-one-out calcolati, K = 1…6 o valori esponenziali, curva completa fino a K = 20.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -208,6 +215,12 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 11: approfondimento sul perché la soglia sull’errore di training è migliore della media delle epoche; tracce
+  di risposta. Nelle figure: 11.1 e 11.2 riproducono le lunghezze delle barre delle slide (nessun valore numerico
+  negli appunti); nella 11.3 i dati sono costruiti (seno con rumore, K-NN per la regressione) e l’errore è
+  calcolato davvero: il minimo tra K = 1 e 6 è a K = 4 come nella slide, e i valori esponenziali trovano K = 8,
+  migliore (esempio dell’ottimo solo locale citato negli appunti); nella slide l’intestazione diceva «10-fold»,
+  qui si usa la leave-one-out come nel testo.
 - 10: letture e spiegazioni delle formule (rischio, rischio empirico, stima della K-fold); tracce di risposta.
   Nelle figure: dati costruiti (24 punti da $\sin(2\pi x)$ con rumore, θ = grado del polinomio); nella 10.2 il
   modello di ogni riga è riaddestrato su TR ∪ VL prima del test; nella 10.5 il conteggio degli addestramenti
