@@ -849,6 +849,12 @@
   background-image: var(--gloss);
 }
 
+/* lezione 9: celle del controesempio */
+:root[data-style='glass'] .rt9__cell {
+  border-radius: 7px;
+  background-image: var(--gloss);
+}
+
 /* ------------------------------------------------------------------ mobile e riduzione del movimento */
 
 @media (max-width: 1023px) {

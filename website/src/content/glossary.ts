@@ -833,6 +833,50 @@ export const glossary: GlossaryEntry[] = [
     lesson: '08',
     section: 'Verso il progetto: il benchmark MONK',
   },
+  // ------------------------------------------------------------------ 09
+  {
+    id: 'blind-test-set',
+    term: 'Blind test set',
+    def: 'Test set «cieco»: mai guardato durante lo sviluppo, usato solo per la valutazione finale. Se si usa per scegliere il modello non è più un test set.',
+    lesson: '09',
+    section: 'Test o model selection?',
+  },
+  {
+    id: 'subset-selection-bias',
+    term: 'Subset selection bias',
+    def: 'La distorsione della stima che nasce quando la selezione (di feature o di modello) è fatta sull’intero dataset: il test set è stato usato implicitamente e la stima diventa ottimistica.',
+    lesson: '09',
+    section: 'Un controesempio istruttivo',
+  },
+  {
+    id: 'grid-search',
+    term: 'Grid search',
+    def: 'Ricerca degli iperparametri che prova tutte le combinazioni di una griglia di valori, scegliendo la migliore sul validation set. Costo $(\\#\\text{valori})^{\\#\\text{iperparametri}}$.',
+    lesson: '09',
+    section: 'Grid search',
+  },
+  {
+    id: 'random-search',
+    term: 'Random search',
+    en: 'Bergstra e Bengio, 2012',
+    def: 'Ricerca degli iperparametri con combinazioni estratte a caso: con lo stesso budget prova molti più valori distinti di ciascun iperparametro, utile quando solo alcuni contano.',
+    lesson: '09',
+    section: 'Alternative alla grid search',
+  },
+  {
+    id: 'stratificazione',
+    term: 'Stratificazione',
+    def: 'Campionare in modo che ogni partizione (TR, TS, fold) contenga le classi circa nelle stesse proporzioni del dataset completo.',
+    lesson: '09',
+    section: 'Campionamento fortunato o sfortunato',
+  },
+  {
+    id: 'bootstrap',
+    term: 'Bootstrap',
+    def: 'Ricampionamento casuale con reinserimento, ripetuto per ottenere sottoinsiemi diversi di validazione o di test.',
+    lesson: '09',
+    section: 'Misure d’errore per la valutazione',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

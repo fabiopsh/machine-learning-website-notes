@@ -15,7 +15,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 06 | 06 - Reti neurali (parte 1) - dal neurone al MLP.md | ✅ fatta | (non indicato) | 6.1–6.15 |
 | 07 | 07 - Note sulla backpropagation.md | ✅ fatta | (non indicato) | 7.1–7.5 |
 | 08 | 08 - Reti neurali (parte 2) - addestramento in pratica.md | ✅ fatta | (non indicato) | 8.1–8.13 |
-| 09 | 09 - Validazione (parte 1) - model selection e assessment.md | ⏳ da fare | | |
+| 09 | 09 - Validazione (parte 1) - model selection e assessment.md | ✅ fatta | (non indicato) | 9.1–9.4 |
 | 10 | 10 - Validazione (parte 2) - schemi formali.md | ⏳ da fare | | |
 | 11 | 11 - Validazione (parte 3) - errori tipici e FAQ.md | ⏳ da fare | | |
 | 12 | 12 - Statistical Learning Theory e VC-dimension.md | ⏳ da fare | | |
@@ -68,6 +68,8 @@ Decisioni di stile confermate dall'utente:
   strato nascosto addestrato **dal vivo** nel browser (batch, momentum, weight decay separato, addestramento
   progressivo a pezzi per frame, storico degli errori, copie della rete) usato da 8.6–8.9 e 8.11–8.13.
   Deciso con l’utente: niente `npm run smoke` (lento e inutile); si verifica con `npm run verify` e screenshot.
+- 2026-09-30 — Lezione 09 (validazione, parte 1), 4 figure. Indicazione dell’utente: aggiunte solo se aiutano
+  a capire gli appunti (spiegazioni migliori sì, dettagli o curiosità no).
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),
@@ -181,6 +183,13 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `08-nn2_monk2-acc.png` → Fig. 8.12 `Monk2Acc` — accuratezza della stessa rete.
 - `08-nn2_monk3.png` → Fig. 8.13 `Monk3` — MONK3 con 4 unità e weight decay a scelta, minimo del test.
 
+### 09 — Validazione (parte 1)
+
+- `09-val1_bias-varianza.png` → Fig. 9.1 `BiasVariance` — errore di training e test di 100 training set (polinomi di grado 0–11 sui dati della lezione 4), medie, training set più fortunato e più sfortunato.
+- `04-l4_schema-tr-vl-ts.png` (ripresa dalla lezione 4) → Fig. 9.2 `DataSplit` (lo stesso widget della 4.7).
+- `09-val1_grid-random.png` → Fig. 9.4 `GridRandom` — grid search e random search con lo stesso budget, curve di livello della prestazione, tacche dei valori provati, variante in cui conta un solo iperparametro.
+- Figura aggiunta: 9.3 `RandomTarget` — il controesempio del target casuale con dati veri (1000 variabili casuali, selezione su tutti i dati contro test separato prima).
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -189,6 +198,10 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 09: la figura 9.3 (il controesempio dal vivo, con la stima su 1000 pattern nuovi); il conteggio degli
+  addestramenti dell’esempio completo (griglia 3 × 3 e K = 5); la spiegazione di $R$ (confronto con chi
+  risponde sempre la media); tracce di risposta. Nella 9.1 la complessità è il grado del polinomio invece
+  dei gradi di libertà di Hastie et al.
 - 08: perché con i pesi tutti a zero la rete non impara; di quanto accelera il momentum (fattore
   $1/(1-\alpha)$ sui plateau, $1/(1+\alpha)$ sulle oscillazioni); letture e spiegazioni delle formule;
   tracce di risposta. Nelle figure: **i dati MONK sono generati dalle regole ufficiali del benchmark** (non

@@ -1,0 +1,63 @@
+/* ------------------------------------------------------------------ controesempio del target casuale (9.3) */
+
+.rt9 {
+  margin-bottom: 10px;
+}
+.rt9__rows {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+.rt9__lbl {
+  flex: 0 0 100%;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.rt9__cell {
+  flex: 1 0 12px;
+  max-width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--c-orange);
+  border: 2px solid transparent;
+  border-bottom-width: 4px;
+}
+.rt9__cell.is-1 {
+  background: var(--c-blue);
+}
+.rt9__cell.is-miss {
+  border-bottom-color: var(--c-red);
+}
+.rt9__cell.is-ts {
+  outline: 2px solid var(--ink-2);
+  outline-offset: 1px;
+}
+.rt9__bar {
+  fill: color-mix(in srgb, var(--ink) 30%, var(--surface));
+}
+.rt9__bar.is-best {
+  fill: var(--accent);
+}
+
+/* ------------------------------------------------------------------ grid e random search (9.4) */
+
+.gr9__rug line {
+  stroke: var(--c-green);
+  stroke-width: 1.4;
+}
+
+.rt9__mark line {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.rt9__mark text {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--accent-ink);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 3px;
+}

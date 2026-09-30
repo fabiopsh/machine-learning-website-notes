@@ -68,7 +68,9 @@ export const parts: LessonPart[] = [
     roman: 'III',
     title: 'Validazione e teoria',
     lessons: [
-      L('09', 'Validazione (parte 1) — model selection e assessment'),
+      L('09', 'Validazione (parte 1) — model selection e assessment', {
+        summary: 'Perché le stime sbagliano: model selection contro model assessment, il controesempio del target casuale, grid e random search, K-fold CV, campionamento e misure d’errore.',
+      }),
       L('10', 'Validazione (parte 2) — schemi formali'),
       L('11', 'Validazione (parte 3) — errori tipici e FAQ'),
       L('12', 'Statistical Learning Theory e VC-dimension'),
