@@ -31,11 +31,15 @@ Prendere come modello le lezioni 01–04 (`website/src/content/lessons/*.mdx`, `
 ```bash
 npm install && npm run dev            # sviluppo su http://localhost:5173
 npm run verify                        # typecheck + lint + controllo contenuti
+npm run check:math -- NN              # formule degli appunti assenti dal sito (da riguardare a mano)
+npm run check:text -- NN              # frasi degli appunti assenti dal sito (da riguardare a mano)
 npm run smoke -- --only NN            # test nel browser: NON usarlo (lento, l'utente lo ritiene inutile)
 npm run shot -- lezione/NN nome --sel "#fig-N-k"   # screenshot in website/.shots/
 npm run build                         # build di produzione (dist/)
 ```
 
-Prima di dichiarare finita una lezione: `npm run verify` pulito (niente `npm run smoke`, su richiesta dell'utente),
-screenshot di ogni figura guardati (chiaro, scuro, glass, mobile), `docs/STATO.md` aggiornato.
+Tutte le 21 lezioni sono convertite (stato in `docs/STATO.md`): restano solo revisioni.
+
+Prima di dichiarare finita una lezione (o una revisione): `npm run verify` pulito (niente `npm run smoke`, su
+richiesta dell'utente), `check:math` e `check:text` riguardati voce per voce, screenshot di ogni figura guardati (chiaro, scuro, glass, mobile), `docs/STATO.md` aggiornato.
 Pubblicare = commit + push su `main` (solo se l'utente lo chiede).
