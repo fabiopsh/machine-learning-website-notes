@@ -1368,6 +1368,68 @@ export const glossary: GlossaryEntry[] = [
     lesson: '18',
     section: 'Struttura generale',
   },
+  // ------------------------------------------------------------------ 19
+  {
+    id: 'centroide',
+    term: 'Centroide',
+    en: 'prototipo, codevector',
+    def: 'Il vettore che rappresenta un cluster (detto anche prototipo, vettore di riferimento, centro del cluster). L’insieme dei centroidi è il **codebook**.',
+    lesson: '19',
+    section: 'Clustering',
+  },
+  {
+    id: 'quantizzazione-vettoriale',
+    term: 'Quantizzazione vettoriale',
+    en: 'Vector Quantization, VQ',
+    def: 'Codificare i dati $\\mathbf{x} \\in V$ con un insieme finito di vettori di riferimento: ogni $\\mathbf{x}$ è descritto dal vettore **vincente**, quello a distorsione minima. Lo spazio risulta diviso in poliedri di Voronoi.',
+    lesson: '19',
+    section: 'Quantizzazione vettoriale',
+  },
+  {
+    id: 'errore-di-quantizzazione',
+    term: 'Errore di quantizzazione',
+    en: 'distorsione',
+    def: 'La distorsione quadratica media tra i dati e i loro prototipi vincitori, $E = \\sum_i\\sum_j \\|\\mathbf{x}_i - \\mathbf{w}_j\\|^2\\,\\delta_{winner}(i,j)$: la loss della quantizzazione vettoriale.',
+    lesson: '19',
+    section: 'L’errore di quantizzazione',
+  },
+  {
+    id: 'k-means',
+    term: 'K-means',
+    def: 'Algoritmo di clustering che minimizza l’errore di quantizzazione: on-line sposta il prototipo vincitore verso il dato; in batch alterna l’assegnazione al centro più vicino e il ricalcolo dei centri come medie.',
+    lesson: '19',
+    section: 'K-means',
+  },
+  {
+    id: 'som',
+    term: 'Self-Organizing Map',
+    en: 'SOM, mappa di Kohonen',
+    def: 'Rete di neuroni disposti su una griglia a bassa dimensione, ciascuno con un peso della dimensione dell’input: impara una mappa che **preserva la topologia**, aggiornando il vincitore e i suoi vicini sulla griglia.',
+    lesson: '19',
+    section: 'Self-Organizing Map',
+  },
+  {
+    id: 'apprendimento-competitivo',
+    term: 'Apprendimento competitivo',
+    def: 'Processo adattivo in cui i neuroni competono per un dato e il vincitore apprende di più: diventano gradualmente specializzati su categorie di input diverse.',
+    lesson: '19',
+    section: 'Apprendimento competitivo e ispirazione biologica',
+  },
+  {
+    id: 'funzione-di-vicinato',
+    term: 'Funzione di vicinato',
+    en: 'neighborhood kernel',
+    def: 'La funzione $h_{i,i^*}$ che decresce con la distanza **sulla mappa** tra l’unità $i$ e il vincitore, ad esempio $\\exp(-\\|\\mathbf{r}_i - \\mathbf{r}_{i^*}\\|^2 / 2\\sigma^2)$: decide quanto si aggiornano i vicini.',
+    lesson: '19',
+    section: 'Fase cooperativa',
+  },
+  {
+    id: 'u-matrix',
+    term: 'U-matrix',
+    def: 'Visualizzazione delle distanze tra i prototipi di unità adiacenti di una SOM: colori scuri = grandi distanze (confini tra cluster), colori chiari = piccole distanze (cluster).',
+    lesson: '19',
+    section: 'Visualizzazione',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

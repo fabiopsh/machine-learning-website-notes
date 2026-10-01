@@ -66,6 +66,9 @@
   --split-new: #6ec3ea;
   --split-val: #8a9a1c;
   --split-ink: #1c1b18;
+  /* scala di grigi della U-matrix (lezione 19): scuro = distanza grande, uguale in tutti i temi */
+  --um-dark: #1c1b18;
+  --um-light: #f4f1ea;
   --split-ts-line: #5e9e37;
   --split-new-line: #1f9bd1;
 

@@ -1,0 +1,185 @@
+/* ------------------------------------------------------------------ lezione 19: diagramma di Voronoi (19.2) */
+
+.vor19__cell {
+  fill: var(--surface);
+  stroke: var(--ink-2);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+.vor19__cell.is-dark {
+  fill: color-mix(in srgb, var(--ink-3) 38%, var(--surface));
+}
+.vor19__cell.is-hot {
+  fill: color-mix(in srgb, var(--accent) 26%, var(--surface));
+}
+.vor19__site {
+  fill: var(--ink);
+  stroke: var(--plot-bg);
+  stroke-width: 1.5;
+}
+.vor19__site.is-hot {
+  fill: var(--accent);
+}
+
+/* ------------------------------------------------------------------ quantizzazione 1D (19.3) */
+
+.q19__axis {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.q19__cut {
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+.q19__hot {
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.q19__cent {
+  fill: var(--c-orange);
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+.q19__cent.is-hot {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.q19__brace {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.6;
+  stroke-dasharray: 5 4;
+}
+
+/* ------------------------------------------------------------------ dallo spazio di input alla mappa (19.5) */
+
+.map19,
+.hom19,
+.wel19 {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.map19__axes line {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.map19__pt {
+  fill: var(--ink);
+  stroke: var(--plot-bg);
+  stroke-width: 1.4;
+  cursor: pointer;
+  outline: none;
+}
+.map19__pt.is-on,
+.map19__pt:focus-visible {
+  fill: var(--accent);
+}
+.map19__cell {
+  fill: color-mix(in srgb, var(--c-yellow) 38%, var(--surface-solid));
+  stroke: var(--ink);
+  stroke-width: 1.2;
+  cursor: pointer;
+  outline: none;
+}
+.map19__cell.is-on,
+.map19__cell:focus-visible {
+  fill: color-mix(in srgb, var(--accent) 45%, var(--surface-solid));
+}
+.map19__arrow {
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+.map19__t {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  fill: var(--ink-2);
+}
+
+/* ------------------------------------------------------------------ homunculus (19.6) */
+
+.hom19 {
+  max-width: 640px;
+  margin: 0 auto;
+}
+.hom19__seg {
+  cursor: pointer;
+  outline: none;
+}
+.hom19__seg path {
+  fill: color-mix(in srgb, var(--c-orange) 22%, var(--surface-solid));
+  stroke: var(--ink-2);
+  stroke-width: 1;
+}
+.hom19__seg.is-near path {
+  fill: color-mix(in srgb, var(--accent) 22%, var(--surface-solid));
+}
+.hom19__seg.is-on path,
+.hom19__seg:focus-visible path {
+  fill: color-mix(in srgb, var(--accent) 55%, var(--surface-solid));
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+.hom19__seg text {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  fill: var(--ink-2);
+}
+.hom19__seg.is-on text {
+  fill: var(--accent-ink);
+  font-weight: 650;
+}
+.hom19__c {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--ink-3);
+}
+
+/* ------------------------------------------------------------------ addestramento della SOM (19.7) */
+
+.som19 {
+  max-width: 460px;
+  margin: 0 auto;
+}
+.som19__net {
+  fill: none;
+  stroke: var(--c-blue);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.som19__u {
+  fill: var(--ink);
+}
+
+/* ------------------------------------------------------------------ mappa del benessere (19.8, 19.9) */
+
+.wel19__cell polygon {
+  stroke: var(--plot-bg);
+  stroke-width: 1.2;
+}
+.wel19__cell text {
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 650;
+  fill: var(--um-dark);
+  pointer-events: none;
+}
+.wel19--umatrix .wel19__cell.is-dark text {
+  fill: var(--um-light);
+}
+.wel19--colors .wel19__cell text {
+  fill: var(--split-ink);
+}
+.wel19__cell[role='button'] {
+  cursor: pointer;
+  outline: none;
+}
+.wel19__cell.is-near polygon {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.wel19__cell.is-on polygon,
+.wel19__cell:focus-visible polygon {
+  stroke: var(--accent);
+  stroke-width: 3.5;
+}

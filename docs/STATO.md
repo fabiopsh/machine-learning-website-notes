@@ -25,7 +25,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 16 | 16 - Reti neurali convoluzionali (CNN).md | ✅ fatta | (non indicato) | 16.1–16.13 |
 | 17 | 17 - Deep learning.md | ✅ fatta | (non indicato) | 17.1–17.15 |
 | 18 | 18 - Reti neurali randomizzate.md | ✅ fatta | (non indicato) | 18.1–18.4 |
-| 19 | 19 - Apprendimento non supervisionato - K-means e SOM.md | ⏳ da fare | | |
+| 19 | 19 - Apprendimento non supervisionato - K-means e SOM.md | ✅ fatta | (non indicato) | 19.1–19.9 |
 | 20 | 20 - Reti neurali ricorrenti (RNN).md | ⏳ da fare | | |
 | 21 | 21 - Apprendimento su dati strutturati e grafi.md | ⏳ da fare | | |
 
@@ -94,6 +94,10 @@ Decisioni di stile confermate dall'utente:
   tipo di riquadro `quote` (citazione, `> [!quote]` negli appunti) in `Callout`.
 - 2026-10-01 — Lezione 18 (reti randomizzate), 4 figure (`widgets/l18/Random.tsx`): `BlockDiagram` per gli schemi a
   blocchi, `Die` (il dado delle slide), rete a pesi casuali vera con readout ai minimi quadrati regolarizzati.
+- 2026-10-01 — Lezione 19 (K-means e SOM), 9 figure (`widgets/l19/Vq.tsx`, `Som.tsx`, motore in `engine.ts`: celle di
+  Voronoi, vincitore, SOM 14×14 addestrata davvero con istantanee alle iterazioni della figura). Token `--um-dark` e
+  `--um-light` (grigi della U-matrix, uguali in tutti i temi). Di nuovo la trappola di Windows: `vq.ts` e `Vq.tsx`
+  collidevano (rinominato `engine.ts`; il server Vite va riavviato dopo la rinomina).
 
 ## Immagini degli appunti → figure del sito
 
@@ -307,6 +311,18 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `18-rand_struttura.png` → Fig. 18.3 `Structure` — input → strato nascosto non addestrato (dadi) → rappresentazione φ → readout addestrato → output; i due testi della slide nei blocchi cliccabili.
 - `18-rand_rete.png` → Fig. 18.4 `RandomNet` — schema della rete ($\mathbf{W}$ casuale, $\mathbf{W}^{out}$ addestrata) e una rete a pesi casuali vera su una regressione: unità, $\lambda$ e pesi casuali a scelta.
 
+### 19 — K-means e SOM
+
+- `03-l23_clustering.png` (ripresa dalla lezione 3) → Fig. 19.1 `Clustering` (lo stesso widget della 3.4).
+- `19-som_voronoi.png` → Fig. 19.2 `VoronoiCells` — celle di Voronoi grigie e bianche calcolate, vettore $\mathbf{x}$ trascinabile con il vincitore e la distorsione, numero di centri a scelta.
+- `19-som_quantizzazione-1d.png` → Fig. 19.3 `Quant1D` — retta divisa in celle con un centroide ciascuna, valore trascinabile, errore di quantizzazione, numero di simboli a scelta.
+- `19-som_kmeans.png` → Fig. 19.4 `KMeans` — le quattro fasi (inizializzazione, assegnazione, aggiornamento con frecce, nuova assegnazione) passo per passo fino a convergenza; inizializzazione casuale.
+- `19-som_mappa.png` → Fig. 19.5 `SomMapping` — punti nello spazio 3D e griglia 3×3: punto → unità vincitrice, unità → punti che rappresenta.
+- `19-som_homunculus.png` → Fig. 19.6 `Homunculus` — arco di corteccia con le parti del corpo in ordine e aree più ampie per le parti più sensibili. Il disegno anatomico non è ricostruibile: resta lo schema.
+- `19-som_training-uniforme.png` → Fig. 19.7 `SomTraining` — SOM addestrata su input uniformi nel quadrato, alle iterazioni 0, 20, 100, 1000, 5000, 100.000; anche con vicinato di raggio zero.
+- `19-som_umatrix.png` → Fig. 19.8 `WelfareMap mode="umatrix"` — mappa esagonale 13×9 con i 77 codici dei paesi nelle posizioni della figura e i grigi della U-matrix.
+- `19-som_mappa-colori.png` → Fig. 19.9 `WelfareMap mode="colors"` — la stessa mappa a colori.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -315,6 +331,14 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 19: letture e spiegazioni delle formule (cella di Voronoi, errore di quantizzazione, K-means on-line, fase
+  cooperativa, vicinato gaussiano); tracce di risposta. Nelle figure: centri, dati e prototipi iniziali di 19.2–19.4
+  sono costruiti; nella 19.5 punti e pesi delle unità sono scelti per l’esempio; nella 19.6 le ampiezze delle zone
+  sono indicative e l’elenco delle parti segue la figura (più completo del testo); nella 19.7 la SOM è 14×14 con
+  $\eta(t)$ e $\sigma(t)$ decrescenti scelti per la figura, e l’opzione «raggio zero» illustra la nota sul K-means
+  on-line; in 19.8 e 19.9 le posizioni dei 77 paesi sono lette dalla figura, mentre grigi e colori sono ricostruiti
+  a occhio, e i paesi scritti in minuscolo nella seconda figura (non usati per l’addestramento) non sono riportati;
+  cliccando un’unità si elencano i paesi delle unità adiacenti.
 - 18: letture e spiegazioni delle formule (readout, uso della rete); tracce di risposta. Nelle figure: nella 18.1
   alberi, variabili e classi delle foglie sono estratti a caso e l’uscita è il voto di maggioranza; nella 18.4 la
   regressione è costruita (30 punti da $\sin(2\pi x)$ con rumore 0,2), le unità sono $\tanh(wx + b)$ con $w$ e $b$
