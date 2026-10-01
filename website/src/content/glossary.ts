@@ -1330,6 +1330,44 @@ export const glossary: GlossaryEntry[] = [
     lesson: '17',
     section: 'Apprendimento avversario',
   },
+  // ------------------------------------------------------------------ 18
+  {
+    id: 'random-forest',
+    term: 'Random Forest',
+    def: 'Ensemble di alberi di decisione randomizzati, ciascuno costruito su campioni estratti a caso dal training set e con una scelta casuale delle variabili su cui dividere i nodi.',
+    lesson: '18',
+    section: 'Modelli intrinsecamente casuali',
+  },
+  {
+    id: 'reti-randomizzate',
+    term: 'Reti neurali a pesi casuali',
+    en: 'reti randomizzate',
+    def: 'Reti con uno o più strati nascosti i cui pesi sono fissati dopo l’inizializzazione casuale: si addestrano solo i pesi di uscita, con un modello lineare.',
+    lesson: '18',
+    section: 'Reti neurali a pesi casuali',
+  },
+  {
+    id: 'elm',
+    term: 'ELM e RVFL',
+    en: 'Extreme Learning Machine, Random Vector Functional Link',
+    def: 'I principali modelli di rete feedforward randomizzata, insieme alle reti RBF con centri casuali.',
+    lesson: '18',
+    section: 'Reti neurali a pesi casuali',
+  },
+  {
+    id: 'readout',
+    term: 'Readout',
+    def: 'Lo strato di uscita addestrato di una rete randomizzata: combina le feature dello spazio nascosto, tipicamente con un modello lineare, $\\mathbf{W}^{out} = (\\mathbf{H}^T\\mathbf{H} + \\lambda\\mathbf{I})^{-1}\\mathbf{H}^T\\mathbf{d}$.',
+    lesson: '18',
+    section: 'Struttura generale',
+  },
+  {
+    id: 'teorema-cover',
+    term: 'Teorema di Cover',
+    def: 'Un problema di classificazione proiettato in modo non lineare in uno spazio ad alta dimensione ha più probabilità di essere linearmente separabile che in uno spazio a bassa dimensione, purché lo spazio non sia densamente popolato.',
+    lesson: '18',
+    section: 'Struttura generale',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

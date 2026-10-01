@@ -107,7 +107,9 @@ export const parts: LessonPart[] = [
       L('17', 'Deep learning', {
         summary: 'Perché molti strati: astrazione gerarchica, no-flattening e composizionalità; representation learning, autoencoder e transfer learning; rappresentazioni distribuite; le tecniche: ReLU, clipping, batch normalization, dropout.',
       }),
-      L('18', 'Reti neurali randomizzate'),
+      L('18', 'Reti neurali randomizzate', {
+        summary: 'La casualità come risorsa: Random Forest, strati nascosti a pesi casuali mai addestrati, readout lineare in un passo, il teorema di Cover; pro e contro delle feature casuali.',
+      }),
       L('19', 'Apprendimento non supervisionato — K-means e SOM'),
       L('20', 'Reti neurali ricorrenti (RNN)'),
       L('21', 'Apprendimento su dati strutturati e grafi'),

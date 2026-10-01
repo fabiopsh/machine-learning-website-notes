@@ -1,0 +1,196 @@
+/* ------------------------------------------------------------------ lezione 18: il dado (casualità) */
+
+.die18 rect {
+  fill: var(--c-red);
+  stroke: color-mix(in srgb, var(--c-red) 60%, var(--ink));
+  stroke-width: 1;
+}
+.die18 circle {
+  fill: var(--plot-bg);
+}
+
+/* ------------------------------------------------------------------ Random Forest (18.1) */
+
+.rf18 {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.rf18__x,
+.rf18__plus {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  fill: var(--ink);
+}
+.rf18__plus {
+  font-style: normal;
+}
+.rf18__feed {
+  stroke: var(--ink-3);
+  stroke-width: 1.1;
+  stroke-dasharray: 3 3;
+}
+.rf18__edge {
+  stroke: var(--ink-4);
+  stroke-width: 1.2;
+}
+.rf18__edge.is-hot {
+  stroke: var(--c-yellow);
+  stroke-width: 3;
+}
+.rf18__node circle {
+  fill: color-mix(in srgb, var(--c-violet) 18%, var(--surface-solid));
+  stroke: var(--ink-3);
+  stroke-width: 1;
+}
+.rf18__node.is-hot circle {
+  fill: color-mix(in srgb, var(--c-yellow) 75%, var(--surface-solid));
+  stroke: var(--ink);
+}
+.rf18__node text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 10.5px;
+  fill: var(--ink);
+}
+.rf18__leaf rect {
+  fill: var(--surface-solid);
+  stroke: var(--ink-4);
+  stroke-width: 1;
+}
+.rf18__leaf.is-hot rect {
+  fill: color-mix(in srgb, var(--c-yellow) 75%, var(--surface-solid));
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.rf18__leaf text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--ink-2);
+}
+.rf18__dots {
+  font-size: 20px;
+  fill: var(--ink-3);
+}
+.rf18__sum {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+
+/* ------------------------------------------------------------------ schemi a blocchi (18.2, 18.3) */
+
+.blk18 {
+  display: block;
+  width: 100%;
+  max-width: 760px;
+  height: auto;
+  margin: 0 auto;
+}
+.blk18__b {
+  cursor: pointer;
+  outline: none;
+}
+.blk18__b rect,
+.blk18__b ellipse {
+  fill: color-mix(in srgb, var(--c-orange) 8%, var(--surface-solid));
+  stroke: var(--c-orange);
+  stroke-width: 1.8;
+}
+.blk18__b text {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.blk18__b--rand rect {
+  fill: color-mix(in srgb, var(--c-orange) 55%, var(--surface-solid));
+}
+.blk18__b--trained rect {
+  fill: color-mix(in srgb, var(--ink-3) 30%, var(--surface-solid));
+  stroke: var(--ink-2);
+}
+.blk18__b--text rect {
+  fill: none;
+  stroke: transparent;
+}
+.blk18__b--text text {
+  font-weight: 400;
+  fill: var(--ink-2);
+}
+.blk18__b.is-on rect,
+.blk18__b.is-on ellipse,
+.blk18__b:focus-visible rect,
+.blk18__b:focus-visible ellipse {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.blk18__arrow {
+  stroke: var(--ink-3);
+  stroke-width: 4;
+}
+.blk18__head {
+  fill: var(--ink-3);
+}
+.blk18__wire {
+  stroke: var(--c-orange);
+  stroke-width: 1.1;
+}
+.blk18__link {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  fill: var(--ink-3);
+}
+
+/* ------------------------------------------------------------------ rete randomizzata (18.4) */
+
+.rn18 {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: 0 auto;
+}
+.rn18__w {
+  stroke: var(--c-yellow);
+  stroke-width: 1.3;
+}
+.rn18__wout {
+  stroke: var(--ink);
+  stroke-width: 1.3;
+}
+.rn18__in {
+  fill: var(--surface-solid);
+  stroke: var(--c-orange);
+  stroke-width: 1.6;
+}
+.rn18__h {
+  fill: var(--c-orange);
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+}
+.rn18__o {
+  fill: color-mix(in srgb, var(--ink-3) 55%, var(--surface-solid));
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+.rn18__t {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--ink-2);
+}
+.rn18__m {
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 17px;
+  fill: var(--ink);
+}
+.rn18__dots {
+  font-size: 16px;
+  fill: var(--ink-2);
+}

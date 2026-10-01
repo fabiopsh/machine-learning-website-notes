@@ -24,7 +24,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 15 | 15 - Bias-varianza ed ensemble.md | ✅ fatta | (non indicato) | 15.1–15.7 |
 | 16 | 16 - Reti neurali convoluzionali (CNN).md | ✅ fatta | (non indicato) | 16.1–16.13 |
 | 17 | 17 - Deep learning.md | ✅ fatta | (non indicato) | 17.1–17.15 |
-| 18 | 18 - Reti neurali randomizzate.md | ⏳ da fare | | |
+| 18 | 18 - Reti neurali randomizzate.md | ✅ fatta | (non indicato) | 18.1–18.4 |
 | 19 | 19 - Apprendimento non supervisionato - K-means e SOM.md | ⏳ da fare | | |
 | 20 | 20 - Reti neurali ricorrenti (RNN).md | ⏳ da fare | | |
 | 21 | 21 - Apprendimento su dati strutturati e grafi.md | ⏳ da fare | | |
@@ -92,6 +92,8 @@ Decisioni di stile confermate dall'utente:
   inversi si perdono): usare gli strumenti di modifica dei file.
 - 2026-10-01 — Lezione 17 (deep learning), 15 figure (`widgets/l17/Hier.tsx`, `Depth.tsx`, `Repr.tsx`, `Tech.tsx`). Nuovo
   tipo di riquadro `quote` (citazione, `> [!quote]` negli appunti) in `Callout`.
+- 2026-10-01 — Lezione 18 (reti randomizzate), 4 figure (`widgets/l18/Random.tsx`): `BlockDiagram` per gli schemi a
+  blocchi, `Die` (il dado delle slide), rete a pesi casuali vera con readout ai minimi quadrati regolarizzati.
 
 ## Immagini degli appunti → figure del sito
 
@@ -298,6 +300,13 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `17-deep_dropout.png` → Fig. 17.14 `Dropout` — rete base con unità rimovibili, le 16 sotto-reti (7 senza percorso input-uscita), campionamento della maschera.
 - `17-deep_l1-l2.png` → Fig. 17.15 `L1L2` — rombo $L^1$ e cerchio $L^2$ con la retta dei vincoli a inclinazione variabile e la soluzione a norma minima.
 
+### 18 — Reti neurali randomizzate
+
+- `18-rand_random-forest.png` → Fig. 18.1 `RandomForest` — tre alberi randomizzati (variabile casuale in ogni nodo), percorso dell’input evidenziato, voti combinati; nuovo input e nuova foresta a richiesta.
+- `18-rand_perceptron.png` → Fig. 18.2 `RosenblattAreas` — retina → area di proiezione (connessioni casuali, rimescolabili) → area di associazione → risposte; blocchi cliccabili.
+- `18-rand_struttura.png` → Fig. 18.3 `Structure` — input → strato nascosto non addestrato (dadi) → rappresentazione φ → readout addestrato → output; i due testi della slide nei blocchi cliccabili.
+- `18-rand_rete.png` → Fig. 18.4 `RandomNet` — schema della rete ($\mathbf{W}$ casuale, $\mathbf{W}^{out}$ addestrata) e una rete a pesi casuali vera su una regressione: unità, $\lambda$ e pesi casuali a scelta.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -306,6 +315,10 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 18: letture e spiegazioni delle formule (readout, uso della rete); tracce di risposta. Nelle figure: nella 18.1
+  alberi, variabili e classi delle foglie sono estratti a caso e l’uscita è il voto di maggioranza; nella 18.4 la
+  regressione è costruita (30 punti da $\sin(2\pi x)$ con rumore 0,2), le unità sono $\tanh(wx + b)$ con $w$ e $b$
+  gaussiani, il readout è calcolato con i minimi quadrati regolarizzati (intercetta esclusa dalla penalità).
 - 17: letture e spiegazioni delle formule (prodotto dei gradienti, clipping, ReLU); tracce di risposta. Nelle figure:
   disegni schematici al posto delle immagini apprese e delle fotografie (17.1–17.3); posizioni illustrative dei
   vettori nella 17.3; valori della rappresentazione distribuita nella 17.8 scelti perché gatto e tigre siano i più
