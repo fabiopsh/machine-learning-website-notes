@@ -13,6 +13,7 @@
     "check:text": "node scripts/check-text.mjs",
     "smoke": "node scripts/smoke.mjs",
     "shot": "node scripts/shot.mjs",
+    "og": "node scripts/og.mjs",
     "verify": "tsc -b && eslint . && node scripts/check-content.mjs"
   },
   "dependencies": {

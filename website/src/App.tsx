@@ -6,9 +6,9 @@ import { Topbar } from './components/shell/Topbar'
 import { GlossaryPage } from './pages/GlossaryPage'
 import { Home } from './pages/Home'
 import { LessonPage } from './pages/LessonPage'
+import { applyMeta } from './lib/meta'
 import { useRoute } from './lib/router'
 import { useLook } from './lib/theme'
-import { getLesson } from './content/lessons'
 
 export default function App() {
   const route = useRoute()
@@ -39,15 +39,7 @@ export default function App() {
     setToc(false)
   }
 
-  useEffect(() => {
-    const t =
-      route.name === 'lesson'
-        ? `${getLesson(route.id)?.title ?? 'Lezione'} — ML`
-        : route.name === 'glossary'
-          ? 'Glossario — ML'
-          : 'Machine Learning — Appunti interattivi'
-    document.title = t
-  }, [route])
+  useEffect(() => applyMeta(route), [route])
 
   useEffect(() => {
     document.body.style.overflow = menu || search ? 'hidden' : ''

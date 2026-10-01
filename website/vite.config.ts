@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import { defineConfig } from 'vite'
 import { lessonIndex } from './plugins/lesson-index.ts'
+import { seo } from './plugins/seo.ts'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,6 +14,7 @@ export default defineConfig({
   base: './',
   plugins: [
     lessonIndex(),
+    seo(),
     {
       enforce: 'pre',
       ...mdx({

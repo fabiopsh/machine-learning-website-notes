@@ -35,7 +35,8 @@ npm run check:math -- NN              # formule degli appunti assenti dal sito (
 npm run check:text -- NN              # frasi degli appunti assenti dal sito (da riguardare a mano)
 npm run smoke -- --only NN            # test nel browser: NON usarlo (lento, l'utente lo ritiene inutile)
 npm run shot -- lezione/NN nome --sel "#fig-N-k"   # screenshot in website/.shots/
-npm run build                         # build di produzione (dist/)
+npm run og                            # rigenera le anteprime dei link (public/og/): dopo ogni cambio di titolo o summary
+npm run build                         # build di produzione (dist/), con pagine statiche per lezione e sitemap
 ```
 
 Tutte le 21 lezioni sono convertite (stato in `docs/STATO.md`): restano solo revisioni.

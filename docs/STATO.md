@@ -113,6 +113,11 @@ Decisioni di stile confermate dall'utente:
   inline presenti; le formule in display non trovate alla lettera sono solo quelle spezzate su più righe (15, 19, 21),
   il punto finale dentro `cases` (17) e «errore $< 1/2$» scritto a parole (15); le frasi non trovate sono solo
   didascalie riformulate (riguardate una per una) e l’intestazione delle domande d’esame.
+- 2026-10-01 — Metainformazioni e indicizzazione: titolo e descrizione della home riscritti, Open Graph e Twitter
+  card, canonical, dati strutturati (LearningResource, BreadcrumbList), `theme-color`, icone PNG e
+  `site.webmanifest`; una pagina statica per lezione e per il glossario (`plugins/seo.ts`) con anteprima propria,
+  `sitemap.xml`; 22 immagini di anteprima generate da `npm run og`; titolo, descrizione e canonical aggiornati
+  nell'app (`src/lib/meta.ts`). Dettagli in `docs/GUIDA-LEZIONI.md` §10.
 
 ## Immagini degli appunti → figure del sito
 
