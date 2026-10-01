@@ -903,6 +903,28 @@
   border-radius: 18px;
 }
 
+/* lezione 16: celle, schede, barre */
+:root[data-style='glass'] .zip16__cell,
+:root[data-style='glass'] .zip16__big,
+:root[data-style='glass'] .top16__card {
+  border-radius: 14px;
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .zip16__cell {
+  border-radius: 8px;
+}
+:root[data-style='glass'] .cg16__c,
+:root[data-style='glass'] .cex16__cell,
+:root[data-style='glass'] .lcb16__bar,
+:root[data-style='glass'] .top16__bar {
+  background-image: var(--gloss);
+  box-shadow: var(--gloss-rim);
+}
+:root[data-style='glass'] .pipe16__hit,
+:root[data-style='glass'] .dim16__hit {
+  rx: 14px;
+}
+
 /* ------------------------------------------------------------------ mobile */
 
 @media (max-width: 1023px) {

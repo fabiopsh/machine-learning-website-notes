@@ -22,7 +22,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 13 | 13 - Support Vector Machines.md | ✅ fatta | (non indicato) | 13.1–13.9 |
 | 14 | 14 - SVM e kernel - aspetti pratici e visione critica.md | ✅ fatta | (non indicato) | 14.1–14.4 |
 | 15 | 15 - Bias-varianza ed ensemble.md | ✅ fatta | (non indicato) | 15.1–15.7 |
-| 16 | 16 - Reti neurali convoluzionali (CNN).md | ⏳ da fare | | |
+| 16 | 16 - Reti neurali convoluzionali (CNN).md | ✅ fatta | (non indicato) | 16.1–16.13 |
 | 17 | 17 - Deep learning.md | ⏳ da fare | | |
 | 18 | 18 - Reti neurali randomizzate.md | ⏳ da fare | | |
 | 19 | 19 - Apprendimento non supervisionato - K-means e SOM.md | ⏳ da fare | | |
@@ -86,6 +86,10 @@ Decisioni di stile confermate dall'utente:
   tratteggiate della lezione 3 costavano ~50% di CPU anche nello stile classico.
 - 2026-10-01 — Lezione 15 (bias-varianza ed ensemble), 7 figure (`widgets/l15/BiasVar.tsx`, dati e calcoli in `widgets/l15/bv.ts`:
   50 rette ai minimi quadrati, 25 modelli a basi gaussiane con penalità λ, ln λ condiviso tra 15.6 e 15.7).
+- 2026-10-01 — Lezione 16 (CNN), 13 figure (`widgets/l16/Conv.tsx`, `widgets/l16/Nets.tsx`; cifre 16×16 generate da
+  tratti in `widgets/l16/digits.ts`; `Pipeline` per gli schemi a stadi, con lo spazio riservato alle etichette).
+  Attenzione: mai modificare questo file o file con TeX da uno script nella shell (le barre rovesciate e gli apici
+  inversi si perdono): usare gli strumenti di modifica dei file.
 
 ## Immagini degli appunti → figure del sito
 
@@ -258,6 +262,22 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `15-bv_lambda.png` → Fig. 15.6 `LambdaFits` — 25 ipotesi e la loro media contro la sinusoide per $\ln\lambda = 2{,}6;\ -0{,}31;\ -2{,}4$ o a scelta.
 - `15-bv_tradeoff.png` → Fig. 15.7 `Tradeoff` — bias², varianza, somma ed errore di test in funzione di $\ln\lambda$, con i minimi.
 
+### 16 — Reti neurali convoluzionali (CNN)
+
+- `16-cnn_zip.png` → Fig. 16.1 `ZipDigits` — 5 righe di cifre 0–9 in 16×16 (generate), cifra scelta ingrandita e traslabile di qualche pixel, con il conteggio dei pixel che cambiano.
+- `16-cnn_conv1d.png` → Fig. 16.2 `Conv1D` — sequenza $x_1 \dots x_5$, unità con tre pesi condivisi che scorre ($t = 2, 3, 4$), uscite calcolate, pesi regolabili.
+- `16-cnn_conv2d.png` → Fig. 16.3 `Conv2D` — input 5×5 con padding, kernel 3×3, feature map 5×5; kernel che scorre, calcolo della cella scelta.
+- `16-cnn_conv2d-esempio.png` → Fig. 16.4 `ConvExample` — input 3×4 ($a \dots l$), kernel 2×2 ($w, x, y, z$), output 2×3 simbolico con la porzione di input evidenziata.
+- `16-cnn_stride.png` → Fig. 16.5 `Conv2D stride={2}` — lo stesso con stride 2 (feature map 3×3) e confronto con stride 1.
+- `16-cnn_maxpool.png` → Fig. 16.6 `MaxPool` — la mappa 4×4 della figura (uscita 6, 8, 3, 4), massimo o media, valori modificabili.
+- `16-cnn_cnn-intera.png` → Fig. 16.7 `CnnPipeline` — stadi cliccabili: input, convoluzioni, sotto-campionamento (due volte), completamente connesso, output.
+- `16-cnn_esempio2.png` → Fig. 16.8 `ReceptiveCone` — sezione di una CNN (convoluzione, pooling, convoluzione, pooling, due strati densi, predizioni cane/gatto/barca/uccello): cono del campo recettivo dell’unità cliccata.
+- `16-cnn_esempio3.png` → Fig. 16.9 `Dimensions` — volumi 36×36×3 → 26×26×9 → 12×12×9 → 6×6×3 → 2×2×3 → 5 unità → 2 uscite, con le finestre 11×11, 3×3, 7×7, 3×3.
+- `16-cnn_alexnet.png` → Fig. 16.10 `AlexLike` — blocchi convoluzione + ReLU, pooling, flatten, completamente connesso, softmax; graffe «feature learning» e «classificazione».
+- `16-cnn_lecun.png` → Fig. 16.11 `LeCunNets` — schema delle cinque reti (strati e dimensioni) e barre di connessioni e pesi.
+- `16-cnn_lecun-curve.png` → Fig. 16.12 `LeCunCurves` — % di corretti sul test per epoca delle cinque reti (valori letti dalla figura), epoca trascinabile.
+- `16-cnn_imagenet.png` → Fig. 16.13 `Top5` — otto schede con la classe corretta e le cinque predizioni (barre lette dalla figura). Le fotografie non sono ricostruibili: resta lo schema.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -266,6 +286,12 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 16: letture e spiegazioni delle formule (convoluzione, unità che scorre); tracce di risposta. Nelle figure: cifre
+  generate (non quelle del dataset) e conteggio dei pixel che cambiano traslandole; valori di input, kernel e pesi di
+  16.2, 16.3 e 16.5 scelti come esempio; nella 16.8 kernel largo 3 e pooling di 2 su una sezione di 32 pixel (scelti
+  per la figura); nella 16.9 i conti «36 − 11 + 1 = 26» e «12 − 7 + 1 = 6» ricavati dalle dimensioni della figura;
+  nella 16.12 le curve sono lette a occhio dalla figura (Net-4 arriva a circa il 94%: il testo alternativo
+  dell’immagine negli appunti dice 98%); nella 16.13 le lunghezze delle barre sono approssimate.
 - 15: letture e spiegazioni delle formule (errore atteso, decomposizione, loss regolarizzata, comitato); tracce di
   risposta. Nelle figure: i dati di 15.1, 15.2 e 15.4 sono generati ($x$ uniforme in $[0, 10]$, rumore gaussiano di
   varianza 0,2), con bias² e varianza stimati sui 50 fit; nella 15.3 il legame «insieme più ampio → regione più ampia e

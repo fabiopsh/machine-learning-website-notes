@@ -1,0 +1,237 @@
+import * as F from '../formulas/l16'
+import { ZipDigits, Conv1D, Conv2D, ConvExample, MaxPool } from '../../widgets/l16/Conv'
+import { CnnPipeline, ReceptiveCone, Dimensions, AlexLike, LeCunNets, LeCunCurves, Top5 } from '../../widgets/l16/Nets'
+
+<Lead>Le reti neurali hanno un’enorme quantità di applicazioni di successo, grazie alle prestazioni e al fatto che si configurano facilmente come primo approccio per apprendere funzioni arbitrarie di forma ignota, senza assumere un modello statistico a priori. I task **sub-simbolici** (dati sensoriali, controllo motorio, elaborazione visiva) sono il loro cavallo di battaglia.</Lead>
+
+Questa lezione presenta un esempio storico e paradigmatico: le <T id="cnn">**reti convoluzionali**</T> (CNN, *ConvNet*, *LeNet*). Mostra la **flessibilità nella progettazione** delle reti, come si cambia il progetto per trattare un’applicazione specifica, e come si realizza una rete feedforward **non completamente connessa** per un problema preciso. Le CNN sono anche un’istanza storica di rete **profonda**, e fanno da ponte verso il deep learning.
+
+## Il problema: riconoscere caratteri
+
+<Figure n="16.1" title="Cifre manoscritte 16 × 16" size="wide">
+  <ZipDigits />
+  <Caption>Esempi nello stile del dataset ZIP code: cinque righe di cifre da 0 a 9 scritte in modi diversi, immagini normalizzate 16×16 a 8 bit in scala di grigi (Le Cun et al., 1990). Il benchmark MNIST è «la drosofila del ML». Le cifre qui sono generate; scegline una e spostala di qualche pixel.</Caption>
+</Figure>
+
+Un primo approccio è una rete standard con **256 input** (uno per pixel, $16 \times 16$): si ottiene un errore del 5–20%, con molti errori dovuti alla **mancanza di invarianza** a rotazioni, traslazioni, ecc. Una rete completamente connessa tratta ogni pixel come un input indipendente: non «sa» che pixel vicini sono correlati né che uno stesso tratto può comparire in posizioni diverse.
+
+<Callout type="tip" title="L’idea di base">
+
+Sfruttare l’**architettura** per includere **conoscenza a priori** nella rete:
+
+- **connessioni locali** (<T id="campo-recettivo">campi recettivi locali</T>): ogni unità vede solo una piccola zona dell’immagine, ed estrae **feature locali**;
+- **condivisione dei pesi** (<T id="weight-sharing">*weight sharing*</T>) tra unità diverse: la **stessa operazione** viene applicata a parti diverse dell’input, perché le feature di un carattere possono comparire ovunque nell’immagine (indipendentemente da posizione, piccole rotazioni…). Si riduce il numero di parametri liberi pur mantenendo una connettività complessa.
+
+</Callout>
+
+## La convoluzione
+
+Il nome viene dall’<T id="convoluzione">**operatore di convoluzione**</T>: una media pesata di una funzione $f$, pesata da un’altra funzione $g$ che scorre nel tempo:
+
+<Formula f={F.convolution} />
+
+L’immagine di $g$ è limitata (non nulla solo su un intervallo): $g$ agisce come una **finestra scorrevole**.
+
+### Convoluzione 1D: una unità su uno stream
+
+Un’unità con tre pesi che scorre su una sequenza di input:
+
+<Formula f={F.conv1d} />
+
+<Figure n="16.2" title="Convoluzione 1D: la stessa unità scorre sull’input">
+  <Conv1D />
+  <Caption>Convoluzione 1D: una sequenza di input $x_1 \dots x_5$; un’unità con pesi $w_1, w_2, w_3$ legge una finestra di tre input consecutivi e produce $o_2$; la stessa unità, con gli stessi pesi, spostata di un passo produce $o_3$, e così via. Sposta l’unità e cambia i pesi.</Caption>
+</Figure>
+
+(Esercizio: con $t = 2$, $o_2 = w_1x_1 + w_2x_2 + w_3x_3$; con $t = 3$, $o_3 = w_1x_2 + w_2x_3 + w_3x_4$.) I pesi sono **condivisi** tra le istanze dell’unità e vengono appresi come al solito: l’unità è un **filtro adattivo**. Più unità diverse formano un **banco di filtri**. Questa rete si chiama anche <T id="tdnn">*Time-Delay Neural Network*</T>.
+
+### Convoluzione 2D
+
+Su un’immagine si usa un <T id="kernel-convoluzione">**kernel**</T> 2D, ad esempio $3 \times 3$ (il **campo recettivo locale** dell’unità), che si sposta di un pixel alla volta (<T id="stride">**stride**</T> 1). Il <T id="padding">**padding**</T> gestisce i bordi. Il kernel scorre sull’immagine e produce una <T id="feature-map">**feature map**</T> (le feature estratte dal filtro).
+
+In termini di reti neurali: si percorre l’immagine con **lo stesso neurone**, che usa connessioni locali.
+
+<Figure n="16.3" title="Convoluzione 2D: il kernel scorre sull’immagine" size="wide">
+  <Conv2D />
+  <Caption>Convoluzione 2D: un kernel 3×3 si sovrappone a una porzione dell’immagine di input (blu; il padding è tratteggiato) e produce un valore nella feature map di output (verde); spostando il kernel si riempie la mappa. I valori dell’immagine e del kernel sono un esempio.</Caption>
+</Figure>
+
+<Figure n="16.4" title="Esempio di convoluzione 2D" size="wide">
+  <ConvExample />
+  <Caption>Esempio di convoluzione 2D di un input 3×4 (valori $a \dots l$) con un kernel 2×2 (pesi $w, x, y, z$): ogni elemento dell’output è la somma dei prodotti del kernel con una porzione 2×2 dell’input, ad esempio $aw + bx + ey + fz$.</Caption>
+</Figure>
+
+<Callout type="note" title="Forma usata nelle librerie">
+
+La convoluzione 2D di un’immagine $I$ con un kernel $K$ è $S(i,j) = (I * K)(i,j) = \sum_m\sum_n I(m,n)\,K(i-m, j-n)$. Molte librerie per CNN implementano in realtà la **cross-correlazione**: $S(i,j) = \sum_m\sum_n I(i+m, j+n)\,K(m,n)$ (per i dettagli: *Deep Learning book*, sez. 9.1; non richiesto all’orale).
+
+</Callout>
+
+### Stride maggiore di 1
+
+Con **stride** > 1 il kernel «salta» pixel (ad esempio due alla volta): è un **sotto-campionamento**, e produce una feature map ridotta.
+
+<Figure n="16.5" title="Convoluzione con stride 2" size="wide">
+  <Conv2D stride={2} pickStride />
+  <Caption>Convoluzione con stride 2: il kernel si sposta di due pixel alla volta sull’immagine di input, e la feature map risultante è ridotta (3×3 invece di 5×5). Confronta con lo stride 1.</Caption>
+</Figure>
+
+## Una rete di «filtri»
+
+I pesi delle unità sono un **filtro addestrato** a rilevare certe feature o pattern nell’immagine. Il progetto dell’architettura prevede:
+
+- **campo recettivo piccolo e locale**: grazie a questo vincolo, i filtri appresi rispondono al massimo a pattern **spazialmente locali** (come nella corteccia visiva degli animali);
+- **lo stesso filtro applicato su tutta l’immagine**: le feature vengono rilevate **indipendentemente dalla posizione**, ottenendo l’<T id="invarianza-traslazione">**invarianza per traslazione**</T>;
+- **filtri appresi**: i filtri che negli algoritmi tradizionali di elaborazione di immagini erano progettati a mano vengono **appresi**. L’indipendenza dalla conoscenza a priori e dallo sforzo umano nel progettare le feature è un grande vantaggio;
+- **molti strati impilati**: le unità delle feature map rappresentano aree via via più grandi dell’immagine originale (assemblando aree delle mappe precedenti).
+
+## Pooling
+
+Il <T id="pooling">**pooling**</T> riduce la feature map:
+
+- con sotto-campionamento (stride > 1, visto sopra);
+- con una **media** (semplice o pesata);
+- con il **max pooling** (il più comune).
+
+In pratica, invece di produrre un valore per ogni pixel di input, se ne produce uno per un insieme (rettangolare) di pixel, prendendo la media o il massimo delle uscite.
+
+<Figure n="16.6" title="Max pooling con filtro 2 × 2 e stride 2">
+  <MaxPool />
+  <Caption>Max pooling con filtro 2×2 e stride 2: una feature map 4×4 divisa in quattro blocchi 2×2 colorati produce una mappa 2×2 con i massimi di ciascun blocco: 6, 8, 3, 4. Cambia i valori o passa alla media.</Caption>
+</Figure>
+
+Il pooling aiuta anche a rendere la rappresentazione **approssimativamente invariante a piccole traslazioni** dell’input: il massimo (o la media) cambia poco se l’input si sposta di poco, quindi un’uscita alta resta alta per una versione leggermente traslata.
+
+## La CNN nel complesso
+
+Una CNN sfrutta la condivisione dei pesi per realizzare una finestra scorrevole di campi locali su un segnale, estesa alle immagini 2D e ripetuta su molti strati (feature map), alternata a operazioni di pooling. I quattro ingredienti:
+
+1. **connessioni locali**;
+2. **pesi condivisi**;
+3. **pooling**;
+4. **molti strati**.
+
+<Figure n="16.7" title="Una CNN completa" size="wide">
+  <CnnPipeline />
+  <Caption>Una CNN completa: un’immagine di input viene elaborata da convoluzioni che producono diverse feature map, poi sotto-campionamento, ancora convoluzioni con più feature map più piccole, sotto-campionamento e infine strati completamente connessi verso l’output. Il numero di filtri (feature map) può crescere negli strati più alti. Clicca uno stadio.</Caption>
+</Figure>
+
+<Figure n="16.8" title="Il «cono» dall’immagine alle mappe finali" size="wide">
+  <ReceptiveCone />
+  <Caption>CNN per la classificazione di immagini: convoluzioni e pooling alternati, poi due strati completamente connessi che producono le probabilità delle classi (barca 0,94). Il «cono» dall’immagine alle mappe finali: il campo recettivo delle unità finali è molto più ampio di quello delle unità dei primi strati, perché sono collegate indirettamente a gran parte dell’immagine. Clicca un’unità per vedere il suo cono.</Caption>
+</Figure>
+
+<Figure n="16.9" title="Un esempio con le dimensioni" size="wide">
+  <Dimensions />
+  <Caption>Un esempio con le dimensioni: input 36×36, il primo strato convoluzionale produce mappe 26×26, il max pooling le porta a 12×12, poi secondo strato convoluzionale, pooling, strato completamente connesso e output. Per un’immagine a colori (RGB) la profondità del volume è il numero di feature map (di neuroni). Clicca uno strato.</Caption>
+</Figure>
+
+<Figure n="16.10" title="Un’architettura tipo AlexNet" size="wide">
+  <AlexLike />
+  <Caption>Un’architettura tipo AlexNet: l’immagine attraversa blocchi di convoluzione + ReLU e pooling (la parte di *feature learning*), poi flatten, strati completamente connessi e softmax per la classificazione (auto, camion, furgone, bicicletta). Clicca un blocco per vedere a quale parte appartiene.</Caption>
+</Figure>
+
+<Callout type="abstract" title="Vantaggi delle CNN">
+
+- **Connessioni locali e pesi condivisi**: rilevano motivi/pattern locali nelle immagini, in modo **invariante alla traslazione** (alla posizione del pattern); **riducono il numero di parametri liberi** pur mantenendo le connessioni, il che è una forma di <T id="regolarizzazione">**regolarizzazione**</T>.
+- **Pooling**: riduce la dimensione della rappresentazione a ogni strato (una **piramide** di strati) e aiuta l’invarianza a piccoli spostamenti e distorsioni.
+- **Molti strati**: le operazioni 1 e 2 applicate a tutte le feature map producono un’**astrazione progressiva** delle feature, permettendo di **comporre primitive** (feature di basso livello, apprese una volta sola) in tutte le combinazioni possibili negli strati successivi.
+- Sono un’istanza storica di **rete profonda**, e sono state studiate analogie con il sistema visivo (neuroscienze).
+
+</Callout>
+
+## Come si usano
+
+L’addestramento avviene tipicamente con la <T id="backpropagation">**backpropagation**</T>, con le euristiche note e alcune specializzazioni (per la condivisione dei pesi, il pooling…). Visto l’uso tipico di reti enormi e grandi quantità di dati, molti iperparametri vengono fissati **per esperienza** o su suggerimento di esperti, perché sarebbe troppo costoso fare cross-validation su grandi spazi di iperparametri. Addestramento, effetti di regolarizzazione e buon comportamento di queste reti enormi saranno discussi nel quadro del deep learning.
+
+## Risultati storici
+
+### Le architetture di LeCun sul dataset ZIP code
+
+<Figure n="16.11" title="Le cinque reti di LeCun sul problema ZIP code" size="wide">
+  <LeCunNets />
+  <Caption>Le cinque reti usate da LeCun sul problema ZIP code: da una rete senza strati nascosti (Net-1) e una completamente connessa con uno strato nascosto (Net-2), a reti con connessioni locali 3×3 (Net-3) e con connessioni locali e pesi condivisi (Net-4 e Net-5, con feature map 8×8×2 e 4×4×4). Scegli una rete: a destra connessioni e pesi di tutte.</Caption>
+</Figure>
+
+| Rete | Connessioni | Pesi |
+|---|---|---|
+| Net-1 | 2570 | 2570 |
+| Net-2 | 3214 | 3214 |
+| Net-3 | 1226 | 1226 |
+| Net-4 | 2266 | 1132 |
+| Net-5 | 5194 | 1060 |
+
+Con i pesi condivisi il numero di **connessioni** può crescere mentre il numero di **pesi** (parametri liberi) resta basso.
+
+<Figure n="16.12" title="Prestazioni sul test delle cinque reti">
+  <LeCunCurves />
+  <Caption>Curve di prestazione sul test per le cinque reti (Le Cun, 1989), in funzione delle epoche: Net-5 raggiunge quasi il 99%, Net-4 circa il 94%, Net-3 e Net-2 restano tra l’86 e l’88%, Net-1 scende verso il 72%. L’errore di training è zero per tutte, su un insieme ridotto di circa 300 immagini. I valori sono letti dalla figura originale. Trascina l’epoca.</Caption>
+</Figure>
+
+Net-5 raggiunge un errore dell’**1,6%** con 5194 connessioni e soli 1060 pesi. Oggi si arriva allo 0,8% (con reti e SVM) e anche meno.
+
+### MNIST
+
+Il dataset completo ha 60.000 immagini di training e 10.000 di test. I progressi (1998–2012) sono documentati sul sito di LeCun. Con il deep learning (MLP o CNN con molti strati, pre-addestramento non supervisionato strato per strato) si è arrivati allo 0,39% (2006) e 0,35% (2011); il migliore nel 2012 è lo 0,23% (comitato di reti convoluzionali), 0,21% nel 2016.
+
+<Callout type="warning" title="Attenzione">
+
+Il test set di MNIST è stato usato così tante volte che i miglioramenti dell’ordine dello 0,1% non sono più significativi: è di fatto diventato un validation set per la comunità.
+
+</Callout>
+
+<Callout type="note" title="Anche un MLP profondo funziona?">
+
+Un articolo del 2010 (*Neural Computation*) mostra che la «buona vecchia» backpropagation on-line su un semplice MLP ottiene lo 0,35% su MNIST: bastano **molti strati**, **molti neuroni** per strato, **molte immagini deformate** per il training e **GPU** per accelerare. La rete 784-2500-2000-1500-1000-500-10 ha 12 milioni di pesi e si addestra in 2 ore. Il controllo della complessità è ottenuto deformando le immagini per avere molti più esempi (<T id="data-augmentation">*data augmentation*</T>).
+
+</Callout>
+
+### Riconoscimento facciale e ImageNet
+
+- **DeepFace** (CVPR 2014): reti convoluzionali a 9 strati addestrate su 4 milioni di immagini di più di 4000 persone; riconosce se due foto mostrano la stessa persona con accuratezza del 97,25% (umani: 97,53%).
+- **AlexNet** (Krizhevsky, Sutskever, Hinton, NIPS 2012): una CNN profonda addestrata su 1,3 milioni di immagini ad alta risoluzione di ImageNet (ILSVRC-2010) in 1000 classi. Errori top-1 e top-5 del 39,7% e 18,9% (dal precedente ~26%), molto meglio dello stato dell’arte. La rete ha **60 milioni di parametri** e 500.000 neuroni: cinque strati convoluzionali (alcuni seguiti da max pooling) e due strati completamente connessi con softmax finale a 1000 classi. Per velocizzare l’addestramento: neuroni **non saturanti** (<T id="relu">ReLU</T>) e un’implementazione GPU molto efficiente. Per ridurre l’overfitting negli strati densi: un nuovo metodo di regolarizzazione, il **dropout**.
+
+<Figure n="16.13" title="Predizioni top-5 di AlexNet" size="wide">
+  <Top5 />
+  <Caption>Predizioni top-5 di AlexNet su otto immagini casuali del test set di ImageNet (orchidea, albero, poncho, scooter, sedia, orchidea, stivale, medusa), con le cinque predizioni più probabili della rete per ciascuna. Le fotografie non sono riprodotte: restano la classe corretta e le barre delle predizioni, lette dalla figura originale.</Caption>
+</Figure>
+
+## CNN moderne e GPU
+
+Esistono molte varianti e architetture specializzate per le immagini (corso *Intelligent Systems for Pattern Recognition*), con grande impatto su Pattern Recognition e Computer Vision; le basi neuroscientifiche sono trattate nel corso di *Computational Neuroscience*. Si possono anche riusare le feature di modelli **già addestrati** su grandi benchmark (AlexNet, GoogLeNet, VGG, ResNet…): sono disponibili molte CNN pre-addestrate per classificazione, segmentazione, riconoscimento facciale, rilevamento di testo.
+
+Le implementazioni efficienti sfruttano le **GPU** tramite la rappresentazione a <T id="tensore">**tensori**</T>. La moltiplicazione di matrici (cioè i prodotti scalari) è un’operazione lineare che le GPU eseguono in modo molto efficiente, parallelizzando le somme e i prodotti indipendenti. Molte operazioni di kernel si possono scrivere come un’unica moltiplicazione tra matrici a blocchi; la notazione a **tensori** (array multidimensionali con l’operazione *tensordot*, ad esempio in TensorFlow o NumPy) permette di farlo senza costruire a mano matrici a blocchi complesse.
+
+<Callout type="note" title="Oltre le CNN: le Capsule Network">
+
+Le <T id="capsule-network">**Capsule Network**</T> (Sabour, Frosst, Hinton, 2017) usano sotto-reti specializzate: una «capsula» è un gruppo di neuroni che produce sia un parametro che indica se un’entità è presente, sia un vettore di **parametri di posa** (posizione, orientamento) rispetto a una versione canonica. Al posto del max pooling usano un meccanismo di **routing** (l’idea che il cervello instradi l’informazione visiva di basso livello verso la capsula più adatta). Ottengono ottimi risultati su MNIST, riconoscendo molto meglio di una CNN cifre sovrapposte.
+
+</Callout>
+
+<Exam>
+<Q q="Quali sono le idee chiave delle CNN (connessioni locali, pesi condivisi, pooling, molti strati) e cosa comporta ciascuna?">
+
+Connessioni locali: ogni unità vede solo una piccola zona (campo recettivo) ed estrae feature locali. Pesi condivisi: la stessa unità (filtro) è applicata a tutte le posizioni, quindi le feature sono rilevate indipendentemente dalla posizione (invarianza per traslazione) e i parametri liberi diminuiscono pur mantenendo le connessioni, che è una forma di regolarizzazione. Pooling: riduce la dimensione della rappresentazione a ogni strato (piramide) e aiuta l’invarianza a piccoli spostamenti e distorsioni. Molti strati: astrazione progressiva delle feature, con unità che rappresentano aree sempre più grandi dell’immagine e primitive di basso livello composte in tutte le combinazioni.
+
+</Q>
+<Q q="Cos’è la convoluzione in una rete neurale? Cosa sono kernel, stride, padding, feature map?">
+
+È una finestra scorrevole: lo stesso neurone, con connessioni locali e pesi condivisi, percorre l’input calcolando in ogni posizione la somma pesata dei valori nella finestra (in 1D, $out_t = \sum_{i=1}^3 w_i x_{t+i-2}$). Il kernel è l’insieme dei pesi del filtro (ad esempio 3×3), cioè il campo recettivo locale dell’unità; lo stride è di quanti pixel si sposta il kernel a ogni passo (con stride maggiore di 1 si sotto-campiona); il padding gestisce i bordi dell’immagine; la feature map è l’uscita, cioè le feature estratte dal filtro in tutte le posizioni.
+
+</Q>
+<Q q="A cosa serve il pooling? Come funziona il max pooling?">
+
+Riduce la feature map, producendo un valore per un insieme rettangolare di pixel invece di uno per pixel, e rende la rappresentazione approssimativamente invariante a piccole traslazioni dell’input. Il max pooling prende il massimo di ciascun blocco: con filtro 2×2 e stride 2 una mappa 4×4 diventa 2×2 (nell’esempio, 6, 8, 3, 4). In alternativa si usa la media (semplice o pesata) o il sotto-campionamento con stride maggiore di 1.
+
+</Q>
+<Q q="Perché la condivisione dei pesi è una forma di regolarizzazione?">
+
+Perché riduce il numero di parametri liberi pur mantenendo una connettività complessa: le unità di una feature map usano tutte gli stessi pesi. Nelle reti di LeCun, Net-5 ha 5194 connessioni ma solo 1060 pesi, ed è la migliore sul test (errore 1,6%). Inoltre il vincolo inserisce conoscenza a priori: la stessa feature può comparire ovunque nell’immagine.
+
+</Q>
+<Q q="Come cresce il campo recettivo con la profondità?">
+
+Le unità del primo strato vedono solo il proprio kernel. Impilando strati (e pooling), ogni unità assembla aree delle mappe precedenti, quindi rappresenta un’area via via più grande dell’immagine originale: è il «cono» dall’immagine alle mappe finali. Le unità finali sono collegate indirettamente a gran parte dell’immagine.
+
+</Q>
+</Exam>
