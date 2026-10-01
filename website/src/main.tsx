@@ -31,6 +31,7 @@ import './styles/l16.css'
 import './styles/l17.css'
 import './styles/l18.css'
 import './styles/l19.css'
+import './styles/l20.css'
 import './styles/glass.css'
 import App from './App.tsx'
 

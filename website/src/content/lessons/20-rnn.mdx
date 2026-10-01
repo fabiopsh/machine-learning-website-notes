@@ -1,0 +1,284 @@
+import * as F from '../formulas/l20'
+import { Transductions, TransductionTypes, Idnn, RecurrentUnit, StateSystem } from '../../widgets/l20/Seq'
+import { Elman, Unfolding, Esn, MarkovStates, TreeEncoding, RecNN } from '../../widgets/l20/Rec'
+
+<Lead>Questa è un’introduzione leggera alle **reti neurali ricorrenti** (RNN), che saranno approfondite nei corsi ISPR e CNS. Finora le reti erano **feedforward** (direzione input → output) e lavoravano su **vettori**. Le RNN aggiungono **connessioni di feedback** (cicli) nella topologia: la presenza di auto-connessioni dà alla rete **proprietà dinamiche** e una **memoria** (uno stato) delle computazioni passate. Questo estende la capacità rappresentativa del modello all’elaborazione di **sequenze** (e di dati strutturati). Le RNN sono anche biologicamente plausibili: le reti neurali biologiche sono ricorrenti.</Lead>
+
+## Perché i dati sequenziali
+
+Servono modelli per sequenze quando l’uscita dipende dalla **storia degli input** (ad esempio nel tempo: modelli dinamici), o quando il dominio è fatto di **sequenze di lunghezza variabile**:
+
+- processi dinamici, elaborazione di segnali (filtri, controllo), robotica;
+- **linguaggio**: riconoscimento del parlato, NLP, linguaggi formali, information retrieval;
+- visione e ragionamento su eventi temporali;
+- **serie temporali**: previsioni finanziarie, elaborazione di segnali;
+- genomica e proteomica (bioinformatica): ad esempio predire la struttura di una proteina dalla sequenza di amminoacidi;
+- riconoscimento di attività umane da dati di sensori.
+
+Le <T id="rnn">RNN</T> (e gli approcci collegati) sono state il riferimento per l’elaborazione di sequenze, con risultati allo stato dell’arte nel **riconoscimento del parlato** e nell’**elaborazione del testo** (traduzione automatica…), ma anche per applicazioni «divertenti» come la composizione musicale e la generazione di testo e parlato.
+
+## Dai dati piatti ai dati strutturati
+
+Finora i dati erano **piatti** (vettori). I dati **strutturati** sono sequenze, alberi, grafi, dati multi-relazionali: stringhe, proteine, serie temporali, piccole molecole, reti.
+
+### Il nuovo dominio: sequenze e trasduzioni
+
+- **Dati**: sequenze discrete di **vettori** (con un ordine seriale, ad esempio il tempo), di lunghezza variabile. Ogni elemento $\mathbf{l}_t$ è un vettore (es. $\mathbf{l}_t = [1, 0, 1, 0{,}7]$).
+- **Task**: una <T id="trasduzione">**trasduzione**</T> nel dominio sequenziale, cioè una mappatura *sequenza di input → valore o sequenza di output*.
+
+<Figure n="20.1" title="Classificazione e trasduzione di sequenze" size="wide">
+  <Transductions />
+  <Caption>Riconoscimento/classificazione di sequenze (una sola uscita, alla fine) e trasduzione di sequenze o predizione del passo successivo (un’uscita per ogni passo di input). Scegli il task, cambia la lunghezza e clicca un elemento per vederne il vettore.</Caption>
+</Figure>
+
+<Figure n="20.2" title="Tipi di trasduzione" size="wide">
+  <TransductionTypes />
+  <Caption>Tipi di trasduzione: classificazione di sequenze, trasduzione IO isomorfa (un’uscita per ogni input), predizione del passo successivo, generazione di sequenze; sotto, una trasduzione generale in cui nodi vuoti e pieni rappresentano i diversi casi. La predizione autoregressiva usa una sola sequenza.</Caption>
+</Figure>
+
+---
+
+## La memoria nelle reti neurali
+
+L’obiettivo è che l’uscita dipenda dagli input **precedenti**.
+
+### Approccio 1: memoria finita (IDNN)
+
+Il primo approccio è «spaziale», a **memoria finita**: le <T id="idnn">**Input Delay Neural Network**</T> (nella classe delle <T id="tdnn">*Time-Delay NN*</T>, già viste all’inizio delle CNN). I ritardi sono nelle connessioni e fanno da memoria dell’input: un **registro a scorrimento** di dimensione finita, una **finestra scorrevole** sulla sequenza. (Le CNN hanno esteso questa idea alle immagini 2D.)
+
+<Figure n="20.3" title="IDNN: una finestra scorrevole sulla sequenza">
+  <Idnn />
+  <Caption>IDNN: una finestra scorrevole di dimensione fissa (qui tre elementi) sulla sequenza $l_1 \dots l_5$ viene data in input a un MLP, che produce un’uscita per ogni posizione della finestra. Fai scorrere la finestra e cambiane la dimensione.</Caption>
+</Figure>
+
+- La dimensione della finestra va **nota in anticipo**.
+- Il numero di pesi **dipende dalla dimensione del buffer**.
+- Se il buffer contiene abbastanza informazione, si risolve il problema con un normale addestramento di MLP (ad esempio NETtalk, 1988).
+
+### Approccio 2: unità ricorrenti
+
+Un’**unità neurale ricorrente** ha una connessione di feedback (un *self-loop*) e usa sia l’input corrente sia l’informazione di **stato**:
+
+<Formula f={F.recUnit} />
+
+dove $\mathbf{l}(t)$ è l’input (etichetta) al tempo $t$, $f$ è l’attivazione (sigmoidale), $\hat{w}$ è il **peso ricorrente**, $\theta$ il bias, e $x(t-1)$ è lo stato al passo precedente, fornito da un ritardo unitario $q^{-1}$. La parte nuova rispetto a un neurone normale è il termine $\hat{w}\,x(t-1)$.
+
+<Figure n="20.4" title="Un’unità ricorrente" size="wide">
+  <RecurrentUnit />
+  <Caption>Un’unità ricorrente: riceve l’input $l(t)$ con peso $w$ e il proprio stato precedente $x(t-1)$ attraverso un ritardo unitario $q^{-1}$ con peso $\hat w$, e produce il nuovo stato $x(t)$. Il self-loop con ritardo unitario porta lo stato precedente come input aggiuntivo. A destra lo stato passo per passo su una sequenza di 0 e 1: cambia i pesi e gli input.</Caption>
+</Figure>
+
+- Lo <T id="stato-rnn">**stato**</T> riassume l’informazione passata (il **contesto**): cambia valore seguendo il flusso degli input.
+- La **codifica del passato è adattiva**, perché dipende dai pesi liberi del modello.
+
+<Callout type="example" title="Esercizio: contare gli «1»">
+
+Realizzare una RNN con una sola unità (trovando i valori di $w$ e $\hat w$) che restituisca il numero di «1» ricevuti finora in una sequenza di 0 e 1.
+
+**Soluzione**: unità lineare con $w = 1$, $\hat w = 1$, $\theta = 0$, cioè $x(t) = l(t) + x(t-1)$. Con l’input $1, 0, 1, 1, 0, 1$ lo stato vale $1, 1, 2, 3, 3, 4$: **lo stato accumula la somma degli «1»** ricevuti. La RNN riassume l’informazione della sotto-sequenza passata, cosa che una IDNN **non può fare** per sequenze di lunghezza variabile (la sua memoria è limitata alla finestra).
+
+</Callout>
+
+### Sistemi a transizione di stato
+
+In generale, un modello ricorrente è un **sistema a transizione di stato**:
+
+<Formula f={F.stateSystem} />
+
+<Figure n="20.5" title="Sistema a transizione di stato" size="wide">
+  <StateSystem />
+  <Caption>Sistema a transizione di stato. A sinistra la formazione dello stato nel tempo: $x(1)$ codifica $l_1$, $x(2)$ codifica $l_1 l_2$, e così via, con riquadri annidati che rappresentano le sotto-sequenze: lo stato al tempo $t$ codifica (è un *embedding* di) tutta la sotto-sequenza fino a $t$. A destra il modello grafico con input $l$, stato $x$ con auto-anello di ritardo e uscita $y$. Cambia l’istante $t$.</Caption>
+</Figure>
+
+- $\tau$ è la **funzione di transizione di stato** (*next-state function*), realizzata da una rete neurale.
+- Lo stato riassume gli input passati: è una **codifica** (embedding) delle sotto-sequenze.
+- Lo stato ha valori **continui** (reali) (a differenza, ad esempio, degli automi o degli HMM, che hanno stati discreti).
+- $\mathbf{x}(t)$ può essere un insieme di stati, per comporre una rete di unità ricorrenti.
+
+### Una rete ricorrente (Simple RNN)
+
+Con molte unità ricorrenti nascoste si ottiene la <T id="simple-rnn">**Simple RNN**</T> di Elman: ogni unità nascosta riceve l’input e gli stati precedenti di **tutte** le unità nascoste (attraverso i ritardi), e uno strato di uscita (eventuale) produce $\mathbf{y}(t)$.
+
+<Figure n="20.6" title="Una Simple RNN (Elman)" size="wide">
+  <Elman />
+  <Caption>Una Simple RNN (Elman) con più unità ricorrenti nascoste: le unità di input $l_1 \dots l_m$ sono collegate con pesi $w$ a tre unità nascoste, che ricevono anche le proprie uscite precedenti attraverso ritardi $q^{-1}$ con pesi $\hat w$; uno strato di uscita produce $y(t)$. Clicca un’unità nascosta.</Caption>
+</Figure>
+
+<Callout type="example" title="Esercizio: le equazioni">
+
+Per l’unità nascosta $i$:
+
+$$
+x_i(t) = f\left(\sum_{j=1}^{m} w_{ij}\,l_j(t) + \sum_{k} \hat w_{ik}\,x_k(t-1) + \theta_i\right),
+$$
+
+e in forma vettoriale
+
+<Formula f={F.elman} />
+
+</Callout>
+
+### Proprietà
+
+Anche la semplice RNN è già molto potente:
+
+- è un **approssimatore universale** di sistemi dinamici non lineari;
+- è **Turing-equivalente** (può simulare qualunque automa);
+- è un sistema dinamico non lineare (non autonomo), studiabile con la teoria dei sistemi dinamici (caos, frattali…).
+
+I modelli ricorrenti si basano su tre assunzioni:
+
+- **Causalità**: l’uscita al tempo $t_0$ dipende solo dagli input ai tempi $t \le t_0$. È necessaria e sufficiente per avere uno stato interno.
+- **Stazionarietà**: invarianza nel tempo (dopo l’addestramento): la funzione di transizione $\tau$ è **la stessa** in ogni istante, indipendentemente dalla lunghezza delle sequenze. È ciò che permette di elaborare dati di lunghezza variabile con un modello di dimensione fissa.
+- **Adattività**: le funzioni di transizione sono realizzate da reti neurali con pesi liberi, quindi **apprese dai dati**.
+
+---
+
+## Apprendimento: l’unfolding
+
+Si **srotola** (<T id="unfolding">*unfolding*</T>) nel tempo lo stesso modello lungo la sequenza di input: si costruisce un MLP feedforward (la **rete di codifica**, *encoding network*) equivalente alla RNN sui $k$ passi della sequenza, con **una replica del modello per ogni passo**. Per la stazionarietà, le repliche **condividono i pesi**.
+
+<Figure n="20.7" title="Unfolding di una RNN" size="wide">
+  <Unfolding />
+  <Caption>Unfolding di una RNN a 2 unità su 3 passi di input: a sinistra la RNN con due unità ricorrenti; a destra la stessa rete srotolata sui passi $l(1), l(2), l(3)$, con le copie delle unità impilate dal passato (in basso) al presente (in alto) e i pesi ricorrenti che collegano ogni copia alla successiva. Si ottiene una rete feedforward a molti strati, diversa per ogni sequenza di input. Cambia la lunghezza della sequenza ed evidenzia un peso.</Caption>
+</Figure>
+
+<Callout type="tip" title="Il punto chiave">
+
+Sulla rete di codifica srotolata si può applicare la <T id="backpropagation">**backpropagation**</T>! Si ottiene una rete diversa per ogni sequenza di input, con **molti strati** (tanti quanti i passi): è di fatto una rete **profonda**, con pesi condivisi tra gli strati.
+
+</Callout>
+
+Gli algoritmi di apprendimento supervisionato per RNN devono tenere conto di tutte le transizioni di codifica sviluppate dal modello a ogni passo:
+
+- <T id="bptt">**BPTT**</T> (*Back-Propagation Through Time*);
+- **RTRL** (*Real-Time Recurrent Learning*).
+
+Calcolano in modo diverso lo stesso gradiente degli errori di uscita sulla rete srotolata equivalente.
+
+<Callout type="warning" title="Dipendenze a lungo termine">
+
+Poiché la rete srotolata è molto profonda, il <T id="vanishing-gradient">**vanishing gradient**</T> rende difficile apprendere **dipendenze a lungo termine** (quando l’uscita dipende da input molto lontani nel passato).
+
+</Callout>
+
+### Modelli avanzati
+
+È un campo di ricerca in rapida crescita, con molte varianti:
+
+- <T id="lstm">**LSTM**</T> (*Long Short-Term Memory*): cercano di risolvere il vanishing gradient con **unità «gate»** capaci di selezionare il flusso del passato e del gradiente. Sono nate per le dipendenze **lunghe**: non sono adatte a serie brevi, quindi, nonostante la popolarità, non vanno usate acriticamente;
+- **GRU** (*Gated Recurrent Units*): una LSTM semplificata;
+- **BRNN** (RNN bidirezionali): considerano sia il contesto a sinistra sia quello a destra;
+- spesso si fondono reti profonde e RNN;
+- contro il vanishing gradient: ottimizzatori Hessian-free, tecniche di pre-training…
+
+Sono incluse nelle principali librerie (PyTorch, Keras, Matlab…). Alcuni dati sulla loro diffusione: nel 2015 le LSTM erano usate in 2 miliardi di telefoni Android e 1 miliardo di iPhone (Siri); nel 2016 quasi il 30% della potenza di calcolo per l’inferenza dei datacenter di Google era usato per le LSTM; nel 2017 erano in Alexa e in Facebook (30 miliardi di traduzioni a settimana). Un esempio curioso: generare la versione **manoscritta** di un testo predicendo un punto $(x,y)$ della traiettoria della penna alla volta (Graves, 2013).
+
+---
+
+## Approcci collegati
+
+- SOM e reti non supervisionate per domini sequenziali.
+- **Hidden Markov Model** (modellano la distribuzione di probabilità delle transizioni di stato).
+- **Transformer**.
+- **RNN randomizzate**: il **Reservoir Computing** (ESN, *Liquid State Machine*).
+- Modelli basati su distanze (string matching), kernel per stringhe, inferenza grammaticale, ILP.
+
+### Transformer e attenzione
+
+Un <T id="transformer">**transformer**</T> (2017) è un’architettura di deep learning basata sul meccanismo di **attenzione multi-head** in parallelo. L’attenzione permette al modello di **accedere a qualunque punto precedente** della sequenza; encoder e/o decoder più reti feedforward completano l’architettura per scopi diversi.
+
+Lo **strato di attenzione** pesa tutti gli stati precedenti secondo una misura di **rilevanza appresa**, fornendo potenzialmente informazione anche su token molto lontani. Si è rivelato particolarmente utile nella traduzione, dove un contesto lontano può essere essenziale per il significato di una parola. Usato prima per migliorare le RNN, poi anche da solo (*«Attention is all you need»*). Tutti i token vengono elaborati **simultaneamente**, calcolando pesi tra le loro rappresentazioni (embedding) in strati successivi: sono semplicemente unità a **prodotto scalare scalato** tra vettori *query* e vettori delle parole, che cercano le correlazioni più alte tra le parole di una frase (ad esempio in «see that girl», «that» viene associato a «girl»). Si applica anche a *patch* di immagini invece che a parole (*vision transformer*).
+
+### Reti ricorrenti randomizzate: le Echo State Network
+
+Possiamo sfruttare direttamente questa macchina a stati per codificare le sequenze, e poi usare l’embedding risultante per imparare la mappatura di uscita? Sì, **anche con reti ricorrenti connesse casualmente con pesi fissi** (non addestrati)! È la classe del <T id="reservoir-computing">**Reservoir Computing**</T> (RC): Echo State Network, *liquid state machine*, *fractal machine* (si veda la [lezione 18](#/lezione/18)).
+
+<Figure n="20.8" title="Una Echo State Network" size="wide">
+  <Esn />
+  <Caption>Una Echo State Network: l’input $u(t)$ entra con pesi $W_{in}$ in un grande reservoir di unità ricorrenti connesse in modo sparso e casuale (pesi $\hat W$), il cui stato $x(t)$ viene letto da un readout lineare con pesi $W_{out}$ che produce $y(t)$; input e reservoir sono non addestrati, il readout è addestrato. Clicca le parti e rilancia i dadi.</Caption>
+</Figure>
+
+<Callout type="definition" title="Echo State Network (ESN)">
+
+Una <T id="esn">ESN</T> è composta da:
+
+- un grande **reservoir** di unità ricorrenti connesse in modo sparso, **non addestrate** dopo un’inizializzazione casuale;
+- un semplice <T id="readout">**readout**</T> feedforward di unità **lineari**, addestrato con metodi lineari efficienti (es. <T id="ridge">**ridge regression**</T>).
+
+**Echo State Property**: la funzione di transizione di stato deve essere **contrattiva** (si limita il raggio spettrale dei pesi del reservoir, cioè si garantisce la stabilità del sistema dinamico). Così lo stato ricorrente dipende asintoticamente (come un’«eco») **solo dalla storia degli input**, e non dalle condizioni iniziali dello stato.
+
+</Callout>
+
+Le ESN sono **molto efficienti** (nessun addestramento delle unità ricorrenti) e risolvono bene i task sotto certe condizioni.
+
+#### Organizzazione markoviana dello spazio degli stati
+
+<Figure n="20.9" title="Organizzazione markoviana dello spazio degli stati" size="wide">
+  <MarkovStates />
+  <Caption>Il reservoir proietta le sequenze nello spazio degli stati in modo «markoviano»: quattro stringhe di input (aaaaa, abbaa, abaab, bbbab) proiettate nello spazio degli stati, dove le stringhe che condividono il suffisso finale (aa oppure ab) finiscono in punti vicini. Cambia le stringhe, la contrattività e i pesi casuali.</Caption>
+</Figure>
+
+Il reservoir agisce come una **proiezione** (embedding) delle sequenze di input nel vettore degli stati $\mathbf{x}(t)$, e riesce intrinsecamente a **discriminare le sequenze in base al suffisso**, senza addestrare i pesi ricorrenti: gli stati sono tanto più vicini quanto più è lungo il **suffisso comune** (gli input recenti contano di più, per la contrattività). Questo rende facile apprendere task **markoviani** (anche per le RNN addestrate, ma le ESN sono molto più efficienti), ed è un **bias architetturale** che vale anche per i modelli ricorrenti con apprendimento (Gallicchio, Micheli, 2011).
+
+**Reservoir Computing profondo.** Si possono impilare più reservoir (**DeepESN**, con molti risultati del gruppo CIML di Pisa), unendo la potenza delle RNN profonde all’efficienza delle ESN. L’organizzazione a strati mostra vantaggi in termini di **scale temporali multiple** e di **ricchezza delle dinamiche**: nell’analisi in frequenza, gli strati più alti si concentrano sulle frequenze più basse (scale temporali più ampie), formando una rappresentazione temporale gerarchica.
+
+---
+
+## Verso i domini strutturati
+
+Si può estendere l’approccio ricorrente agli **alberi**? Sì: le <T id="recnn">**reti neurali ricorsive**</T> (RecNN). La codifica procede **dal basso verso l’alto** (dalle foglie alla radice), e lo stato di ogni vertice dipende dal suo label e dagli stati dei **figli** (estendendo la funzione di transizione a più stati).
+
+<Figure n="20.10" title="Modello grafico per alberi e unfolding lungo la struttura" size="wide">
+  <TreeEncoding />
+  <Caption>Modello grafico per alberi (lo stato $x$ riceve l’input $l$ e gli stati dei figli attraverso i ritardi $q_1 \dots q_k$) e unfolding del processo di codifica su un albero con nodi a, b, c, d, e, f: ogni nodo codifica i propri figli. Se la struttura dell’albero cambia, la codifica cambia di conseguenza. Segui la codifica passo per passo.</Caption>
+</Figure>
+
+<Figure n="20.11" title="Una rete ricorsiva applicata ad alberi diversi" size="wide">
+  <RecNN />
+  <Caption>Una rete ricorsiva applicata ad alberi diversi, due frammenti chimici (uno con OH, C e tre CH₃; l’altro con O, CH₂, CH₃): la rete si srotola lungo ciascuna struttura partendo dalle foglie («Start») fino alla radice, dove produce l’uscita per l’albero. Le unità sono le stesse per tutti i vertici di un albero e per tutti gli alberi del dataset (condivisione dei pesi).</Caption>
+</Figure>
+
+<Callout type="abstract" title="Sintesi">
+
+Le RNN aggiungono **stati** e **feedback** alle reti, diventando **sistemi a transizione di stato** capaci di elaborare sequenze di lunghezza variabile. Si basano su causalità, stazionarietà e adattività; si addestrano **srotolandole** nel tempo e applicando la backpropagation (BPTT, RTRL), ma soffrono di **vanishing gradient** sulle dipendenze lunghe (da cui LSTM e GRU). Alternative e sviluppi: transformer (attenzione), Echo State Network (reservoir casuale + readout lineare, con un bias markoviano), reti ricorsive per alberi e grafi.
+
+</Callout>
+
+<Exam>
+<Q q="Perché servono modelli per dati sequenziali? Cos’è una trasduzione?">
+
+Perché in molti problemi l’uscita dipende dalla storia degli input (modelli dinamici, serie temporali, segnali) o il dominio è fatto di sequenze di lunghezza variabile (linguaggio, sequenze biologiche, dati di sensori), che un modello a input vettoriale di dimensione fissa non tratta. Una trasduzione è una mappatura da una sequenza di input a un valore o a una sequenza di output: classificazione di sequenze (uscita alla fine), trasduzione IO isomorfa (un’uscita per ogni input), predizione del passo successivo, generazione di sequenze.
+
+</Q>
+<Q q="Differenza tra IDNN e RNN; perché una IDNN non può contare gli «1» in sequenze arbitrarie?">
+
+La IDNN ha memoria finita: una finestra scorrevole di dimensione fissa, nota in anticipo, data in input a un MLP, con un numero di pesi che dipende dalla finestra. La RNN ha uno stato, alimentato da connessioni di feedback, che riassume in modo adattivo tutta la sotto-sequenza passata, qualunque sia la sua lunghezza. Per contare gli «1» basta un’unità ricorrente lineare con $w = 1$, $\hat w = 1$, $\theta = 0$: $x(t) = l(t) + x(t-1)$. La IDNN vede solo gli elementi nella finestra: per sequenze più lunghe della finestra gli «1» precedenti sono persi.
+
+</Q>
+<Q q="Scrivere l’equazione di un’unità ricorrente e di una Simple RNN.">
+
+Unità ricorrente: $x(t) = f\big(\mathbf{w}^T\mathbf{l}(t) + \hat w\,x(t-1) + \theta\big)$ con $x(0) = 0$; il termine nuovo è $\hat w\,x(t-1)$, lo stato precedente riportato dal ritardo unitario. Simple RNN (Elman), per l’unità nascosta $i$: $x_i(t) = f\big(\sum_j w_{ij}\,l_j(t) + \sum_k \hat w_{ik}\,x_k(t-1) + \theta_i\big)$; in forma vettoriale $\mathbf{x}(t) = f\big(W\mathbf{l}(t) + \hat W\mathbf{x}(t-1) + \boldsymbol{\theta}\big)$, con un eventuale strato di uscita $\mathbf{y}(t) = g(\mathbf{x}(t), \mathbf{l}(t))$.
+
+</Q>
+<Q q="Quali sono le assunzioni di causalità, stazionarietà e adattività?">
+
+Causalità: l’uscita al tempo $t_0$ dipende solo dagli input ai tempi $t \le t_0$ (necessaria e sufficiente per avere uno stato interno). Stazionarietà: la funzione di transizione $\tau$ è la stessa in ogni istante, indipendentemente dalla lunghezza delle sequenze; permette di elaborare dati di lunghezza variabile con un modello di dimensione fissa. Adattività: le funzioni di transizione sono reti neurali con pesi liberi, quindi apprese dai dati.
+
+</Q>
+<Q q="Cos’è l’unfolding e come permette di usare la backpropagation?">
+
+Si srotola il modello nel tempo lungo la sequenza di input: una replica della rete per ogni passo, collegata alla successiva dai pesi ricorrenti. Si ottiene una rete feedforward equivalente (la rete di codifica), diversa per ogni sequenza, con tanti strati quanti i passi e con i pesi condivisi tra le repliche (stazionarietà). Su questa rete si applica la backpropagation (BPTT; RTRL calcola lo stesso gradiente in un altro modo). Essendo molto profonda, soffre di vanishing gradient: le dipendenze a lungo termine sono difficili da apprendere, da cui LSTM e GRU.
+
+</Q>
+<Q q="Cos’è una Echo State Network e cos’è la Echo State Property?">
+
+Una ESN ha un grande reservoir di unità ricorrenti connesse in modo sparso e casuale, mai addestrato, e un readout lineare addestrato con metodi lineari efficienti (ridge regression): è Reservoir Computing, molto efficiente. Echo State Property: la funzione di transizione di stato deve essere contrattiva (si limita il raggio spettrale dei pesi del reservoir), così lo stato dipende asintoticamente solo dalla storia degli input e non dallo stato iniziale. Ne segue un’organizzazione markoviana degli stati: sequenze con lo stesso suffisso finiscono vicine.
+
+</Q>
+<Q q="Come si estendono le RNN agli alberi?">
+
+Con le reti neurali ricorsive: la funzione di transizione è estesa a più stati, e lo stato di ogni vertice dipende dal suo label e dagli stati dei figli. La codifica procede dal basso verso l’alto, dalle foglie alla radice, srotolando la rete lungo la struttura: alberi diversi danno reti di codifica diverse, ma le unità (i pesi) sono le stesse per tutti i vertici e per tutti gli alberi. Lo stato della radice codifica l’intero albero, e da lì si produce l’uscita.
+
+</Q>
+</Exam>

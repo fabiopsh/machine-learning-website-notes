@@ -113,7 +113,9 @@ export const parts: LessonPart[] = [
       L('19', 'Apprendimento non supervisionato — K-means e SOM', {
         summary: 'Il clustering come quantizzazione vettoriale: celle di Voronoi, errore di quantizzazione, K-means on-line e batch; poi le Self-Organizing Map, che preservano la topologia e permettono di visualizzare i dati.',
       }),
-      L('20', 'Reti neurali ricorrenti (RNN)'),
+      L('20', 'Reti neurali ricorrenti (RNN)', {
+        summary: 'Sequenze e trasduzioni, la memoria finita delle IDNN e lo stato delle unità ricorrenti, la Simple RNN, l’unfolding e la backpropagation nel tempo, poi transformer, Echo State Network e reti ricorsive.',
+      }),
       L('21', 'Apprendimento su dati strutturati e grafi'),
     ],
   },

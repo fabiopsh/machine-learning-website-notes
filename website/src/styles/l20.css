@@ -1,0 +1,550 @@
+/* ------------------------------------------------------------------ lezione 20: sequenze (20.1–20.3, 20.5) */
+
+.sq20,
+.ru20,
+.el20,
+.uf20,
+.esn20,
+.tr20 {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sq20 {
+  max-width: 700px;
+  margin: 0 auto;
+}
+.sq20__link line {
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+.sq20__link path {
+  fill: var(--ink-2);
+}
+.sq20__in circle {
+  fill: color-mix(in srgb, var(--c-yellow) 45%, var(--surface-solid));
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+.sq20__in--plain circle {
+  fill: color-mix(in srgb, var(--c-blue) 10%, var(--surface-solid));
+}
+.sq20__in text,
+.sq20__o text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--ink);
+}
+.sq20__in[role='button'] {
+  cursor: pointer;
+  outline: none;
+}
+.sq20__in.is-hot circle,
+.sq20__in[role='button']:focus-visible circle {
+  stroke: var(--accent);
+  stroke-width: 2.6;
+}
+.sq20__down {
+  stroke: var(--ink-3);
+  stroke-width: 1.3;
+  stroke-dasharray: 3 3;
+}
+.sq20__out {
+  fill: var(--c-blue);
+  stroke: var(--plot-bg);
+  stroke-width: 1.5;
+}
+.sq20__out.is-empty {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+}
+.sq20__auto {
+  stroke: var(--c-green);
+  stroke-width: 1.8;
+}
+.sq20__time line {
+  stroke: var(--ink-4);
+  stroke-width: 5;
+}
+.sq20__time path {
+  fill: var(--ink-4);
+}
+.sq20__time text,
+.sq20__cap {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+.sq20__win {
+  fill: color-mix(in srgb, var(--accent) 10%, transparent);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  transition: x 0.3s var(--ease);
+}
+.sq20__funnel {
+  fill: color-mix(in srgb, var(--ink-4) 16%, transparent);
+  stroke: none;
+}
+.sq20__mlp {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+.sq20__mlpt {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.sq20__o circle {
+  fill: color-mix(in srgb, var(--c-blue) 30%, var(--surface-solid));
+  stroke: var(--c-blue);
+  stroke-width: 1.4;
+}
+.sq20__o.is-none circle {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-dasharray: 3 3;
+}
+.sq20__o.is-hot circle {
+  fill: color-mix(in srgb, var(--accent) 22%, var(--surface-solid));
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.sq20__nest {
+  fill: color-mix(in srgb, var(--c-blue) 9%, transparent);
+  stroke: color-mix(in srgb, var(--c-blue) 60%, var(--line-2));
+  stroke-width: 1.2;
+}
+.sq20__nest.is-hot {
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.sq20__xt {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  fill: var(--ink-3);
+}
+.sq20__xt.is-hot {
+  fill: var(--accent-ink);
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------ unità ricorrente e modelli grafici (20.4, 20.5, 20.10) */
+
+.ru20 {
+  max-width: 360px;
+  margin: 0 auto;
+}
+.ru20--wide {
+  max-width: 430px;
+}
+.ru20--small {
+  max-width: 190px;
+}
+.ss20 {
+  display: grid;
+  grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.ru20__head {
+  fill: var(--ink);
+}
+.ru20__arrow {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.ru20__arrow--thin {
+  stroke-width: 1.2;
+}
+.ru20__loop {
+  fill: none;
+  stroke: var(--c-red);
+  stroke-width: 1.7;
+}
+.ru20__unit {
+  fill: color-mix(in srgb, var(--c-orange) 60%, var(--surface-solid));
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+.ru20__f {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  fill: var(--ink);
+}
+.ru20__in {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+.ru20__q {
+  fill: color-mix(in srgb, var(--c-yellow) 55%, var(--surface-solid));
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+}
+.ru20__t {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  fill: var(--ink);
+}
+.ru20__t--sm {
+  font-size: 14.5px;
+}
+.ru20__m {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink-2);
+}
+.ru20__m--new {
+  fill: var(--c-red);
+  font-weight: 600;
+}
+.ru20__s {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--ink-3);
+}
+.ru20__tab {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.ru20__tab th,
+.ru20__tab td {
+  padding: 5px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  color: var(--ink);
+}
+.ru20__tab th:first-child {
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.ru20__bit {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--accent-line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.ru20__bit.is-1 {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border-color: var(--accent);
+}
+.ru20__bit:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.ru20__x {
+  font-weight: 600;
+  color: var(--c-orange) !important;
+}
+.ru20__ones {
+  color: var(--ink-3) !important;
+}
+
+/* ------------------------------------------------------------------ Simple RNN (20.6) */
+
+.el20__box {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+}
+.el20__t {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  fill: var(--ink-2);
+}
+.el20__t--math {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 17px;
+}
+.el20__w {
+  stroke: var(--ink-4);
+  stroke-width: 1;
+}
+.el20__w.is-in {
+  stroke: var(--c-blue);
+  stroke-width: 2.2;
+}
+.el20__w.is-rec {
+  stroke: var(--c-orange);
+  stroke-width: 2.2;
+}
+.el20__fb {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.1;
+  stroke-dasharray: 5 4;
+}
+.el20__u {
+  cursor: pointer;
+  outline: none;
+}
+.el20__u circle {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+.el20__u.is-on circle,
+.el20__u:focus-visible circle {
+  fill: color-mix(in srgb, var(--accent) 12%, var(--surface-solid));
+  stroke: var(--accent);
+  stroke-width: 2.6;
+}
+.el20__u text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--ink);
+}
+.el20__in {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+
+/* ------------------------------------------------------------------ unfolding (20.7) */
+
+.uf20 {
+  max-width: 620px;
+  margin: 0 auto;
+}
+.uf20__t {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--ink-2);
+}
+.uf20__t--mono {
+  font-family: var(--font-mono);
+  fill: var(--ink-3);
+}
+.uf20__fb {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.1;
+  stroke-dasharray: 5 4;
+}
+.uf20__sep {
+  stroke: var(--line-2);
+  stroke-width: 1;
+}
+.uf20__w {
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  cursor: pointer;
+}
+.uf20__w--w1 {
+  stroke: var(--c-red);
+}
+.uf20__w--w2 {
+  stroke: var(--ink-3);
+}
+.uf20__w--r11 {
+  stroke: var(--c-blue);
+}
+.uf20__w--r21 {
+  stroke: var(--c-orange);
+  stroke-dasharray: 6 4;
+}
+.uf20__w--r12 {
+  stroke: var(--c-violet);
+}
+.uf20__w--r22 {
+  stroke: var(--c-green);
+}
+.uf20__w.is-hot {
+  stroke-width: 5;
+}
+.uf20__w.is-dim {
+  opacity: 0.22;
+}
+.uf20__u {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+.uf20__u.is-zero {
+  stroke-dasharray: 3 3;
+}
+.uf20__in {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+}
+
+/* ------------------------------------------------------------------ Echo State Network (20.8, 20.9) */
+
+.esn20__part {
+  cursor: pointer;
+  outline: none;
+}
+.esn20__hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 1.5;
+}
+.esn20__res {
+  fill: color-mix(in srgb, var(--ink-4) 12%, var(--surface));
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+.esn20__part.is-on .esn20__hit,
+.esn20__part.is-on .esn20__res,
+.esn20__part:focus-visible .esn20__hit,
+.esn20__part:focus-visible .esn20__res {
+  stroke: var(--accent);
+  stroke-width: 2.6;
+}
+.esn20__in {
+  fill: var(--surface-solid);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.esn20__u {
+  fill: color-mix(in srgb, var(--c-blue) 22%, var(--surface-solid));
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.esn20__out {
+  fill: color-mix(in srgb, var(--c-violet) 40%, var(--surface-solid));
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.esn20__arrow {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.1;
+}
+.esn20__m {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 4px;
+}
+.esn20__t {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  fill: var(--c-blue);
+}
+.mk20__strs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.mk20__str {
+  display: flex;
+  gap: 4px;
+}
+.mk20__ch {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--line-2);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mk20__ch.is-suf {
+  border-width: 2.5px;
+}
+.mk20__ch:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.mk20__pt {
+  stroke: var(--plot-bg);
+  stroke-width: 1.6;
+  transition:
+    cx 0.3s var(--ease-out),
+    cy 0.3s var(--ease-out);
+}
+
+/* ------------------------------------------------------------------ codifica di alberi (20.10, 20.11) */
+
+.tr20 {
+  margin: 0 auto;
+}
+.tr20__wrap {
+  display: flex;
+  justify-content: center;
+}
+.tr20__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+.tr20__box {
+  fill: color-mix(in srgb, var(--c-blue) 12%, transparent);
+  stroke: color-mix(in srgb, var(--c-blue) 65%, var(--line-2));
+  stroke-width: 1.2;
+}
+.tr20__box.is-new {
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+.tr20__edge {
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+.tr20__n circle {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+.tr20__n.is-done circle {
+  fill: color-mix(in srgb, var(--c-yellow) 60%, var(--surface-solid));
+}
+.tr20__n.is-new circle {
+  stroke: var(--accent);
+  stroke-width: 2.6;
+}
+.tr20__n text {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  fill: var(--ink);
+}
+.tr20__out path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 640px) {
+  .ss20 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tr20__pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

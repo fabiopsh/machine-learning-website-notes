@@ -26,7 +26,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 17 | 17 - Deep learning.md | ✅ fatta | (non indicato) | 17.1–17.15 |
 | 18 | 18 - Reti neurali randomizzate.md | ✅ fatta | (non indicato) | 18.1–18.4 |
 | 19 | 19 - Apprendimento non supervisionato - K-means e SOM.md | ✅ fatta | (non indicato) | 19.1–19.9 |
-| 20 | 20 - Reti neurali ricorrenti (RNN).md | ⏳ da fare | | |
+| 20 | 20 - Reti neurali ricorrenti (RNN).md | ✅ fatta | (non indicato) | 20.1–20.11 |
 | 21 | 21 - Apprendimento su dati strutturati e grafi.md | ⏳ da fare | | |
 
 Decisioni di stile confermate dall'utente:
@@ -98,6 +98,10 @@ Decisioni di stile confermate dall'utente:
   Voronoi, vincitore, SOM 14×14 addestrata davvero con istantanee alle iterazioni della figura). Token `--um-dark` e
   `--um-light` (grigi della U-matrix, uguali in tutti i temi). Di nuovo la trappola di Windows: `vq.ts` e `Vq.tsx`
   collidevano (rinominato `engine.ts`; il server Vite va riavviato dopo la rinomina).
+- 2026-10-01 — Lezione 20 (RNN), 11 figure (`widgets/l20/Seq.tsx`, `Rec.tsx`): catene di nodi (`Chain`), unità ricorrente
+  calcolata dal vivo, unfolding con pesi condivisi evidenziabili, reservoir vero a due unità, `TreeSvg` (codifica di
+  alberi dal basso verso l’alto, riusabile per la lezione 21). `.shots/step20.mjs NN fig-N-k:clic[:selettore]`
+  fotografa una figura dopo alcuni clic su un pulsante.
 
 ## Immagini degli appunti → figure del sito
 
@@ -323,6 +327,20 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `19-som_umatrix.png` → Fig. 19.8 `WelfareMap mode="umatrix"` — mappa esagonale 13×9 con i 77 codici dei paesi nelle posizioni della figura e i grigi della U-matrix.
 - `19-som_mappa-colori.png` → Fig. 19.9 `WelfareMap mode="colors"` — la stessa mappa a colori.
 
+### 20 — Reti neurali ricorrenti (RNN)
+
+- `20-rnn_trasduzioni.png` → Fig. 20.1 `Transductions` — sequenza $l_1 \dots l_n$ di vettori (lunghezza a scelta, vettore dell’elemento cliccato), uscita alla fine oppure a ogni passo, freccia del tempo.
+- `20-rnn_tipi-trasduzione.png` → Fig. 20.2 `TransductionTypes` — i quattro tipi (classificazione, IO isomorfa, passo successivo con i legami autoregressivi, generazione) e la forma generale a nodi pieni e vuoti.
+- `20-rnn_idnn.png` → Fig. 20.3 `Idnn` — finestra scorrevole sulla sequenza, MLP, uscite $o_3, o_4, o_5$; finestra animabile e di dimensione variabile.
+- `20-rnn_unita-ricorrente.png` → Fig. 20.4 `RecurrentUnit` — unità con self-loop e ritardo $q^{-1}$, pesi $w$ e $\hat w$ regolabili, stato calcolato su una sequenza di 0 e 1 modificabile (l’esercizio «contare gli 1»).
+- `20-rnn_sistema-stati.png` → Fig. 20.5 `StateSystem` — riquadri annidati delle sotto-sequenze codificate da $x(1) \dots x(5)$ e modello grafico $l \to x \to y$ con l’auto-anello.
+- `20-rnn_elman.png` → Fig. 20.6 `Elman` — tre unità nascoste ricorrenti, input, ritardi, strato di uscita; unità cliccabile con i suoi pesi di input e ricorrenti e la sua equazione.
+- `20-rnn_unfolding.png` → Fig. 20.7 `Unfolding` — RNN a due unità e rete srotolata su 1–6 passi, pesi colorati come nella figura ed evidenziabili in tutte le repliche.
+- `20-rnn_esn.png` → Fig. 20.8 `Esn` — strato di input, reservoir sparso e casuale (rigenerabile), readout; parti cliccabili (addestrato / non addestrato).
+- `20-rnn_markov.png` → Fig. 20.9 `MarkovStates` — le quattro stringhe della figura proiettate nello spazio degli stati da un reservoir vero a due unità; stringhe, contrattività e pesi casuali modificabili.
+- `20-rnn_alberi.png` → Fig. 20.10 `TreeEncoding` — albero a, b, c, d, e, f codificato dalle foglie alla radice con i riquadri annidati; modello grafico con i ritardi $q_1 \dots q_k$; struttura alternativa.
+- `20-rnn_recnn.png` → Fig. 20.11 `RecNN` — i due frammenti chimici codificati passo per passo fino all’uscita alla radice.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -331,6 +349,13 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 20: letture e spiegazioni delle formule (unità ricorrente, sistema a transizione di stato, Simple RNN in forma
+  vettoriale); tracce di risposta. Nelle figure: i vettori degli elementi della 20.1 dopo il primo sono inventati; nella
+  20.4 i pesi partono da $0{,}5$ perché l’esercizio sia da risolvere, e si può provare la sigmoide; nella 20.7 la
+  lunghezza della sequenza è variabile; nella 20.8 le connessioni del reservoir sono estratte a caso; nella 20.9 il
+  reservoir ha due unità $\tanh$ con matrice ricorrente $\rho$ per una rotazione casuale (raggio spettrale $\rho$) e
+  pesi di input casuali; nella 20.10 la seconda struttura («c spostato sotto d») illustra la frase «se la struttura
+  cambia, la codifica cambia».
 - 19: letture e spiegazioni delle formule (cella di Voronoi, errore di quantizzazione, K-means on-line, fase
   cooperativa, vicinato gaussiano); tracce di risposta. Nelle figure: centri, dati e prototipi iniziali di 19.2–19.4
   sono costruiti; nella 19.5 punti e pesi delle unità sono scelti per l’esempio; nella 19.6 le ampiezze delle zone
