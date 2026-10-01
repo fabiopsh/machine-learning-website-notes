@@ -253,7 +253,7 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `15-bv_20punti.png` → Fig. 15.1 `TwentyPoints` — 20 punti da $y = x + 2\sin(1{,}5x)$ più rumore, funzione vera, retta ai minimi quadrati; nuovo dataset a richiesta.
 - `15-bv_50fit.png` → Fig. 15.2 `FiftyFits` — le 50 rette (una per dataset) sulla funzione vera; numero di dataset a scelta.
 - `15-bv_vista-grafica.png` → Fig. 15.3 `SpaceView` — insieme delle funzioni, regione delle soluzioni, media, soluzione ottima e dati; bias, varianza e rumore evidenziabili; ampiezza dell’insieme regolabile, training set aggiuntivi.
-- `15-bv_varianza.png` → Fig. 15.4 `VarianceFits` — le 50 rette e la media $ar h$ in rosso; punto $x$ trascinabile con varianza, bias², rumore² e somma; funzione vera a richiesta.
+- `15-bv_varianza.png` → Fig. 15.4 `VarianceFits` — le 50 rette e la media $\bar h$ in rosso; punto $x$ trascinabile con varianza, bias², rumore² e somma; funzione vera a richiesta.
 - `15-bv_freccette.png` → Fig. 15.5 `Darts` — i quattro bersagli (bias basso/alto × varianza bassa/alta) cliccabili, freccette rilanciabili (la fotografia del gioco non è riprodotta).
 - `15-bv_lambda.png` → Fig. 15.6 `LambdaFits` — 25 ipotesi e la loro media contro la sinusoide per $\ln\lambda = 2{,}6;\ -0{,}31;\ -2{,}4$ o a scelta.
 - `15-bv_tradeoff.png` → Fig. 15.7 `Tradeoff` — bias², varianza, somma ed errore di test in funzione di $\ln\lambda$, con i minimi.
