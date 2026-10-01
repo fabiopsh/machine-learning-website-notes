@@ -1,7 +1,7 @@
 import { useId, useState, type ReactNode } from 'react'
 import { Icon, type IconName } from '../ui/Icon'
 
-export type CalloutType = 'definition' | 'theorem' | 'example' | 'note' | 'tip' | 'warning' | 'abstract' | 'question'
+export type CalloutType = 'definition' | 'theorem' | 'example' | 'note' | 'tip' | 'warning' | 'abstract' | 'question' | 'quote'
 
 const meta: Record<CalloutType, { label: string; icon: IconName }> = {
   definition: { label: 'Definizione', icon: 'definition' },
@@ -12,6 +12,7 @@ const meta: Record<CalloutType, { label: string; icon: IconName }> = {
   warning: { label: 'Attenzione', icon: 'warning' },
   abstract: { label: 'Sintesi', icon: 'abstract' },
   question: { label: 'Domande', icon: 'question' },
+  quote: { label: 'Citazione', icon: 'book' },
 }
 
 type CalloutProps = {

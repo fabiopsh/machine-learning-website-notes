@@ -46,6 +46,14 @@
 .callout--abstract {
   background: color-mix(in srgb, var(--k) 6%, var(--bg-elev));
 }
+/* citazione: solo un filetto a sinistra, come in un libro */
+.callout--quote {
+  padding: 4px 0 4px 22px;
+  background: transparent;
+  border: 0;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0;
+}
 
 .callout__head {
   display: flex;

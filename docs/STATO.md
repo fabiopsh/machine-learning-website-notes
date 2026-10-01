@@ -23,7 +23,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 14 | 14 - SVM e kernel - aspetti pratici e visione critica.md | ✅ fatta | (non indicato) | 14.1–14.4 |
 | 15 | 15 - Bias-varianza ed ensemble.md | ✅ fatta | (non indicato) | 15.1–15.7 |
 | 16 | 16 - Reti neurali convoluzionali (CNN).md | ✅ fatta | (non indicato) | 16.1–16.13 |
-| 17 | 17 - Deep learning.md | ⏳ da fare | | |
+| 17 | 17 - Deep learning.md | ✅ fatta | (non indicato) | 17.1–17.15 |
 | 18 | 18 - Reti neurali randomizzate.md | ⏳ da fare | | |
 | 19 | 19 - Apprendimento non supervisionato - K-means e SOM.md | ⏳ da fare | | |
 | 20 | 20 - Reti neurali ricorrenti (RNN).md | ⏳ da fare | | |
@@ -90,6 +90,8 @@ Decisioni di stile confermate dall'utente:
   tratti in `widgets/l16/digits.ts`; `Pipeline` per gli schemi a stadi, con lo spazio riservato alle etichette).
   Attenzione: mai modificare questo file o file con TeX da uno script nella shell (le barre rovesciate e gli apici
   inversi si perdono): usare gli strumenti di modifica dei file.
+- 2026-10-01 — Lezione 17 (deep learning), 15 figure (`widgets/l17/Hier.tsx`, `Depth.tsx`, `Repr.tsx`, `Tech.tsx`). Nuovo
+  tipo di riquadro `quote` (citazione, `> [!quote]` negli appunti) in `Callout`.
 
 ## Immagini degli appunti → figure del sito
 
@@ -278,6 +280,24 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `16-cnn_lecun-curve.png` → Fig. 16.12 `LeCunCurves` — % di corretti sul test per epoca delle cinque reti (valori letti dalla figura), epoca trascinabile.
 - `16-cnn_imagenet.png` → Fig. 16.13 `Top5` — otto schede con la classe corretta e le cinque predizioni (barre lette dalla figura). Le fotografie non sono ricostruibili: resta lo schema.
 
+### 17 — Deep learning
+
+- `17-deep_gerarchia.png` → Fig. 17.1 `Hierarchy` — rete pixel → bordi → angoli e contorni → parti di oggetti → identità (auto, persona, animale); unità cliccabili con le unità dello strato precedente che combinano. Le immagini apprese e la fotografia non sono ricostruibili: disegni schematici.
+- `17-deep_dnn.png` → Fig. 17.2 `FaceFeatures` — dati grezzi, feature di basso, medio e alto livello (riquadri schematici) e la rete con gli strati corrispondenti; i numeri dell’applicazione riportati dalla slide.
+- `17-deep_occhiali.png` → Fig. 17.3 `VectorArithmetic` — «uomo con occhiali − uomo + donna ≈ donna con occhiali» con volti schematici e vettori nel piano; anche gli esempi re/regina e capitali del testo.
+- `17-deep_parita-2strati.png` → Fig. 17.4 `ParityTwoLayer` — parità di $N$ bit con AND + OR: una porta AND per configurazione positiva, formula per $N \le 4$, conteggio $2^{N-1}+1$.
+- `17-deep_parita-albero.png` → Fig. 17.5 `ParityTree` — albero di XOR con bit cliccabili, XOR = 3 porte, confronto $3(N-1)$ contro $2^{N-1}+1$.
+- `17-deep_svhn.png` → Fig. 17.6 `Svhn` — accuratezza di test contro numero di parametri per le tre famiglie di reti (punti letti dalla figura), linea verticale trascinabile.
+- `17-deep_autoencoder.png` → Fig. 17.7 `Autoencoder` — input, codice, ricostruzione, encoder $W_1$ e decoder $W_1'$; numero di unità nascoste a scelta (undercomplete/overcomplete).
+- `17-deep_distribuita.png` → Fig. 17.8 `LocalDistributed` — cane, gatto, tigre in one-hot e in rappresentazione distribuita, distanza tra coppie.
+- `17-deep_disentangling.png` → Fig. 17.9 `Disentangle` — le due tabelle (localista 4 colonne, distribuita 2), colonna del «rosso» evidenziata, oggetto mai visto a scelta con la risposta «mi piace?».
+- `17-deep_word-embedding.png` → Fig. 17.10 `WordEmbedding` — i due zoom (paesi e lingue, anni) con le parole nelle posizioni della figura; clic su una parola per le tre più vicine.
+- `17-deep_double-descent.png` → Fig. 17.11 `DoubleDescent` — errore di training e di test contro la larghezza (valori letti dalla figura), regime critico, soglia di interpolazione, larghezza trascinabile.
+- `17-deep_double-descent-poly.png` → Fig. 17.12 `PolyDescent` — MSE mediano di training e test contro il grado, in scala logaritmica (valori letti dalla figura).
+- `17-deep_clipping.png` → Fig. 17.13 `Clipping` — discesa del gradiente davanti a una scogliera, senza e con clipping, soglia $v$ a scelta.
+- `17-deep_dropout.png` → Fig. 17.14 `Dropout` — rete base con unità rimovibili, le 16 sotto-reti (7 senza percorso input-uscita), campionamento della maschera.
+- `17-deep_l1-l2.png` → Fig. 17.15 `L1L2` — rombo $L^1$ e cerchio $L^2$ con la retta dei vincoli a inclinazione variabile e la soluzione a norma minima.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -286,6 +306,14 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 17: letture e spiegazioni delle formule (prodotto dei gradienti, clipping, ReLU); tracce di risposta. Nelle figure:
+  disegni schematici al posto delle immagini apprese e delle fotografie (17.1–17.3); posizioni illustrative dei
+  vettori nella 17.3; valori della rappresentazione distribuita nella 17.8 scelti perché gatto e tigre siano i più
+  vicini; nella 17.9 la risposta «mi piace?» (mi piacciono gli oggetti rossi, come nell’esempio del testo) per ogni
+  oggetto escluso; nella 17.10 alcune parole sono leggermente spostate per non sovrapporsi; nella 17.13 la funzione
+  di costo è in una dimensione, costruita con una parete ripida (i valori di passo e soglia sono della figura);
+  nella 17.14 il conteggio «7 sotto-reti su 16 non funzionano»; nella 17.15 la soluzione è quella a norma minima
+  sulla retta dei vincoli. Nella 17.2 i numeri dell’applicazione vengono dalla slide (non sono nel testo degli appunti).
 - 16: letture e spiegazioni delle formule (convoluzione, unità che scorre); tracce di risposta. Nelle figure: cifre
   generate (non quelle del dataset) e conteggio dei pixel che cambiano traslandole; valori di input, kernel e pesi di
   16.2, 16.3 e 16.5 scelti come esempio; nella 16.8 kernel largo 3 e pooling di 2 su una sezione di 32 pixel (scelti

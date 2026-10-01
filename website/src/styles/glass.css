@@ -424,6 +424,10 @@
   border-left-width: 1px;
   border-radius: 22px;
 }
+:root[data-style='glass'] .callout--quote {
+  padding: 16px 22px 14px;
+  border: 1px solid color-mix(in srgb, var(--k) 30%, var(--glass-edge));
+}
 :root[data-style='glass'] .callout__label {
   padding: 3px 10px 3px 8px;
   border-radius: 999px;
@@ -923,6 +927,21 @@
 :root[data-style='glass'] .pipe16__hit,
 :root[data-style='glass'] .dim16__hit {
   rx: 14px;
+}
+
+/* lezione 17: schede e celle */
+:root[data-style='glass'] .lvl17__card,
+:root[data-style='glass'] .va17__box,
+:root[data-style='glass'] .dr17__cell {
+  border-radius: 14px;
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .par17__and.is-on {
+  background-image: var(--gloss);
+  box-shadow: var(--gloss-rim);
+}
+:root[data-style='glass'] .dis17 thead th {
+  background: var(--bg-sunken);
 }
 
 /* ------------------------------------------------------------------ mobile */

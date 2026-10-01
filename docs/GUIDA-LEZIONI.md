@@ -96,7 +96,7 @@ import { MioWidget } from '../../widgets/lNN/MioWidget'
 | Appunti (Obsidian) | MDX |
 |---|---|
 | `> [!definition] Titolo` | `<Callout type="definition" title="Titolo">` |
-| `> [!theorem]`, `[!example]`, `[!note]`, `[!tip]`, `[!warning]`, `[!abstract]` | stesso `type` |
+| `> [!theorem]`, `[!example]`, `[!note]`, `[!tip]`, `[!warning]`, `[!abstract]`, `[!quote]` | stesso `type` (`quote` = citazione, con l'autore nel `title`) |
 | `> [!question] Possibili domande d'esame` | `<Exam>` con un `<Q q="…">` per domanda + traccia di risposta |
 | `> [!question] Esercizi …` (altre domande) | `<Callout type="question" label="Esercizi" title="…">` |
 | `![alt](assets/…png)` + didascalia `*Fig. …*` | `<Figure n="N.k" title="…"><Widget /><Caption>…</Caption></Figure>` |

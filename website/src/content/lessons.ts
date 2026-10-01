@@ -104,7 +104,9 @@ export const parts: LessonPart[] = [
       L('16', 'Reti neurali convoluzionali (CNN)', {
         summary: 'Connessioni locali, pesi condivisi, pooling e molti strati: la convoluzione 1D e 2D, il campo recettivo che cresce con la profondità, le reti di LeCun, MNIST, AlexNet e ImageNet.',
       }),
-      L('17', 'Deep learning'),
+      L('17', 'Deep learning', {
+        summary: 'Perché molti strati: astrazione gerarchica, no-flattening e composizionalità; representation learning, autoencoder e transfer learning; rappresentazioni distribuite; le tecniche: ReLU, clipping, batch normalization, dropout.',
+      }),
       L('18', 'Reti neurali randomizzate'),
       L('19', 'Apprendimento non supervisionato — K-means e SOM'),
       L('20', 'Reti neurali ricorrenti (RNN)'),

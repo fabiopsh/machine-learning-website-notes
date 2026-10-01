@@ -1,0 +1,642 @@
+/* ------------------------------------------------------------------ lezione 17: disegni delle feature (17.1, 17.2) */
+
+.ft17__ln {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ft17__px--0 {
+  fill: color-mix(in srgb, var(--c-blue) 30%, var(--surface-solid));
+}
+.ft17__px--1 {
+  fill: color-mix(in srgb, var(--c-orange) 55%, var(--surface-solid));
+}
+.ft17__px--2 {
+  fill: color-mix(in srgb, var(--c-orange) 25%, var(--surface-solid));
+}
+
+.hier17 {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.hier17__edge {
+  stroke: var(--ink-4);
+  stroke-width: 1;
+}
+.hier17__edge.is-hot {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+.hier17__unit {
+  cursor: pointer;
+  outline: none;
+}
+.hier17__unit > circle {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.hier17__unit.is-feed > circle {
+  stroke: var(--accent);
+}
+.hier17__unit.is-on > circle {
+  fill: color-mix(in srgb, var(--accent) 12%, var(--surface-solid));
+  stroke: var(--accent);
+  stroke-width: 2.6;
+}
+.hier17__unit:focus-visible > circle {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.hier17__out {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.hier17__lab text {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  fill: var(--ink-2);
+}
+.hier17__lab.is-on text {
+  fill: var(--accent-ink);
+  font-weight: 600;
+}
+.hier17__sub {
+  font-family: var(--font-sans);
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+  fill: var(--ink-3) !important;
+}
+
+.lvl17 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.lvl17__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 0;
+}
+.lvl17__card.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.lvl17__card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.lvl17__name {
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+}
+.lvl17__grid,
+.lvl17__raw {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+}
+.lvl17__raw {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 0;
+}
+.lvl17__raw i {
+  aspect-ratio: 1;
+  background: var(--ink);
+}
+.ft17__patch {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--bg-sunken);
+  border-radius: 3px;
+}
+.dnn17 {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 8px 0;
+}
+.dnn17__col line {
+  stroke: var(--ink-4);
+  stroke-width: 0.6;
+}
+.dnn17__col circle {
+  fill: var(--surface-solid);
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+}
+.dnn17__col.is-on circle {
+  fill: color-mix(in srgb, var(--accent) 14%, var(--surface-solid));
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.dnn17__t {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  fill: var(--ink-2);
+}
+
+/* ------------------------------------------------------------------ operazioni sulle rappresentazioni (17.3) */
+
+.va17__eq {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 4px;
+  margin-bottom: 8px;
+}
+.va17__term {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.va17__op {
+  padding: 0 6px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: var(--ink-2);
+}
+.va17__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--surface);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.fg17 {
+  display: block;
+  width: 54px;
+  height: auto;
+}
+.fg17__hair {
+  fill: var(--ink-2);
+}
+.fg17__head {
+  fill: color-mix(in srgb, var(--c-orange) 22%, var(--surface-solid));
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+}
+.fg17__eye {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.fg17__gl rect {
+  fill: var(--ink);
+}
+.fg17__gl path {
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+
+/* ------------------------------------------------------------------ parità (17.4, 17.5) */
+
+.par17__bits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.par17__bit {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border: 1.5px solid var(--accent-line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+.par17__bit b {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+.par17__bit.is-1 {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border-color: var(--accent);
+}
+.par17__bit:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.par17__layer {
+  margin: 8px 0 5px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.par17__ands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.par17__and {
+  display: inline-grid;
+  place-items: center;
+  min-width: 42px;
+  min-height: 30px;
+  padding: 3px 9px;
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  background: var(--surface);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.par17__ands.is-small {
+  gap: 3px;
+}
+.par17__ands.is-small .par17__and {
+  min-width: 15px;
+  min-height: 15px;
+  padding: 0;
+  border-radius: 4px;
+}
+.par17__and.is-on {
+  border-color: var(--c-blue);
+  background-color: var(--c-blue);
+  color: var(--plot-bg);
+}
+.par17__and--or {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 650;
+}
+.par17__or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.par17__res {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.par17__res b {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.tree17 {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.tree17__wire {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 1.8;
+}
+.tree17__wire.is-1 {
+  stroke: var(--c-blue);
+  stroke-width: 2.6;
+}
+.tree17__bit {
+  cursor: pointer;
+  outline: none;
+}
+.tree17__bit rect {
+  fill: var(--surface-solid);
+  stroke: var(--accent-line);
+  stroke-width: 1.5;
+}
+.tree17__bit.is-1 rect {
+  fill: color-mix(in srgb, var(--c-blue) 22%, var(--surface-solid));
+  stroke: var(--accent);
+}
+.tree17__bit:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.tree17__bit text,
+.tree17__xor text,
+.tree17__out {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  fill: var(--ink);
+}
+.tree17__xor rect {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+.tree17__xor.is-1 rect {
+  fill: color-mix(in srgb, var(--c-blue) 24%, var(--surface-solid));
+  stroke: var(--c-blue);
+}
+.tree17__out {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ autoencoder (17.7) */
+
+.ae17 {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: 0 auto 8px;
+}
+.ae17__edges line {
+  stroke: var(--ink-4);
+  stroke-width: 0.8;
+  opacity: 0.7;
+}
+.ae17__edges.is-hot line {
+  stroke: var(--accent);
+  opacity: 1;
+}
+.ae17__u {
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+.ae17__u--x {
+  fill: color-mix(in srgb, var(--c-blue) 22%, var(--surface-solid));
+}
+.ae17__u--h {
+  fill: color-mix(in srgb, var(--c-violet) 26%, var(--surface-solid));
+}
+.ae17__u--r {
+  fill: color-mix(in srgb, var(--c-green) 24%, var(--surface-solid));
+}
+.ae17__t {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  fill: var(--ink-2);
+}
+.ae17__w {
+  cursor: default;
+  outline: none;
+}
+.ae17__w rect {
+  fill: var(--surface-solid);
+  stroke: var(--line-2);
+}
+.ae17__w text {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  fill: var(--ink);
+}
+.ae17__w.is-hot rect,
+.ae17__w:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+
+/* ------------------------------------------------------------------ localista / distribuita (17.8, 17.9) */
+
+.ld17__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.ld17__row {
+  display: grid;
+  grid-template-columns: 52px repeat(5, minmax(0, 1fr));
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+}
+.ld17__row.is-on {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.ld17__name {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+}
+.ld17__u {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.ld17__u::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--ink-2);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.ld17__u i {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.ld17__u small {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
+.dis17 {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.dis17 th,
+.dis17 td {
+  padding: 6px 7px;
+  border: 1px solid var(--line-2);
+  text-align: center;
+  color: var(--ink);
+}
+.dis17 thead th {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--bg-sunken);
+}
+.dis17 tbody th {
+  text-align: left;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.dis17 td {
+  font-family: var(--font-mono);
+}
+.dis17 .is-shared {
+  background: color-mix(in srgb, var(--c-yellow) 22%, var(--surface));
+}
+.dis17 .is-new {
+  background: color-mix(in srgb, var(--c-red) 12%, var(--surface));
+}
+.dis17 tr.is-hold th {
+  color: var(--accent-ink);
+  font-weight: 650;
+}
+.dis17__ans {
+  font-family: var(--font-sans) !important;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ word embedding (17.10) */
+
+.we17__w {
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  fill: var(--ink-2);
+  cursor: pointer;
+  outline: none;
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 2.5px;
+}
+.we17__w:hover,
+.we17__w:focus-visible {
+  fill: var(--accent-ink);
+}
+.we17__w.is-sel {
+  fill: var(--accent-ink);
+  font-weight: 700;
+  font-size: 15px;
+}
+.we17__w.is-near {
+  fill: var(--c-blue);
+  font-weight: 650;
+}
+
+/* ------------------------------------------------------------------ double descent (17.11) */
+
+.dd17__band {
+  fill: color-mix(in srgb, var(--c-yellow) 22%, transparent);
+}
+
+/* ------------------------------------------------------------------ dropout (17.14) */
+
+.dr17 {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 22px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+.dr17__base {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dr17__net {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.dr17__net--big {
+  max-width: 240px;
+  margin: 0 auto;
+}
+.dr17__edge {
+  stroke: var(--ink-2);
+  stroke-width: 0.9;
+}
+.dr17__u circle {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 0.9;
+}
+.dr17__u text {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 6.5px;
+  fill: var(--ink);
+}
+.dr17__u.is-click {
+  cursor: pointer;
+  outline: none;
+}
+.dr17__u.is-click circle {
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+.dr17__u.is-off circle {
+  fill: none;
+  stroke-dasharray: 2 2;
+}
+.dr17__u.is-off text {
+  fill: var(--ink-4);
+}
+.dr17__u.is-click:focus-visible circle {
+  stroke-width: 2.2;
+}
+.dr17__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.dr17__cell {
+  padding: 3px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.dr17__cell.is-bad {
+  border-color: color-mix(in srgb, var(--c-red) 55%, var(--line-2));
+  background: color-mix(in srgb, var(--c-red) 9%, var(--surface));
+}
+.dr17__cell.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft), 0 0 0 1px var(--accent);
+}
+.dr17__cell:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+@media (max-width: 640px) {
+  .lvl17 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dr17 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hier17__lab text {
+    font-size: 14px;
+  }
+  .dis17 {
+    font-size: 12px;
+  }
+  .dis17 th,
+  .dis17 td {
+    padding: 5px 4px;
+  }
+}
