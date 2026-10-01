@@ -1,18 +1,19 @@
 import { useId, useState, type ReactNode } from 'react'
+import { tx } from '../../lib/i18n'
 import { Icon, type IconName } from '../ui/Icon'
 
 export type CalloutType = 'definition' | 'theorem' | 'example' | 'note' | 'tip' | 'warning' | 'abstract' | 'question' | 'quote'
 
 const meta: Record<CalloutType, { label: string; icon: IconName }> = {
-  definition: { label: 'Definizione', icon: 'definition' },
-  theorem: { label: 'Teorema', icon: 'theorem' },
-  example: { label: 'Esempio', icon: 'example' },
-  note: { label: 'Nota', icon: 'note' },
-  tip: { label: 'Idea chiave', icon: 'tip' },
-  warning: { label: 'Attenzione', icon: 'warning' },
-  abstract: { label: 'Sintesi', icon: 'abstract' },
-  question: { label: 'Domande', icon: 'question' },
-  quote: { label: 'Citazione', icon: 'book' },
+  definition: { label: tx('Definizione', 'Definition'), icon: 'definition' },
+  theorem: { label: tx('Teorema', 'Theorem'), icon: 'theorem' },
+  example: { label: tx('Esempio', 'Example'), icon: 'example' },
+  note: { label: tx('Nota', 'Note'), icon: 'note' },
+  tip: { label: tx('Idea chiave', 'Key idea'), icon: 'tip' },
+  warning: { label: tx('Attenzione', 'Warning'), icon: 'warning' },
+  abstract: { label: tx('Sintesi', 'Summary'), icon: 'abstract' },
+  question: { label: tx('Domande', 'Questions'), icon: 'question' },
+  quote: { label: tx('Citazione', 'Quote'), icon: 'book' },
 }
 
 type CalloutProps = {
@@ -42,11 +43,11 @@ export function Callout({ type = 'note', title, label, children }: CalloutProps)
 type DeepKind = 'approfondimento' | 'intuizione' | 'dimostrazione' | 'esempio' | 'come-si-legge'
 
 const deepMeta: Record<DeepKind, { label: string; icon: IconName }> = {
-  approfondimento: { label: 'Approfondimento', icon: 'sparkle' },
-  intuizione: { label: 'Intuizione', icon: 'bulb' },
-  dimostrazione: { label: 'Dimostrazione', icon: 'theorem' },
-  esempio: { label: 'Esempio svolto', icon: 'example' },
-  'come-si-legge': { label: 'Come si legge', icon: 'book' },
+  approfondimento: { label: tx('Approfondimento', 'In depth'), icon: 'sparkle' },
+  intuizione: { label: tx('Intuizione', 'Intuition'), icon: 'bulb' },
+  dimostrazione: { label: tx('Dimostrazione', 'Proof'), icon: 'theorem' },
+  esempio: { label: tx('Esempio svolto', 'Worked example'), icon: 'example' },
+  'come-si-legge': { label: tx('Come si legge', 'How to read it'), icon: 'book' },
 }
 
 /** Contenuto aggiuntivo che si apre solo se lo studente lo chiede. */

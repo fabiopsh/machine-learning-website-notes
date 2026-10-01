@@ -1,0 +1,740 @@
+import * as F from '../formulas/l06'
+import { BioNeuron, Unit, Activations } from '../../widgets/l06/Neuron'
+import { Rosenblatt } from '../../widgets/l06/Rosenblatt'
+import { BoolPerceptron, XorNetwork } from '../../widgets/l06/BoolNets'
+import { PerceptronStep, ConvergenceBound, LmsVsPerceptron } from '../../widgets/l06/PerceptronLearn'
+import { Sigmoids, SigmoidDerivatives } from '../../widgets/l06/Sigmoids'
+import { TwoViews, Architectures, MultiOutput, UniversalApprox } from '../../widgets/l06/Mlp'
+
+<Lead>With neural networks we reach the heart of the course. This first part starts from the biological inspiration, introduces the artificial neuron and the **Perceptron** with its learning algorithm and the **convergence theorem**, compares the Perceptron with LMS, introduces sigmoidal activation functions and arrives at the **Multi-Layer Perceptron** (MLP), analyzed as a flexible function, as an adaptive basis expansion and as a universal approximator. It closes with the problems that learning in a network poses and that will be solved by **backpropagation**.</Lead>
+
+## Neural networks as an ML tool
+
+Neural networks are studied with two different goals:
+
+- **modeling biological systems** and learning processes (philosophy, psychology, neurobiology, cognitive science, computational neuroscience): here **biological realism** is essential;
+- **building effective ML systems and algorithms** (statistics, AI, physics, mathematics, engineering), often giving up strict biological realism: here what matters are the **computational and algorithmic** properties.
+
+In this course we are interested in **ANNs** (Artificial Neural Networks) as a **flexible ML tool**, in the sense of function approximation: a network implements a mathematical function $h(\mathbf{x})$ with special properties.
+
+Although they are a “historical machine,” neural networks remain a powerful approach:
+
+- they learn from examples;
+- they are **universal approximators** (Cybenko’s theorem): flexible approaches for arbitrary functions, including nonlinear ones;
+- they handle noise and incomplete data, with performance that **degrades gracefully** under adverse conditions;
+- they deal with real-valued and discrete data, for regression and classification;
+- they are not a single model but a **paradigm** (in the class of sub-symbolic approaches).
+
+The underlying “philosophy” is <T id="connessionismo">**connectionism**</T>: complex behaviors (mental, behavioral) that **emerge** from the interaction of many simple interconnected computational units.
+
+---
+
+## The biological inspiration
+
+The human brain has more than $10^{10}$ neurons, each with $10^4$–$10^5$ connections. A neuron responds in about one millisecond, and yet we recognize an image in about 0.1 seconds: at most a hundred or so **serial** computation steps. It follows that the brain must perform a **massively parallel** computation. (Note that face recognition, so easy for us, is complex for conventional computers.)
+
+<Figure n="6.1" title="The biological neuron" size="wide">
+  <BioNeuron />
+  <Caption>The biological neuron: dendrites (input), soma, myelin-coated axon and terminal buttons (output). Hover over the parts to read their role; click the synapses (excitatory + in blue, inhibitory − in orange) to change the potential: once the threshold is exceeded, a spike travels along the axon. It is a schematic, not a realistic model of the timing.</Caption>
+</Figure>
+
+How it works, in short: the neuron goes through cycles of charge and discharge (sodium and potassium ions); the inputs from the dendrites change the potential of the cell; once a **threshold** is exceeded, a **spike** (a voltage pulse) is generated, and information is also encoded in the time intervals between spikes.
+
+The signal propagates along the axon to the **synapses**, where it passes (in chemical form, through **neurotransmitters**) to the next neuron. Synapses can be **excitatory** or **inhibitory**, and above all they change with learning: their strength (the “weight”) is reinforced in response to stimuli. This is the **plasticity** of the nervous system.
+
+<Callout type="definition" title="Hebbian learning (Hebb, 1949)">
+
+A synapse is strengthened when the inputs of the neuron (and the correlated outputs) are repeated. The incoming stimulus reinforces the synapse, so **the weights move closer to the inputs** (<T id="hebb">Hebbian learning</T>).
+
+</Callout>
+
+---
+
+## The artificial neuron
+
+<Figure n="6.2" title="The processing unit" size="wide">
+  <Unit />
+  <Caption>The processing unit (artificial neuron) $i$: the inputs $x_1, x_2, x_3$ and the constant input $x_0 = 1$ enter with the weights $w_{i1}, w_{i2}, w_{i3}$ and the bias $w_{i0}$; the node computes the weighted sum $\Sigma$ and applies the function $f$ to it. The thickness of each connection is proportional to the weight (blue positive, orange negative). Move inputs and weights and choose $f$.</Caption>
+</Figure>
+
+A <T id="unita">**unit**</T> (node, neuron) receives inputs from external sources or from other units. Each connection has a **weight** $w$, a free parameter that learning can modify (the analog of the synaptic strength). Unit $i$ computes:
+
+<Formula f={F.unit} />
+
+- The weighted sum $net_i$ is the **net input** of unit $i$; it includes the bias $w_{i0}$ through the constant input $x_0 = 1$.
+- $f$ is the <T id="funzione-di-attivazione">**activation function**</T> (linear, threshold, sigmoidal…).
+
+<Callout type="warning" title="Notation for the weights">
+
+$w_{ij}$ is the weight **of unit $i$**, that is, of the connection **from input/unit $j$ to unit $i$** (not the other way around). Some sources (for example Wikipedia in the section on backpropagation, and some libraries) use the opposite convention; in this course the traditional one is always used: the first index is the receiving unit.
+
+</Callout>
+
+Three classic activation functions:
+
+<Figure n="6.3" title="Three activation functions">
+  <Activations />
+  <Caption>Linear (identity), threshold (Perceptron) and logistic (sigmoid) activation functions, applied to the same net input. Drag net along the axis of one of the three plots.</Caption>
+</Figure>
+
+1. **linear** (identity): $h(\mathbf{x}) = \sum_i w_i x_i$;
+2. **threshold** (step): this is the **Perceptron**, that is, the LTU already seen;
+3. **logistic** (sigmoid): see below.
+
+---
+
+## The Perceptron
+
+The <T id="perceptron">**Perceptron**</T> was proposed by Frank Rosenblatt (1957–1960) for pattern classification, simulating human perception: an “eye” of photocells connected to units that compute a weighted combination with a threshold.
+
+<Figure n="6.4" title="Rosenblatt’s Perceptron" size="wide">
+  <Rosenblatt />
+  <Caption>The original Perceptron, used to recognize letters: a letter projected onto a grid of photocells, association units that look at parts of the image and a threshold response unit. Here the association units are 2 × 2 blocks and the response unit distinguishes X from O with weights learned by the Perceptron algorithm (seen below).</Caption>
+</Figure>
+
+The single neuron is an extremely simple computational unit. Minsky: *“for the kind of recognition it can do, it is such a simple machine that it would be astonishing if nature did not make use of it somewhere”*. The Perceptron is a model of historical importance and a **paradigmatic** one for the transition from linear to nonlinear models: by composing and connecting perceptrons one obtains **MLP** (Multi-Layer Perceptron) networks.
+
+### McCulloch and Pitts networks (1943)
+
+The first model, *“A logical calculus of the ideas immanent in nervous activity”* (1943), asked what a given network computes and whether a network can compute a given logical formula.
+
+- Neurons have two states: active (1) and inactive (0).
+- All synapses are equivalent and characterized by a real number (the strength $w$), positive for **excitatory** connections and negative for **inhibitory** ones.
+- A neuron $i$ becomes active when the sum of the weights $w_{ij}$ coming from the active neurons $j$, plus a bias, exceeds zero.
+
+Binary inputs and outputs: essentially it is the LTU/Perceptron.
+
+#### Representing Boolean functions
+
+With $net = \mathbf{w}^T\mathbf{x} = \sum_{i=0}^n w_i x_i$ and output $1$ if $net > 0$, $0$ (or $-1$) otherwise:
+
+- **AND**: $w_1 = w_2 = 1$, $w_0 = -1.5$ (both inputs must be 1 to exceed $1.5$);
+- **OR**: $w_1 = w_2 = 1$, $w_0 = -0.5$ (one input at 1 is enough).
+
+<Figure n="6.5" title="AND and OR with a single perceptron" size="wide">
+  <BoolPerceptron />
+  <Caption>AND and OR implemented by a single perceptron: the network with its weights, the truth table with net input and output, and the line $net = 0$ in the $x_1$-$x_2$ plane. Change the weights; in the NOT tab, try the exercise.</Caption>
+</Figure>
+
+(Exercise: NOT is obtained with $w_1 = -1$, $w_0 = 0.5$: for $x_1 = 0$ the net is $0.5 > 0$, for $x_1 = 1$ it is $-0.5$.)
+
+#### XOR and two-layer networks
+
+**XOR** is not linearly separable: no single perceptron can represent it (Minsky and Papert, 1969). It can, however, be decomposed:
+
+$$
+x_1 \oplus x_2 = x_1\bar{x}_2 + \bar{x}_1 x_2 = \bar{h}_1 \cdot h_2, \qquad \text{with } h_1 = x_1 \cdot x_2 \text{ (AND)}, \quad h_2 = x_1 + x_2 \text{ (OR)}.
+$$
+
+<Callout type="theorem" title="XOR as a composition of AND and OR">
+
+By De Morgan, $\overline{h_1} = \overline{a \wedge b} = \bar a \vee \bar b$. Hence
+
+$$
+\bar h_1 \wedge h_2 = (\bar a \vee \bar b) \wedge (a \vee b) = (\bar a \wedge a) \vee (\bar a \wedge b) \vee (a \wedge \bar b) \vee (b \wedge \bar b) = (\bar a \wedge b) \vee (a \wedge \bar b) = a \oplus b.
+$$
+
+</Callout>
+
+In this way one builds a **two-layer** network: two hidden units compute $h_1$ (AND) and $h_2$ (OR), and an output unit computes $\bar h_1 \wedge h_2$ (weights $-1$ from $h_1$ and $+1$ from $h_2$, bias $-0.5$).
+
+<Figure n="6.6" title="XOR with a two-layer network" size="wide">
+  <XorNetwork />
+  <Caption>XOR with a two-layer network: the hidden units compute AND ($h_1$) and OR ($h_2$). In the $x_1$-$x_2$ plane the points are not separable; in the space of the hidden units $(h_1, h_2)$ they become linearly separable. Choose an input by clicking it and move the slider to transform the space.</Caption>
+</Figure>
+
+### The hidden layer as a representation
+
+The figure shows the key concept: the <T id="strato-nascosto">hidden layer</T> produces an **internal re-representation** of the inputs. The point $(1,0)$, which in the original space sits in the bottom-right corner, becomes $h_1 = 0$, $h_2 = 1$: the two positive points $(0,1)$ and $(1,0)$ are mapped **to the same point** $(0,1)$ of the hidden space, and the problem becomes linearly separable for the output unit.
+
+<Callout type="tip" title="The most important concept of neural networks">
+
+Developing **high-level features** in the hidden layers is the key factor of neural networks: the representation in the hidden layer makes the task of the output layer easier. This composition of intermediate operations can be extended over **many layers of abstraction**, and — unlike what we saw here, where the weights are chosen by hand — in neural networks these representations **are learned**. This is the idea behind representation learning and **deep learning**.
+
+</Callout>
+
+<Callout type="abstract" title="Properties of perceptron networks">
+
+- Perceptrons represent AND, OR, NOT (and hence NAND, NOR) → **every Boolean function** can be represented by a network of perceptrons.
+- **Two levels** are enough (more levels can be more efficient).
+- A single layer is not enough (Minsky and Papert, 1969): limits due to linear separability.
+- So far, however, **we have no learning algorithm at all**, not even for a single unit.
+
+</Callout>
+
+---
+
+## Learning for a single unit
+
+Historically there are two families of methods:
+
+1. <T id="adaline">**Adaline**</T> (Adaptive Linear Neuron, Widrow and Hoff): during training the unit is **linear**; one uses the direct LMS solution or gradient descent (exactly as in the [lesson on linear models](#/lezione/05/il-problema-di-apprendimento)). It serves for regression and, with the threshold, classification. It is the approach we will generalize to MLPs.
+2. **Perceptron** (Rosenblatt): during training the unit is **nonlinear** (with a threshold function). Classification only; its capabilities and convergence are studied.
+
+To build a linear classifier we therefore have three algorithms: direct LMS, gradient-based LMS and now the Perceptron algorithm (and others will come, such as SVMs).
+
+### The Perceptron learning algorithm
+
+The goal is to **minimize the number of misclassified patterns**: find $\mathbf{w}$ such that $\operatorname{sign}(\mathbf{w}^T\mathbf{x}) = d$. It is an **on-line** algorithm (one step for each pattern).
+
+<Callout type="abstract" title="Perceptron Learning Algorithm">
+
+1. Initialize the weights (to zero or to small random values).
+2. Choose a learning rate $\eta \in (0, 1)$.
+3. Until the stopping condition is met (e.g. the weights no longer change), for each pattern $(\mathbf{x}, d)$ with $d \in \{+1, -1\}$:
+   - compute $out = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$;
+   - if $out = d$, **do not change the weights**;
+   - if $out \ne d$, update: $\mathbf{w}_{new} = \mathbf{w} + \eta\, d\, \mathbf{x}$.
+
+</Callout>
+
+<Formula f={F.perceptronRule} />
+
+In practice one adds $\eta\mathbf{x}$ if $\mathbf{w}^T\mathbf{x} \le 0$ and $d = +1$ (false negative), and subtracts $\eta\mathbf{x}$ if $\mathbf{w}^T\mathbf{x} > 0$ and $d = -1$ (false positive). In equivalent form:
+
+$$
+\mathbf{w}_{new} = \mathbf{w} + \tfrac{1}{2}\eta\,(d - out)\,\mathbf{x},
+$$
+
+because $d - out$ is $0$ if the classification is correct and $\pm 2$ if it is wrong.
+
+<Callout type="warning" title="Difference from LMS">
+
+The formula looks like that of LMS, but here $out$ contains the **sign**: $out = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$, whereas in LMS the error was computed on $\mathbf{w}^T\mathbf{x}$ (without threshold).
+
+</Callout>
+
+#### Geometric view
+
+<Figure n="6.7" title="A Perceptron step, geometrically" size="wide">
+  <PerceptronStep />
+  <Caption>Perceptron update: $\mathbf{w}$ (black) and its dashed boundary misclassify $p_1$ and $p_2$; choosing $p_1$, $\mathbf{w}$ is moved in its direction by adding $\eta\,d\,\mathbf{x}$ (green), giving $\mathbf{w}_{new}$ (violet) with a better boundary. Here the bias is 0. Click a circled pattern and apply; drag the tip of $\mathbf{w}$ to change the starting point.</Caption>
+</Figure>
+
+Before the update, $\mathbf{w}$ (which points toward the positive region) misclassifies both $p_1$ and $p_2$. Choosing $p_1$, which has target $d = +1$, $\mathbf{w}$ is moved a little in the direction of $p_1$ (vector sum $\mathbf{w} + \eta d\mathbf{x}$), and the new boundary is better. (Exercise: if $p_2$ is chosen, with $d = -1$, $\mathbf{w}$ is moved away from $p_2$.)
+
+### Delta rule: two readings
+
+- The form $\mathbf{w}_{new} = \mathbf{w} + \eta\, d\,\mathbf{x}$ can be read as **Hebbian learning**: $\mathbf{w}$ moves toward $\mathbf{x}$.
+- The form $\mathbf{w}_{new} = \mathbf{w} + \eta\,(d - out)\,\mathbf{x} = \mathbf{w} + \eta\,\delta\,\mathbf{x}$ is an **error-correction** rule (<T id="delta-rule">delta rule</T>, Widrow-Hoff): the weight changes in proportion to the error.
+
+In terms of neurons: *the change of a synaptic weight is proportional to the product of the error signal and the input signal that excites the synapse*. The computation is easy when the error signal $\delta$ is **directly measurable**, that is, when we know the desired response for the unit. (This will be the problem in networks with hidden layers.)
+
+### Representing and learning
+
+The Perceptron can **represent** linear decision boundaries, so it solves linearly separable problems. But can it always **learn** the solution? Yes: the Perceptron with its algorithm is always able to learn what it can represent.
+
+<Callout type="note" title="A historic result">
+
+The convergence theorem is a milestone: a model **inspired by biology**, with well-defined and **mathematically proven** computational capabilities.
+
+</Callout>
+
+### The Perceptron convergence theorem
+
+<Callout type="theorem" title="Perceptron convergence theorem">
+
+If the problem is **linearly separable**, the Perceptron algorithm converges (correctly classifying all patterns) in a **finite number of steps**, regardless of the starting point (although the final solution is not unique and depends on the starting point) (<T id="convergenza-perceptron">convergence theorem</T>).
+
+If the problem is not separable, the algorithm can be unstable: it develops **cycles**, with weights that are not necessarily optimal.
+
+</Callout>
+
+In the proof we omit the $T$ in dot products between vectors.
+
+#### Preliminaries 1: reducing to all-positive patterns
+
+Let $(\mathbf{x}_i, d_i)$ be the training examples, $d_i \in \{+1, -1\}$, $i = 1,\dots,l$. If the problem is linearly separable there exists a solution $\mathbf{w}^*$ such that
+
+$$
+d_i(\mathbf{w}^*\mathbf{x}_i) \ge \alpha, \qquad \text{with } \alpha = \min_i d_i(\mathbf{w}^*\mathbf{x}_i) > 0.
+$$
+
+Hence $\mathbf{w}^*(d_i\mathbf{x}_i) \ge \alpha$. Defining $\mathbf{x}'_i = d_i\mathbf{x}_i$, **$\mathbf{w}^*$ is a solution of the original problem if and only if it is a solution of the problem $(\mathbf{x}'_i, +1)$** with all targets positive:
+
+- (if) $\mathbf{w}^*$ solves the original problem $\Rightarrow d_i(\mathbf{w}^*\mathbf{x}_i) \ge \alpha \Rightarrow \mathbf{w}^*\mathbf{x}'_i \ge \alpha \Rightarrow \mathbf{w}^*$ solves $(\mathbf{x}'_i, +1)$;
+- (only if) the reverse argument.
+
+It is therefore enough to prove the theorem for a problem with **positive patterns only**: “flipping” the negative patterns changes nothing.
+
+#### Preliminaries 2: form of the weights after $q$ errors
+
+We assume $\mathbf{w}(0) = \mathbf{0}$, $\eta = 1$ and define $\beta = \max_i \|\mathbf{x}_i\|^2$. With positive patterns only, the rule becomes $\mathbf{w}(j) = \mathbf{w}(j-1) + \mathbf{x}_{i_j}$ at each error. After $q$ errors (all false negatives):
+
+$$
+\mathbf{w}(q) = \sum_{j=1}^{q} \mathbf{x}_{i_j},
+$$
+
+where $i_j$ denotes the misclassified patterns (for example indices 2, 8, 9, 14 of the training set; the same pattern can appear more than once).
+
+#### Idea of the proof
+
+One finds a **lower bound** on $\|\mathbf{w}(q)\|^2$ that grows like $q^2$ and an **upper bound** that grows like $q$. Since a quadratic function sooner or later exceeds a linear one, the two bounds are compatible only for $q$ up to a certain maximum value: the number of errors (and hence of updates) is finite.
+
+<Figure n="6.8" title="Why the errors are finite" size="wide">
+  <ConvergenceBound />
+  <Caption>Idea of the proof: the quadratic lower bound (blue) and the linear upper bound (orange) meet at $q_{max}$. The red points are $\|\mathbf{w}(q)\|^2$ measured during an actual run of the Perceptron (with $\mathbf{w}(0) = \mathbf{0}$, $\eta = 1$) on the data on the right, and they always stay between the two bounds. Change the separation between the classes.</Caption>
+</Figure>
+
+#### Lower bound
+
+$$
+\mathbf{w}^{*T}\mathbf{w}(q) = \mathbf{w}^{*T}\sum_{j=1}^{q}\mathbf{x}_{i_j} \ge q\alpha,
+$$
+
+because each term $\mathbf{w}^{*T}\mathbf{x}_{i_j}$ is at least $\alpha$. By the **Cauchy-Schwarz inequality**, $\|\mathbf{a}\|^2\|\mathbf{b}\|^2 \ge (\mathbf{a}^T\mathbf{b})^2$; with $\mathbf{a} = \mathbf{w}^*$ and $\mathbf{b} = \mathbf{w}(q)$:
+
+$$
+\|\mathbf{w}^*\|^2\,\|\mathbf{w}(q)\|^2 \ge \big(\mathbf{w}^{*T}\mathbf{w}(q)\big)^2 \ge (q\alpha)^2 \quad\Rightarrow\quad \|\mathbf{w}(q)\|^2 \ge \frac{(q\alpha)^2}{\|\mathbf{w}^*\|^2}.
+$$
+
+<Deep title="How to read the Cauchy-Schwarz inequality" kind="come-si-legge">
+
+Since $\mathbf{a}^T\mathbf{b} = \|\mathbf{a}\|\,\|\mathbf{b}\|\cos\theta$ (the [dot product](#/lezione/01/prodotto-scalare-e-norme)), the inequality only says that $\cos^2\theta \le 1$: the dot product cannot exceed the product of the lengths. In the proof it is used “in reverse”: if the dot product $\mathbf{w}^{*T}\mathbf{w}(q)$ grows at least like $q\alpha$, then the length of $\mathbf{w}(q)$ must also grow at least in proportion.
+
+</Deep>
+
+#### Upper bound
+
+Using $\|\mathbf{a} + \mathbf{b}\|^2 = \|\mathbf{a}\|^2 + 2\mathbf{a}\mathbf{b} + \|\mathbf{b}\|^2$:
+
+$$
+\|\mathbf{w}(q)\|^2 = \|\mathbf{w}(q-1) + \mathbf{x}_{i_q}\|^2 = \|\mathbf{w}(q-1)\|^2 + 2\,\mathbf{w}(q-1)\,\mathbf{x}_{i_q} + \|\mathbf{x}_{i_q}\|^2.
+$$
+
+Since $\mathbf{x}_{i_q}$ was misclassified (it is the $q$-th error), $\mathbf{w}(q-1)\,\mathbf{x}_{i_q} \le 0$: dropping this non-positive term gives
+
+$$
+\|\mathbf{w}(q)\|^2 \le \|\mathbf{w}(q-1)\|^2 + \|\mathbf{x}_{i_q}\|^2,
+$$
+
+and iterating (with $\mathbf{w}(0) = \mathbf{0}$):
+
+$$
+\|\mathbf{w}(q)\|^2 \le \sum_{j=1}^{q}\|\mathbf{x}_{i_j}\|^2 \le q\beta.
+$$
+
+#### Conclusion
+
+Putting the two bounds together:
+
+<Formula f={F.convergence} />
+
+The number of errors (and hence of updates) is bounded by a constant: the algorithm converges in a **finite number of steps**. $\blacksquare$
+
+<Callout type="tip" title="Interpreting the bound">
+
+The number of steps grows with $\beta$ (how “large” the patterns are) and decreases with $\alpha^2$: $\alpha$ measures how “well separated” the problem is (the minimum margin of the solution $\mathbf{w}^*$). Problems with classes close to the separating hyperplane require more steps. The idea of **margin** will become central again in SVMs.
+
+</Callout>
+
+---
+
+## Perceptron versus LMS
+
+The two rules look similar ($\mathbf{w}_{new} = \mathbf{w} + \eta\,\delta\,\mathbf{x}$), but:
+
+- LMS is derived (through the gradient) **without** a threshold function, by minimizing the error of the linear unit: $\delta = d - \mathbf{w}^T\mathbf{x}$;
+- the Perceptron uses the thresholded output: $\delta = d - \operatorname{sign}(\mathbf{w}^T\mathbf{x})$.
+
+Of course, the model trained with LMS can be used to classify by applying the threshold ($h(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$, LTU).
+
+An important consequence: **LMS can misclassify even linearly separable problems**. LMS does not minimize the number of errors of the LTU, but the squared error, and it modifies the weights **even for patterns that are already classified correctly**. A pattern that is correct but “far” from the hyperplane (with $\mathbf{w}^T\mathbf{x}$ much greater than 1) still produces a large squared error that “pulls” the hyperplane.
+
+<Figure n="6.9" title="LMS and Perceptron on a separable problem" size="wide">
+  <LmsVsPerceptron />
+  <Caption>A separable problem: the LMS solution (violet) misclassifies one training point, while the Perceptron (red, two different initializations: solid and dashed line) separates everything (as in Hastie et al., Fig. 4.14). Drag the far pattern of class +1.</Caption>
+</Figure>
+
+| Perceptron Learning Algorithm | LMS |
+|---|---|
+| Minimizes the misclassifications ($out = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$) | Minimizes $E(\mathbf{w})$ with $out = \mathbf{w}^T\mathbf{x}$ |
+| Always converges for separable problems, in a finite number of steps, to a perfect classifier | **Asymptotic** convergence, even for non-separable problems |
+| Does not converge if the problem is not separable | Not always zero classification errors, even on separable problems |
+| Hard to extend to networks of units | **Extensible to networks** with the gradient-based approach |
+
+The last row is decisive: to build neural networks we need an approach based on the **gradient**, which requires differentiable functions.
+
+---
+
+## Sigmoidal activation functions
+
+Besides the linear and the threshold functions, one uses **nonlinear “squashing” functions** such as the <T id="sigmoide">**logistic sigmoid**</T>, which takes continuous values in the bounded interval $[0,1]$:
+
+<Formula f={F.logistic} />
+
+It is a **smooth and differentiable version of the threshold function**. The parameter $a$ is the **slope**.
+
+<Figure n="6.10" title="Logistic sigmoid and hyperbolic tangent" size="wide">
+  <Sigmoids />
+  <Caption>Logistic sigmoid (left) for $a = 0.5$ (green), $1$ (red), $2$ (blue) and hyperbolic tangent (right, in red with $a = 1$). The dashed violet curve uses the slope chosen with the slider; the gray line is the tangent at zero (the semi-linear region).</Caption>
+</Figure>
+
+The symmetric version is the <T id="tanh">**hyperbolic tangent**</T>, with values in $[-1, +1]$:
+
+$$
+f_{symm}(x) = 2f_\sigma(x) - 1 = \tanh(ax/2).
+$$
+
+Near zero the sigmoid is almost linear (**semi-linearity**). As $a$ varies:
+
+- for $a \to 0$ the function tends to a **linear** function (very flat);
+- for $a \to \infty$ it tends to the **step** function (LTU).
+
+For classification, with the logistic an output $\ge 0.5$ corresponds to the positive class and $< 0.5$ to the zero/negative class (for the tanh the threshold is 0). The threshold can be moved (by studying the effect on false positives/negatives or with a ROC curve), and one can also define a **rejection zone** around the threshold to avoid fragile decisions.
+
+### Other activation functions
+
+- **Radial basis functions** (RBF): $f(x) = e^{-ax^2}$ applied to $\|\mathbf{w} - \mathbf{x}_{input}\|$, that is, a Gaussian centered on the weights → **RBF networks**.
+- **Softmax**: for the case with multiple outputs (see later lectures).
+- **Stochastic neurons**: output $+1$ with probability $P(net)$, $-1$ otherwise → **Boltzmann machines** and models from statistical mechanics.
+- **Piecewise linear** approximations of the tanh, for efficient computation (also with binary shifts).
+- <T id="relu">**ReLU**</T> (Rectified Linear Unit): $f(x) = \max(0, x)$. It has become the default choice for deep models; it will be discussed in deep learning.
+- **Softplus**, its smooth approximation: $f(x) = \ln(1 + e^x)$.
+
+Many activation functions perform similarly in practice.
+
+### Derivatives
+
+- The derivative of the identity is 1.
+- The derivative of the step function **is not defined** (at zero) and is zero elsewhere: this is exactly why it is not used with LMS.
+- For the sigmoids (with $a = 1$):
+
+$$
+\frac{df_\sigma(x)}{dx} = f_\sigma(x)\big(1 - f_\sigma(x)\big), \qquad \frac{d\tanh(x)}{dx} = 1 - \tanh^2(x).
+$$
+
+(With a generic $a$: $\frac{df_\sigma}{dx} = a\,f_\sigma(x)(1 - f_\sigma(x))$.)
+
+<Callout type="note" title="Deriving the derivative of the logistic">
+
+$f_\sigma(x) = (1 + e^{-x})^{-1}$, hence $f'_\sigma(x) = \frac{e^{-x}}{(1 + e^{-x})^2} = \frac{1}{1 + e^{-x}} \cdot \frac{e^{-x}}{1 + e^{-x}} = f_\sigma(x)\big(1 - f_\sigma(x)\big)$, because $\frac{e^{-x}}{1 + e^{-x}} = 1 - \frac{1}{1 + e^{-x}}$. This is convenient: the derivative is computed from the value of the function itself.
+
+</Callout>
+
+### LMS with a sigmoidal unit
+
+Since the logistic is a smooth and differentiable threshold, we can derive an LMS algorithm by computing the gradient of the squared error as for linear units: we go from $o(\mathbf{x}) = \mathbf{x}^T\mathbf{w}$ to $o(\mathbf{x}) = f_\sigma(\mathbf{x}^T\mathbf{w})$, and minimize
+
+$$
+E(\mathbf{w}) = \sum_{p=1}^{l}\big(d_p - f_\sigma(\mathbf{x}_p^T\mathbf{w})\big)^2.
+$$
+
+The gradient is obtained with the **chain rule**, $\frac{\partial f}{\partial x} = \frac{\partial f}{\partial g}\frac{\partial g}{\partial x}$, using as auxiliary variables $g = net$ and then $g = out$. For a pattern $p$ with $net_p = \mathbf{x}_p^T\mathbf{w}$:
+
+$$
+\frac{\partial E_p}{\partial w_j} = \frac{\partial E_p}{\partial o_p}\cdot\frac{\partial o_p}{\partial net_p}\cdot\frac{\partial net_p}{\partial w_j} = -2(d_p - o_p)\cdot f'_\sigma(net_p)\cdot x_{p,j}.
+$$
+
+Summing over all patterns:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_j} = -2\sum_{p=1}^{l}\big(d_p - o(\mathbf{x}_p)\big)\, f'_\sigma(net(\mathbf{x}_p))\; x_{p,j} = -2\sum_{p=1}^{l}\delta_p\, x_{p,j}.
+$$
+
+This derivative answers the question: **how much does a change in $w_j$ affect the change in $E$?**
+
+Gradient descent is identical to that for the linear unit, with a new delta:
+
+<Formula f={F.sigmoidDelta} />
+
+<Figure n="6.11" title="The logistic and its derivatives">
+  <SigmoidDerivatives />
+  <Caption>The logistic $f_\sigma$ (black), its derivative $f'_\sigma$ (red) and the second derivative $f''_\sigma$ (green). The gray regions are the saturation regions, where $f'_\sigma$ is almost zero. Drag the net input along the axis.</Caption>
+</Figure>
+
+It is still an **error-correction** rule, with a few remarks:
+
+- the slope $a$ affects the size of the descent step;
+- $f'_\sigma$ is **maximal for $net$ close to 0** (almost linear region): there the deltas can be large;
+- $f'_\sigma$ is **minimal in the saturated cases** ($f$ close to 0 or 1): small deltas, weights that change extremely slowly. One must **avoid premature saturation**, for example by **starting with small weights**.
+
+<Callout type="tip" title="A bridge between LMS and the Perceptron">
+
+When a pattern is classified correctly “with confidence” (output saturated close to the target), $f'_\sigma \approx 0$ and the correction is almost zero, just as in the Perceptron, which does not correct correct patterns. Using $f_\sigma$ therefore approximates not only the LTU, but also the Perceptron algorithm.
+
+</Callout>
+
+---
+
+## Neural networks: the Multi-Layer Perceptron
+
+All the ingredients are ready. An <T id="mlp">**MLP**</T> can be seen in two ways:
+
+- **A.** as a **network of interconnected units**;
+- **B.** as a **flexible function** $h(\mathbf{x})$, composed of nested nonlinear functions.
+
+<Figure n="6.12" title="The two views of a feedforward network" size="wide">
+  <TwoViews />
+  <Caption>The two views of a feedforward network with one hidden layer: network of units (A: inputs $i$, hidden units $j$, output $k$, weights $w_{ji}$ and $w_{kj}$) and flexible function (B: $h(\mathbf{x}) = f_k(\sum_j w_{kj} f_j(\sum_i w_{ji} x_i))$). The color of the nodes is their value; hover over a hidden unit or a row to link the two views.</Caption>
+</Figure>
+
+### View A: a network of units
+
+In an MLP architecture:
+
+- the units are connected by weighted links and organized in **layers**;
+- the **input layer** is just the source of the input $\mathbf{x}$: it loads (copies) the pattern, without computing $net$ or $f$;
+- the **hidden layer** projects onto the output layer (or onto another hidden layer);
+- the **output layer** produces $h(\mathbf{x})$.
+
+### View B: a flexible function
+
+A two-layer network (one hidden and one output layer) computes
+
+<Formula f={F.mlp} />
+
+where $x_i$ are the input variables, $w$ the free parameters (weight matrices) and $f$ nonlinear functions (sigmoids). Compare it with the linear function $h(\mathbf{x}) = \sum_i w_i x_i$: the network is a composition of linear and nonlinear functions.
+
+### Components of a neural network
+
+A network is traditionally described by:
+
+- the type of **unit** (net and activation function);
+- the **architecture** (number of units, topology, number of layers);
+- the **learning algorithm**.
+
+### Uniform notation for the units
+
+For a generic unit $t$ (which can be hidden, $j$, or output, $k$):
+
+$$
+net_t(\mathbf{x}) = \sum_u w_{tu}\, o_u, \qquad o_t(\mathbf{x}) = f_t\big(net_t(\mathbf{x})\big),
+$$
+
+where $u$ denotes a generic input source (which can be $i$ or $j$). By loading the pattern into the input layer, the symbol $o$ can be used both for the inputs and for the outputs of the hidden units: the input to unit $t$ from source $u$ (through the connection $w_{tu}$) is $o_u$. This notation will be used in the derivation of backpropagation.
+
+<Callout type="example" title="Exercise (from the lecture)">
+
+1. For the weights $w_{ji}$ (input → hidden), the input $o_u$ is $o_i = x_i$, the component of the pattern.
+2. For the weights $w_{kj}$ (hidden → output), the input $o_u$ is $o_j$, the output of hidden unit $j$.
+3. $w_{t0}$ is the **bias** of each unit $t$, with constant input $o_0 = 1$.
+4. Hidden unit: $o_j = f_j\left(\sum_i w_{ji}\,x_i\right)$; output unit: $o_k = f_k\left(\sum_j w_{kj}\,o_j\right)$.
+
+</Callout>
+
+### Architecture and feedforward processing
+
+The **architecture** defines the topology of the connections. The two-layer network described above is the standard, **fully connected** MLP; there can be more hidden layers and also connections that “skip” layers.
+
+<Figure n="6.13" title="MLP architectures and feedforward processing" size="wide">
+  <Architectures />
+  <Caption>MLP architectures: two fully connected layers (with one hidden layer, yellow border) and three layers with other connections (dashed, they skip a layer). Press the buttons to follow the feedforward processing of a pattern, layer after layer.</Caption>
+</Figure>
+
+The <T id="feedforward">**feedforward**</T> processing of a pattern proceeds from the input to the output:
+
+1. the pattern $\mathbf{x}$ is loaded into the input layer;
+2. the outputs of all the units of the first hidden layer are computed;
+3. then those of the second hidden layer, and so on;
+4. the outputs of the output layer, that is, $h(\mathbf{x})$, are computed;
+5. the error (delta) at the output can now be computed.
+
+<Callout type="note" title="Recurrent networks">
+
+**Feedforward** networks have a single direction input → output. **Recurrent networks** add feedback connections (cycles): self-loops give the network dynamical properties and a **memory** of past computations, extending the model to the processing of **sequences** (and structured data). They will be covered in a dedicated lecture.
+
+</Callout>
+
+---
+
+## Why neural networks are flexible
+
+Three questions guide the analysis: why are networks a flexible model (and why can they be seen as an LBE)? Is the flexibility theoretically grounded? How are the weights learned?
+
+### Which tasks
+
+The hypothesis space is the **continuous space of all the functions** that can be represented by assigning values to the weights of a given architecture. Depending on the output units, the network handles:
+
+- **classification**, with a sigmoidal output;
+- **regression**, with a linear output.
+
+With **several output units** one obtains multiple regression or multi-class classifiers (for example three outputs giving $0.2;\ 0.7;\ 0.1$ for three classes).
+
+<Figure n="6.14" title="A network with multiple outputs" size="wide">
+  <MultiOutput />
+  <Caption>A network with multiple outputs for a multi-class problem: two inputs, a hidden layer of three units and three output units, which for the initial input give $0.2;\ 0.7;\ 0.1$. Change the input and see which class wins.</Caption>
+</Figure>
+
+### The network as an adaptive basis expansion
+
+The network computes $h(\mathbf{x}) = f_k\left(\sum_j w_{kj}\,f_j\left(\sum_i w_{ji}x_i\right)\right)$. Units and architecture are just a graphical representation of the data flow. Each term
+
+$$
+\phi_j(\mathbf{x}, \mathbf{w}) = f_j\left(\sum_i w_{ji}\,x_i\right)
+$$
+
+can be seen as computed by an independent hidden unit, or as a **basis function $\phi$ of an LBE**. Let us compare:
+
+- **LBE**: $h(\mathbf{x}) = \sum_j w_j\,\phi_j(\mathbf{x})$ (regression) or $h(\mathbf{x}) = f\left(\sum_j w_j\,\phi_j(\mathbf{x})\right)$ (classification), with the $\phi$ **fixed a priori** and the model linear in the parameters.
+- **Neural network**: $h(\mathbf{x}) = f_k\left(\sum_j w_{kj}\,\phi_j(\mathbf{x}, \mathbf{w})\right)$, where now **the $\phi$ depend on the weights** and therefore **adapt to the data** during training.
+
+<Callout type="tip" title="Neural networks as adaptive bases">
+
+Neural networks are an **adaptive basis function** approach: the bases themselves are adapted to the data (by learning the $\mathbf{w}$ inside the $\phi$). All the bases have the same type (given by the activation function). $h(\mathbf{x})$ is a nonlinear function of weighted sums of nonlinearly transformed linear models, with the crucial improvement of **adaptivity**. (To be compared later with SVMs, another form of LBE.)
+
+</Callout>
+
+Each hidden unit computes a new **nonlinear derived feature**, adaptively. In other words: the representational capacity of the model is tied to the presence of a **hidden layer with nonlinear activations**, which transforms the input into the **internal representation** of the network. Learning defines a suitable internal representation, that is, new hidden features of the data, which allow the model to extract the **higher-order statistics** relevant for approximating the target function.
+
+<Callout type="warning" title="Hidden units must be nonlinear">
+
+An MLP with **linear** units is equivalent to a **single-layer** network: the composition of linear functions is linear. With $f$ the identity, $h(\mathbf{x}) = \sum_j w_{kj}\sum_i w_{ji}x_i = \sum_i\left(\sum_j w_{kj}w_{ji}\right)x_i = \sum_i w'_i x_i$.
+
+The price of nonlinearity: the model is **nonlinear in the parameters** $\mathbf{w}$, and training becomes a **nonlinear optimization** problem (non-convex).
+
+</Callout>
+
+### Universal approximation
+
+<Callout type="theorem" title="Universal approximation theorem (Cybenko 1989, Hornik et al.)">
+
+A network with **a single hidden layer** (with logistic activations) and a linear output can approximate arbitrarily well **every continuous function** (on hypercubes), provided there are enough hidden units: given $f$ and $\varepsilon > 0$, there exists $h$ such that $|f(\mathbf{x}) - h(\mathbf{x})| < \varepsilon$ for every $\mathbf{x}$ in the hypercube. More generally, an MLP can approximate arbitrarily well every input-output mapping, with enough hidden units (<T id="approssimazione-universale">universal approximation</T>).
+
+</Callout>
+
+(It can be thought of as a generalization of approximation by finite Fourier series.)
+
+<Figure n="6.15" title="More hidden units, better approximation">
+  <UniversalApprox />
+  <Caption>An intuitive construction (not Cybenko’s proof), in one dimension: each logistic hidden unit with a large slope is a soft step centered at $c_j$, and the linear output sums their jumps; with enough units the network (red) follows the continuous function (green) with an error as small as desired. Choose the number of units and the slope.</Caption>
+</Figure>
+
+<Deep title="Why a sum of steps approximates every continuous function" kind="intuizione">
+
+Divide $[0, 1]$ into $N$ intervals of width $1/N$. A continuous function on a closed interval is uniformly continuous: with $N$ large enough, it varies by less than $\varepsilon$ within each interval. The “staircase” function that equals $f$ at the division points is then less than $\varepsilon$ away from $f$; and a staircase is precisely a sum of steps, that is, of very steep sigmoids weighted by the jumps $f(t_{j+1}) - f(t_j)$. This is the idea of the figure: the actual theorem guarantees more (also in several dimensions and with learned weights), but it does not say how many units are needed nor how to find them.
+
+</Deep>
+
+<Callout type="warning" title="It is an existence theorem">
+
+The theorem says that the network **exists**, but it provides neither the **algorithm** to find it nor the **number of units** needed.
+
+</Callout>
+
+Two fundamental questions therefore remain: **how to learn** (backpropagation, next lecture) and **how to choose the architecture**.
+
+### Expressive power and VC-dimension
+
+The expressive power of a network depends on the **number of units** and on their **configuration**. The number of units is related to the <T id="vc-dimension">VC-dimension</T>: the capabilities of the network depend on the number of parameters (in a fully connected MLP, roughly the number of inputs times the number of hidden units, plus the hidden units times the outputs), but also on the **value** of the weights:
+
+- weights $= 0$ → minimal VC-dim;
+- small weights → one works in the linear part of the sigmoid → small VC-dim;
+- large weights → more complex model.
+
+Since training starts from weights close to 0 and the weights grow during training, the network is a **hypothesis space of variable size**: the effective VC-dim grows during learning. (This will be the basis of early stopping.)
+
+### How many layers? (a preview)
+
+The universal approximation theorem says that one hidden layer is enough, but it does not guarantee that a **small** number of units is enough. There are “no flattening” results (about efficiency, not expressiveness): functions that with a single hidden layer would require an **exponential** number of units (with respect to the input dimension), whereas with more layers far fewer are enough. But is it easy to train an MLP with many layers? We will see in deep learning.
+
+### The inductive bias of neural networks
+
+For networks trained with backpropagation, the <T id="bias-induttivo">inductive bias</T> is tied to the **smoothness** properties of the functions: small variations of the input produce small variations of the output (for example, a locally bounded first derivative). It is a very common assumption in ML, and a reasonable one: if the target function is not smooth (for example a random number generator), generalization is impossible anyway.
+
+---
+
+## Toward the learning algorithm
+
+The learning algorithm adapts the weights of the network to obtain the best approximation of the target function, minimizing as always an error function (or loss) on the training data.
+
+### The credit assignment problem
+
+- The Perceptron has a learning algorithm, but it does not represent all Boolean functions.
+- A network of perceptrons represents every Boolean function, but an algorithm is needed to train it.
+
+What changes? The **<T id="credit-assignment">credit assignment</T> problem**: how much “responsibility” for the error should be attributed to the hidden units? For the output units we know the desired response and hence the error; for the hidden units **we do not know what their output should be**, so the error signal is not directly measurable. Moreover, the model is nonlinear in the weights.
+
+Minsky and Papert (1969) considered the problem too hard; it was solved by several researchers with the **backpropagation** algorithm, popularized by Rumelhart, Hinton and Williams in the *PDP* book (1986): it was the **renaissance** of neural networks.
+
+### The loading problem
+
+<Callout type="definition" title="Loading problem">
+
+Given a network and a set of examples, is there a set of weights for which the network is consistent with the examples? (“Loading” the training data into the free parameters of the network: <T id="loading-problem">loading problem</T>.)
+
+</Callout>
+
+The loading problem is **NP-complete** (Judd, 1990): no polynomial algorithm is known. In practice, however, networks are trained in reasonable time with backpropagation, even though the optimal solution is not guaranteed.
+
+### The key idea: extending gradient descent
+
+Gradient descent minimizing a loss **extends to MLPs**, provided that the loss and the activation functions are **differentiable**: the point is to find the delta for **every** unit of the network. The problem stays the same: given $l$ examples $(\mathbf{x}_p, d_p)$ and a loss $L$ (for example $L(h(\mathbf{x}_p), d_p) = (d_p - h_\mathbf{w}(\mathbf{x}_p))^2$), find $\mathbf{w}$ that minimizes
+
+$$
+E(\mathbf{w}) = R_{emp} = \frac{1}{l}\sum_{p=1}^{l}\big(d_p - h(\mathbf{x}_p)\big)^2
+$$
+
+by computing its gradient. What is needed: a differentiable loss, differentiable activations and a network to follow the flow of information.
+
+Properties of <T id="backpropagation">backpropagation</T>:
+
+- it is simple thanks to the **compositional form** of the model;
+- it uses only quantities that are **local** to each unit, preserving its modularity;
+- it is **efficient**: $O(\#W)$ instead of $O(\#W^2)$, thanks to the factorization of the deltas;
+- on biological plausibility the debate is open (it has been hypothesized that the brain uses a suboptimal local approximation of BP).
+
+The full derivation is in the next lecture (and in the notes [on backpropagation](#/lezione/07)).
+
+### Practical issues in training
+
+The model is often **over-parameterized** and the optimization is **non-convex** and potentially unstable. The issues to address (after backpropagation) are: initial values of the weights, learning rate, on-line/batch; overfitting and regularization; scaling of the input and representation of the output; number of hidden units; multiple minima; stopping criteria.
+
+<Callout type="abstract" title="Summary">
+
+The artificial neuron computes $o = f(\sum_j w_j x_j)$. The **Perceptron** (threshold) has a learning algorithm that **converges in a finite number of steps** for linearly separable problems, but it does not represent XOR. Two-layer perceptron networks represent every Boolean function thanks to the **internal re-representation** of the hidden layer. Replacing the threshold with a differentiable **sigmoid** makes it possible to use gradient descent. The **MLP** is a nested function $h(\mathbf{x}) = f_k(\sum_j w_{kj} f_j(\sum_i w_{ji} x_i))$, interpretable as an **adaptive basis expansion**, and it is a **universal approximator**. To train it one must solve the **credit assignment** of the hidden units: backpropagation does this.
+
+</Callout>
+
+<Exam>
+<Q q="Describe the artificial neuron and the main activation functions.">
+
+Unit $i$ computes the net input $net_i = \sum_j w_{ij}x_j$ (bias $w_{i0}$ with $x_0 = 1$; $w_{ij}$ is the weight from $j$ to $i$) and the output $o_i = f(net_i)$. Activations: linear (identity), threshold/step (Perceptron, LTU), logistic $1/(1+e^{-ax})$ in $[0,1]$ and tanh in $[-1,1]$ (smooth and differentiable, with slope $a$); in addition RBF, softmax, stochastic neurons, ReLU $\max(0,x)$ and softplus.
+
+</Q>
+<Q q="How are AND, OR, NOT represented with a perceptron? How is XOR solved?">
+
+With output 1 if $net > 0$: AND with $w_1 = w_2 = 1$, $w_0 = -1.5$; OR with $w_1 = w_2 = 1$, $w_0 = -0.5$; NOT with $w_1 = -1$, $w_0 = 0.5$. XOR is not linearly separable, but $x_1 \oplus x_2 = \bar h_1 \wedge h_2$ with $h_1$ = AND and $h_2$ = OR (De Morgan): a two-layer network with two hidden units (AND, OR) and an output with weights $-1$, $+1$ and bias $-0.5$. In the space $(h_1, h_2)$ the two positives end up at the same point $(0,1)$ and the problem becomes separable.
+
+</Q>
+<Q q="Write the Perceptron learning algorithm.">
+
+Initial weights zero or small, $\eta \in (0,1)$; as long as the weights change, for each pattern $(\mathbf{x}, d)$ with $d = \pm1$: $out = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$; if $out = d$ nothing; otherwise $\mathbf{w} \leftarrow \mathbf{w} + \eta d\mathbf{x}$ (equivalent to $\mathbf{w} + \tfrac12\eta(d - out)\mathbf{x}$). It is on-line and minimizes the number of errors.
+
+</Q>
+<Q q="State and prove the Perceptron convergence theorem.">
+
+If the problem is linearly separable the algorithm converges in a finite number of steps. Proof: the negatives are flipped ($\mathbf{x}'_i = d_i\mathbf{x}_i$) so that all targets are positive; with $\mathbf{w}(0) = 0$, $\eta = 1$, after $q$ errors $\mathbf{w}(q) = \sum_j \mathbf{x}_{i_j}$. Lower bound: $\mathbf{w}^*\mathbf{w}(q) \ge q\alpha$ and by Cauchy-Schwarz $\|\mathbf{w}(q)\|^2 \ge (q\alpha)^2/\|\mathbf{w}^*\|^2$. Upper bound: $\|\mathbf{w}(q)\|^2 \le \|\mathbf{w}(q-1)\|^2 + \|\mathbf{x}_{i_q}\|^2$ because $\mathbf{w}(q-1)\mathbf{x}_{i_q} \le 0$, hence $\le q\beta$. Together: $q \le \beta\|\mathbf{w}^*\|^2/\alpha^2$.
+
+</Q>
+<Q q="Differences between the Perceptron algorithm and LMS; why can LMS fail on separable problems?">
+
+The Perceptron uses $\delta = d - \operatorname{sign}(\mathbf{w}^T\mathbf{x})$, corrects only the errors, converges in a finite number of steps if separable, does not converge otherwise and is hard to extend to networks. LMS uses $\delta = d - \mathbf{w}^T\mathbf{x}$ (without threshold), minimizes the squared error with asymptotic convergence even on non-separable problems and is extensible to networks with the gradient. Precisely because it minimizes the squared error, it modifies the weights even for patterns that are already correct: a pattern that is correct but far from the hyperplane has a large squared error and moves the line, which can thus misclassify other patterns (figure 6.9).
+
+</Q>
+<Q q="Derive the update rule for a single sigmoidal unit.">
+
+$E = \sum_p (d_p - f_\sigma(\mathbf{x}_p^T\mathbf{w}))^2$. By the chain rule $\frac{\partial E_p}{\partial w_j} = \frac{\partial E_p}{\partial o_p}\frac{\partial o_p}{\partial net_p}\frac{\partial net_p}{\partial w_j} = -2(d_p - o_p)f'_\sigma(net_p)x_{p,j}$. Hence $\mathbf{w} \leftarrow \mathbf{w} + \eta\delta_p\mathbf{x}_p$ with $\delta_p = (d_p - o_p)f'_\sigma(net_p)$ and $f'_\sigma = f_\sigma(1 - f_\sigma)$: large correction near $net = 0$, almost zero in saturation (it is best to start from small weights).
+
+</Q>
+<Q q="Why must the hidden units be nonlinear?">
+
+Because a composition of linear functions is linear: with $f$ the identity $h(\mathbf{x}) = \sum_j w_{kj}\sum_i w_{ji}x_i = \sum_i w'_i x_i$, that is, a single-layer network. The representational capacity comes from the nonlinear hidden layer; the price is that the model becomes nonlinear in the weights and the optimization non-convex.
+
+</Q>
+<Q q="In what sense is a neural network an adaptive LBE?">
+
+Each hidden unit computes $\phi_j(\mathbf{x}, \mathbf{w}) = f_j(\sum_i w_{ji}x_i)$, a basis function; the output is $f_k(\sum_j w_{kj}\phi_j)$. In an LBE the $\phi$ are fixed a priori and the model is linear in the parameters; in the network the $\phi$ depend on the weights and adapt to the data during training (learned derived features, internal representation).
+
+</Q>
+<Q q="State the universal approximation theorem and discuss its limits.">
+
+A network with a single logistic hidden layer and a linear output approximates arbitrarily well every continuous function on a hypercube, with enough hidden units: for every $\varepsilon > 0$ there exists $h$ with $|f - h| < \varepsilon$. Limits: it is an existence theorem, it gives neither the algorithm to find the weights nor the number of units needed (which can be exponential: “no flattening” results in favor of more layers).
+
+</Q>
+<Q q="What is the credit assignment problem? And the loading problem?">
+
+Credit assignment: establishing how much responsibility for the error to attribute to the hidden units, whose desired output is not known (the error signal is not directly measurable); backpropagation solves it. Loading problem: deciding whether there exist weights with which a network is consistent with a set of examples; it is NP-complete (Judd, 1990), but in practice backpropagation trains networks in reasonable time with no guarantee of optimality.
+
+</Q>
+</Exam>

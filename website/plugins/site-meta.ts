@@ -1,5 +1,6 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { lessonsEn, partsEn } from '../src/content/lessons.en.ts'
 
 /**
  * Dati per le metainformazioni del sito (anteprime dei link, motori di ricerca), letti dai contenuti:
@@ -7,14 +8,33 @@ import { resolve } from 'node:path'
  * Solo sintassi TypeScript «cancellabile»: Node esegue questo file direttamente.
  */
 
+export type Lang = 'it' | 'en'
+export const LANGS: Lang[] = ['it', 'en']
+
 /** indirizzo pubblico del sito, con la barra finale */
 export const SITE_URL = 'https://fabiopsh.github.io/machine-learning-website-notes/'
-export const SITE_NAME = 'Machine Learning — Appunti interattivi'
 export const AUTHOR = 'Fabio Piscitelli'
-export const COURSE = 'Machine Learning (654AA), prof. Alessio Micheli, Università di Pisa, a.a. 2026/27'
+
+const TEXT = {
+  it: {
+    siteName: 'Machine Learning — Appunti interattivi',
+    course: 'Machine Learning (654AA), prof. Alessio Micheli, Università di Pisa, a.a. 2026/27',
+    notes: 'Appunti di Machine Learning',
+  },
+  en: {
+    siteName: 'Machine Learning — Interactive notes',
+    course: 'Machine Learning (654AA), Prof. Alessio Micheli, University of Pisa, a.y. 2026/27',
+    notes: 'Machine Learning notes',
+  },
+}
+
+export const siteName = (lang: Lang = 'it') => TEXT[lang].siteName
+export const course = (lang: Lang = 'it') => TEXT[lang].course
+export const notesName = (lang: Lang = 'it') => TEXT[lang].notes
 
 const ROOT = resolve(import.meta.dirname, '..')
 const LESSONS_DIR = resolve(ROOT, 'src/content/lessons')
+const LESSONS_EN_DIR = resolve(ROOT, 'src/content/lessons-en')
 
 export type LessonMeta = {
   id: string
@@ -35,8 +55,11 @@ const plain = (s: string) =>
     .replace(/\*\*?|`/g, '')
     .trim()
 
-/** Le lezioni nell'ordine dell'indice, con titolo e riassunto presi da `src/content/lessons.ts`. */
-export function readLessons(): LessonMeta[] {
+/**
+ * Le lezioni nell'ordine dell'indice, con titolo e riassunto presi da `src/content/lessons.ts`
+ * (in inglese: da `lessons.en.ts` e dall'MDX tradotto, se c'è).
+ */
+export function readLessons(lang: Lang = 'it'): LessonMeta[] {
   const src = readFileSync(resolve(ROOT, 'src/content/lessons.ts'), 'utf8')
   const files = readdirSync(LESSONS_DIR).filter((f) => f.endsWith('.mdx'))
   const out: LessonMeta[] = []
@@ -45,15 +68,17 @@ export function readLessons(): LessonMeta[] {
     for (const l of p[3].matchAll(/L\('(\d\d)', '([^']+)'(?:, \{([\s\S]*?)\}\))?/g)) {
       const file = files.find((f) => f.startsWith(l[1] + '-'))
       if (!file) continue
-      const mdx = readFileSync(resolve(LESSONS_DIR, file), 'utf8')
+      const translated = lang === 'en' && existsSync(resolve(LESSONS_EN_DIR, file))
+      const mdx = readFileSync(resolve(translated ? LESSONS_EN_DIR : LESSONS_DIR, file), 'utf8')
       const field = (name: string) => new RegExp(`${name}: '([^']*)'`).exec(l[3] ?? '')?.[1] ?? ''
+      const en = lang === 'en' ? lessonsEn[l[1]] : undefined
       out.push({
         id: l[1],
-        title: l[2],
+        title: en?.title ?? l[2],
         part: p[1],
-        partTitle: p[2],
-        eyebrow: field('eyebrow'),
-        summary: field('summary'),
+        partTitle: (lang === 'en' && partsEn[p[1]]) || p[2],
+        eyebrow: en ? (en.eyebrow ?? '') : field('eyebrow'),
+        summary: en?.summary ?? field('summary'),
         sections: [...mdx.matchAll(/^## (.*)$/gm)].map((m) => plain(m[1])),
         figures: (mdx.match(/<Figure\b/g) ?? []).length,
       })
@@ -63,25 +88,47 @@ export function readLessons(): LessonMeta[] {
 }
 
 /** Titolo, descrizione e indirizzo di ogni pagina condivisibile. */
-export function pages() {
-  const lessons = readLessons()
+export function pages(lang: Lang = 'it') {
+  const lessons = readLessons(lang)
   const figures = lessons.reduce((s, l) => s + l.figures, 0)
-  const home = {
-    path: '',
-    title: 'Appunti interattivi di Machine Learning — Università di Pisa',
-    description: `Le ${lessons.length} lezioni del corso di Machine Learning dell’Università di Pisa in pagine da esplorare: formule spiegate simbolo per simbolo, ${figures} figure da manipolare, glossario e domande d’esame con traccia di risposta.`,
-    image: 'og/home.png',
-  }
-  const glossary = {
-    path: 'glossario/',
-    title: 'Glossario di Machine Learning — Appunti interattivi',
-    description:
-      'I termini del corso di Machine Learning, dal bias induttivo al message passing: una definizione breve per ciascuno e il rimando alla lezione in cui è spiegato.',
-    image: 'og/home.png',
-  }
+  const prefix = langPrefix(lang)
+  const image = `og/${prefix}home.png`
+  const home =
+    lang === 'en'
+      ? {
+          path: prefix,
+          title: 'Interactive Machine Learning notes — University of Pisa',
+          description: `The ${lessons.length} lessons of the Machine Learning course of the University of Pisa as pages to explore: formulas explained symbol by symbol, ${figures} figures to manipulate, a glossary and exam questions with answer outlines.`,
+          image,
+        }
+      : {
+          path: prefix,
+          title: 'Appunti interattivi di Machine Learning — Università di Pisa',
+          description: `Le ${lessons.length} lezioni del corso di Machine Learning dell’Università di Pisa in pagine da esplorare: formule spiegate simbolo per simbolo, ${figures} figure da manipolare, glossario e domande d’esame con traccia di risposta.`,
+          image,
+        }
+  const glossary =
+    lang === 'en'
+      ? {
+          path: `${prefix}glossario/`,
+          title: 'Machine Learning glossary — Interactive notes',
+          description:
+            'The terms of the Machine Learning course, from inductive bias to message passing: a short definition for each and a pointer to the lesson where it is explained.',
+          image,
+        }
+      : {
+          path: `${prefix}glossario/`,
+          title: 'Glossario di Machine Learning — Appunti interattivi',
+          description:
+            'I termini del corso di Machine Learning, dal bias induttivo al message passing: una definizione breve per ciascuno e il rimando alla lezione in cui è spiegato.',
+          image,
+        }
   return { lessons, figures, home, glossary }
 }
 
-export const lessonPath = (id: string) => `lezione/${id}/`
-export const lessonTitle = (l: LessonMeta) => `${l.title} · Appunti di Machine Learning`
-export const lessonNumber = (l: LessonMeta, all: LessonMeta[]) => `Lezione ${all.indexOf(l) + 1} di ${all.length}`
+/** Le pagine inglesi stanno sotto `en/` (stessi percorsi dell'italiano). */
+export const langPrefix = (lang: Lang = 'it') => (lang === 'en' ? 'en/' : '')
+export const lessonPath = (id: string, lang: Lang = 'it') => `${langPrefix(lang)}lezione/${id}/`
+export const lessonTitle = (l: LessonMeta, lang: Lang = 'it') => `${l.title} · ${notesName(lang)}`
+export const lessonNumber = (l: LessonMeta, all: LessonMeta[], lang: Lang = 'it') =>
+  lang === 'en' ? `Lesson ${all.indexOf(l) + 1} of ${all.length}` : `Lezione ${all.indexOf(l) + 1} di ${all.length}`

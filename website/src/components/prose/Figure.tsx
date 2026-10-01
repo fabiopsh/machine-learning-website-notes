@@ -1,4 +1,5 @@
 import { Children, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react'
+import { tx } from '../../lib/i18n'
 import { Icon } from '../ui/Icon'
 import { Rich } from './Tex'
 
@@ -41,9 +42,9 @@ export function Figure({ n, title, size = 'normal', children }: FigureProps) {
       <div className="fig__head">
         <span className="fig__num">Fig. {n}</span>
         <span className="fig__title">{title}</span>
-        <span className="fig__badge" title="Figura interattiva">
+        <span className="fig__badge" title={tx('Figura interattiva', 'Interactive figure')}>
           <Icon name="hand" size={13} />
-          interattiva
+          {tx('interattiva', 'interactive')}
         </span>
       </div>
       <div className="fig__body">{body}</div>
@@ -60,7 +61,7 @@ export function Tasks({ items }: { items: Task[] }) {
   return (
     <div className="tasks">
       <div className="tasks__head">
-        <span>Prova a…</span>
+        <span>{tx('Prova a…', 'Try it…')}</span>
         <span className="tasks__count">
           {done}/{items.length}
         </span>
@@ -80,12 +81,12 @@ export function Tasks({ items }: { items: Task[] }) {
 /** Domande d'esame con traccia di risposta nascosta. */
 export function Exam({ children }: { children: ReactNode }) {
   return (
-    <section className="exam" aria-label="Possibili domande d'esame">
+    <section className="exam" aria-label={tx("Possibili domande d'esame", 'Possible exam questions')}>
       <div className="exam__head">
         <span className="exam__label">
-          <Icon name="question" size={15} /> Possibili domande d’esame
+          <Icon name="question" size={15} /> {tx('Possibili domande d’esame', 'Possible exam questions')}
         </span>
-        <span className="exam__hint">Prova a rispondere, poi apri la traccia</span>
+        <span className="exam__hint">{tx('Prova a rispondere, poi apri la traccia', 'Try to answer, then open the outline')}</span>
       </div>
       <ol className="exam__list">{children}</ol>
     </section>
@@ -98,7 +99,7 @@ export function Q({ q, children }: { q: ReactNode; children: ReactNode }) {
     <li className={`exam__q${open ? ' is-open' : ''}`}>
       <div className="exam__qtext">{typeof q === 'string' ? <Rich text={q} /> : q}</div>
       <button className="exam__toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        {open ? 'Nascondi traccia' : 'Mostra traccia di risposta'}
+        {open ? tx('Nascondi traccia', 'Hide outline') : tx('Mostra traccia di risposta', 'Show answer outline')}
         <Icon name="chevronDown" size={15} />
       </button>
       <div className="exam__answer" inert={!open}>

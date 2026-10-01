@@ -4,6 +4,7 @@ import { mdxComponents } from '../components/shell/mdxComponents'
 import { scrollToSection, TocList, useScrollSpy, type TocItem } from '../components/shell/Toc'
 import { Icon } from '../components/ui/Icon'
 import { getLesson, lessonIndex, lessonStats, neighbours, partOf } from '../content/lessons'
+import { tx } from '../lib/i18n'
 import { recordProgress } from '../lib/progress'
 import { lessonHref } from '../lib/router'
 
@@ -101,11 +102,11 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
     return (
       <div className="page page--narrow">
         <div className="empty">
-          <p className="empty__eyebrow">Lezione {id}</p>
-          <h1>In preparazione</h1>
-          <p>Questa lezione non è ancora disponibile nella versione interattiva.</p>
+          <p className="empty__eyebrow">{tx('Lezione', 'Lesson')} {id}</p>
+          <h1>{tx('In preparazione', 'Coming soon')}</h1>
+          <p>{tx('Questa lezione non è ancora disponibile nella versione interattiva.', 'This lesson is not yet available in the interactive version.')}</p>
           <a className="btn btn--solid" href="#/">
-            Torna all’indice
+            {tx('Torna all’indice', 'Back to the index')}
           </a>
         </div>
       </div>
@@ -120,7 +121,7 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
         <header className="lesson-head">
           <div className="lesson-head__eyebrow">
             <span>
-              Parte {part?.roman} · {part?.title}
+              {tx('Parte', 'Part')} {part?.roman} · {part?.title}
             </span>
             {lesson.eyebrow && <span className="lesson-head__tag">{lesson.eyebrow}</span>}
           </div>
@@ -132,30 +133,34 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
             {stats && (
               <>
                 <span>
-                  <Icon name="book" size={15} /> ≈ {stats.minutes} min di lettura
+                  <Icon name="book" size={15} /> ≈ {stats.minutes} {tx('min di lettura', 'min read')}
                 </span>
                 {stats.figures > 0 && (
                   <span>
-                    <Icon name="hand" size={15} /> {stats.figures === 1 ? '1 figura interattiva' : `${stats.figures} figure interattive`}
+                    <Icon name="hand" size={15} /> {stats.figures === 1
+                      ? tx('1 figura interattiva', '1 interactive figure')
+                      : `${stats.figures} ${tx('figure interattive', 'interactive figures')}`}
                   </span>
                 )}
               </>
             )}
           </div>
           <p className="lesson-head__credits">
-            Appunti di Fabio Piscitelli — Machine Learning (654AA), Prof. Alessio Micheli, Università di Pisa, a.a.
-            2026/27
+            {tx(
+              'Appunti di Fabio Piscitelli — Machine Learning (654AA), Prof. Alessio Micheli, Università di Pisa, a.a. 2026/27',
+              'Notes by Fabio Piscitelli — Machine Learning (654AA), Prof. Alessio Micheli, University of Pisa, a.y. 2026/27',
+            )}
           </p>
         </header>
 
         <div className="prose">{C ? <C components={mdxComponents} /> : <LessonSkeleton />}</div>
 
         {ready && (
-          <nav className="pager" aria-label="Lezioni vicine">
+          <nav className="pager" aria-label={tx('Lezioni vicine', 'Adjacent lessons')}>
             {prev ? (
               <a className="pager__card pager__card--prev" href={lessonHref(prev.id)}>
                 <span className="pager__dir">
-                  <Icon name="arrowLeft" size={15} /> Lezione precedente
+                  <Icon name="arrowLeft" size={15} /> {tx('Lezione precedente', 'Previous lesson')}
                 </span>
                 <span className="pager__title">
                   <span className="pager__num">{prev.id}</span> {prev.title}
@@ -167,7 +172,7 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
             {next ? (
               <a className="pager__card pager__card--next" href={lessonHref(next.id)}>
                 <span className="pager__dir">
-                  Lezione successiva <Icon name="arrowRight" size={15} />
+                  {tx('Lezione successiva', 'Next lesson')} <Icon name="arrowRight" size={15} />
                 </span>
                 <span className="pager__title">
                   <span className="pager__num">{next.id}</span> {next.title}
@@ -176,33 +181,33 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
             ) : (
               <a className="pager__card pager__card--next" href="#/">
                 <span className="pager__dir">
-                  Ultima lezione disponibile <Icon name="arrowRight" size={15} />
+                  {tx('Ultima lezione disponibile', 'Last available lesson')} <Icon name="arrowRight" size={15} />
                 </span>
-                <span className="pager__title">Torna all’indice del corso</span>
+                <span className="pager__title">{tx('Torna all’indice del corso', 'Back to the course index')}</span>
               </a>
             )}
           </nav>
         )}
       </article>
 
-      <aside className="toc" aria-label="Indice della lezione">
+      <aside className="toc" aria-label={tx('Indice della lezione', 'Lesson contents')}>
         <div className="toc__inner">
-          <div className="toc__label">In questa lezione</div>
+          <div className="toc__label">{tx('In questa lezione', 'In this lesson')}</div>
           <div className="toc__scroll">
             <TocList items={items} active={active} lessonId={id} />
           </div>
           <button className="toc__top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            Torna su
+            {tx('Torna su', 'Back to top')}
           </button>
         </div>
       </aside>
 
       {tocOpen && (
         <div className="sheet" onClick={onCloseToc}>
-          <div className="sheet__panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Indice della lezione">
+          <div className="sheet__panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={tx('Indice della lezione', 'Lesson contents')}>
             <div className="sheet__head">
-              <span>In questa lezione</span>
-              <button className="icon-btn" onClick={onCloseToc} aria-label="Chiudi">
+              <span>{tx('In questa lezione', 'In this lesson')}</span>
+              <button className="icon-btn" onClick={onCloseToc} aria-label={tx('Chiudi', 'Close')}>
                 <Icon name="close" size={18} />
               </button>
             </div>
@@ -218,7 +223,7 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
 
 function LessonSkeleton() {
   return (
-    <div className="skeleton" aria-label="Caricamento della lezione">
+    <div className="skeleton" aria-label={tx('Caricamento della lezione', 'Loading the lesson')}>
       {Array.from({ length: 7 }, (_, i) => (
         <span key={i} style={{ width: `${[92, 100, 84, 97, 60, 88, 74][i]}%` }} />
       ))}

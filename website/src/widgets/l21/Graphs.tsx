@@ -4,6 +4,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Segmented, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -30,66 +31,69 @@ const hexa = (cx: number, cy: number, r: number): XY[] =>
 
 const EXAMPLES: { name: string; nodes: string; edges: string; g: G }[] = [
   {
-    name: 'Astrazioni di immagini',
-    nodes: 'parti dell’immagine',
-    edges: 'relazioni tra le parti',
+    name: tx('Astrazioni di immagini', 'Image abstractions'),
+    nodes: tx('parti dell’immagine', 'parts of the image'),
+    edges: tx('relazioni tra le parti', 'relations between the parts'),
     g: { n: [[50, 8], [30, 28], [70, 28], [18, 52], [40, 52], [62, 52], [84, 52]], e: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]] },
   },
   {
-    name: 'Reti per la comprensione di scene',
-    nodes: 'oggetti e attributi della scena',
-    edges: 'relazioni tra oggetti',
+    name: tx('Reti per la comprensione di scene', 'Networks for scene understanding'),
+    nodes: tx('oggetti e attributi della scena', 'objects and attributes of the scene'),
+    edges: tx('relazioni tra oggetti', 'relations between objects'),
     g: { n: [[14, 14], [50, 10], [86, 16], [28, 44], [64, 40], [88, 54], [44, 58]], e: [[0, 1], [1, 2], [0, 3], [1, 4], [3, 4], [4, 5], [3, 6], [2, 4]] },
   },
   {
     name: 'Social network',
-    nodes: 'persone',
-    edges: 'relazioni (amico, collega, familiare…)',
+    nodes: tx('persone', 'people'),
+    edges: tx('relazioni (amico, collega, familiare…)', 'relations (friend, colleague, family member…)'),
     g: { n: [[12, 32], [38, 14], [38, 50], [66, 8], [66, 28], [66, 46], [90, 20], [90, 54]], e: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [4, 6], [5, 7], [2, 4]] },
   },
   {
-    name: 'Reti di trasporto',
-    nodes: 'tratti di strada',
-    edges: 'collegamenti tra i tratti (es. la previsione del traffico su Google Maps, di DeepMind)',
+    name: tx('Reti di trasporto', 'Transportation networks'),
+    nodes: tx('tratti di strada', 'road segments'),
+    edges: tx(
+      'collegamenti tra i tratti (es. la previsione del traffico su Google Maps, di DeepMind)',
+      'connections between the segments (e.g. traffic prediction on Google Maps, by DeepMind)',
+    ),
     g: { n: [[10, 14], [40, 14], [70, 14], [92, 14], [10, 46], [40, 46], [70, 46], [92, 50]], e: [[0, 1], [1, 2], [2, 3], [4, 5], [5, 6], [6, 7], [1, 5], [2, 6], [0, 4]] },
   },
   {
-    name: 'Piccole molecole (drug design)',
-    nodes: 'atomi',
-    edges: 'legami chimici',
+    name: tx('Piccole molecole (drug design)', 'Small molecules (drug design)'),
+    nodes: tx('atomi', 'atoms'),
+    edges: tx('legami chimici', 'chemical bonds'),
     g: { n: [...hexa(40, 32, 17), [76, 32], [90, 16], [90, 48]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [0, 6], [6, 7], [6, 8]] },
   },
   {
-    name: 'Reti biologiche (proteine)',
-    nodes: 'proteine',
-    edges: 'interazioni',
+    name: tx('Reti biologiche (proteine)', 'Biological networks (proteins)'),
+    nodes: tx('proteine', 'proteins'),
+    edges: tx('interazioni', 'interactions'),
     g: {
       n: [[50, 8], [20, 20], [80, 20], [12, 46], [50, 34], [88, 46], [34, 58], [68, 58]],
       e: [[0, 1], [0, 2], [0, 4], [1, 3], [1, 4], [2, 4], [2, 5], [3, 4], [3, 6], [4, 5], [4, 6], [4, 7], [5, 7], [6, 7], [1, 2]],
     },
   },
   {
-    name: 'Analisi sintattica del linguaggio',
-    nodes: 'costituenti e parole della frase',
-    edges: 'la struttura dell’albero di parsing',
+    name: tx('Analisi sintattica del linguaggio', 'Syntactic analysis of language'),
+    nodes: tx('costituenti e parole della frase', 'constituents and words of the sentence'),
+    edges: tx('la struttura dell’albero di parsing', 'the structure of the parse tree'),
     g: { n: [[50, 6], [26, 22], [70, 22], [12, 42], [34, 42], [58, 42], [84, 42], [48, 58], [70, 58]], e: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6], [5, 7], [5, 8]] },
   },
   {
-    name: 'Termini logici',
-    nodes: 'simboli del termine',
-    edges: 'gli argomenti di ogni simbolo',
+    name: tx('Termini logici', 'Logical terms'),
+    nodes: tx('simboli del termine', 'symbols of the term'),
+    edges: tx('gli argomenti di ogni simbolo', 'the arguments of each symbol'),
     g: { n: [[50, 8], [28, 28], [72, 28], [50, 44], [16, 54], [84, 50], [38, 58]], e: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 3], [2, 5], [1, 6], [2, 6]] },
   },
   {
     name: 'Knowledge graph',
-    nodes: 'entità (persone, opere, luoghi…)',
-    edges: 'relazioni con un nome (ha dipinto, si trova a…)',
+    nodes: tx('entità (persone, opere, luoghi…)', 'entities (people, works, places…)'),
+    edges: tx('relazioni con un nome (ha dipinto, si trova a…)', 'named relations (painted, is located in…)'),
     g: { n: [[14, 12], [48, 26], [84, 10], [20, 52], [58, 56], [90, 44]], e: [[0, 1], [1, 2], [1, 3], [1, 4], [2, 5], [4, 5], [3, 4]] },
   },
   {
-    name: 'Modellazione di reti cerebrali',
-    nodes: 'aree del cervello',
-    edges: 'connessioni tra le aree',
+    name: tx('Modellazione di reti cerebrali', 'Modeling of brain networks'),
+    nodes: tx('aree del cervello', 'areas of the brain'),
+    edges: tx('connessioni tra le aree', 'connections between the areas'),
     g: { n: [[22, 24], [44, 12], [70, 14], [88, 32], [30, 46], [56, 34], [74, 52]], e: [[0, 1], [1, 2], [2, 3], [0, 4], [1, 5], [2, 5], [4, 5], [5, 6], [3, 6], [3, 5]] },
   },
 ]
@@ -119,9 +123,19 @@ export function GraphExamples() {
       </div>
       <div className="wpanel">
         <div className="wpanel__title">{ex.name}</div>
-        Nodi: {ex.nodes}. Archi: {ex.edges}.
+        {tx(`Nodi: ${ex.nodes}. Archi: ${ex.edges}.`, `Nodes: ${ex.nodes}. Edges: ${ex.edges}.`)}
       </div>
-      <Tasks items={[{ label: 'Clicca alcuni esempi: in ognuno i dati non sono elementi isolati, ma elementi con relazioni.', done: n >= 3 }]} />
+      <Tasks
+        items={[
+          {
+            label: tx(
+              'Clicca alcuni esempi: in ognuno i dati non sono elementi isolati, ma elementi con relazioni.',
+              'Click a few examples: in each one the data are not isolated elements, but elements with relations.',
+            ),
+            done: n >= 3,
+          },
+        ]}
+      />
     </div>
   )
 }
@@ -132,33 +146,66 @@ type Row = { id: string; title: string; opts: { id: string; label: string; sub: 
 const ROWS: Row[] = [
   {
     id: 'dom',
-    title: 'Dominio di input',
+    title: tx('Dominio di input', 'Input domain'),
     opts: [
-      { id: 'flat', label: 'Piatto', sub: 'vettori (es. reti feedforward)', text: 'Un’etichetta vettoriale per ogni esempio: le reti feedforward delle prime lezioni.' },
-      { id: 'seq', label: 'Sequenze', sub: 'RNN', text: 'Elementi con un ordine seriale: le reti ricorrenti.' },
-      { id: 'str', label: 'Strutture', sub: 'alberi e grafi', focus: true, text: 'Elementi con relazioni generali: alberi e grafi.' },
+      {
+        id: 'flat',
+        label: tx('Piatto', 'Flat'),
+        sub: tx('vettori (es. reti feedforward)', 'vectors (e.g. feedforward networks)'),
+        text: tx(
+          'Un’etichetta vettoriale per ogni esempio: le reti feedforward delle prime lezioni.',
+          'A vector label for every example: the feedforward networks of the first lectures.',
+        ),
+      },
+      {
+        id: 'seq',
+        label: tx('Sequenze', 'Sequences'),
+        sub: 'RNN',
+        text: tx('Elementi con un ordine seriale: le reti ricorrenti.', 'Elements with a serial order: recurrent networks.'),
+      },
+      {
+        id: 'str',
+        label: tx('Strutture', 'Structures'),
+        sub: tx('alberi e grafi', 'trees and graphs'),
+        focus: true,
+        text: tx('Elementi con relazioni generali: alberi e grafi.', 'Elements with general relations: trees and graphs.'),
+      },
     ],
   },
   {
     id: 'lay',
-    title: 'Stratificazione',
+    title: tx('Stratificazione', 'Layering'),
     opts: [
-      { id: 'sh', label: 'Shallow', sub: 'pochi strati', text: 'Modelli superficiali.' },
+      { id: 'sh', label: 'Shallow', sub: tx('pochi strati', 'few layers'), text: tx('Modelli superficiali.', 'Shallow models.') },
       {
         id: 'deep',
         label: 'Deep',
-        sub: 'per feedforward e RNN',
+        sub: tx('per feedforward e RNN', 'for feedforward and RNNs'),
         focus: true,
-        text: 'Rappresentazione dell’input su più livelli di astrazione. Gli approcci «deep and wide» hanno però un alto costo computazionale.',
+        text: tx(
+          'Rappresentazione dell’input su più livelli di astrazione. Gli approcci «deep and wide» hanno però un alto costo computazionale.',
+          'Representation of the input on several levels of abstraction. “Deep and wide” approaches, however, have a high computational cost.',
+        ),
       },
     ],
   },
   {
     id: 'eff',
-    title: 'Efficienza',
+    title: tx('Efficienza', 'Efficiency'),
     opts: [
-      { id: 'e2e', label: 'Addestrate end-to-end', sub: 'tutti i pesi appresi con Δw', text: 'Reti addestrate completamente end-to-end.' },
-      { id: 'rnd', label: 'Randomizzate / incrementali', sub: 'pesi casuali o costruzione a passi', focus: true, text: 'Le reti randomizzate o incrementali offrono l’efficienza.' },
+      {
+        id: 'e2e',
+        label: tx('Addestrate end-to-end', 'Trained end-to-end'),
+        sub: tx('tutti i pesi appresi con Δw', 'all weights learned with Δw'),
+        text: tx('Reti addestrate completamente end-to-end.', 'Networks trained fully end-to-end.'),
+      },
+      {
+        id: 'rnd',
+        label: tx('Randomizzate / incrementali', 'Randomized / incremental'),
+        sub: tx('pesi casuali o costruzione a passi', 'random weights or stepwise construction'),
+        focus: true,
+        text: tx('Le reti randomizzate o incrementali offrono l’efficienza.', 'Randomized or incremental networks offer efficiency.'),
+      },
     ],
   },
 ]
@@ -209,11 +256,27 @@ export function Scenario() {
       <Controls>
         <span className={'verdict ' + (focus ? 'verdict--good' : 'verdict--info')}>
           {focus
-            ? 'È il focus della lezione: approcci «profondi ed efficienti» per i domini strutturati.'
-            : 'Le caselle con il bordo arancione sono quelle verso cui si muove la lezione.'}
+            ? tx(
+                'È il focus della lezione: approcci «profondi ed efficienti» per i domini strutturati.',
+                'This is the focus of the lecture: “deep and efficient” approaches for structured domains.',
+              )
+            : tx(
+                'Le caselle con il bordo arancione sono quelle verso cui si muove la lezione.',
+                'The boxes with the orange border are the ones the lecture moves toward.',
+              )}
         </span>
       </Controls>
-      <Tasks items={[{ label: 'Scegli in ogni riga la casella del focus: strutture, deep, randomizzate o incrementali.', done: seen.focus }]} />
+      <Tasks
+        items={[
+          {
+            label: tx(
+              'Scegli in ogni riga la casella del focus: strutture, deep, randomizzate o incrementali.',
+              'In every row choose the focus box: structures, deep, randomized or incremental.',
+            ),
+            done: seen.focus,
+          },
+        ]}
+      />
     </div>
   )
 }
@@ -255,7 +318,7 @@ export function LabeledGraph() {
   return (
     <div>
       <div className="wgrid">
-        <svg className="lg21" viewBox="0 0 360 262" role="img" aria-label="Grafo etichettato con nodi d, b, c, a, a">
+        <svg className="lg21" viewBox="0 0 360 262" role="img" aria-label={tx('Grafo etichettato con nodi d, b, c, a, a', 'Labeled graph with nodes d, b, c, a, a')}>
           <defs>
             <marker id="lg21a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0L10,5L0,10z" className="ru20__head" />
@@ -270,7 +333,7 @@ export function LabeledGraph() {
             const on = sel.kind === 'edge' && sel.i === i
             const inC = cyc && CYCLE.has(`${a}-${b}`)
             return (
-              <g key={i} className={'lg21__e' + (on ? ' is-on' : '') + (inC ? ' is-cyc' : '')} onClick={() => pick('edge', i)} role="button" tabIndex={0} aria-label={`arco ${A0.l}–${B0.l}`} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && pick('edge', i)}>
+              <g key={i} className={'lg21__e' + (on ? ' is-on' : '') + (inC ? ' is-cyc' : '')} onClick={() => pick('edge', i)} role="button" tabIndex={0} aria-label={tx(`arco ${A0.l}–${B0.l}`, `edge ${A0.l}–${B0.l}`)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && pick('edge', i)}>
                 <line className="lg21__hit" x1={A0.x} y1={A0.y} x2={B0.x} y2={B0.y} />
                 <line
                   x1={A0.x + ux * (R + 2)}
@@ -290,7 +353,7 @@ export function LabeledGraph() {
               onClick={() => pick('node', i)}
               role="button"
               tabIndex={0}
-              aria-label={`nodo ${nd.l}`}
+              aria-label={tx(`nodo ${nd.l}`, `node ${nd.l}`)}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && pick('node', i)}
             >
               <circle cx={nd.x} cy={nd.y} r={R} />
@@ -302,25 +365,34 @@ export function LabeledGraph() {
         </svg>
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">{sel.kind === 'node' ? 'Nodo (vertice) v' : 'Arco (link)'}</div>
+            <div className="wpanel__title">
+              {sel.kind === 'node' ? tx('Nodo (vertice) v', 'Node (vertex) v') : tx('Arco (link)', 'Edge (link)')}
+            </div>
             {sel.kind === 'node' ? (
               <>
-                Ha un’etichetta vettoriale:
+                {tx('Ha un’etichetta vettoriale:', 'It has a vector label:')}
                 <div className="wmath">
-                  <Tex>{`\\mathbf{l}(v) = \\mathbf{l}_${LG_N[sel.i].l} = [${LG_N[sel.i].vec.map((v) => fmt(v, Number.isInteger(v) ? 0 : 1)).join(';\\ ')}]`}</Tex>
+                  <Tex>{`\\mathbf{l}(v) = \\mathbf{l}_${LG_N[sel.i].l} = [${LG_N[sel.i].vec.map((v) => fmt(v, Number.isInteger(v) ? 0 : 1)).join(tx(';\\ ', ',\\ '))}]`}</Tex>
                 </div>
               </>
             ) : (
-              <>
-                Collega {LG_N[edgeSel![0]].l} e {LG_N[edgeSel![1]].l}
-                {edgeSel![2] === 'one' ? ', orientato' : edgeSel![2] === 'both' ? ', percorribile nei due versi' : ', non orientato'}. Può avere a sua
-                volta un’etichetta vettoriale (ad esempio una posizione).
-              </>
+              tx(
+                <>
+                  Collega {LG_N[edgeSel![0]].l} e {LG_N[edgeSel![1]].l}
+                  {edgeSel![2] === 'one' ? ', orientato' : edgeSel![2] === 'both' ? ', percorribile nei due versi' : ', non orientato'}. Può avere a sua
+                  volta un’etichetta vettoriale (ad esempio una posizione).
+                </>,
+                <>
+                  It connects {LG_N[edgeSel![0]].l} and {LG_N[edgeSel![1]].l}
+                  {edgeSel![2] === 'one' ? ', directed' : edgeSel![2] === 'both' ? ', traversable in both directions' : ', undirected'}. It can in turn
+                  have a vector label (for example a position).
+                </>,
+              )
             )}
           </div>
           <table className="lg21__A">
             <caption>
-              Matrice di adiacenza <Tex>{'A'}</Tex>
+              {tx('Matrice di adiacenza', 'Adjacency matrix')} <Tex>{'A'}</Tex>
             </caption>
             <thead>
               <tr>
@@ -343,16 +415,25 @@ export function LabeledGraph() {
               ))}
             </tbody>
           </table>
-          <Toggle label="evidenzia il ciclo" checked={cyc} onChange={setCyc} />
+          <Toggle label={tx('evidenzia il ciclo', 'highlight the cycle')} checked={cyc} onChange={setCyc} />
         </div>
       </div>
       <p className="wnote">
-        Due nodi diversi possono avere la stessa etichetta (qui «a»). Le etichette dei nodi diversi da d sono inventate per l’esempio.
+        {tx(
+          'Due nodi diversi possono avere la stessa etichetta (qui «a»). Le etichette dei nodi diversi da d sono inventate per l’esempio.',
+          'Two different nodes can have the same label (here “a”). The labels of the nodes other than d are made up for the example.',
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Clicca un nodo e poi un arco: entrambi possono portare un’etichetta vettoriale.', done: seenK.node && seenK.edge },
-          { label: 'Evidenzia il ciclo: il grafo non è un albero.', done: cyc },
+          {
+            label: tx(
+              'Clicca un nodo e poi un arco: entrambi possono portare un’etichetta vettoriale.',
+              'Click a node and then an edge: both can carry a vector label.',
+            ),
+            done: seenK.node && seenK.edge,
+          },
+          { label: tx('Evidenzia il ciclo: il grafo non è un albero.', 'Highlight the cycle: the graph is not a tree.'), done: cyc },
         ]}
       />
     </div>
@@ -414,17 +495,17 @@ export function GraphTransduction() {
       <div className="wbar">
         <Segmented
           size="sm"
-          label="compito"
+          label={tx('compito', 'task')}
           value={task}
           onChange={setTask}
           options={[
-            { value: 'node', label: 'a livello di nodo' },
-            { value: 'graph', label: 'a livello di grafo' },
+            { value: 'node', label: tx('a livello di nodo', 'node-level') },
+            { value: 'graph', label: tx('a livello di grafo', 'graph-level') },
           ]}
         />
       </div>
       <div className="pipe16__scroll">
-        <svg className="tg21" viewBox="0 0 640 286" style={{ minWidth: 560 }} role="img" aria-label="Trasduzione su grafi: grafo di input, embedding dei nodi, uscita">
+        <svg className="tg21" viewBox="0 0 640 286" style={{ minWidth: 560 }} role="img" aria-label={tx('Trasduzione su grafi: grafo di input, embedding dei nodi, uscita', 'Transduction on graphs: input graph, node embedding, output')}>
           <defs>
             <marker id="tg21a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
               <path d="M0,0L10,5L0,10z" className="ru20__head" />
@@ -438,7 +519,7 @@ export function GraphTransduction() {
           {draw(232, 'emb')}
           <Bar h={EMB[hov]} x={232 + 112} y={196} />
           <text className="tg21__t" x={232 + 144} y={232} textAnchor="middle">
-            {svgScript('h', 'v')} del nodo scelto
+            {tx(<>{svgScript('h', 'v')} del nodo scelto</>, <>{svgScript('h', 'v')} of the chosen node</>)}
           </text>
           {task === 'node' ? (
             <>
@@ -472,27 +553,54 @@ export function GraphTransduction() {
             </>
           )}
           <text className="tg21__cap" x={80} y={262} textAnchor="middle">
-            grafo di input etichettato
+            {tx('grafo di input etichettato', 'labeled input graph')}
           </text>
           <text className="tg21__cap" x={312} y={262} textAnchor="middle">
-            embedding dei nodi (spazio latente)
+            {tx('embedding dei nodi (spazio latente)', 'node embedding (latent space)')}
           </text>
           <text className="tg21__cap" x={540} y={262} textAnchor="middle">
-            {task === 'node' ? 'un’uscita per ogni nodo' : 'un’uscita per l’intero grafo'}
+            {task === 'node'
+              ? tx('un’uscita per ogni nodo', 'an output for every node')
+              : tx('un’uscita per l’intero grafo', 'an output for the whole graph')}
           </text>
         </svg>
       </div>
       <div className="wpanel">
-        <div className="wpanel__title">{task === 'node' ? 'Struttura → struttura' : 'Struttura → scalare/elemento'}</div>
+        <div className="wpanel__title">
+          {task === 'node' ? tx('Struttura → struttura', 'Structure → structure') : tx('Struttura → scalare/elemento', 'Structure → scalar/element')}
+        </div>
         {task === 'node'
-          ? 'Trasduzione isomorfa input-output: compiti a livello di nodo, ad esempio la classificazione dei nodi. L’uscita ha la stessa struttura del grafo di input.'
-          : 'Compiti a livello di grafo (regressione o classificazione di grafi): una funzione di readout R riassume gli embedding dei nodi in un embedding del grafo, da cui si calcola l’uscita.'}
+          ? tx(
+              'Trasduzione isomorfa input-output: compiti a livello di nodo, ad esempio la classificazione dei nodi. L’uscita ha la stessa struttura del grafo di input.',
+              'Input-output isomorphic transduction: node-level tasks, for example node classification. The output has the same structure as the input graph.',
+            )
+          : tx(
+              'Compiti a livello di grafo (regressione o classificazione di grafi): una funzione di readout R riassume gli embedding dei nodi in un embedding del grafo, da cui si calcola l’uscita.',
+              'Graph-level tasks (graph regression or classification): a readout function R summarizes the node embeddings into a graph embedding, from which the output is computed.',
+            )}
       </div>
-      <p className="wnote">I valori degli embedding sono inventati per l’esempio (il colore dei nodi è la prima componente).</p>
+      <p className="wnote">
+        {tx(
+          'I valori degli embedding sono inventati per l’esempio (il colore dei nodi è la prima componente).',
+          'The embedding values are made up for the example (the color of the nodes is the first component).',
+        )}
+      </p>
       <Tasks
         items={[
-          { label: 'Passa sui nodi dell’embedding: ogni nodo ha il proprio vettore di stato.', done: hov !== 1 },
-          { label: 'Passa al compito a livello di grafo: il readout R produce un solo embedding per tutto il grafo.', done: seen.graph },
+          {
+            label: tx(
+              'Passa sui nodi dell’embedding: ogni nodo ha il proprio vettore di stato.',
+              'Hover over the nodes of the embedding: every node has its own state vector.',
+            ),
+            done: hov !== 1,
+          },
+          {
+            label: tx(
+              'Passa al compito a livello di grafo: il readout R produce un solo embedding per tutto il grafo.',
+              'Switch to the graph-level task: the readout R produces a single embedding for the whole graph.',
+            ),
+            done: seen.graph,
+          },
         ]}
       />
     </div>
@@ -561,11 +669,15 @@ export function MessagePassing() {
   }
   const reached = m[v].filter((x) => x > 1e-6).length
   const pool = MP_N.map((_, k) => m.reduce((s, mu) => s + mu[k], 0) / m.length)
-  const btn = ['1 · I vicini inviano i messaggi', '2 · Il nodo aggrega i messaggi', '3 · Tutti i nodi aggiornano lo stato'][phase]
+  const btn = [
+    tx('1 · I vicini inviano i messaggi', '1 · The neighbors send the messages'),
+    tx('2 · Il nodo aggrega i messaggi', '2 · The node aggregates the messages'),
+    tx('3 · Tutti i nodi aggiornano lo stato', '3 · All nodes update their state'),
+  ][phase]
   return (
     <div>
       <div className="wgrid">
-        <svg className="mp21" viewBox="0 -18 400 278" role="img" aria-label="Message passing su un grafo: messaggi dai vicini, aggregazione, aggiornamento">
+        <svg className="mp21" viewBox="0 -18 400 278" role="img" aria-label={tx('Message passing su un grafo: messaggi dai vicini, aggregazione, aggiornamento', 'Message passing on a graph: messages from the neighbors, aggregation, update')}>
           <defs>
             <marker id="mp21a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
               <path d="M0,0L10,5L0,10z" className="mp21__head" />
@@ -597,7 +709,7 @@ export function MessagePassing() {
               className={'mp21__n' + (i === v ? ' is-v' : nb.includes(i) ? ' is-nb' : '')}
               role="button"
               tabIndex={0}
-              aria-label={`nodo ${i + 1}`}
+              aria-label={tx(`nodo ${i + 1}`, `node ${i + 1}`)}
               onClick={() => {
                 setV(i)
                 setPhase(0)
@@ -617,7 +729,7 @@ export function MessagePassing() {
             <g>
               <Mix m={agg(v)} x={MP_N[v][0] + 26} y={MP_N[v][1] - 44} />
               <text className="mp21__t" x={MP_N[v][0] + 42} y={MP_N[v][1] - 22}>
-                messaggi aggregati
+                {tx('messaggi aggregati', 'aggregated messages')}
               </text>
             </g>
           )}
@@ -627,17 +739,25 @@ export function MessagePassing() {
         </svg>
         <div className="wside">
           <div className="readouts">
-            <Readout label="iterazioni complete" tone="accent" value={String(iter)} />
-            <Readout label="nodi la cui informazione è in v" value={`${reached} su ${MP_N.length}`} />
+            <Readout label={tx('iterazioni complete', 'complete iterations')} tone="accent" value={String(iter)} />
+            <Readout
+              label={tx('nodi la cui informazione è in v', 'nodes whose information is in v')}
+              value={tx(`${reached} su ${MP_N.length}`, `${reached} of ${MP_N.length}`)}
+            />
           </div>
           <div>
-            <div className="wpanel__title">Global pooling: la media degli stati</div>
+            <div className="wpanel__title">{tx('Global pooling: la media degli stati', 'Global pooling: the mean of the states')}</div>
             <svg viewBox="0 0 160 14" preserveAspectRatio="none" className="mp21__pool" aria-hidden="true">
               {pool.map((p, i) => (
                 <rect key={i} x={pool.slice(0, i).reduce((s, q) => s + q, 0) * 160} y={0} width={p * 160} height={14} style={{ fill: MP_COL[i] }} />
               ))}
             </svg>
-            <p className="wnote">Un’uscita per l’intero grafo: non dipende dall’ordine dei nodi.</p>
+            <p className="wnote">
+              {tx(
+                'Un’uscita per l’intero grafo: non dipende dall’ordine dei nodi.',
+                'An output for the whole graph: it does not depend on the order of the nodes.',
+              )}
+            </p>
           </div>
         </div>
       </div>
@@ -654,17 +774,38 @@ export function MessagePassing() {
           }}
           disabled={iter === 0 && phase === 0}
         >
-          Ricomincia
+          {tx('Ricomincia', 'Restart')}
         </Btn>
       </Controls>
       <p className="wnote">
-        La barra sopra ogni nodo è il suo stato: i colori dicono da quali nodi proviene l’informazione che contiene (all’inizio, solo dal
-        nodo stesso). Qui l’aggregazione è la media dei vicini, che non dipende dal loro ordine. Clicca un nodo per scegliere v.
+        {tx(
+          <>
+            La barra sopra ogni nodo è il suo stato: i colori dicono da quali nodi proviene l’informazione che contiene (all’inizio, solo dal
+            nodo stesso). Qui l’aggregazione è la media dei vicini, che non dipende dal loro ordine. Clicca un nodo per scegliere v.
+          </>,
+          <>
+            The bar above every node is its state: the colors tell which nodes the information it contains comes from (at the beginning, only
+            from the node itself). Here the aggregation is the mean of the neighbors, which does not depend on their order. Click a node to
+            choose v.
+          </>,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Esegui le tre fasi di un’iterazione: messaggi, aggregazione, aggiornamento.', done: iter >= 1 },
-          { label: 'Continua a iterare: nello stato di v arriva l’informazione di nodi sempre più lontani, fino a tutto il grafo.', done: reached === MP_N.length },
+          {
+            label: tx(
+              'Esegui le tre fasi di un’iterazione: messaggi, aggregazione, aggiornamento.',
+              'Run the three phases of an iteration: messages, aggregation, update.',
+            ),
+            done: iter >= 1,
+          },
+          {
+            label: tx(
+              'Continua a iterare: nello stato di v arriva l’informazione di nodi sempre più lontani, fino a tutto il grafo.',
+              'Keep iterating: the information of more and more distant nodes reaches the state of v, up to the whole graph.',
+            ),
+            done: reached === MP_N.length,
+          },
         ]}
       />
     </div>
@@ -694,8 +835,8 @@ export function CnnVsGraph() {
     <div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Griglia regolare (CNN)</div>
-          <svg className="cg21" viewBox="0 0 230 230" role="img" aria-label="Griglia regolare: un pixel con i suoi otto vicini ordinati">
+          <div className="htf__title">{tx('Griglia regolare (CNN)', 'Regular grid (CNN)')}</div>
+          <svg className="cg21" viewBox="0 0 230 230" role="img" aria-label={tx('Griglia regolare: un pixel con i suoi otto vicini ordinati', 'Regular grid: a pixel with its eight ordered neighbors')}>
             {[0, 1, 2, 3, 4].map((i) => (
               <g key={i}>
                 <line className="cg21__e" x1={gx(0)} y1={gx(i)} x2={gx(4)} y2={gx(i)} />
@@ -714,7 +855,7 @@ export function CnnVsGraph() {
                   className={'cg21__n' + (center ? ' is-v' : w ? ' is-nb' : '')}
                   role="button"
                   tabIndex={0}
-                  aria-label={`pixel riga ${r + 1}, colonna ${c + 1}`}
+                  aria-label={tx(`pixel riga ${r + 1}, colonna ${c + 1}`, `pixel row ${r + 1}, column ${c + 1}`)}
                   onClick={() => {
                     setPx([Math.max(1, Math.min(3, r)), Math.max(1, Math.min(3, c))])
                     setClicks((q) => ({ ...q, g: q.g + 1 }))
@@ -733,12 +874,16 @@ export function CnnVsGraph() {
             })}
           </svg>
           <div className="readouts">
-            <Readout label="vicini del pixel" value="8" sub="in numero fisso, ordinati: ognuno ha il suo peso" />
+            <Readout
+              label={tx('vicini del pixel', 'neighbors of the pixel')}
+              value="8"
+              sub={tx('in numero fisso, ordinati: ognuno ha il suo peso', 'fixed in number, ordered: each has its own weight')}
+            />
           </div>
         </div>
         <div>
-          <div className="htf__title">Grafo</div>
-          <svg className="cg21" viewBox="0 0 250 190" role="img" aria-label="Grafo: un nodo con vicini non ordinati e in numero variabile">
+          <div className="htf__title">{tx('Grafo', 'Graph')}</div>
+          <svg className="cg21" viewBox="0 0 250 190" role="img" aria-label={tx('Grafo: un nodo con vicini non ordinati e in numero variabile', 'Graph: a node with unordered neighbors, variable in number')}>
             {CG.e.map(([a, b], i) => {
               const hot = (a === nd && nbG.includes(b)) || (b === nd && nbG.includes(a))
               return <line key={i} className={hot ? 'cg21__link' : 'cg21__e'} x1={CG.n[a][0]} y1={CG.n[a][1]} x2={CG.n[b][0]} y2={CG.n[b][1]} />
@@ -749,7 +894,7 @@ export function CnnVsGraph() {
                 className={'cg21__n' + (i === nd ? ' is-v' : nbG.includes(i) ? ' is-nb' : '')}
                 role="button"
                 tabIndex={0}
-                aria-label={`nodo ${i + 1}`}
+                aria-label={tx(`nodo ${i + 1}`, `node ${i + 1}`)}
                 onClick={() => {
                   setNd(i)
                   setClicks((q) => ({ ...q, n: q.n + 1 }))
@@ -761,22 +906,39 @@ export function CnnVsGraph() {
             ))}
           </svg>
           <div className="readouts">
-            <Readout label="vicini del nodo" tone="accent" value={String(nbG.length)} sub="in numero variabile, senza un ordine: pesi condivisi" />
+            <Readout
+              label={tx('vicini del nodo', 'neighbors of the node')}
+              tone="accent"
+              value={String(nbG.length)}
+              sub={tx('in numero variabile, senza un ordine: pesi condivisi', 'variable in number, with no order: shared weights')}
+            />
           </div>
         </div>
       </div>
       <div className="wbar">
         <Legend
           items={[
-            { label: 'il nodo visitato', color: 'var(--c-red)', kind: 'dot' },
-            { label: 'i suoi vicini (il campo recettivo)', color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('il nodo visitato', 'the visited node'), color: 'var(--c-red)', kind: 'dot' },
+            { label: tx('i suoi vicini (il campo recettivo)', 'its neighbors (the receptive field)'), color: 'var(--c-blue)', kind: 'dot' },
           ]}
         />
       </div>
       <Tasks
         items={[
-          { label: 'Sposta il pixel sulla griglia: la finestra ha sempre gli stessi otto vicini, nelle stesse posizioni.', done: clicks.g >= 2 },
-          { label: 'Clicca nodi diversi del grafo: il numero di vicini cambia da nodo a nodo e non c’è un ordine tra loro.', done: clicks.n >= 3 },
+          {
+            label: tx(
+              'Sposta il pixel sulla griglia: la finestra ha sempre gli stessi otto vicini, nelle stesse posizioni.',
+              'Move the pixel on the grid: the window always has the same eight neighbors, in the same positions.',
+            ),
+            done: clicks.g >= 2,
+          },
+          {
+            label: tx(
+              'Clicca nodi diversi del grafo: il numero di vicini cambia da nodo a nodo e non c’è un ordine tra loro.',
+              'Click different nodes of the graph: the number of neighbors changes from node to node and there is no order among them.',
+            ),
+            done: clicks.n >= 3,
+          },
         ]}
       />
     </div>

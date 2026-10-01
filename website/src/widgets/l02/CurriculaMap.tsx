@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Segmented } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 
 /**
  * Il ML al centro: collegato ai quattro curricula (caratterizzante per AI)
@@ -8,23 +9,25 @@ import { Segmented } from '../../components/ui/Controls'
 
 type Item = { id: string; label: string[]; note: string; strong?: boolean }
 
+const USES = tx('Usa direttamente i metodi del ML.', 'Directly uses ML methods.')
+
 const CURRICULA: Item[] = [
-  { id: 'ai', label: ['Artificial', 'Intelligence'], note: 'Curriculum AI: qui il ML è un corso caratterizzante, parte della base metodologica.', strong: true },
-  { id: 'bd', label: ['Big Data', 'Technologies'], note: 'Dal 2021 (prima: Data and Knowledge). Collegato al ML.' },
-  { id: 'ict', label: ['ICT Solutions', 'Architect'], note: 'Curriculum ICT. Collegato al ML.' },
-  { id: 'sw', label: ['Software: Programming,', 'Principles, Technologies'], note: 'Curriculum SW. Collegato al ML.' },
+  { id: 'ai', label: ['Artificial', 'Intelligence'], note: tx('Curriculum AI: qui il ML è un corso caratterizzante, parte della base metodologica.', 'AI curriculum: here ML is a core course, part of the methodological foundation.'), strong: true },
+  { id: 'bd', label: ['Big Data', 'Technologies'], note: tx('Dal 2021 (prima: Data and Knowledge). Collegato al ML.', 'Since 2021 (formerly: Data and Knowledge). Connected to ML.') },
+  { id: 'ict', label: ['ICT Solutions', 'Architect'], note: tx('Curriculum ICT. Collegato al ML.', 'ICT curriculum. Connected to ML.') },
+  { id: 'sw', label: ['Software: Programming,', 'Principles, Technologies'], note: tx('Curriculum SW. Collegato al ML.', 'SW curriculum. Connected to ML.') },
 ]
 
 const COURSES: Item[] = [
-  { id: 'hlt', label: ['Human Language', 'Technologies'], note: 'Usa direttamente i metodi del ML.' },
-  { id: 'ispr', label: ['Intelligent Systems for', 'Pattern Recognition'], note: 'Usa direttamente i metodi del ML.' },
-  { id: 'sa', label: ['Smart', 'Applications'], note: 'Usa direttamente i metodi del ML.' },
-  { id: 'cn', label: ['Computational', 'Neuroscience'], note: 'Usa direttamente i metodi del ML.' },
-  { id: 'rob', label: ['Robotics'], note: 'Usa direttamente i metodi del ML.' },
-  { id: 'dm', label: ['Data Mining'], note: 'Usa direttamente i metodi del ML.' },
-  { id: 'ir', label: ['Information', 'Retrieval'], note: 'Usa direttamente i metodi del ML.' },
-  { id: 'bio', label: ['Bioinformatics'], note: 'Usa direttamente i metodi del ML.' },
-  { id: 'bda', label: ['Big Data', 'Analytics'], note: 'Usa direttamente i metodi del ML.' },
+  { id: 'hlt', label: ['Human Language', 'Technologies'], note: USES },
+  { id: 'ispr', label: ['Intelligent Systems for', 'Pattern Recognition'], note: USES },
+  { id: 'sa', label: ['Smart', 'Applications'], note: USES },
+  { id: 'cn', label: ['Computational', 'Neuroscience'], note: USES },
+  { id: 'rob', label: ['Robotics'], note: USES },
+  { id: 'dm', label: ['Data Mining'], note: USES },
+  { id: 'ir', label: ['Information', 'Retrieval'], note: USES },
+  { id: 'bio', label: ['Bioinformatics'], note: USES },
+  { id: 'bda', label: ['Big Data', 'Analytics'], note: USES },
 ]
 
 export function CurriculaMap() {
@@ -48,12 +51,12 @@ export function CurriculaMap() {
             setHot(null)
           }}
           options={[
-            { value: 'cur', label: 'I quattro curricula' },
-            { value: 'area', label: 'Area dei sistemi intelligenti' },
+            { value: 'cur', label: tx('I quattro curricula', 'The four curricula') },
+            { value: 'area', label: tx('Area dei sistemi intelligenti', 'Intelligent systems area') },
           ]}
         />
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="curmap__svg" role="img" aria-label="Il Machine Learning al centro dei curricula e dei corsi collegati">
+      <svg viewBox={`0 0 ${W} ${H}`} className="curmap__svg" role="img" aria-label={tx('Il Machine Learning al centro dei curricula e dei corsi collegati', 'Machine Learning at the center of the curricula and of the related courses')}>
         {items.map((it, i) => {
           const a = -Math.PI / 2 + (i * 2 * Math.PI) / items.length + (view === 'cur' ? Math.PI / 4 : 0)
           const x = cx + Math.cos(a) * R * (view === 'cur' ? 1.35 : 1.42)
@@ -70,7 +73,7 @@ export function CurriculaMap() {
               ))}
               {it.strong && (
                 <text x={x} y={y - 34} textAnchor="middle" className="curmap__tag">
-                  caratterizzante
+                  {tx('caratterizzante', 'core course')}
                 </text>
               )}
             </g>
@@ -82,7 +85,7 @@ export function CurriculaMap() {
             ML
           </text>
           <text x={cx} y={cy + 20} textAnchor="middle" className="curmap__cfu">
-            9 CFU
+            {tx('9 CFU', '9 ECTS')}
           </text>
         </g>
       </svg>
@@ -92,9 +95,12 @@ export function CurriculaMap() {
             <strong>{active.label.join(' ')}</strong> — {active.note}
           </>
         ) : view === 'cur' ? (
-          'Il ML è collegato a tutti e quattro i curricula. Passa sui riquadri.'
+          tx('Il ML è collegato a tutti e quattro i curricula. Passa sui riquadri.', 'ML is connected to all four curricula. Hover over the boxes.')
         ) : (
-          'Il ML è il perno dell’area dei sistemi intelligenti: questi corsi ne usano direttamente i metodi.'
+          tx(
+            'Il ML è il perno dell’area dei sistemi intelligenti: questi corsi ne usano direttamente i metodi.',
+            'ML is the pivot of the intelligent systems area: these courses directly use its methods.',
+          )
         )}
       </p>
     </div>

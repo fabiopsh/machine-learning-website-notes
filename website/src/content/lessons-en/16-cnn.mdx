@@ -1,0 +1,237 @@
+import * as F from '../formulas/l16'
+import { ZipDigits, Conv1D, Conv2D, ConvExample, MaxPool } from '../../widgets/l16/Conv'
+import { CnnPipeline, ReceptiveCone, Dimensions, AlexLike, LeCunNets, LeCunCurves, Top5 } from '../../widgets/l16/Nets'
+
+<Lead>Neural networks have a huge number of successful applications, thanks to their performance and to the fact that they are easy to set up as a first approach for learning arbitrary functions of unknown form, without assuming a statistical model a priori. **Sub-symbolic** tasks (sensory data, motor control, visual processing) are where they excel.</Lead>
+
+This lesson presents a historical and paradigmatic example: <T id="cnn">**convolutional networks**</T> (CNN, ConvNet, LeNet). It shows the **flexibility in the design** of networks, how the design is changed to deal with a specific application, and how a **not fully connected** feedforward network is built for a precise problem. CNNs are also a historical instance of a **deep** network, and they act as a bridge to deep learning.
+
+## The problem: recognizing characters
+
+<Figure n="16.1" title="Handwritten digits 16 × 16" size="wide">
+  <ZipDigits />
+  <Caption>Examples in the style of the ZIP code dataset: five rows of digits from 0 to 9 written in different ways, normalized 16×16 8-bit grayscale images (Le Cun et al., 1990). The MNIST benchmark is “the drosophila of ML”. The digits here are generated; pick one and shift it by a few pixels.</Caption>
+</Figure>
+
+A first approach is a standard network with **256 inputs** (one per pixel, $16 \times 16$): the error obtained is 5–20%, with many errors due to the **lack of invariance** to rotations, translations, etc. A fully connected network treats every pixel as an independent input: it does not “know” that nearby pixels are correlated, nor that the same stroke can appear in different positions.
+
+<Callout type="tip" title="The basic idea">
+
+Exploit the **architecture** to build **prior knowledge** into the network:
+
+- **local connections** (<T id="campo-recettivo">local receptive fields</T>): each unit sees only a small region of the image, and extracts **local features**;
+- **sharing of the weights** (<T id="weight-sharing">weight sharing</T>) among different units: the **same operation** is applied to different parts of the input, because the features of a character can appear anywhere in the image (regardless of position, small rotations…). The number of free parameters is reduced while a complex connectivity is maintained.
+
+</Callout>
+
+## Convolution
+
+The name comes from the <T id="convoluzione">**convolution operator**</T>: a weighted average of a function $f$, weighted by another function $g$ that slides over time:
+
+<Formula f={F.convolution} />
+
+The image of $g$ is bounded (nonzero only on an interval): $g$ acts as a **sliding window**.
+
+### 1D convolution: one unit over a stream
+
+A unit with three weights that slides over a sequence of inputs:
+
+<Formula f={F.conv1d} />
+
+<Figure n="16.2" title="1D convolution: the same unit slides over the input">
+  <Conv1D />
+  <Caption>1D convolution: a sequence of inputs $x_1 \dots x_5$; a unit with weights $w_1, w_2, w_3$ reads a window of three consecutive inputs and produces $o_2$; the same unit, with the same weights, shifted by one step produces $o_3$, and so on. Move the unit and change the weights.</Caption>
+</Figure>
+
+(Exercise: with $t = 2$, $o_2 = w_1x_1 + w_2x_2 + w_3x_3$; with $t = 3$, $o_3 = w_1x_2 + w_2x_3 + w_3x_4$.) The weights are **shared** among the instances of the unit and are learned as usual: the unit is an **adaptive filter**. Several different units form a **filter bank**. This network is also called a <T id="tdnn">Time-Delay Neural Network</T>.
+
+### 2D convolution
+
+On an image a 2D <T id="kernel-convoluzione">**kernel**</T> is used, for example $3 \times 3$ (the **local receptive field** of the unit), which moves one pixel at a time (<T id="stride">**stride**</T> 1). The <T id="padding">**padding**</T> handles the borders. The kernel slides over the image and produces a <T id="feature-map">**feature map**</T> (the features extracted by the filter).
+
+In neural network terms: the image is scanned with **the same neuron**, which uses local connections.
+
+<Figure n="16.3" title="2D convolution: the kernel slides over the image" size="wide">
+  <Conv2D />
+  <Caption>2D convolution: a 3×3 kernel overlaps a portion of the input image (blue; the padding is dashed) and produces one value in the output feature map (green); moving the kernel fills the map. The values of the image and of the kernel are an example.</Caption>
+</Figure>
+
+<Figure n="16.4" title="Example of 2D convolution" size="wide">
+  <ConvExample />
+  <Caption>Example of 2D convolution of a 3×4 input (values $a \dots l$) with a 2×2 kernel (weights $w, x, y, z$): each element of the output is the sum of the products of the kernel with a 2×2 portion of the input, for example $aw + bx + ey + fz$.</Caption>
+</Figure>
+
+<Callout type="note" title="Form used in libraries">
+
+The 2D convolution of an image $I$ with a kernel $K$ is $S(i,j) = (I * K)(i,j) = \sum_m\sum_n I(m,n)\,K(i-m, j-n)$. Many CNN libraries actually implement the **cross-correlation**: $S(i,j) = \sum_m\sum_n I(i+m, j+n)\,K(m,n)$ (for the details: *Deep Learning book*, sec. 9.1; not required at the oral exam).
+
+</Callout>
+
+### Stride greater than 1
+
+With **stride** > 1 the kernel “skips” pixels (for example two at a time): this is a **subsampling**, and it produces a smaller feature map.
+
+<Figure n="16.5" title="Convolution with stride 2" size="wide">
+  <Conv2D stride={2} pickStride />
+  <Caption>Convolution with stride 2: the kernel moves two pixels at a time over the input image, and the resulting feature map is smaller (3×3 instead of 5×5). Compare with stride 1.</Caption>
+</Figure>
+
+## A network of “filters”
+
+The weights of the units are a **filter trained** to detect certain features or patterns in the image. The design of the architecture involves:
+
+- **a small, local receptive field**: thanks to this constraint, the learned filters respond most strongly to **spatially local** patterns (as in the visual cortex of animals);
+- **the same filter applied over the whole image**: the features are detected **regardless of position**, which gives <T id="invarianza-traslazione">**translation invariance**</T>;
+- **learned filters**: the filters that in traditional image processing algorithms were designed by hand are **learned**. Independence from prior knowledge and from human effort in designing the features is a major advantage;
+- **many stacked layers**: the units of the feature maps represent larger and larger areas of the original image (by assembling areas of the previous maps).
+
+## Pooling
+
+<T id="pooling">**Pooling**</T> reduces the feature map:
+
+- with subsampling (stride > 1, seen above);
+- with an **average** (simple or weighted);
+- with **max pooling** (the most common).
+
+In practice, instead of producing one value for every input pixel, one value is produced for a (rectangular) set of pixels, by taking the average or the maximum of the outputs.
+
+<Figure n="16.6" title="Max pooling with a 2 × 2 filter and stride 2">
+  <MaxPool />
+  <Caption>Max pooling with a 2×2 filter and stride 2: a 4×4 feature map divided into four colored 2×2 blocks produces a 2×2 map with the maxima of each block: 6, 8, 3, 4. Change the values or switch to the average.</Caption>
+</Figure>
+
+Pooling also helps to make the representation **approximately invariant to small translations** of the input: the maximum (or the average) changes little if the input shifts slightly, so a high output stays high for a slightly translated version.
+
+## The CNN as a whole
+
+A CNN exploits weight sharing to implement a sliding window of local fields over a signal, extended to 2D images and repeated over many layers (feature maps), alternated with pooling operations. The four ingredients:
+
+1. **local connections**;
+2. **shared weights**;
+3. **pooling**;
+4. **many layers**.
+
+<Figure n="16.7" title="A complete CNN" size="wide">
+  <CnnPipeline />
+  <Caption>A complete CNN: an input image is processed by convolutions that produce several feature maps, then subsampling, then more convolutions with a larger number of smaller feature maps, subsampling and finally fully connected layers leading to the output. The number of filters (feature maps) can grow in the higher layers. Click a stage.</Caption>
+</Figure>
+
+<Figure n="16.8" title="The “cone” from the image to the final maps" size="wide">
+  <ReceptiveCone />
+  <Caption>A CNN for image classification: alternating convolutions and pooling, then two fully connected layers that produce the class probabilities (boat 0.94). The “cone” from the image to the final maps: the receptive field of the final units is much wider than that of the units of the first layers, because they are indirectly connected to a large part of the image. Click a unit to see its cone.</Caption>
+</Figure>
+
+<Figure n="16.9" title="An example with the dimensions" size="wide">
+  <Dimensions />
+  <Caption>An example with the dimensions: a 36×36 input, the first convolutional layer produces 26×26 maps, max pooling brings them down to 12×12, then a second convolutional layer, pooling, a fully connected layer and the output. For a color (RGB) image the depth of the volume is the number of feature maps (of neurons). Click a layer.</Caption>
+</Figure>
+
+<Figure n="16.10" title="An AlexNet-like architecture" size="wide">
+  <AlexLike />
+  <Caption>An AlexNet-like architecture: the image goes through blocks of convolution + ReLU and pooling (the feature learning part), then flatten, fully connected layers and softmax for the classification (car, truck, van, bicycle). Click a block to see which part it belongs to.</Caption>
+</Figure>
+
+<Callout type="abstract" title="Advantages of CNNs">
+
+- **Local connections and shared weights**: they detect local motifs/patterns in images, in a **translation-invariant** way (invariant to the position of the pattern); they **reduce the number of free parameters** while keeping the connections, which is a form of <T id="regolarizzazione">**regularization**</T>.
+- **Pooling**: it reduces the size of the representation at every layer (a **pyramid** of layers) and helps invariance to small shifts and distortions.
+- **Many layers**: operations 1 and 2 applied to all the feature maps produce a **progressive abstraction** of the features, making it possible to **compose primitives** (low-level features, learned only once) in all possible combinations in the subsequent layers.
+- They are a historical instance of a **deep network**, and analogies with the visual system have been studied (neuroscience).
+
+</Callout>
+
+## How they are used
+
+Training is typically done with <T id="backpropagation">**backpropagation**</T>, with the known heuristics and some specializations (for weight sharing, pooling…). Given the typical use of huge networks and large amounts of data, many hyperparameters are set **by experience** or following the advice of experts, because it would be too expensive to run cross-validation over large hyperparameter spaces. Training, regularization effects and the good behavior of these huge networks will be discussed in the framework of deep learning.
+
+## Historical results
+
+### LeCun’s architectures on the ZIP code dataset
+
+<Figure n="16.11" title="LeCun’s five networks on the ZIP code problem" size="wide">
+  <LeCunNets />
+  <Caption>The five networks used by LeCun on the ZIP code problem: from a network with no hidden layers (Net-1) and a fully connected one with one hidden layer (Net-2), to networks with 3×3 local connections (Net-3) and with local connections and shared weights (Net-4 and Net-5, with 8×8×2 and 4×4×4 feature maps). Pick a network: on the right, the connections and weights of all of them.</Caption>
+</Figure>
+
+| Network | Connections | Weights |
+|---|---|---|
+| Net-1 | 2570 | 2570 |
+| Net-2 | 3214 | 3214 |
+| Net-3 | 1226 | 1226 |
+| Net-4 | 2266 | 1132 |
+| Net-5 | 5194 | 1060 |
+
+With shared weights the number of **connections** can grow while the number of **weights** (free parameters) stays low.
+
+<Figure n="16.12" title="Test performance of the five networks">
+  <LeCunCurves />
+  <Caption>Test performance curves for the five networks (Le Cun, 1989), as a function of the epochs: Net-5 reaches almost 99%, Net-4 about 94%, Net-3 and Net-2 stay between 86 and 88%, Net-1 drops toward 72%. The training error is zero for all of them, on a reduced set of about 300 images. The values are read from the original figure. Drag the epoch.</Caption>
+</Figure>
+
+Net-5 reaches an error of **1.6%** with 5194 connections and only 1060 weights. Today 0.8% is reached (with networks and SVMs), and even less.
+
+### MNIST
+
+The complete dataset has 60,000 training images and 10,000 test images. The progress (1998–2012) is documented on LeCun’s website. With deep learning (MLPs or CNNs with many layers, unsupervised layer-by-layer pre-training) 0.39% (2006) and 0.35% (2011) were reached; the best in 2012 is 0.23% (a committee of convolutional networks), 0.21% in 2016.
+
+<Callout type="warning" title="Warning">
+
+The MNIST test set has been used so many times that improvements of the order of 0.1% are no longer significant: it has in fact become a validation set for the community.
+
+</Callout>
+
+<Callout type="note" title="Does a deep MLP work too?">
+
+A 2010 paper (*Neural Computation*) shows that “good old” on-line backpropagation on a simple MLP obtains 0.35% on MNIST: all it takes is **many layers**, **many neurons** per layer, **many deformed images** for training and **GPUs** to speed things up. The 784-2500-2000-1500-1000-500-10 network has 12 million weights and is trained in 2 hours. Complexity control is achieved by deforming the images to obtain many more examples (<T id="data-augmentation">data augmentation</T>).
+
+</Callout>
+
+### Face recognition and ImageNet
+
+- **DeepFace** (CVPR 2014): 9-layer convolutional networks trained on 4 million images of more than 4000 people; it recognizes whether two photos show the same person with an accuracy of 97.25% (humans: 97.53%).
+- **AlexNet** (Krizhevsky, Sutskever, Hinton, NIPS 2012): a deep CNN trained on 1.3 million high-resolution ImageNet images (ILSVRC-2010) in 1000 classes. Top-1 and top-5 errors of 39.7% and 18.9% (from the previous ~26%), much better than the state of the art. The network has **60 million parameters** and 500,000 neurons: five convolutional layers (some followed by max pooling) and two fully connected layers with a final 1000-class softmax. To speed up training: **non-saturating** neurons (<T id="relu">ReLU</T>) and a very efficient GPU implementation. To reduce overfitting in the dense layers: a new regularization method, **dropout**.
+
+<Figure n="16.13" title="AlexNet’s top-5 predictions" size="wide">
+  <Top5 />
+  <Caption>AlexNet’s top-5 predictions on eight random images from the ImageNet test set (orchid, tree, poncho, scooter, chair, orchid, boot, jellyfish), with the network’s five most probable predictions for each. The photographs are not reproduced: what remains is the correct class and the bars of the predictions, read from the original figure.</Caption>
+</Figure>
+
+## Modern CNNs and GPUs
+
+There are many variants and specialized architectures for images (the *Intelligent Systems for Pattern Recognition* course), with a great impact on Pattern Recognition and Computer Vision; the neuroscientific foundations are covered in the *Computational Neuroscience* course. The features of models **already trained** on large benchmarks (AlexNet, GoogLeNet, VGG, ResNet…) can also be reused: many pre-trained CNNs are available for classification, segmentation, face recognition, text detection.
+
+Efficient implementations exploit **GPUs** through the <T id="tensore">**tensor**</T> representation. Matrix multiplication (that is, dot products) is a linear operation that GPUs perform very efficiently, by parallelizing the independent sums and products. Many kernel operations can be written as a single multiplication between block matrices; the **tensor** notation (multidimensional arrays with the tensordot operation, for example in TensorFlow or NumPy) makes it possible to do so without building complex block matrices by hand.
+
+<Callout type="note" title="Beyond CNNs: Capsule Networks">
+
+<T id="capsule-network">**Capsule Networks**</T> (Sabour, Frosst, Hinton, 2017) use specialized sub-networks: a “capsule” is a group of neurons that produces both a parameter indicating whether an entity is present and a vector of **pose parameters** (position, orientation) with respect to a canonical version. Instead of max pooling they use a **routing** mechanism (the idea that the brain routes low-level visual information to the most suitable capsule). They obtain excellent results on MNIST, recognizing overlapping digits much better than a CNN.
+
+</Callout>
+
+<Exam>
+<Q q="What are the key ideas of CNNs (local connections, shared weights, pooling, many layers) and what does each of them entail?">
+
+Local connections: each unit sees only a small region (receptive field) and extracts local features. Shared weights: the same unit (filter) is applied at all positions, so the features are detected regardless of position (translation invariance) and the free parameters decrease while the connections are kept, which is a form of regularization. Pooling: it reduces the size of the representation at every layer (pyramid) and helps invariance to small shifts and distortions. Many layers: progressive abstraction of the features, with units that represent larger and larger areas of the image and low-level primitives composed in all combinations.
+
+</Q>
+<Q q="What is convolution in a neural network? What are kernel, stride, padding, feature map?">
+
+It is a sliding window: the same neuron, with local connections and shared weights, scans the input, computing at each position the weighted sum of the values in the window (in 1D, $out_t = \sum_{i=1}^3 w_i x_{t+i-2}$). The kernel is the set of weights of the filter (for example 3×3), that is, the local receptive field of the unit; the stride is how many pixels the kernel moves at each step (with stride greater than 1 the input is subsampled); the padding handles the borders of the image; the feature map is the output, that is, the features extracted by the filter at all positions.
+
+</Q>
+<Q q="What is pooling for? How does max pooling work?">
+
+It reduces the feature map, producing one value for a rectangular set of pixels instead of one per pixel, and makes the representation approximately invariant to small translations of the input. Max pooling takes the maximum of each block: with a 2×2 filter and stride 2 a 4×4 map becomes 2×2 (in the example, 6, 8, 3, 4). Alternatively, the average (simple or weighted) or subsampling with stride greater than 1 is used.
+
+</Q>
+<Q q="Why is weight sharing a form of regularization?">
+
+Because it reduces the number of free parameters while maintaining a complex connectivity: the units of a feature map all use the same weights. In LeCun’s networks, Net-5 has 5194 connections but only 1060 weights, and it is the best on the test set (error 1.6%). Moreover, the constraint builds in prior knowledge: the same feature can appear anywhere in the image.
+
+</Q>
+<Q q="How does the receptive field grow with depth?">
+
+The units of the first layer see only their own kernel. By stacking layers (and pooling), each unit assembles areas of the previous maps, so it represents a larger and larger area of the original image: this is the “cone” from the image to the final maps. The final units are indirectly connected to a large part of the image.
+
+</Q>
+</Exam>

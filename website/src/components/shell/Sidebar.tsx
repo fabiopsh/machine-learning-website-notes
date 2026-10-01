@@ -1,4 +1,5 @@
 import { parts } from '../../content/lessons'
+import { tx } from '../../lib/i18n'
 import { useProgress } from '../../lib/progress'
 import { glossaryHref, lessonHref, type Route } from '../../lib/router'
 import { Icon } from '../ui/Icon'
@@ -24,22 +25,22 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
   const progress = useProgress()
   const activeId = route.name === 'lesson' ? route.id : undefined
   return (
-    <nav className="sidebar" aria-label="Lezioni del corso">
+    <nav className="sidebar" aria-label={tx('Lezioni del corso', 'Course lessons')}>
       <div className="sidebar__scroll">
         <a className="brand" href="#/" onClick={onNavigate}>
           <span className="brand__mark" aria-hidden="true" />
           <span className="brand__text">
             <span className="brand__title">Machine Learning</span>
-            <span className="brand__sub">Appunti interattivi · 654AA</span>
+            <span className="brand__sub">{tx('Appunti interattivi', 'Interactive notes')} · 654AA</span>
           </span>
         </a>
 
         <div className="sidebar__links">
           <a href="#/" className={route.name === 'home' ? 'is-active' : undefined} onClick={onNavigate}>
-            <Icon name="book" size={16} /> Indice del corso
+            <Icon name="book" size={16} /> {tx('Indice del corso', 'Course index')}
           </a>
           <a href={glossaryHref()} className={route.name === 'glossary' ? 'is-active' : undefined} onClick={onNavigate}>
-            <Icon name="list" size={16} /> Glossario
+            <Icon name="list" size={16} /> {tx('Glossario', 'Glossary')}
           </a>
         </div>
 
@@ -54,7 +55,7 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
                 const p = progress[l.id]
                 if (!l.load) {
                   return (
-                    <li key={l.id} className="sidebar__lesson is-locked" title="In preparazione">
+                    <li key={l.id} className="sidebar__lesson is-locked" title={tx('In preparazione', 'Coming soon')}>
                       <span className="sidebar__num">{l.id}</span>
                       <span className="sidebar__name">{l.title}</span>
                     </li>
@@ -80,11 +81,11 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
         ))}
 
         <div className="sidebar__foot">
-          Appunti di Fabio Piscitelli
+          {tx('Appunti di Fabio Piscitelli', 'Notes by Fabio Piscitelli')}
           <br />
-          Prof. Alessio Micheli · Università di Pisa
+          Prof. Alessio Micheli · {tx('Università di Pisa', 'University of Pisa')}
           <br />
-          a.a. 2026/27
+          {tx('a.a. 2026/27', 'a.y. 2026/27')}
         </div>
       </div>
     </nav>

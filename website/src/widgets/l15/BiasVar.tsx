@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import {
@@ -51,9 +52,9 @@ export function TwentyPoints() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'i 20 punti del dataset', color: 'var(--c-blue)', kind: 'dot' },
-            { label: 'funzione vera', color: 'var(--c-green)' },
-            { label: 'ipotesi lineare adattata', color: 'var(--c-red)' },
+            { label: tx('i 20 punti del dataset', 'the 20 points of the dataset'), color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('funzione vera', 'true function'), color: 'var(--c-green)' },
+            { label: tx('ipotesi lineare adattata', 'fitted linear hypothesis'), color: 'var(--c-red)' },
           ]}
         />
       </div>
@@ -68,7 +69,7 @@ export function TwentyPoints() {
       <Controls>
         <div className="readouts">
           <Readout
-            label="retta adattata"
+            label={tx('retta adattata', 'fitted line')}
             tone="red"
             value={<Tex>{`h(x) = ${fmt(d.w[1], 2)}\\,x ${d.w[0] < 0 ? '-' : '+'} ${fmt(Math.abs(d.w[0]), 2)}`}</Tex>}
           />
@@ -80,18 +81,21 @@ export function TwentyPoints() {
             setN(n + 1)
           }}
         >
-          Nuovo dataset
+          {tx('Nuovo dataset', 'New dataset')}
         </Btn>
         {seed !== 0 && (
           <Btn variant="ghost" onClick={() => setSeed(0)}>
-            Il primo dataset
+            {tx('Il primo dataset', 'The first dataset')}
           </Btn>
         )}
       </Controls>
       <Tasks
         items={[
           {
-            label: 'Estrai tre dataset nuovi: la funzione vera resta la stessa, ma la retta trovata cambia ogni volta.',
+            label: tx(
+              'Estrai tre dataset nuovi: la funzione vera resta la stessa, ma la retta trovata cambia ogni volta.',
+              'Draw three new datasets: the true function stays the same, but the line found changes every time.',
+            ),
             done: n >= 3,
           },
         ]}
@@ -110,8 +114,8 @@ export function FiftyFits() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'rette adattate (una per dataset)', color: 'var(--c-red)' },
-            { label: 'funzione vera', color: 'var(--c-green)' },
+            { label: tx('rette adattate (una per dataset)', 'fitted lines (one per dataset)'), color: 'var(--c-red)' },
+            { label: tx('funzione vera', 'true function'), color: 'var(--c-green)' },
           ]}
         />
       </div>
@@ -121,12 +125,15 @@ export function FiftyFits() {
         <FnPath f={trueF} color="var(--c-green)" width={2.2} />
       </Plot>
       <Controls>
-        <Slider label="numero di dataset (di 20 punti ciascuno)" min={1} max={50} step={1} value={k} onChange={setK} width={300} />
+        <Slider label={tx('numero di dataset (di 20 punti ciascuno)', 'number of datasets (of 20 points each)')} min={1} max={50} step={1} value={k} onChange={setK} width={300} />
       </Controls>
       <Tasks
         items={[
           {
-            label: 'Scendi a pochi dataset e poi risali a 50: ogni dataset dà una retta diversa, e nessuna segue le onde della funzione vera.',
+            label: tx(
+              'Scendi a pochi dataset e poi risali a 50: ogni dataset dà una retta diversa, e nessuna segue le onde della funzione vera.',
+              'Go down to a few datasets and then back up to 50: each dataset gives a different line, and none follows the waves of the true function.',
+            ),
             done: seen.few,
           },
         ]}
@@ -148,12 +155,12 @@ export function VarianceFits() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'le 50 ipotesi', color: 'var(--ink-3)' },
-            { label: <>predizione media</>, color: 'var(--c-red)' },
-            ...(showF ? [{ label: 'funzione vera', color: 'var(--c-green)' }] : []),
+            { label: tx('le 50 ipotesi', 'the 50 hypotheses'), color: 'var(--ink-3)' },
+            { label: tx(<>predizione media</>, <>mean prediction</>), color: 'var(--c-red)' },
+            ...(showF ? [{ label: tx('funzione vera', 'true function'), color: 'var(--c-green)' }] : []),
           ]}
         />
-        <Toggle label="mostra la funzione vera" checked={showF} onChange={setShowF} />
+        <Toggle label={tx('mostra la funzione vera', 'show the true function')} checked={showF} onChange={setShowF} />
       </div>
       <Plot xDomain={X_DOM} yDomain={Y_DOM} aspect={0.58}>
         <Axes xTicks={X_TICKS} yTicks={Y_TICKS} xLabel="x" yLabel="y" />
@@ -195,12 +202,17 @@ export function VarianceFits() {
         <Label x={8.6} y={lineAt(MEAN_W, 8.6) - 2.2} className="plot-label--math">
           h̄(x)
         </Label>
-        <Handle x={xq} y={Y_DOM[0]} axis="x" label="punto x" onMove={(p) => setXq(Math.round(p.x * 20) / 20)} />
+        <Handle x={xq} y={Y_DOM[0]} axis="x" label={tx('punto x', 'point x')} onMove={(p) => setXq(Math.round(p.x * 20) / 20)} />
       </Plot>
       <Controls>
         <div className="readouts">
           <Readout label={<Tex>{'x'}</Tex>} tone="accent" value={fmt(xq, 2)} />
-          <Readout label="varianza" tone="violet" value={fmt(b.variance, 3)} sub="dispersione delle 50 rette" />
+          <Readout
+            label={tx('varianza', 'variance')}
+            tone="violet"
+            value={fmt(b.variance, 3)}
+            sub={tx('dispersione delle 50 rette', 'spread of the 50 lines')}
+          />
           <Readout
             label={
               <>bias²</>
@@ -211,19 +223,41 @@ export function VarianceFits() {
           />
           <Readout
             label={
-              <>rumore²</>
+              tx(<>rumore²</>, <>noise²</>)
             }
             value={fmt(NOISE_VAR, 3)}
             sub={<Tex>{'\\sigma^2'}</Tex>}
           />
-          <Readout label="errore atteso" value={fmt(b.variance + b.bias2 + NOISE_VAR, 3)} sub="la somma dei tre" />
+          <Readout
+            label={tx('errore atteso', 'expected error')}
+            value={fmt(b.variance + b.bias2 + NOISE_VAR, 3)}
+            sub={tx('la somma dei tre', 'the sum of the three')}
+          />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Mostra la funzione vera: il tratto verde è la distanza tra la media delle rette e la funzione, cioè il bias.', done: seen.f },
-          { label: 'Sposta x dove la media incrocia la funzione vera: il bias si annulla, restano varianza e rumore.', done: seen.f && seen.low },
-          { label: 'Sposta x su una cresta o in una valle della funzione vera: l’errore è quasi tutto bias.', done: seen.f && seen.high },
+          {
+            label: tx(
+              'Mostra la funzione vera: il tratto verde è la distanza tra la media delle rette e la funzione, cioè il bias.',
+              'Show the true function: the green segment is the distance between the mean of the lines and the function, that is, the bias.',
+            ),
+            done: seen.f,
+          },
+          {
+            label: tx(
+              'Sposta x dove la media incrocia la funzione vera: il bias si annulla, restano varianza e rumore.',
+              'Move x to where the mean crosses the true function: the bias vanishes, variance and noise remain.',
+            ),
+            done: seen.f && seen.low,
+          },
+          {
+            label: tx(
+              'Sposta x su una cresta o in una valle della funzione vera: l’errore è quasi tutto bias.',
+              'Move x onto a crest or into a valley of the true function: the error is almost all bias.',
+            ),
+            done: seen.f && seen.high,
+          },
         ]}
       />
     </div>
@@ -280,10 +314,10 @@ export function SpaceView() {
   })
   return (
     <div>
-      <svg className="sv15" viewBox="0 0 640 400" role="img" aria-label="Vista grafica di bias, varianza e rumore nello spazio delle funzioni">
+      <svg className="sv15" viewBox="0 0 640 400" role="img" aria-label={tx('Vista grafica di bias, varianza e rumore nello spazio delle funzioni', 'Graphical view of bias, variance and noise in the space of functions')}>
         <ellipse className="sv15__h" cx={HC.x} cy={HC.y} rx={rx} ry={ry} />
         <text className="sv15__cap" x={HC.x - rx + 26} y={HC.y + ry * 0.55}>
-          insieme delle funzioni
+          {tx('insieme delle funzioni', 'set of functions')}
         </text>
         <ellipse className={'sv15__reg' + cls('var')} cx={c.x} cy={c.y} rx={rrx} ry={rry} />
         <g className={'sv15__seg sv15__seg--bias' + cls('bias')}>
@@ -299,64 +333,100 @@ export function SpaceView() {
         <circle className="sv15__pt" cx={OPT.x} cy={OPT.y} r={6.5} />
         <circle className="sv15__pt" cx={DATA.x} cy={DATA.y} r={6.5} />
         <text className="sv15__lbl" x={OPT.x} y={OPT.y - 16} textAnchor="middle">
-          soluzione ottima
+          {tx('soluzione ottima', 'optimal solution')}
         </text>
         <text className="sv15__lbl" x={DATA.x + 13} y={DATA.y + 5}>
-          dati
+          {tx('dati', 'data')}
         </text>
         <text className={'sv15__name' + cls('noise')} x={(OPT.x + DATA.x) / 2} y={OPT.y + 27} textAnchor="middle">
-          rumore
+          {tx('rumore', 'noise')}
         </text>
         <text className={'sv15__name' + cls('bias')} x={(c.x + OPT.x) / 2 + 14} y={(c.y + OPT.y) / 2 + 4}>
           bias
         </text>
         <text className={'sv15__name sv15__name--in' + cls('var')} x={c.x} y={c.y + rry + 20} textAnchor="middle">
-          varianza
+          {tx('varianza', 'variance')}
         </text>
         <text className="sv15__lbl sv15__lbl--sm" x={c.x - rrx - 8} y={c.y - rry - 22} textAnchor="end">
-          <tspan x={c.x - rrx - 8}>soluzioni ottenute con</tspan>
+          <tspan x={c.x - rrx - 8}>{tx('soluzioni ottenute con', 'solutions obtained with')}</tspan>
           <tspan x={c.x - rrx - 8} dy="1.2em">
-            training set diversi
+            {tx('training set diversi', 'different training sets')}
           </tspan>
         </text>
       </svg>
       <div className="sv15__keys">
         <button type="button" className={'sv15__key' + cls('var')} {...on('var')}>
-          <b>Varianza</b> — l’ampiezza della regione delle soluzioni: training set diversi producono soluzioni diverse.
+          {tx(
+            <>
+              <b>Varianza</b> — l’ampiezza della regione delle soluzioni: training set diversi producono soluzioni diverse.
+            </>,
+            <>
+              <b>Variance</b> — the width of the region of the solutions: different training sets produce different solutions.
+            </>,
+          )}
         </button>
         <button type="button" className={'sv15__key' + cls('bias')} {...on('bias')}>
-          <b>Bias</b> — la distanza tra il centro della regione (la media delle soluzioni) e la soluzione ottima.
+          {tx(
+            <>
+              <b>Bias</b> — la distanza tra il centro della regione (la media delle soluzioni) e la soluzione ottima.
+            </>,
+            <>
+              <b>Bias</b> — the distance between the center of the region (the mean of the solutions) and the optimal solution.
+            </>,
+          )}
         </button>
         <button type="button" className={'sv15__key' + cls('noise')} {...on('noise')}>
-          <b>Rumore</b> — la distanza tra la soluzione ottima e i dati: non dipende dal modello.
+          {tx(
+            <>
+              <b>Rumore</b> — la distanza tra la soluzione ottima e i dati: non dipende dal modello.
+            </>,
+            <>
+              <b>Noise</b> — the distance between the optimal solution and the data: it does not depend on the model.
+            </>,
+          )}
         </button>
       </div>
       <Controls>
         <Slider
-          label="ampiezza dell’insieme delle funzioni"
+          label={tx('ampiezza dell’insieme delle funzioni', 'width of the set of functions')}
           min={0}
           max={1}
           step={0.01}
           value={size}
           onChange={setSize}
-          format={(v) => (v < 0.34 ? 'piccolo' : v < 0.67 ? 'medio' : 'grande')}
+          format={(v) => (v < 0.34 ? tx('piccolo', 'small') : v < 0.67 ? tx('medio', 'medium') : tx('grande', 'large'))}
           width={280}
         />
         <Btn icon="play" onClick={() => setN(Math.min(OFFS.length, n + 1))} disabled={n >= OFFS.length}>
-          Un altro training set
+          {tx('Un altro training set', 'Another training set')}
         </Btn>
         <Btn icon="reset" onClick={() => setN(2)} disabled={n === 2}>
-          Ricomincia
+          {tx('Ricomincia', 'Start over')}
         </Btn>
       </Controls>
       <Tasks
         items={[
-          { label: 'Aggiungi altri training set: ognuno dà una soluzione diversa, dentro la regione scura.', done: seen.more },
           {
-            label: 'Rimpicciolisci l’insieme delle funzioni: la regione si stringe (meno varianza) ma si allontana dall’ottimo (più bias).',
+            label: tx(
+              'Aggiungi altri training set: ognuno dà una soluzione diversa, dentro la regione scura.',
+              'Add more training sets: each one gives a different solution, inside the dark region.',
+            ),
+            done: seen.more,
+          },
+          {
+            label: tx(
+              'Rimpicciolisci l’insieme delle funzioni: la regione si stringe (meno varianza) ma si allontana dall’ottimo (più bias).',
+              'Shrink the set of functions: the region narrows (less variance) but moves away from the optimum (more bias).',
+            ),
             done: seen.small,
           },
-          { label: 'Ingrandiscilo: la regione delle soluzioni si allarga, perché la sua ampiezza dipende da quella dell’insieme.', done: seen.big },
+          {
+            label: tx(
+              'Ingrandiscilo: la regione delle soluzioni si allarga, perché la sua ampiezza dipende da quella dell’insieme.',
+              'Enlarge it: the region of the solutions widens, because its width depends on that of the set.',
+            ),
+            done: seen.big,
+          },
         ]}
       />
     </div>
@@ -386,18 +456,32 @@ function darts(b: Board, seed: number) {
 }
 
 const BOARD_TEXT: Record<string, { title: string; text: string; tone: string }> = {
-  ll: { title: 'Basso bias, bassa varianza', text: 'Le freccette sono tutte al centro: il caso ideale.', tone: 'good' },
+  ll: {
+    title: tx('Basso bias, bassa varianza', 'Low bias, low variance'),
+    text: tx('Le freccette sono tutte al centro: il caso ideale.', 'The darts are all at the center: the ideal case.'),
+    tone: 'good',
+  },
   lh: {
-    title: 'Basso bias, alta varianza',
-    text: 'Le freccette sono sparse attorno al centro: in media sono giuste, ma ognuna può finire lontano. Corrisponde all’overfitting.',
+    title: tx('Basso bias, alta varianza', 'Low bias, high variance'),
+    text: tx(
+      'Le freccette sono sparse attorno al centro: in media sono giuste, ma ognuna può finire lontano. Corrisponde all’overfitting.',
+      'The darts are scattered around the center: on average they are right, but each one can end up far away. It corresponds to overfitting.',
+    ),
     tone: 'warn',
   },
   hl: {
-    title: 'Alto bias, bassa varianza',
-    text: 'Le freccette sono raggruppate ma lontane dal centro: tutte sbagliano nello stesso modo. Corrisponde all’underfitting.',
+    title: tx('Alto bias, bassa varianza', 'High bias, low variance'),
+    text: tx(
+      'Le freccette sono raggruppate ma lontane dal centro: tutte sbagliano nello stesso modo. Corrisponde all’underfitting.',
+      'The darts are clustered but far from the center: they all miss in the same way. It corresponds to underfitting.',
+    ),
     tone: 'warn',
   },
-  hh: { title: 'Alto bias, alta varianza', text: 'Le freccette sono sparse e lontane dal centro.', tone: 'bad' },
+  hh: {
+    title: tx('Alto bias, alta varianza', 'High bias, high variance'),
+    text: tx('Le freccette sono sparse e lontane dal centro.', 'The darts are scattered and far from the center.'),
+    tone: 'bad',
+  },
 }
 
 export function Darts() {
@@ -410,10 +494,10 @@ export function Darts() {
     <div>
       <div className="darts15">
         <span />
-        <span className="darts15__col">Bassa varianza</span>
-        <span className="darts15__col">Alta varianza</span>
+        <span className="darts15__col">{tx('Bassa varianza', 'Low variance')}</span>
+        <span className="darts15__col">{tx('Alta varianza', 'High variance')}</span>
         {BOARDS.map((b, i) => (
-          <DartCell key={b.id} first={i % 2 === 0} label={b.bias ? 'Alto bias' : 'Basso bias'}>
+          <DartCell key={b.id} first={i % 2 === 0} label={b.bias ? tx('Alto bias', 'High bias') : tx('Basso bias', 'Low bias')}>
             <button
               type="button"
               className={'darts15__board' + (sel === b.id ? ' is-on' : '')}
@@ -444,16 +528,18 @@ export function Darts() {
             {info.text}
           </div>
         ) : (
-          <p className="wnote">Clicca un bersaglio per leggere a quale situazione corrisponde.</p>
+          <p className="wnote">
+            {tx('Clicca un bersaglio per leggere a quale situazione corrisponde.', 'Click a target to read which situation it corresponds to.')}
+          </p>
         )}
         <Btn icon="reset" onClick={() => setSeed(seed + 1)}>
-          Rilancia le freccette
+          {tx('Rilancia le freccette', 'Throw the darts again')}
         </Btn>
       </Controls>
       <Tasks
         items={[
-          { label: 'Trova il bersaglio che corrisponde all’underfitting.', done: !!picked.hl },
-          { label: 'Trova quello che corrisponde all’overfitting.', done: !!picked.lh },
+          { label: tx('Trova il bersaglio che corrisponde all’underfitting.', 'Find the target that corresponds to underfitting.'), done: !!picked.hl },
+          { label: tx('Trova quello che corrisponde all’overfitting.', 'Find the one that corresponds to overfitting.'), done: !!picked.lh },
         ]}
       />
     </div>
@@ -491,8 +577,8 @@ export function LambdaFits() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'ipotesi apprese (una per dataset)', color: 'var(--c-red)' },
-            { label: 'funzione vera', color: 'var(--c-green)' },
+            { label: tx('ipotesi apprese (una per dataset)', 'learned hypotheses (one per dataset)'), color: 'var(--c-red)' },
+            { label: tx('funzione vera', 'true function'), color: 'var(--c-green)' },
           ]}
         />
         <Segmented
@@ -505,14 +591,14 @@ export function LambdaFits() {
       </div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Le 25 ipotesi</div>
+          <div className="htf__title">{tx('Le 25 ipotesi', 'The 25 hypotheses')}</div>
           <Plot xDomain={[0, 1]} yDomain={S_DOM} aspect={0.72} minH={190} maxH={300} margin={{ l: 34, r: 10 }}>
             <Axes xTicks={[0, 1]} yTicks={S_TICKS} xLabel="x" yLabel="t" />
             <Curves rows={fit.curves} color="var(--c-red)" />
           </Plot>
         </div>
         <div>
-          <div className="htf__title">La loro media e la funzione vera</div>
+          <div className="htf__title">{tx('La loro media e la funzione vera', 'Their mean and the true function')}</div>
           <Plot xDomain={[0, 1]} yDomain={S_DOM} aspect={0.72} minH={190} maxH={300} margin={{ l: 34, r: 10 }}>
             <Axes xTicks={[0, 1]} yTicks={S_TICKS} xLabel="x" yLabel="t" />
             <FnPath f={sine} color="var(--c-green)" width={2.4} />
@@ -539,14 +625,23 @@ export function LambdaFits() {
             tone="blue"
             value={fmt(fit.bias2, 3)}
           />
-          <Readout label="varianza" tone="red" value={fmt(fit.variance, 3)} />
+          <Readout label={tx('varianza', 'variance')} tone="red" value={fmt(fit.variance, 3)} />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Passa a ln λ = −0,31: le curve si allargano e la media si avvicina alla sinusoide.', done: seen.mid },
           {
-            label: 'Scendi a ln λ = −2,4 (o meno): le 25 curve sono molto diverse tra loro, ma la loro media coincide quasi con la sinusoide.',
+            label: tx(
+              'Passa a ln λ = −0,31: le curve si allargano e la media si avvicina alla sinusoide.',
+              'Switch to ln λ = −0.31: the curves spread out and the mean gets closer to the sinusoid.',
+            ),
+            done: seen.mid,
+          },
+          {
+            label: tx(
+              'Scendi a ln λ = −2,4 (o meno): le 25 curve sono molto diverse tra loro, ma la loro media coincide quasi con la sinusoide.',
+              'Go down to ln λ = −2.4 (or less): the 25 curves are very different from one another, but their mean almost coincides with the sinusoid.',
+            ),
             done: seen.low,
           },
         ]}
@@ -584,14 +679,14 @@ export function Tradeoff() {
               ),
               color: 'var(--c-blue)',
             },
-            { label: 'varianza', color: 'var(--c-red)' },
+            { label: tx('varianza', 'variance'), color: 'var(--c-red)' },
             {
               label: (
-                <>bias² + varianza</>
+                tx(<>bias² + varianza</>, <>bias² + variance</>)
               ),
               color: 'var(--c-violet)',
             },
-            { label: 'errore di test', color: 'var(--ink)' },
+            { label: tx('errore di test', 'test error'), color: 'var(--ink)' },
           ]}
         />
       </div>
@@ -602,7 +697,7 @@ export function Tradeoff() {
         <Polyline pts={line((r) => r.variance)} color="var(--c-red)" width={2.2} />
         <Polyline pts={line((r) => r.bias2)} color="var(--c-blue)" width={2.2} />
         <Label x={LN_MIN + 0.1} y={T_MAX * 0.94} className="plot-label--muted">
-          ← complessità più alta
+          {tx('← complessità più alta', '← higher complexity')}
         </Label>
         <Label x={LN_MAX - 0.75} y={T_MAX * 0.94} anchor="end" className="plot-label--muted">
           underfitting →
@@ -630,15 +725,36 @@ export function Tradeoff() {
             tone="blue"
             value={fmt(cur.bias2, 3)}
           />
-          <Readout label="varianza" tone="red" value={fmt(cur.variance, 3)} />
-          <Readout label="somma" tone="violet" value={fmt(cur.bias2 + cur.variance, 3)} sub={`minimo a ln λ = ${fmt(best.v, 1)}`} />
-          <Readout label="errore di test" value={fmt(cur.test, 3)} sub={`minimo a ln λ = ${fmt(bestT.v, 1)}`} />
+          <Readout label={tx('varianza', 'variance')} tone="red" value={fmt(cur.variance, 3)} />
+          <Readout
+            label={tx('somma', 'sum')}
+            tone="violet"
+            value={fmt(cur.bias2 + cur.variance, 3)}
+            sub={tx(`minimo a ln λ = ${fmt(best.v, 1)}`, `minimum at ln λ = ${fmt(best.v, 1)}`)}
+          />
+          <Readout
+            label={tx('errore di test', 'test error')}
+            value={fmt(cur.test, 3)}
+            sub={tx(`minimo a ln λ = ${fmt(bestT.v, 1)}`, `minimum at ln λ = ${fmt(bestT.v, 1)}`)}
+          />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Porta ln λ sul minimo della somma (viola): l’errore di test (nero) ha il minimo circa nello stesso punto.', done: seen.min },
-          { label: 'Vai tutto a sinistra (λ piccolo): il bias è quasi zero, l’errore è dovuto alla varianza.', done: seen.left },
+          {
+            label: tx(
+              'Porta ln λ sul minimo della somma (viola): l’errore di test (nero) ha il minimo circa nello stesso punto.',
+              'Bring ln λ to the minimum of the sum (violet): the test error (black) has its minimum at roughly the same point.',
+            ),
+            done: seen.min,
+          },
+          {
+            label: tx(
+              'Vai tutto a sinistra (λ piccolo): il bias è quasi zero, l’errore è dovuto alla varianza.',
+              'Go all the way to the left (small λ): the bias is almost zero, the error is due to the variance.',
+            ),
+            done: seen.left,
+          },
         ]}
       />
     </div>

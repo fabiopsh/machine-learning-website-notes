@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { glossary } from '../../content/glossary'
 import { availableLessons, lessonIndex } from '../../content/lessons'
+import { tx } from '../../lib/i18n'
 import { glossaryHref, lessonHref, navigate } from '../../lib/router'
 import { Rich } from '../prose/Tex'
 import { Icon, type IconName } from '../ui/Icon'
@@ -9,10 +10,10 @@ type Kind = 'lesson' | 'section' | 'figure' | 'term'
 type Item = { kind: Kind; title: string; sub: string; href: string; hay: string }
 
 const kindMeta: Record<Kind, { label: string; icon: IconName; weight: number }> = {
-  lesson: { label: 'Lezione', icon: 'book', weight: 3 },
-  term: { label: 'Glossario', icon: 'definition', weight: 2.2 },
-  section: { label: 'Sezione', icon: 'hash', weight: 1.6 },
-  figure: { label: 'Figura', icon: 'figure', weight: 1.2 },
+  lesson: { label: tx('Lezione', 'Lesson'), icon: 'book', weight: 3 },
+  term: { label: tx('Glossario', 'Glossary'), icon: 'definition', weight: 2.2 },
+  section: { label: tx('Sezione', 'Section'), icon: 'hash', weight: 1.6 },
+  figure: { label: tx('Figura', 'Figure'), icon: 'figure', weight: 1.2 },
 }
 
 export function normalize(s: string) {
@@ -99,14 +100,14 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="palette" role="dialog" aria-modal="true" aria-label="Cerca nel corso" onMouseDown={onClose}>
+    <div className="palette" role="dialog" aria-modal="true" aria-label={tx('Cerca nel corso', 'Search the course')} onMouseDown={onClose}>
       <div className="palette__box" onMouseDown={(e) => e.stopPropagation()}>
         <div className="palette__input">
           <Icon name="search" size={18} />
           <input
             ref={input}
             value={q}
-            placeholder="Cerca lezioni, sezioni, figure, termini…"
+            placeholder={tx('Cerca lezioni, sezioni, figure, termini…', 'Search lessons, sections, figures, terms…')}
             onChange={(e) => {
               setQ(e.target.value)
               setSel(0)
@@ -129,7 +130,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
           <kbd onClick={onClose}>Esc</kbd>
         </div>
         <ul className="palette__list" ref={list} role="listbox">
-          {results.length === 0 && <li className="palette__empty">Nessun risultato per “{q}”.</li>}
+          {results.length === 0 && <li className="palette__empty">{tx('Nessun risultato per', 'No results for')} “{q}”.</li>}
           {results.map((it, i) => {
             const m = kindMeta[it.kind]
             return (
@@ -161,10 +162,10 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
         <div className="palette__foot">
           <span>
             <kbd>↑</kbd>
-            <kbd>↓</kbd> per muoverti
+            <kbd>↓</kbd> {tx('per muoverti', 'to move')}
           </span>
           <span>
-            <kbd>↵</kbd> per aprire
+            <kbd>↵</kbd> {tx('per aprire', 'to open')}
           </span>
         </div>
       </div>

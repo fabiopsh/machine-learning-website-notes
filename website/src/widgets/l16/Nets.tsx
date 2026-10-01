@@ -3,6 +3,7 @@ import { Axes, Dot, Handle, Label, Plot, Polyline } from '../../components/plot/
 import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Legend, Readout, Segmented, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 
 /* ------------------------------------------------------------------ schema a stadi (16.7 e 16.10) */
@@ -198,10 +199,30 @@ function Pipeline({
         items={
           groups
             ? [
-                { label: 'Clicca un blocco della parte di feature learning (convoluzioni e pooling).', done: !!seenGroup.feat },
-                { label: 'Clicca un blocco della parte di classificazione (strati densi e softmax).', done: !!seenGroup.cls },
+                {
+                  label: tx(
+                    'Clicca un blocco della parte di feature learning (convoluzioni e pooling).',
+                    'Click a block of the feature learning part (convolutions and pooling).',
+                  ),
+                  done: !!seenGroup.feat,
+                },
+                {
+                  label: tx(
+                    'Clicca un blocco della parte di classificazione (strati densi e softmax).',
+                    'Click a block of the classification part (dense layers and softmax).',
+                  ),
+                  done: !!seenGroup.cls,
+                },
               ]
-            : [{ label: 'Clicca gli stadi uno dopo l’altro, dall’input all’output, e segui come cambiano numero e dimensione delle mappe.', done: n >= 3 }]
+            : [
+                {
+                  label: tx(
+                    'Clicca gli stadi uno dopo l’altro, dall’input all’output, e segui come cambiano numero e dimensione delle mappe.',
+                    'Click the stages one after the other, from the input to the output, and follow how the number and size of the maps change.',
+                  ),
+                  done: n >= 3,
+                },
+              ]
         }
       />
     </div>
@@ -215,53 +236,71 @@ const CNN_STAGES: Stage[] = [
     kind: 'image',
     size: 84,
     title: 'Input',
-    text: 'L’immagine di input. Il riquadro è una finestra di input: il campo recettivo locale di un’unità del primo strato.',
+    text: tx(
+      'L’immagine di input. Il riquadro è una finestra di input: il campo recettivo locale di un’unità del primo strato.',
+      'The input image. The box is an input window: the local receptive field of a unit of the first layer.',
+    ),
   },
   {
     id: 'c1',
-    label: 'Convoluzioni',
+    label: tx('Convoluzioni', 'Convolutions'),
     kind: 'maps',
     n: 4,
     size: 70,
-    title: 'Convoluzioni',
-    text: 'Ogni feature map è prodotta da un filtro: la stessa unità, con connessioni locali e pesi condivisi, che scorre su tutta l’immagine. Filtri diversi producono feature map diverse.',
+    title: tx('Convoluzioni', 'Convolutions'),
+    text: tx(
+      'Ogni feature map è prodotta da un filtro: la stessa unità, con connessioni locali e pesi condivisi, che scorre su tutta l’immagine. Filtri diversi producono feature map diverse.',
+      'Each feature map is produced by a filter: the same unit, with local connections and shared weights, sliding over the whole image. Different filters produce different feature maps.',
+    ),
   },
   {
     id: 's1',
-    label: 'Sotto-\ncampionamento',
+    label: tx('Sotto-\ncampionamento', 'Subsampling'),
     kind: 'maps',
     n: 4,
     size: 38,
-    title: 'Sotto-campionamento',
-    text: 'Il pooling riduce ogni feature map: un valore (la media o il massimo) per un insieme rettangolare di pixel. Il numero di mappe non cambia.',
+    title: tx('Sotto-campionamento', 'Subsampling'),
+    text: tx(
+      'Il pooling riduce ogni feature map: un valore (la media o il massimo) per un insieme rettangolare di pixel. Il numero di mappe non cambia.',
+      'Pooling reduces each feature map: one value (the average or the maximum) for a rectangular set of pixels. The number of maps does not change.',
+    ),
   },
   {
     id: 'c2',
-    label: 'Convoluzioni',
+    label: tx('Convoluzioni', 'Convolutions'),
     kind: 'maps',
     n: 8,
     size: 30,
-    title: 'Convoluzioni (secondo strato)',
-    text: 'Le stesse operazioni applicate alle mappe precedenti: le unità rappresentano aree via via più grandi dell’immagine originale. Il numero di filtri (feature map) può crescere negli strati più alti.',
+    title: tx('Convoluzioni (secondo strato)', 'Convolutions (second layer)'),
+    text: tx(
+      'Le stesse operazioni applicate alle mappe precedenti: le unità rappresentano aree via via più grandi dell’immagine originale. Il numero di filtri (feature map) può crescere negli strati più alti.',
+      'The same operations applied to the previous maps: the units represent larger and larger areas of the original image. The number of filters (feature maps) can grow in the higher layers.',
+    ),
   },
   {
     id: 's2',
-    label: 'Sotto-\ncampionamento',
+    label: tx('Sotto-\ncampionamento', 'Subsampling'),
     kind: 'maps',
     n: 8,
     size: 14,
-    title: 'Sotto-campionamento (secondo strato)',
-    text: 'Un’altra riduzione: la dimensione della rappresentazione diminuisce a ogni strato, come in una piramide.',
+    title: tx('Sotto-campionamento (secondo strato)', 'Subsampling (second layer)'),
+    text: tx(
+      'Un’altra riduzione: la dimensione della rappresentazione diminuisce a ogni strato, come in una piramide.',
+      'Another reduction: the size of the representation decreases at every layer, as in a pyramid.',
+    ),
   },
   {
     id: 'fc',
-    label: 'Completamente\nconnesso',
+    label: tx('Completamente\nconnesso', 'Fully\nconnected'),
     kind: 'dense',
     n: 7,
-    title: 'Strati completamente connessi',
-    text: 'Dopo convoluzioni e sotto-campionamenti alternati, le mappe finali sono collegate a strati completamente connessi.',
+    title: tx('Strati completamente connessi', 'Fully connected layers'),
+    text: tx(
+      'Dopo convoluzioni e sotto-campionamenti alternati, le mappe finali sono collegate a strati completamente connessi.',
+      'After alternating convolutions and subsamplings, the final maps are connected to fully connected layers.',
+    ),
   },
-  { id: 'out', label: 'Output', kind: 'out', n: 2, title: 'Output', text: 'Le unità di uscita della rete.' },
+  { id: 'out', label: 'Output', kind: 'out', n: 2, title: 'Output', text: tx('Le unità di uscita della rete.', 'The output units of the network.') },
 ]
 
 export function CnnPipeline() {
@@ -269,22 +308,35 @@ export function CnnPipeline() {
     <Pipeline
       stages={CNN_STAGES}
       initial="c1"
-      aria="Una CNN completa: input, convoluzioni, sotto-campionamento, convoluzioni, sotto-campionamento, strati completamente connessi, output"
+      aria={tx(
+        'Una CNN completa: input, convoluzioni, sotto-campionamento, convoluzioni, sotto-campionamento, strati completamente connessi, output',
+        'A complete CNN: input, convolutions, subsampling, convolutions, subsampling, fully connected layers, output',
+      )}
     />
   )
 }
 
 const ALEX_STAGES: Stage[] = [
-  { id: 'in', label: 'Input', kind: 'image', size: 76, title: 'Input', text: 'L’immagine da classificare (nella figura originale, un’auto).' },
+  {
+    id: 'in',
+    label: 'Input',
+    kind: 'image',
+    size: 76,
+    title: 'Input',
+    text: tx('L’immagine da classificare (nella figura originale, un’auto).', 'The image to classify (in the original figure, a car).'),
+  },
   {
     id: 'c1',
-    label: 'Convoluzione\n+ ReLU',
+    label: tx('Convoluzione\n+ ReLU', 'Convolution\n+ ReLU'),
     kind: 'maps',
     n: 5,
     size: 64,
     group: 'feat',
-    title: 'Convoluzione + ReLU',
-    text: 'Feature learning: i filtri convoluzionali, seguiti da unità ReLU (neuroni non saturanti), estraggono le feature dall’immagine.',
+    title: tx('Convoluzione + ReLU', 'Convolution + ReLU'),
+    text: tx(
+      'Feature learning: i filtri convoluzionali, seguiti da unità ReLU (neuroni non saturanti), estraggono le feature dall’immagine.',
+      'Feature learning: the convolutional filters, followed by ReLU units (non-saturating neurons), extract the features from the image.',
+    ),
   },
   {
     id: 'p1',
@@ -294,19 +346,31 @@ const ALEX_STAGES: Stage[] = [
     size: 40,
     group: 'feat',
     title: 'Pooling',
-    text: 'Feature learning: il pooling riduce la dimensione delle feature map.',
+    text: tx('Feature learning: il pooling riduce la dimensione delle feature map.', 'Feature learning: pooling reduces the size of the feature maps.'),
   },
   {
     id: 'c2',
-    label: 'Convoluzione\n+ ReLU',
+    label: tx('Convoluzione\n+ ReLU', 'Convolution\n+ ReLU'),
     kind: 'maps',
     n: 7,
     size: 34,
     group: 'feat',
-    title: 'Convoluzione + ReLU',
-    text: 'Feature learning: un altro blocco di convoluzione, applicato alle mappe ridotte.',
+    title: tx('Convoluzione + ReLU', 'Convolution + ReLU'),
+    text: tx(
+      'Feature learning: un altro blocco di convoluzione, applicato alle mappe ridotte.',
+      'Feature learning: another convolution block, applied to the reduced maps.',
+    ),
   },
-  { id: 'p2', label: 'Pooling', kind: 'maps', n: 7, size: 18, group: 'feat', title: 'Pooling', text: 'Feature learning: un’altra riduzione.' },
+  {
+    id: 'p2',
+    label: 'Pooling',
+    kind: 'maps',
+    n: 7,
+    size: 18,
+    group: 'feat',
+    title: 'Pooling',
+    text: tx('Feature learning: un’altra riduzione.', 'Feature learning: another reduction.'),
+  },
   { id: 'dots', label: '', kind: 'dots', group: 'feat', title: '', text: '' },
   {
     id: 'flat',
@@ -315,25 +379,34 @@ const ALEX_STAGES: Stage[] = [
     n: 10,
     group: 'cls',
     title: 'Flatten',
-    text: 'Classificazione: le mappe finali vengono «srotolate» in un unico vettore, che fa da input agli strati densi.',
+    text: tx(
+      'Classificazione: le mappe finali vengono «srotolate» in un unico vettore, che fa da input agli strati densi.',
+      'Classification: the final maps are “unrolled” into a single vector, which serves as input to the dense layers.',
+    ),
   },
   {
     id: 'fc',
-    label: 'Completamente\nconnesso',
+    label: tx('Completamente\nconnesso', 'Fully\nconnected'),
     kind: 'dense',
     n: 10,
     group: 'cls',
-    title: 'Strato completamente connesso',
-    text: 'Classificazione: strati densi (completamente connessi) sulle feature apprese.',
+    title: tx('Strato completamente connesso', 'Fully connected layer'),
+    text: tx(
+      'Classificazione: strati densi (completamente connessi) sulle feature apprese.',
+      'Classification: dense (fully connected) layers on the learned features.',
+    ),
   },
   {
     id: 'soft',
     label: 'Softmax',
     kind: 'out',
     group: 'cls',
-    classes: ['auto', 'camion', 'furgone', '…', 'bicicletta'],
+    classes: tx(['auto', 'camion', 'furgone', '…', 'bicicletta'], ['car', 'truck', 'van', '…', 'bicycle']),
     title: 'Softmax',
-    text: 'Classificazione: l’uscita softmax assegna una probabilità a ogni classe (auto, camion, furgone, …, bicicletta).',
+    text: tx(
+      'Classificazione: l’uscita softmax assegna una probabilità a ogni classe (auto, camion, furgone, …, bicicletta).',
+      'Classification: the softmax output assigns a probability to each class (car, truck, van, …, bicycle).',
+    ),
   },
 ]
 
@@ -343,10 +416,13 @@ export function AlexLike() {
       stages={ALEX_STAGES}
       groups={[
         { id: 'feat', label: 'FEATURE LEARNING' },
-        { id: 'cls', label: 'CLASSIFICAZIONE' },
+        { id: 'cls', label: tx('CLASSIFICAZIONE', 'CLASSIFICATION') },
       ]}
       initial="in"
-      aria="Architettura tipo AlexNet: blocchi di convoluzione più ReLU e pooling, poi flatten, strati completamente connessi e softmax"
+      aria={tx(
+        'Architettura tipo AlexNet: blocchi di convoluzione più ReLU e pooling, poi flatten, strati completamente connessi e softmax',
+        'AlexNet-like architecture: blocks of convolution plus ReLU and pooling, then flatten, fully connected layers and softmax',
+      )}
     />
   )
 }
@@ -355,20 +431,20 @@ export function AlexLike() {
 
 type Layer = { name: string; n: number; kind: 'in' | 'conv' | 'pool' | 'fc' | 'out' }
 const LAYERS: Layer[] = [
-  { name: 'Immagine', n: 32, kind: 'in' },
-  { name: 'Convoluzione', n: 32, kind: 'conv' },
+  { name: tx('Immagine', 'Image'), n: 32, kind: 'in' },
+  { name: tx('Convoluzione', 'Convolution'), n: 32, kind: 'conv' },
   { name: 'Pooling', n: 16, kind: 'pool' },
-  { name: 'Convoluzione', n: 16, kind: 'conv' },
+  { name: tx('Convoluzione', 'Convolution'), n: 16, kind: 'conv' },
   { name: 'Pooling', n: 8, kind: 'pool' },
-  { name: 'Compl. connesso', n: 6, kind: 'fc' },
-  { name: 'Compl. connesso', n: 6, kind: 'fc' },
-  { name: 'Predizioni', n: 4, kind: 'out' },
+  { name: tx('Compl. connesso', 'Fully connected'), n: 6, kind: 'fc' },
+  { name: tx('Compl. connesso', 'Fully connected'), n: 6, kind: 'fc' },
+  { name: tx('Predizioni', 'Predictions'), n: 4, kind: 'out' },
 ]
 const PROBS = [
-  { c: 'cane', p: 0.01 },
-  { c: 'gatto', p: 0.04 },
-  { c: 'barca', p: 0.94 },
-  { c: 'uccello', p: 0.02 },
+  { c: tx('cane', 'dog'), p: 0.01 },
+  { c: tx('gatto', 'cat'), p: 0.04 },
+  { c: tx('barca', 'boat'), p: 0.94 },
+  { c: tx('uccello', 'bird'), p: 0.02 },
 ]
 
 /** intervallo di unità dello strato precedente da cui dipende l'intervallo [lo, hi] dello strato l */
@@ -399,7 +475,7 @@ export function ReceptiveCone() {
   return (
     <div>
       <div className="pipe16__scroll">
-        <svg className="cone16" viewBox="0 0 680 330" style={{ minWidth: 600 }} role="img" aria-label="Campo recettivo delle unità ai vari strati di una CNN">
+        <svg className="cone16" viewBox="0 0 680 330" style={{ minWidth: 600 }} role="img" aria-label={tx('Campo recettivo delle unità ai vari strati di una CNN', 'Receptive field of the units at the various layers of a CNN')}>
           {LAYERS.map((ly, l) => (
             <text key={l} className="cone16__name" x={cx(l) + CW / 2} y={l % 2 === 0 ? 16 : 30} textAnchor="middle">
               {ly.name}
@@ -445,18 +521,41 @@ export function ReceptiveCone() {
       </div>
       <div className="controls">
         <div className="readouts">
-          <Readout label="unità scelta" tone="accent" value={LAYERS[sel[0]].name.toLowerCase()} sub={`strato ${sel[0]} di 7`} />
-          <Readout label="campo recettivo" value={`${rf} pixel`} sub="su 32 (in una sezione dell’immagine)" />
+          <Readout
+            label={tx('unità scelta', 'selected unit')}
+            tone="accent"
+            value={LAYERS[sel[0]].name.toLowerCase()}
+            sub={tx(`strato ${sel[0]} di 7`, `layer ${sel[0]} of 7`)}
+          />
+          <Readout
+            label={tx('campo recettivo', 'receptive field')}
+            value={tx(`${rf} pixel`, `${rf} ${rf === 1 ? 'pixel' : 'pixels'}`)}
+            sub={tx('su 32 (in una sezione dell’immagine)', 'out of 32 (in a section of the image)')}
+          />
         </div>
       </div>
       <p className="wnote">
-        Ogni colonna è una sezione di uno strato. Qui le convoluzioni hanno un kernel largo 3 e il pooling raggruppa 2 unità. Clicca
-        un’unità: sono evidenziate tutte le unità e i pixel da cui dipende.
+        {tx(
+          'Ogni colonna è una sezione di uno strato. Qui le convoluzioni hanno un kernel largo 3 e il pooling raggruppa 2 unità. Clicca un’unità: sono evidenziate tutte le unità e i pixel da cui dipende.',
+          'Each column is a section of a layer. Here the convolutions have a kernel 3 wide and pooling groups 2 units. Click a unit: all the units and the pixels it depends on are highlighted.',
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Clicca un’unità del secondo pooling: è collegata indirettamente a una zona dell’immagine molto più ampia di un’unità del primo strato.', done: seen.pool },
-          { label: 'Clicca un’unità di uno strato completamente connesso o un’uscita: vede tutta l’immagine.', done: seen.fc },
+          {
+            label: tx(
+              'Clicca un’unità del secondo pooling: è collegata indirettamente a una zona dell’immagine molto più ampia di un’unità del primo strato.',
+              'Click a unit of the second pooling: it is indirectly connected to a much wider region of the image than a unit of the first layer.',
+            ),
+            done: seen.pool,
+          },
+          {
+            label: tx(
+              'Clicca un’unità di uno strato completamente connesso o un’uscita: vede tutta l’immagine.',
+              'Click a unit of a fully connected layer or an output: it sees the whole image.',
+            ),
+            done: seen.fc,
+          },
         ]}
       />
     </div>
@@ -474,16 +573,22 @@ const VOLS: Vol[] = [
     depth: 3,
     win: 11,
     title: 'Input: 36 × 36 × 3',
-    text: 'Un’immagine a colori: 36 × 36 pixel per 3 canali (RGB). La finestra 11 × 11 è il campo recettivo di un’unità del primo strato convoluzionale.',
+    text: tx(
+      'Un’immagine a colori: 36 × 36 pixel per 3 canali (RGB). La finestra 11 × 11 è il campo recettivo di un’unità del primo strato convoluzionale.',
+      'A color image: 36 × 36 pixels times 3 channels (RGB). The 11 × 11 window is the receptive field of a unit of the first convolutional layer.',
+    ),
   },
   {
     id: 'c1',
-    name: ['Strato', 'convoluzionale 1'],
+    name: tx(['Strato', 'convoluzionale 1'], ['Convolutional', 'layer 1']),
     side: 26,
     depth: 9,
     win: 3,
-    title: 'Strato convoluzionale 1: 26 × 26 × 9',
-    text: 'Un kernel 11 × 11 che scorre su un input 36 × 36 ha 36 − 11 + 1 = 26 posizioni per lato. La profondità del volume (9) è il numero di neuroni, cioè di feature map.',
+    title: tx('Strato convoluzionale 1: 26 × 26 × 9', 'Convolutional layer 1: 26 × 26 × 9'),
+    text: tx(
+      'Un kernel 11 × 11 che scorre su un input 36 × 36 ha 36 − 11 + 1 = 26 posizioni per lato. La profondità del volume (9) è il numero di neuroni, cioè di feature map.',
+      'An 11 × 11 kernel sliding over a 36 × 36 input has 36 − 11 + 1 = 26 positions per side. The depth of the volume (9) is the number of neurons, that is, of feature maps.',
+    ),
   },
   {
     id: 'p1',
@@ -492,16 +597,22 @@ const VOLS: Vol[] = [
     depth: 9,
     win: 7,
     title: 'Max pooling 1: 12 × 12 × 9',
-    text: 'Il pooling (finestra 3 × 3) riduce ogni mappa da 26 × 26 a 12 × 12; la profondità resta 9. La finestra 7 × 7 è il campo recettivo delle unità dello strato successivo.',
+    text: tx(
+      'Il pooling (finestra 3 × 3) riduce ogni mappa da 26 × 26 a 12 × 12; la profondità resta 9. La finestra 7 × 7 è il campo recettivo delle unità dello strato successivo.',
+      'Pooling (3 × 3 window) reduces each map from 26 × 26 to 12 × 12; the depth stays 9. The 7 × 7 window is the receptive field of the units of the next layer.',
+    ),
   },
   {
     id: 'c2',
-    name: ['Strato', 'convoluzionale 2'],
+    name: tx(['Strato', 'convoluzionale 2'], ['Convolutional', 'layer 2']),
     side: 6,
     depth: 3,
     win: 3,
-    title: 'Strato convoluzionale 2: 6 × 6 × 3',
-    text: 'Un kernel 7 × 7 su mappe 12 × 12: 12 − 7 + 1 = 6 posizioni per lato, con 3 feature map.',
+    title: tx('Strato convoluzionale 2: 6 × 6 × 3', 'Convolutional layer 2: 6 × 6 × 3'),
+    text: tx(
+      'Un kernel 7 × 7 su mappe 12 × 12: 12 − 7 + 1 = 6 posizioni per lato, con 3 feature map.',
+      'A 7 × 7 kernel on 12 × 12 maps: 12 − 7 + 1 = 6 positions per side, with 3 feature maps.',
+    ),
   },
   {
     id: 'p2',
@@ -509,10 +620,35 @@ const VOLS: Vol[] = [
     side: 2,
     depth: 3,
     title: 'Max pooling 2: 2 × 2 × 3',
-    text: 'Il secondo pooling (finestra 3 × 3) riduce le mappe a 2 × 2: restano 2 · 2 · 3 = 12 valori.',
+    text: tx(
+      'Il secondo pooling (finestra 3 × 3) riduce le mappe a 2 × 2: restano 2 · 2 · 3 = 12 valori.',
+      'The second pooling (3 × 3 window) reduces the maps to 2 × 2: 2 · 2 · 3 = 12 values remain.',
+    ),
   },
-  { id: 'fc', name: ['Completamente', 'connesso'], side: 0, depth: 0, units: 5, title: 'Strato completamente connesso', text: 'Cinque unità, ciascuna collegata a tutti i valori dell’ultimo pooling.' },
-  { id: 'out', name: ['Output'], side: 0, depth: 0, units: 2, title: 'Strato di output', text: 'Due unità di uscita, collegate a tutte le unità dello strato completamente connesso.' },
+  {
+    id: 'fc',
+    name: tx(['Completamente', 'connesso'], ['Fully', 'connected']),
+    side: 0,
+    depth: 0,
+    units: 5,
+    title: tx('Strato completamente connesso', 'Fully connected layer'),
+    text: tx(
+      'Cinque unità, ciascuna collegata a tutti i valori dell’ultimo pooling.',
+      'Five units, each connected to all the values of the last pooling.',
+    ),
+  },
+  {
+    id: 'out',
+    name: ['Output'],
+    side: 0,
+    depth: 0,
+    units: 2,
+    title: tx('Strato di output', 'Output layer'),
+    text: tx(
+      'Due unità di uscita, collegate a tutte le unità dello strato completamente connesso.',
+      'Two output units, connected to all the units of the fully connected layer.',
+    ),
+  },
 ]
 
 export function Dimensions() {
@@ -530,7 +666,7 @@ export function Dimensions() {
   return (
     <div>
       <div className="pipe16__scroll">
-        <svg className="dim16" viewBox={`0 0 ${W} 300`} style={{ minWidth: 600 }} role="img" aria-label="Una CNN con le dimensioni di ogni strato">
+        <svg className="dim16" viewBox={`0 0 ${W} 300`} style={{ minWidth: 600 }} role="img" aria-label={tx('Una CNN con le dimensioni di ogni strato', 'A CNN with the dimensions of each layer')}>
           {VOLS.map((v, i) => {
             const p = lay[i]
             const on = v.id === sel
@@ -608,7 +744,17 @@ export function Dimensions() {
         <div className="wpanel__title">{cur.title}</div>
         {cur.text}
       </div>
-      <Tasks items={[{ label: 'Clicca gli strati in ordine e segui come cambiano larghezza, altezza e profondità del volume.', done: n >= 3 }]} />
+      <Tasks
+        items={[
+          {
+            label: tx(
+              'Clicca gli strati in ordine e segui come cambiano larghezza, altezza e profondità del volume.',
+              'Click the layers in order and follow how the width, height and depth of the volume change.',
+            ),
+            done: n >= 3,
+          },
+        ]}
+      />
     </div>
   )
 }
@@ -625,7 +771,10 @@ const NETS: NetDef[] = [
       { label: '16 × 16', maps: 1, w: 110 },
       { label: '10', maps: 1, w: 70 },
     ],
-    note: 'Nessuno strato nascosto: l’immagine 16 × 16 è collegata direttamente alle 10 uscite.',
+    note: tx(
+      'Nessuno strato nascosto: l’immagine 16 × 16 è collegata direttamente alle 10 uscite.',
+      'No hidden layer: the 16 × 16 image is connected directly to the 10 outputs.',
+    ),
   },
   {
     name: 'Net-2',
@@ -636,7 +785,7 @@ const NETS: NetDef[] = [
       { label: '12', maps: 1, w: 86 },
       { label: '10', maps: 1, w: 70 },
     ],
-    note: 'Completamente connessa, con uno strato nascosto di 12 unità.',
+    note: tx('Completamente connessa, con uno strato nascosto di 12 unità.', 'Fully connected, with one hidden layer of 12 units.'),
   },
   {
     name: 'Net-3',
@@ -649,7 +798,10 @@ const NETS: NetDef[] = [
       { label: '4 × 4', maps: 1, w: 46 },
       { label: '10', maps: 1, w: 70 },
     ],
-    note: 'Connessioni locali: ogni unità nascosta vede solo una piccola zona (3 × 3) dello strato precedente. Le mappe si riducono da uno strato all’altro (local averaging / sotto-campionamento, es. media o max pooling).',
+    note: tx(
+      'Connessioni locali: ogni unità nascosta vede solo una piccola zona (3 × 3) dello strato precedente. Le mappe si riducono da uno strato all’altro (local averaging / sotto-campionamento, es. media o max pooling).',
+      'Local connections: each hidden unit sees only a small region (3 × 3) of the previous layer. The maps shrink from one layer to the next (local averaging / subsampling, e.g. average or max pooling).',
+    ),
   },
   {
     name: 'Net-4',
@@ -663,7 +815,10 @@ const NETS: NetDef[] = [
       { label: '4 × 4', maps: 1, w: 46 },
       { label: '10', maps: 1, w: 70 },
     ],
-    note: 'Connessioni locali e pesi condivisi: il primo strato nascosto è fatto di due feature map 8 × 8. Le connessioni sono il doppio dei pesi.',
+    note: tx(
+      'Connessioni locali e pesi condivisi: il primo strato nascosto è fatto di due feature map 8 × 8. Le connessioni sono il doppio dei pesi.',
+      'Local connections and shared weights: the first hidden layer is made of two 8 × 8 feature maps. The connections are twice as many as the weights.',
+    ),
   },
   {
     name: 'Net-5',
@@ -677,7 +832,10 @@ const NETS: NetDef[] = [
       { label: '4 × 4 × 4', maps: 4, w: 38 },
       { label: '10', maps: 1, w: 70 },
     ],
-    note: 'Connessioni locali e pesi condivisi su due strati: due feature map 8 × 8 e quattro 4 × 4. Ha più connessioni di tutte, ma il minor numero di pesi.',
+    note: tx(
+      'Connessioni locali e pesi condivisi su due strati: due feature map 8 × 8 e quattro 4 × 4. Ha più connessioni di tutte, ma il minor numero di pesi.',
+      'Local connections and shared weights on two layers: two 8 × 8 feature maps and four 4 × 4 ones. It has the most connections of all, but the smallest number of weights.',
+    ),
   },
 ]
 const CMAX = 5194
@@ -697,7 +855,7 @@ export function LeCunNets() {
         <Segmented value={k} onChange={setK} options={NETS.map((n, i) => ({ value: i, label: n.name }))} />
       </div>
       <div className="wgrid wgrid--even">
-        <svg className="lcn16" viewBox={`0 0 300 ${H}`} role="img" aria-label={`Architettura di ${net.name}`}>
+        <svg className="lcn16" viewBox={`0 0 300 ${H}`} role="img" aria-label={tx(`Architettura di ${net.name}`, `Architecture of ${net.name}`)}>
           {net.layers.map((ly, i) => {
             if (i === nL - 1) return null
             const up = net.layers[i + 1]
@@ -743,8 +901,8 @@ export function LeCunNets() {
           <div className="wpanel">
             <div className="wpanel__title">
               {net.name}
-              {net.local ? ' · connessioni locali' : ''}
-              {net.shared ? ' · pesi condivisi' : ''}
+              {net.local ? tx(' · connessioni locali', ' · local connections') : ''}
+              {net.shared ? tx(' · pesi condivisi', ' · shared weights') : ''}
             </div>
             {net.note}
           </div>
@@ -766,16 +924,28 @@ export function LeCunNets() {
           </div>
           <Legend
             items={[
-              { label: 'connessioni', color: 'var(--c-blue)', kind: 'square' },
-              { label: 'pesi', color: 'var(--c-orange)', kind: 'square' },
+              { label: tx('connessioni', 'connections'), color: 'var(--c-blue)', kind: 'square' },
+              { label: tx('pesi', 'weights'), color: 'var(--c-orange)', kind: 'square' },
             ]}
           />
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Guarda Net-4: con i pesi condivisi le connessioni (2266) sono il doppio dei pesi (1132).', done: seen.n4 },
-          { label: 'Guarda Net-5: è la rete con più connessioni e con meno pesi.', done: seen.n5 },
+          {
+            label: tx(
+              'Guarda Net-4: con i pesi condivisi le connessioni (2266) sono il doppio dei pesi (1132).',
+              'Look at Net-4: with shared weights the connections (2266) are twice as many as the weights (1132).',
+            ),
+            done: seen.n4,
+          },
+          {
+            label: tx(
+              'Guarda Net-5: è la rete con più connessioni e con meno pesi.',
+              'Look at Net-5: it is the network with the most connections and the fewest weights.',
+            ),
+            done: seen.n5,
+          },
         ]}
       />
     </div>
@@ -833,10 +1003,10 @@ export function LeCunCurves() {
     <div>
       <div className="wbar">
         <Legend items={shown.map((c) => ({ label: c.name, color: c.color }))} />
-        <Toggle label="solo Net-1 e Net-5" checked={only} onChange={setOnly} />
+        <Toggle label={tx('solo Net-1 e Net-5', 'only Net-1 and Net-5')} checked={only} onChange={setOnly} />
       </div>
       <Plot xDomain={[0, 30]} yDomain={[60, 100]} aspect={0.58} margin={{ b: 40 }}>
-        <Axes xTicks={[0, 5, 10, 15, 20, 25, 30]} yTicks={[60, 70, 80, 90, 100]} xLabel="epoche di training" yLabel="% corretti sul test" />
+        <Axes xTicks={[0, 5, 10, 15, 20, 25, 30]} yTicks={[60, 70, 80, 90, 100]} xLabel={tx('epoche di training', 'training epochs')} yLabel={tx('% corretti sul test', '% correct on test')} />
         {shown.map((c) => (
           <Polyline key={c.name} pts={[{ x: c.pts[0][0] - 0.25, y: 40 }, ...c.pts.map(([x, y]) => ({ x, y }))]} color={c.color} width={2.2} />
         ))}
@@ -857,11 +1027,11 @@ export function LeCunCurves() {
         {shown.map((c) => (
           <Dot key={c.name} x={e} y={Math.max(60, interp(c.pts, e))} color={c.color} r={4} />
         ))}
-        <Handle x={e} y={60} axis="x" label="epoca" onMove={(p) => setE(Math.max(1, Math.round(p.x)))} />
+        <Handle x={e} y={60} axis="x" label={tx('epoca', 'epoch')} onMove={(p) => setE(Math.max(1, Math.round(p.x)))} />
       </Plot>
       <div className="controls">
         <div className="readouts">
-          <Readout label="epoca" tone="accent" value={String(e)} />
+          <Readout label={tx('epoca', 'epoch')} tone="accent" value={String(e)} />
           {shown.map((c) => (
             <Readout key={c.name} label={c.name} value={`${fmt(interp(c.pts, e), 1)}%`} />
           ))}
@@ -869,8 +1039,20 @@ export function LeCunCurves() {
       </div>
       <Tasks
         items={[
-          { label: 'Trascina l’epoca verso l’inizio: Net-5 è la migliore fin dalle prime epoche.', done: seen.early },
-          { label: 'Confronta solo Net-1 e Net-5: la rete senza strati nascosti peggiora sul test andando avanti con le epoche.', done: seen.only },
+          {
+            label: tx(
+              'Trascina l’epoca verso l’inizio: Net-5 è la migliore fin dalle prime epoche.',
+              'Drag the epoch toward the beginning: Net-5 is the best right from the first epochs.',
+            ),
+            done: seen.early,
+          },
+          {
+            label: tx(
+              'Confronta solo Net-1 e Net-5: la rete senza strati nascosti peggiora sul test andando avanti con le epoche.',
+              'Compare only Net-1 and Net-5: the network with no hidden layers gets worse on the test set as the epochs go on.',
+            ),
+            done: seen.only,
+          },
         ]}
       />
     </div>
@@ -882,14 +1064,14 @@ export function LeCunCurves() {
 type Pred = { it: string; label: string; preds: [string, number][] }
 /** etichette e lunghezze delle barre lette dalla figura originale (le probabilità sono approssimate) */
 const PREDS: Pred[] = [
-  { it: 'orchidea', label: 'fragrant orchid', preds: [['coelogyne', 0.37], ['dendrobium', 0.2], ['cymbid', 0.16], ['phaius', 0.03], ['stanhopea', 0.02]] },
-  { it: 'albero', label: 'huisache', preds: [['huisache', 0.38], ['silver maple', 0.15], ['pin oak', 0.08], ['sycamore', 0.05], ['red beech', 0.04]] },
+  { it: tx('orchidea', 'orchid'), label: 'fragrant orchid', preds: [['coelogyne', 0.37], ['dendrobium', 0.2], ['cymbid', 0.16], ['phaius', 0.03], ['stanhopea', 0.02]] },
+  { it: tx('albero', 'tree'), label: 'huisache', preds: [['huisache', 0.38], ['silver maple', 0.15], ['pin oak', 0.08], ['sycamore', 0.05], ['red beech', 0.04]] },
   { it: 'poncho', label: 'poncho', preds: [['poncho', 0.72], ['pullover', 0.1], ['cardigan', 0.05], ['chain mail', 0.02], ['stole', 0.01]] },
   { it: 'scooter', label: 'motor scooter', preds: [['motor scooter', 0.55], ['go-kart', 0.11], ['moped', 0.11], ['bumper car', 0.09], ['golfcart', 0.02]] },
-  { it: 'sedia', label: 'armchair', preds: [['armchair', 0.56], ['folding chair', 0.28], ['swivel chair', 0.01], ['apron', 0.005], ['lentil', 0.003]] },
-  { it: 'orchidea', label: 'fly orchid', preds: [['fly orchid', 0.99], ['helleborine', 0.004], ['bee orchid', 0.002], ['lizard orchid', 0.001], ['spider orchid', 0.001]] },
-  { it: 'stivale', label: 'boot', preds: [['boot', 0.99], ['sock', 0.002], ['jean', 0.001], ['ice skate', 0.001], ['shin guard', 0.001]] },
-  { it: 'medusa', label: 'jellyfish', preds: [['jellyfish', 0.99], ['coral', 0.002], ['polyp', 0.001], ['isopod', 0.001], ['sea anemone', 0.001]] },
+  { it: tx('sedia', 'chair'), label: 'armchair', preds: [['armchair', 0.56], ['folding chair', 0.28], ['swivel chair', 0.01], ['apron', 0.005], ['lentil', 0.003]] },
+  { it: tx('orchidea', 'orchid'), label: 'fly orchid', preds: [['fly orchid', 0.99], ['helleborine', 0.004], ['bee orchid', 0.002], ['lizard orchid', 0.001], ['spider orchid', 0.001]] },
+  { it: tx('stivale', 'boot'), label: 'boot', preds: [['boot', 0.99], ['sock', 0.002], ['jean', 0.001], ['ice skate', 0.001], ['shin guard', 0.001]] },
+  { it: tx('medusa', 'jellyfish'), label: 'jellyfish', preds: [['jellyfish', 0.99], ['coral', 0.002], ['polyp', 0.001], ['isopod', 0.001], ['sea anemone', 0.001]] },
 ]
 
 export function Top5() {
@@ -902,8 +1084,8 @@ export function Top5() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'la classe corretta', color: 'var(--c-red)', kind: 'square' },
-            { label: 'le altre predizioni', color: 'var(--c-blue)', kind: 'square' },
+            { label: tx('la classe corretta', 'the correct class'), color: 'var(--c-red)', kind: 'square' },
+            { label: tx('le altre predizioni', 'the other predictions'), color: 'var(--c-blue)', kind: 'square' },
           ]}
         />
       </div>
@@ -936,16 +1118,37 @@ export function Top5() {
         {cur ? (
           <span className={'verdict ' + (rank(cur) === 0 ? 'verdict--good' : rank(cur) > 0 ? 'verdict--info' : 'verdict--bad')}>
             {rank(cur) === 0
-              ? `«${cur.label}»: la classe corretta è la prima predizione.`
+              ? tx(`«${cur.label}»: la classe corretta è la prima predizione.`, `“${cur.label}”: the correct class is the first prediction.`)
               : rank(cur) > 0
-                ? `«${cur.label}»: la classe corretta è tra le cinque predizioni, ma non la prima.`
-                : `«${cur.label}»: la classe corretta non è tra le cinque predizioni più probabili.`}
+                ? tx(
+                    `«${cur.label}»: la classe corretta è tra le cinque predizioni, ma non la prima.`,
+                    `“${cur.label}”: the correct class is among the five predictions, but not the first.`,
+                  )
+                : tx(
+                    `«${cur.label}»: la classe corretta non è tra le cinque predizioni più probabili.`,
+                    `“${cur.label}”: the correct class is not among the five most probable predictions.`,
+                  )}
           </span>
         ) : (
-          <p className="wnote">Sopra ogni riquadro c’è la classe corretta dell’immagine; sotto, le cinque classi che la rete ritiene più probabili. Clicca un riquadro.</p>
+          <p className="wnote">
+            {tx(
+              'Sopra ogni riquadro c’è la classe corretta dell’immagine; sotto, le cinque classi che la rete ritiene più probabili. Clicca un riquadro.',
+              'Above each box is the correct class of the image; below, the five classes the network considers most probable. Click a box.',
+            )}
+          </p>
         )}
       </div>
-      <Tasks items={[{ label: 'Trova l’immagine per cui la classe corretta non compare tra le cinque predizioni.', done: wrong }]} />
+      <Tasks
+        items={[
+          {
+            label: tx(
+              'Trova l’immagine per cui la classe corretta non compare tra le cinque predizioni.',
+              'Find the image for which the correct class does not appear among the five predictions.',
+            ),
+            done: wrong,
+          },
+        ]}
+      />
     </div>
   )
 }

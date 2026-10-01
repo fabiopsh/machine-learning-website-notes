@@ -25,6 +25,17 @@
           document.documentElement.dataset.theme = 'light'
           document.documentElement.dataset.style = 'glass'
         }
+        // lingua: parametro ?lang=, poi la scelta salvata, poi la lingua del browser (vedi src/lib/i18n.ts)
+        var l = null
+        try {
+          l = new URLSearchParams(location.search).get('lang')
+          if (l === 'it' || l === 'en') localStorage.setItem('ml-lang', l)
+          else l = localStorage.getItem('ml-lang')
+        } catch (e) {
+          /* storage non disponibile */
+        }
+        if (l !== 'it' && l !== 'en') l = /^it\b/i.test(navigator.language || 'it') ? 'it' : 'en'
+        document.documentElement.lang = l
       })()
     </script>
   </head>

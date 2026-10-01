@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -76,14 +77,14 @@ export function ContextPlanes({ variant }: { variant: 'context' | 'layers' }) {
         <div className="wbar">
           <Segmented
             size="sm"
-            label="stato da calcolare"
+            label={tx('stato da calcolare', 'state to compute')}
             value={layer}
             onChange={setLayer}
             options={[1, 2, 3].map((l) => ({ value: l, label: <Tex>{`h_v^{(${l})}`}</Tex> }))}
           />
           <Segmented
             size="sm"
-            label="modello"
+            label={tx('modello', 'model')}
             value={mode}
             onChange={setMode}
             options={[
@@ -94,12 +95,12 @@ export function ContextPlanes({ variant }: { variant: 'context' | 'layers' }) {
         </div>
       )}
       <div className="pipe16__scroll">
-        <svg className="pl21" viewBox="0 0 590 330" style={{ minWidth: 500 }} role="img" aria-label="Lo stesso grafo su tre strati sovrapposti: il contesto di un nodo cresce di strato in strato">
+        <svg className="pl21" viewBox="0 0 590 330" style={{ minWidth: 500 }} role="img" aria-label={tx('Lo stesso grafo su tre strati sovrapposti: il contesto di un nodo cresce di strato in strato', 'The same graph on three stacked layers: the context of a node grows from layer to layer')}>
           {[1, 2, 3].map((l) => (
             <g key={l}>
               <path className={'pl21__plane' + (variant === 'layers' && l === layer ? ' is-on' : '')} d={`M${ox(l)},${oy(l) + 40}h${pw}l34,-80h${-pw}z`} />
               <text className="pl21__t" x={ox(l) + pw - 10} y={oy(l) + 33} textAnchor="end">
-                {variant === 'context' ? `iterazione ${l}` : `strato ${l}`}
+                {variant === 'context' ? tx(`iterazione ${l}`, `iteration ${l}`) : tx(`strato ${l}`, `layer ${l}`)}
               </text>
             </g>
           ))}
@@ -137,7 +138,7 @@ export function ContextPlanes({ variant }: { variant: 'context' | 'layers' }) {
                       r={10}
                       role="button"
                       tabIndex={l === 3 ? 0 : -1}
-                      aria-label={`nodo ${i + 1}`}
+                      aria-label={tx(`nodo ${i + 1}`, `node ${i + 1}`)}
                       onClick={() => {
                         setV(i)
                         setPicks(picks + 1)
@@ -162,40 +163,83 @@ export function ContextPlanes({ variant }: { variant: 'context' | 'layers' }) {
       {variant === 'context' ? (
         <Controls>
           <div className="readouts">
-            <Readout label={<>contesto di <Tex>{'h_v^{(3)}'}</Tex></>} tone="accent" value="raggio 2" sub={`${ctxCount} nodi su ${N}`} />
-            <Readout label={<>contesto di <Tex>{'h_v^{(2)}'}</Tex></>} value="raggio 1" sub={`${dist.filter((d) => d <= 1).length} nodi`} />
-            <Readout label={<>contesto di <Tex>{'h_v^{(1)}'}</Tex></>} value="raggio 0" sub="solo il nodo" />
+            <Readout
+              label={tx(<>contesto di <Tex>{'h_v^{(3)}'}</Tex></>, <>context of <Tex>{'h_v^{(3)}'}</Tex></>)}
+              tone="accent"
+              value={tx('raggio 2', 'radius 2')}
+              sub={tx(`${ctxCount} nodi su ${N}`, `${ctxCount} of ${N} nodes`)}
+            />
+            <Readout
+              label={tx(<>contesto di <Tex>{'h_v^{(2)}'}</Tex></>, <>context of <Tex>{'h_v^{(2)}'}</Tex></>)}
+              value={tx('raggio 1', 'radius 1')}
+              sub={tx(`${dist.filter((d) => d <= 1).length} nodi`, `${dist.filter((d) => d <= 1).length} nodes`)}
+            />
+            <Readout
+              label={tx(<>contesto di <Tex>{'h_v^{(1)}'}</Tex></>, <>context of <Tex>{'h_v^{(1)}'}</Tex></>)}
+              value={tx('raggio 0', 'radius 0')}
+              sub={tx('solo il nodo', 'only the node')}
+            />
           </div>
           <Legend
             items={[
-              { label: 'il nodo v', color: 'var(--c-red)', kind: 'dot' },
-              { label: 'il suo contesto a quello strato', color: 'var(--c-blue)', kind: 'dot' },
-              { label: 'stati dei vicini usati dallo strato sopra', color: 'var(--ink-2)', kind: 'dash' },
+              { label: tx('il nodo v', 'the node v'), color: 'var(--c-red)', kind: 'dot' },
+              { label: tx('il suo contesto a quello strato', 'its context at that layer'), color: 'var(--c-blue)', kind: 'dot' },
+              { label: tx('stati dei vicini usati dallo strato sopra', 'neighbor states used by the layer above'), color: 'var(--ink-2)', kind: 'dash' },
             ]}
           />
         </Controls>
       ) : (
         <div className="wpanel">
           <div className="wpanel__title">
-            <Tex>{`h_v^{(${layer})}`}</Tex> dipende da
+            <Tex>{`h_v^{(${layer})}`}</Tex> {tx('dipende da', 'depends on')}
           </div>
           {layer === 1
-            ? 'Solo dall’etichetta del nodo v.'
+            ? tx('Solo dall’etichetta del nodo v.', 'Only the label of node v.')
             : mode === 'nn4g'
-              ? `L’etichetta di v e gli stati dei vicini di v in tutti gli strati precedenti (${Array.from({ length: layer - 1 }, (_, j) => j + 1).join(' e ')}): non è ricorsivo.`
-              : `Lo stato di v e gli stati dei vicini di v nello strato precedente (${layer - 1}).`}
+              ? tx(
+                  `L’etichetta di v e gli stati dei vicini di v in tutti gli strati precedenti (${Array.from({ length: layer - 1 }, (_, j) => j + 1).join(' e ')}): non è ricorsivo.`,
+                  `The label of v and the states of the neighbors of v in all the previous layers (${Array.from({ length: layer - 1 }, (_, j) => j + 1).join(' and ')}): it is not recursive.`,
+                )
+              : tx(
+                  `Lo stato di v e gli stati dei vicini di v nello strato precedente (${layer - 1}).`,
+                  `The state of v and the states of the neighbors of v in the previous layer (${layer - 1}).`,
+                )}
         </div>
       )}
       <Tasks
         items={
           variant === 'context'
             ? [
-                { label: 'Clicca un altro nodo: il suo contesto si allarga di un passo a ogni iterazione.', done: picks >= 1 },
-                { label: 'Scegli un nodo all’estremità: dopo tre iterazioni il suo contesto non copre ancora tutto il grafo.', done: picks >= 1 && ctxCount < N },
+                {
+                  label: tx(
+                    'Clicca un altro nodo: il suo contesto si allarga di un passo a ogni iterazione.',
+                    'Click another node: its context widens by one step at every iteration.',
+                  ),
+                  done: picks >= 1,
+                },
+                {
+                  label: tx(
+                    'Scegli un nodo all’estremità: dopo tre iterazioni il suo contesto non copre ancora tutto il grafo.',
+                    'Choose a node at the end: after three iterations its context still does not cover the whole graph.',
+                  ),
+                  done: picks >= 1 && ctxCount < N,
+                },
               ]
             : [
-                { label: 'Cambia lo stato da calcolare: ogni iterazione del message passing è un nuovo strato.', done: seen.l2 },
-                { label: 'Confronta NN4G e GCN: NN4G usa gli stati di tutti gli strati precedenti, una GCN solo quelli dello strato sotto.', done: seen.gcn },
+                {
+                  label: tx(
+                    'Cambia lo stato da calcolare: ogni iterazione del message passing è un nuovo strato.',
+                    'Change the state to compute: every iteration of message passing is a new layer.',
+                  ),
+                  done: seen.l2,
+                },
+                {
+                  label: tx(
+                    'Confronta NN4G e GCN: NN4G usa gli stati di tutti gli strati precedenti, una GCN solo quelli dello strato sotto.',
+                    'Compare NN4G and GCN: NN4G uses the states of all the previous layers, a GCN only those of the layer below.',
+                  ),
+                  done: seen.gcn,
+                },
               ]
         }
       />
@@ -262,8 +306,14 @@ export function GraphEsn() {
     <div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">{conv ? 'Embedding a punto fisso' : hist.length === 1 ? 'Grafo di input' : 'Calcolo iterativo degli stati'}</div>
-          <svg className="ge21" viewBox="0 0 250 220" role="img" aria-label="Grafo con gli stati dei nodi calcolati iterativamente">
+          <div className="htf__title">
+            {conv
+              ? tx('Embedding a punto fisso', 'Fixed-point embedding')
+              : hist.length === 1
+                ? tx('Grafo di input', 'Input graph')
+                : tx('Calcolo iterativo degli stati', 'Iterative computation of the states')}
+          </div>
+          <svg className="ge21" viewBox="0 0 250 220" role="img" aria-label={tx('Grafo con gli stati dei nodi calcolati iterativamente', 'Graph with the node states computed iteratively')}>
             {GE_E.map(([a, b], i) => (
               <line key={i} className="ge21__e" x1={GE_N[a][0]} y1={GE_N[a][1]} x2={GE_N[b][0]} y2={GE_N[b][1]} />
             ))}
@@ -277,7 +327,7 @@ export function GraphEsn() {
             ))}
           </svg>
           <div className="readouts">
-            <Readout label="iterazioni" tone="accent" value={String(hist.length - 1)} />
+            <Readout label={tx('iterazioni', 'iterations')} tone="accent" value={String(hist.length - 1)} />
             <Readout
               label={
                 <>
@@ -285,30 +335,32 @@ export function GraphEsn() {
                 </>
               }
               value={fmt(h.reduce((s, x) => s + x, 0), 3)}
-              sub={conv ? 'va al readout lineare addestrato' : 'somma degli stati'}
+              sub={conv ? tx('va al readout lineare addestrato', 'goes to the trained linear readout') : tx('somma degli stati', 'sum of the states')}
             />
           </div>
         </div>
         <div>
-          <div className="htf__title">Variazione massima degli stati a ogni iterazione</div>
+          <div className="htf__title">{tx('Variazione massima degli stati a ogni iterazione', 'Maximum change of the states at every iteration')}</div>
           <Plot xDomain={[0, Math.max(12, diffs.length)]} yDomain={[0, 1]} aspect={0.62} minH={190} maxH={260} margin={{ l: 40, b: 36 }}>
-            <Axes xTicks={5} yTicks={[0, 0.5, 1]} xLabel="iterazione" />
+            <Axes xTicks={5} yTicks={[0, 0.5, 1]} xLabel={tx('iterazione', 'iteration')} />
             <Polyline pts={diffs.map((d, i) => ({ x: i + 1, y: Math.min(1, d) }))} color="var(--c-violet)" width={2.2} />
             {diffs.map((d, i) => (
               <Dot key={i} x={i + 1} y={Math.min(1, d)} color="var(--c-violet)" r={3.4} />
             ))}
           </Plot>
           <span className={'verdict ' + (conv ? 'verdict--good' : 'verdict--info')}>
-            {conv ? `Punto fisso raggiunto dopo ${hist.length - 1} iterazioni.` : 'Gli stati stanno ancora cambiando.'}
+            {conv
+              ? tx(`Punto fisso raggiunto dopo ${hist.length - 1} iterazioni.`, `Fixed point reached after ${hist.length - 1} iterations.`)
+              : tx('Gli stati stanno ancora cambiando.', 'The states are still changing.')}
           </span>
         </div>
       </div>
       <Controls>
         <Btn icon="step" variant="soft" onClick={one}>
-          Un’iterazione
+          {tx('Un’iterazione', 'One iteration')}
         </Btn>
         <Btn icon="play" onClick={run} disabled={conv}>
-          Fino a convergenza
+          {tx('Fino a convergenza', 'Until convergence')}
         </Btn>
         <Btn
           icon="reset"
@@ -318,12 +370,12 @@ export function GraphEsn() {
             setSeed(seed + 1)
           }}
         >
-          Stato iniziale casuale
+          {tx('Stato iniziale casuale', 'Random initial state')}
         </Btn>
         <Slider
           label={
             <>
-              peso ricorrente <Tex>{'\\hat w'}</Tex>
+              {tx('peso ricorrente', 'recurrent weight')} <Tex>{'\\hat w'}</Tex>
             </>
           }
           min={0.05}
@@ -339,15 +391,40 @@ export function GraphEsn() {
         />
       </Controls>
       <p className="wnote">
-        Stati scalari, calcolati davvero con <Tex>{'h_v \\leftarrow \\tanh\\big(l_v + \\hat w \\sum_{u \\in \\mathcal{N}(v)} h_u\\big)'}</Tex>, senza
-        addestrare nulla. {contractive ? 'Con questo peso la dinamica è contrattiva' : 'Con questo peso la dinamica non è garantita contrattiva'}{' '}
-        (<Tex>{`\\hat w \\cdot \\|A\\| = ${fmt(w * LAMBDA, 2)}`}</Tex>): {contractive ? 'il punto fisso non dipende dallo stato iniziale.' : 'il punto raggiunto può dipendere dallo stato iniziale.'}
+        {tx('Stati scalari, calcolati davvero con', 'Scalar states, actually computed with')}{' '}
+        <Tex>{'h_v \\leftarrow \\tanh\\big(l_v + \\hat w \\sum_{u \\in \\mathcal{N}(v)} h_u\\big)'}</Tex>
+        {tx(', senza addestrare nulla.', ', without training anything.')}{' '}
+        {contractive
+          ? tx('Con questo peso la dinamica è contrattiva', 'With this weight the dynamics is contractive')
+          : tx('Con questo peso la dinamica non è garantita contrattiva', 'With this weight the dynamics is not guaranteed to be contractive')}{' '}
+        (<Tex>{`\\hat w \\cdot \\|A\\| = ${fmt(w * LAMBDA, 2)}`}</Tex>):{' '}
+        {contractive
+          ? tx('il punto fisso non dipende dallo stato iniziale.', 'the fixed point does not depend on the initial state.')
+          : tx('il punto raggiunto può dipendere dallo stato iniziale.', 'the point reached may depend on the initial state.')}
       </p>
       <Tasks
         items={[
-          { label: 'Itera fino a convergenza: gli stati smettono di cambiare, e il punto fisso è l’embedding del grafo.', done: seen.conv },
-          { label: 'Riparti da uno stato iniziale casuale: con una dinamica contrattiva si arriva agli stessi valori.', done: seed >= 1 && conv },
-          { label: 'Alza il peso ricorrente finché la dinamica non è più contrattiva e ripeti la prova.', done: seen.big },
+          {
+            label: tx(
+              'Itera fino a convergenza: gli stati smettono di cambiare, e il punto fisso è l’embedding del grafo.',
+              'Iterate until convergence: the states stop changing, and the fixed point is the embedding of the graph.',
+            ),
+            done: seen.conv,
+          },
+          {
+            label: tx(
+              'Riparti da uno stato iniziale casuale: con una dinamica contrattiva si arriva agli stessi valori.',
+              'Restart from a random initial state: with a contractive dynamics the same values are reached.',
+            ),
+            done: seed >= 1 && conv,
+          },
+          {
+            label: tx(
+              'Alza il peso ricorrente finché la dinamica non è più contrattiva e ripeti la prova.',
+              'Raise the recurrent weight until the dynamics is no longer contractive and repeat the test.',
+            ),
+            done: seen.big,
+          },
         ]}
       />
     </div>
@@ -357,9 +434,30 @@ export function GraphEsn() {
 /* ------------------------------------------------------------------ Fig. 21.10: problemi aperti */
 
 const ISSUES = [
-  { id: 'eff', title: 'Efficienza', text: 'Scalare l’addestramento a grafi molto grandi, ad esempio oltre 100.000 nodi.' },
-  { id: 'under', title: 'Under-reaching', text: 'I modelli profondi possono non riuscire a sfruttare le interazioni a lungo raggio tra i nodi del grafo.' },
-  { id: 'expr', title: 'Espressività', text: 'I modelli possono non riuscire a imparare rappresentazioni dei nodi significative (il collo di bottiglia).' },
+  {
+    id: 'eff',
+    title: tx('Efficienza', 'Efficiency'),
+    text: tx(
+      'Scalare l’addestramento a grafi molto grandi, ad esempio oltre 100.000 nodi.',
+      'Scaling training to very large graphs, for example beyond 100,000 nodes.',
+    ),
+  },
+  {
+    id: 'under',
+    title: 'Under-reaching',
+    text: tx(
+      'I modelli profondi possono non riuscire a sfruttare le interazioni a lungo raggio tra i nodi del grafo.',
+      'Deep models may fail to exploit the long-range interactions between the nodes of the graph.',
+    ),
+  },
+  {
+    id: 'expr',
+    title: tx('Espressività', 'Expressiveness'),
+    text: tx(
+      'I modelli possono non riuscire a imparare rappresentazioni dei nodi significative (il collo di bottiglia).',
+      'Models may fail to learn meaningful node representations (the bottleneck).',
+    ),
+  },
 ] as const
 const DEPTH = 4
 /** nuvola di punti per l'icona del grafo molto grande */
@@ -415,7 +513,7 @@ export function OpenIssues() {
         ))}
       </div>
       <div className="pipe16__scroll">
-        <svg className="oi21__tree" viewBox="0 0 590 240" style={{ minWidth: 480 }} role="img" aria-label="Il campo recettivo di un nodo al crescere degli strati">
+        <svg className="oi21__tree" viewBox="0 0 590 240" style={{ minWidth: 480 }} role="img" aria-label={tx('Il campo recettivo di un nodo al crescere degli strati', 'The receptive field of a node as the layers grow')}>
           {Array.from({ length: DEPTH }, (_, k) =>
             Array.from({ length: 2 ** (k + 1) }, (_, i) => (
               <line key={`${k}-${i}`} className={'oi21__e' + (k + 1 <= L ? ' is-on' : '')} x1={X(k + 1)} y1={Y(k + 1, i)} x2={X(k)} y2={Y(k, Math.floor(i / 2))} />
@@ -434,25 +532,48 @@ export function OpenIssues() {
             u
           </text>
           <text className="oi21__cap" x={582} y={Y(0, 0) + 54} textAnchor="end">
-            un solo embedding
+            {tx('un solo embedding', 'a single embedding')}
           </text>
         </svg>
       </div>
       <Controls>
-        <Slider label="strati di message passing L" min={1} max={DEPTH} step={1} value={L} onChange={setL} width={230} />
+        <Slider label={tx('strati di message passing L', 'message passing layers L')} min={1} max={DEPTH} step={1} value={L} onChange={setL} width={230} />
         <div className="readouts">
-          <Readout label="campo recettivo di v" tone="accent" value={`${2 ** (L + 1) - 1} nodi`} sub="raddoppia a ogni strato" />
-          <Readout label="il nodo lontano u" value={L >= DEPTH ? 'raggiunto' : 'non raggiunto'} sub={`dista ${DEPTH} archi da v`} />
+          <Readout
+            label={tx('campo recettivo di v', 'receptive field of v')}
+            tone="accent"
+            value={tx(`${2 ** (L + 1) - 1} nodi`, `${2 ** (L + 1) - 1} nodes`)}
+            sub={tx('raddoppia a ogni strato', 'doubles at every layer')}
+          />
+          <Readout
+            label={tx('il nodo lontano u', 'the distant node u')}
+            value={L >= DEPTH ? tx('raggiunto', 'reached') : tx('non raggiunto', 'not reached')}
+            sub={tx(`dista ${DEPTH} archi da v`, `${DEPTH} edges away from v`)}
+          />
         </div>
       </Controls>
       <p className="wnote">
-        Un esempio su un grafo ad albero: con pochi strati v non vede u (under-reaching); con molti strati lo vede, ma l’informazione di
-        tutti i nodi del campo recettivo deve stare in un embedding di dimensione fissa (il collo di bottiglia).
+        {tx(
+          <>
+            Un esempio su un grafo ad albero: con pochi strati v non vede u (under-reaching); con molti strati lo vede, ma l’informazione di
+            tutti i nodi del campo recettivo deve stare in un embedding di dimensione fissa (il collo di bottiglia).
+          </>,
+          <>
+            An example on a tree-shaped graph: with few layers v does not see u (under-reaching); with many layers it does, but the
+            information of all the nodes of the receptive field has to fit in a fixed-size embedding (the bottleneck).
+          </>,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Riduci gli strati a 1: v vede solo i vicini diretti.', done: seen.small },
-          { label: 'Porta gli strati a 4 per raggiungere u: il campo recettivo è cresciuto fino a 31 nodi.', done: seen.reach },
+          { label: tx('Riduci gli strati a 1: v vede solo i vicini diretti.', 'Reduce the layers to 1: v sees only its direct neighbors.'), done: seen.small },
+          {
+            label: tx(
+              'Porta gli strati a 4 per raggiungere u: il campo recettivo è cresciuto fino a 31 nodi.',
+              'Bring the layers to 4 to reach u: the receptive field has grown to 31 nodes.',
+            ),
+            done: seen.reach,
+          },
         ]}
       />
     </div>
@@ -531,19 +652,19 @@ export function Homophily() {
           value={cls === HIGH ? 'high' : cls === LOW ? 'low' : 'custom'}
           onChange={(k) => k !== 'custom' && setCls(k === 'high' ? HIGH : LOW)}
           options={[
-            { value: 'high', label: 'alta omofilia' },
-            { value: 'low', label: 'bassa omofilia' },
+            { value: 'high', label: tx('alta omofilia', 'high homophily') },
+            { value: 'low', label: tx('bassa omofilia', 'low homophily') },
           ]}
         />
         <Legend
           items={[
-            { label: 'arco tra nodi della stessa classe', color: 'var(--ink-2)' },
-            { label: 'arco tra classi diverse', color: 'var(--c-red)', kind: 'dash' },
+            { label: tx('arco tra nodi della stessa classe', 'edge between nodes of the same class'), color: 'var(--ink-2)' },
+            { label: tx('arco tra classi diverse', 'edge between different classes'), color: 'var(--c-red)', kind: 'dash' },
           ]}
         />
       </div>
       <div className="wgrid">
-        <svg className="hm21" viewBox="0 0 284 284" role="img" aria-label="Grafo con nodi di tre classi">
+        <svg className="hm21" viewBox="0 0 284 284" role="img" aria-label={tx('Grafo con nodi di tre classi', 'Graph with nodes of three classes')}>
           {HM_E.map(([a, b], i) => (
             <line key={i} className={'hm21__e' + (cls[a] === cls[b] ? '' : ' is-het')} x1={HM_N[a][0]} y1={HM_N[a][1]} x2={HM_N[b][0]} y2={HM_N[b][1]} />
           ))}
@@ -557,7 +678,7 @@ export function Homophily() {
               style={{ fill: HM_COL[cls[i]] }}
               role="button"
               tabIndex={0}
-              aria-label={`nodo ${i + 1}, classe ${cls[i] + 1}: clicca per cambiarla`}
+              aria-label={tx(`nodo ${i + 1}, classe ${cls[i] + 1}: clicca per cambiarla`, `node ${i + 1}, class ${cls[i] + 1}: click to change it`)}
               onClick={() => {
                 setCls(cls.map((c, j) => (j === i ? (c + 1) % 3 : c)))
                 setEdits(edits + 1)
@@ -568,24 +689,52 @@ export function Homophily() {
         </svg>
         <div className="wside">
           <div className="readouts">
-            <Readout label="omofilia" tone="accent" value={fmt(hom, 2)} sub={`${same} archi su ${HM_E.length} uniscono nodi della stessa classe`} />
-            <Readout label="nodi in accordo con i vicini" value={`${agree} su ${HM_N.length}`} sub="la loro classe è la più frequente tra i vicini" />
-            <Readout label="energia di Dirichlet delle etichette" value={String(energy)} sub="alta = segnale ad alta frequenza" />
+            <Readout
+              label={tx('omofilia', 'homophily')}
+              tone="accent"
+              value={fmt(hom, 2)}
+              sub={tx(`${same} archi su ${HM_E.length} uniscono nodi della stessa classe`, `${same} of ${HM_E.length} edges join nodes of the same class`)}
+            />
+            <Readout
+              label={tx('nodi in accordo con i vicini', 'nodes agreeing with their neighbors')}
+              value={tx(`${agree} su ${HM_N.length}`, `${agree} of ${HM_N.length}`)}
+              sub={tx('la loro classe è la più frequente tra i vicini', 'their class is the most frequent among the neighbors')}
+            />
+            <Readout
+              label={tx('energia di Dirichlet delle etichette', 'Dirichlet energy of the labels')}
+              value={String(energy)}
+              sub={tx('alta = segnale ad alta frequenza', 'high = high-frequency signal')}
+            />
           </div>
           <span className={'verdict ' + (hom >= 0.6 ? 'verdict--good' : hom < 0.35 ? 'verdict--bad' : 'verdict--warn')}>
             {hom >= 0.6
-              ? 'Grafo omofilo: i vicini sono una buona indicazione della classe.'
+              ? tx('Grafo omofilo: i vicini sono una buona indicazione della classe.', 'Homophilic graph: the neighbors are a good indication of the class.')
               : hom < 0.35
-                ? 'Grafo eterofilo: le predizioni basate sui vicini immediati sono fuorvianti.'
-                : 'Omofilia intermedia.'}
+                ? tx(
+                    'Grafo eterofilo: le predizioni basate sui vicini immediati sono fuorvianti.',
+                    'Heterophilic graph: predictions based on the immediate neighbors are misleading.',
+                  )
+                : tx('Omofilia intermedia.', 'Intermediate homophily.')}
           </span>
-          <p className="wnote">Clicca un nodo per cambiarne la classe.</p>
+          <p className="wnote">{tx('Clicca un nodo per cambiarne la classe.', 'Click a node to change its class.')}</p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Passa alla bassa omofilia: quasi tutti gli archi uniscono classi diverse, e pochi nodi sono in accordo con i vicini.', done: seen.low },
-          { label: 'Cambia la classe di qualche nodo e osserva come variano omofilia ed energia.', done: edits >= 2 },
+          {
+            label: tx(
+              'Passa alla bassa omofilia: quasi tutti gli archi uniscono classi diverse, e pochi nodi sono in accordo con i vicini.',
+              'Switch to low homophily: almost all the edges join different classes, and few nodes agree with their neighbors.',
+            ),
+            done: seen.low,
+          },
+          {
+            label: tx(
+              'Cambia la classe di qualche nodo e osserva come variano omofilia ed energia.',
+              'Change the class of a few nodes and observe how homophily and energy vary.',
+            ),
+            done: edits >= 2,
+          },
         ]}
       />
     </div>
@@ -609,15 +758,15 @@ const gear = (
   </g>
 )
 const BIKE: Part[] = [
-  { name: 'ruota', icon: wheel },
-  { name: 'ingranaggi', icon: gear },
-  { name: 'catena', icon: <rect x={-11} y={-5} width={22} height={10} rx={5} strokeDasharray="2.5 2" /> },
-  { name: 'manubrio', icon: <path d="M-10,-5Q-10,3 0,3Q10,3 10,-5M0,3V9" /> },
-  { name: 'sella', icon: <path d="M-10,-2Q0,-7 10,-1Q2,3 -10,-2M0,1V9" /> },
+  { name: tx('ruota', 'wheel'), icon: wheel },
+  { name: tx('ingranaggi', 'gears'), icon: gear },
+  { name: tx('catena', 'chain'), icon: <rect x={-11} y={-5} width={22} height={10} rx={5} strokeDasharray="2.5 2" /> },
+  { name: tx('manubrio', 'handlebar'), icon: <path d="M-10,-5Q-10,3 0,3Q10,3 10,-5M0,3V9" /> },
+  { name: tx('sella', 'saddle'), icon: <path d="M-10,-2Q0,-7 10,-1Q2,3 -10,-2M0,1V9" /> },
 ]
 const CAR: Part[] = [
   {
-    name: 'pneumatico',
+    name: tx('pneumatico', 'tire'),
     icon: (
       <g>
         <circle r={10} />
@@ -625,9 +774,9 @@ const CAR: Part[] = [
       </g>
     ),
   },
-  { name: 'paraurti', icon: <path d="M-11,-3H11V3H-11ZM-7,3V7M7,3V7" /> },
+  { name: tx('paraurti', 'bumper'), icon: <path d="M-11,-3H11V3H-11ZM-7,3V7M7,3V7" /> },
   {
-    name: 'volante',
+    name: tx('volante', 'steering wheel'),
     icon: (
       <g>
         <circle r={10} />
@@ -636,7 +785,7 @@ const CAR: Part[] = [
     ),
   },
   {
-    name: 'motore',
+    name: tx('motore', 'engine'),
     icon: (
       <g>
         <rect x={-10} y={-6} width={20} height={13} rx={2} />
@@ -644,7 +793,7 @@ const CAR: Part[] = [
       </g>
     ),
   },
-  { name: 'ingranaggi', icon: gear },
+  { name: tx('ingranaggi', 'gears'), icon: gear },
 ]
 /** similarità illustrative tra sotto-strutture: righe = bicicletta, colonne = auto */
 const KS = [
@@ -664,7 +813,7 @@ export function ConvKernel() {
   return (
     <div>
       <div className="pipe16__scroll">
-        <svg className="ck21" viewBox="0 0 640 290" style={{ minWidth: 540 }} role="img" aria-label="Kernel di convoluzione: due oggetti scomposti in sotto-strutture confrontate tra loro">
+        <svg className="ck21" viewBox="0 0 640 290" style={{ minWidth: 540 }} role="img" aria-label={tx('Kernel di convoluzione: due oggetti scomposti in sotto-strutture confrontate tra loro', 'Convolution kernel: two objects decomposed into substructures that are compared with each other')}>
           {/* bicicletta */}
           <g className="ck21__obj" transform="translate(64 136)">
             <circle cx={-24} cy={12} r={15} />
@@ -672,7 +821,7 @@ export function ConvKernel() {
             <path d="M-24,12L-6,-12H16L24,12M-6,-12L4,12H-24M16,-12L12,-22H20M-6,-12L-9,-19H-2" />
           </g>
           <text className="ck21__t" x={64} y={190} textAnchor="middle">
-            oggetto x
+            {tx('oggetto x', 'object x')}
           </text>
           {/* auto */}
           <g className="ck21__obj" transform="translate(576 136)">
@@ -681,7 +830,7 @@ export function ConvKernel() {
             <circle cx={22} cy={12} r={8} />
           </g>
           <text className="ck21__t" x={576} y={190} textAnchor="middle">
-            oggetto x′
+            {tx('oggetto x′', 'object x′')}
           </text>
           <path className="ck21__arrow" d="M112,136H150m-9,-6l9,6l-9,6" />
           <path className="ck21__arrow" d="M528,136H490m9,-6l-9,6l9,6" />
@@ -725,40 +874,51 @@ export function ConvKernel() {
             {svgScript('K', 'S', 'sup')}
           </text>
           <text className="ck21__t" x={212} y={278} textAnchor="middle">
-            sotto-strutture S(x)
+            {tx('sotto-strutture S(x)', 'substructures S(x)')}
           </text>
           <text className="ck21__t" x={428} y={278} textAnchor="middle">
-            sotto-strutture S(x′)
+            {tx('sotto-strutture S(x′)', 'substructures S(x′)')}
           </text>
         </svg>
       </div>
       <Controls>
         <div className="readouts">
           <Readout
-            label={`«${BIKE[sel].name}» contro le parti di x′`}
+            label={tx(`«${BIKE[sel].name}» contro le parti di x′`, `“${BIKE[sel].name}” against the parts of x′`)}
             tone="accent"
             value={row.map((k) => fmt(k, 1)).join(' · ')}
-            sub="kernel tra sotto-strutture"
+            sub={tx('kernel tra sotto-strutture', 'kernel between substructures')}
           />
           <Readout
             label={
               <>
-                kernel tra i due oggetti <Tex>{"k(x, x')"}</Tex>
+                {tx('kernel tra i due oggetti', 'kernel between the two objects')} <Tex>{"k(x, x')"}</Tex>
               </>
             }
             value={fmt(KTOT, 1)}
-            sub="qui: la somma dei kernel tra tutte le coppie di parti"
+            sub={tx('qui: la somma dei kernel tra tutte le coppie di parti', 'here: the sum of the kernels between all pairs of parts')}
           />
         </div>
       </Controls>
       <p className="wnote">
-        Gli oggetti e le loro parti sono disegni schematici (nella figura originale, una bicicletta e un’auto con le loro parti); i valori
-        di similarità tra le parti sono inventati per l’esempio.
+        {tx(
+          <>
+            Gli oggetti e le loro parti sono disegni schematici (nella figura originale, una bicicletta e un’auto con le loro parti); i valori
+            di similarità tra le parti sono inventati per l’esempio.
+          </>,
+          <>
+            The objects and their parts are schematic drawings (in the original figure, a bicycle and a car with their parts); the similarity
+            values between the parts are made up for the example.
+          </>,
+        )}
       </p>
       <Tasks
         items={[
           {
-            label: 'Clicca le sotto-strutture della bicicletta: ognuna è confrontata con tutte quelle dell’auto, e il kernel tra i due oggetti combina questi confronti.',
+            label: tx(
+              'Clicca le sotto-strutture della bicicletta: ognuna è confrontata con tutte quelle dell’auto, e il kernel tra i due oggetti combina questi confronti.',
+              'Click the substructures of the bicycle: each one is compared with all those of the car, and the kernel between the two objects combines these comparisons.',
+            ),
             done: Object.keys(seenP).length >= 2,
           },
         ]}

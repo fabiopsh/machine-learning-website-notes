@@ -4,6 +4,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -66,13 +67,13 @@ export function Transductions() {
           value={task}
           onChange={setTask}
           options={[
-            { value: 'class', label: 'classificazione: uscita alla fine' },
-            { value: 'trans', label: 'trasduzione: uscita a ogni passo' },
+            { value: 'class', label: tx('classificazione: uscita alla fine', 'classification: output at the end') },
+            { value: 'trans', label: tx('trasduzione: uscita a ogni passo', 'transduction: output at each step') },
           ]}
         />
       </div>
       <div className="pipe16__scroll">
-        <svg className="sq20" viewBox={`0 0 ${Math.max(W, 520)} 190`} style={{ minWidth: Math.min(Math.max(W, 520), 560) }} role="img" aria-label="Una sequenza di vettori e l’uscita del task">
+        <svg className="sq20" viewBox={`0 0 ${Math.max(W, 520)} 190`} style={{ minWidth: Math.min(Math.max(W, 520), 560) }} role="img" aria-label={tx('Una sequenza di vettori e l’uscita del task', 'A sequence of vectors and the output of the task')}>
           <Chain
             n={n}
             y={40}
@@ -97,26 +98,50 @@ export function Transductions() {
               t = 0
             </text>
             <text x={sx(n - 1) + 18} y={184} textAnchor="end">
-              t = ora
+              {tx('t = ora', 't = now')}
             </text>
             <text x={(X0 + sx(n - 1)) / 2} y={184} textAnchor="middle">
-              tempo
+              {tx('tempo', 'time')}
             </text>
           </g>
         </svg>
       </div>
       <Controls>
-        <Slider label="lunghezza della sequenza" min={3} max={7} step={1} value={n} onChange={setN} width={200} />
+        <Slider label={tx('lunghezza della sequenza', 'sequence length')} min={3} max={7} step={1} value={n} onChange={setN} width={200} />
         <div className="readouts">
-          <Readout label={<>elemento scelto</>} tone="accent" value={<Tex>{`\\mathbf{l}_{${cur + 1}} = [${VECS[cur].map((v) => fmt(v, Number.isInteger(v) ? 0 : 1)).join(';\\ ')}]`}</Tex>} sub="ogni elemento è un vettore" />
-          <Readout label="uscite" value={task === 'class' ? '1' : String(n)} sub={task === 'class' ? 'un valore per l’intera sequenza' : 'una per ogni passo di input'} />
+          <Readout
+            label={<>{tx('elemento scelto', 'selected element')}</>}
+            tone="accent"
+            value={<Tex>{`\\mathbf{l}_{${cur + 1}} = [${VECS[cur].map((v) => fmt(v, Number.isInteger(v) ? 0 : 1)).join(tx(';\\ ', ',\\ '))}]`}</Tex>}
+            sub={tx('ogni elemento è un vettore', 'each element is a vector')}
+          />
+          <Readout
+            label={tx('uscite', 'outputs')}
+            value={task === 'class' ? '1' : String(n)}
+            sub={task === 'class' ? tx('un valore per l’intera sequenza', 'one value for the whole sequence') : tx('una per ogni passo di input', 'one for each input step')}
+          />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Clicca un elemento della sequenza: è un vettore, non un singolo numero.', done: picked },
-          { label: 'Cambia la lunghezza: il modello deve funzionare per sequenze di qualunque lunghezza.', done: seen.len },
-          { label: 'Passa alla trasduzione: ogni passo di input ha la sua uscita (un vettore, a valori discreti o continui).', done: seen.trans },
+          {
+            label: tx('Clicca un elemento della sequenza: è un vettore, non un singolo numero.', 'Click an element of the sequence: it is a vector, not a single number.'),
+            done: picked,
+          },
+          {
+            label: tx(
+              'Cambia la lunghezza: il modello deve funzionare per sequenze di qualunque lunghezza.',
+              'Change the length: the model must work for sequences of any length.',
+            ),
+            done: seen.len,
+          },
+          {
+            label: tx(
+              'Passa alla trasduzione: ogni passo di input ha la sua uscita (un vettore, a valori discreti o continui).',
+              'Switch to transduction: each input step has its own output (a vector, with discrete or continuous values).',
+            ),
+            done: seen.trans,
+          },
         ]}
       />
     </div>
@@ -129,26 +154,32 @@ type Kind = 'class' | 'iso' | 'next' | 'gen'
 const KINDS: { id: Kind; label: string; text: string; full: boolean[] }[] = [
   {
     id: 'class',
-    label: 'classificazione',
-    text: 'Classificazione di sequenze: una sola uscita, alla fine della sequenza.',
+    label: tx('classificazione', 'classification'),
+    text: tx('Classificazione di sequenze: una sola uscita, alla fine della sequenza.', 'Sequence classification: a single output, at the end of the sequence.'),
     full: [false, false, false, true],
   },
   {
     id: 'iso',
-    label: 'trasduzione IO isomorfa',
-    text: 'Trasduzione input-output isomorfa: un’uscita per ogni elemento di input.',
+    label: tx('trasduzione IO isomorfa', 'IO-isomorphic transduction'),
+    text: tx('Trasduzione input-output isomorfa: un’uscita per ogni elemento di input.', 'Input-output isomorphic transduction: one output for each input element.'),
     full: [true, true, true, true],
   },
   {
     id: 'next',
-    label: 'passo successivo',
-    text: 'Predizione del passo successivo: l’uscita al passo t è l’input del passo t + 1. La predizione autoregressiva usa una sola sequenza, che fa sia da input sia da target.',
+    label: tx('passo successivo', 'next step'),
+    text: tx(
+      'Predizione del passo successivo: l’uscita al passo t è l’input del passo t + 1. La predizione autoregressiva usa una sola sequenza, che fa sia da input sia da target.',
+      'Next-step prediction: the output at step t is the input of step t + 1. Autoregressive prediction uses a single sequence, which serves as both input and target.',
+    ),
     full: [true, true, true, true],
   },
   {
     id: 'gen',
-    label: 'generazione',
-    text: 'Generazione di sequenze: dopo l’input, il modello produce una sequenza di uscite, una dopo l’altra.',
+    label: tx('generazione', 'generation'),
+    text: tx(
+      'Generazione di sequenze: dopo l’input, il modello produce una sequenza di uscite, una dopo l’altra.',
+      'Sequence generation: after the input, the model produces a sequence of outputs, one after the other.',
+    ),
     full: [false, true, true, true],
   },
 ]
@@ -175,7 +206,7 @@ export function TransductionTypes() {
       <div className="pipe16__scroll">
         <svg className="sq20" viewBox="0 0 560 300" style={{ minWidth: 520 }} role="img" aria-label={cur.text}>
           <text className="sq20__cap" x={X0 - 20} y={18}>
-            tempo →
+            {tx('tempo →', 'time →')}
           </text>
           <Chain n={N} y={52} cls="sq20__in sq20__in--plain" />
           {Array.from({ length: N }, (_, i) => {
@@ -196,7 +227,10 @@ export function TransductionTypes() {
             </text>
           )}
           <text className="sq20__cap" x={X0 - 20} y={186}>
-            La stessa trasduzione, in forma generale: nodi pieni = uscite richieste, vuoti = uscite assenti
+            {tx(
+              'La stessa trasduzione, in forma generale: nodi pieni = uscite richieste, vuoti = uscite assenti',
+              'The same transduction, in general form: filled nodes = required outputs, empty = no output',
+            )}
           </text>
           <Chain n={N} y={216} cls="sq20__in sq20__in--plain" />
           {Array.from({ length: N }, (_, i) => (
@@ -215,7 +249,10 @@ export function TransductionTypes() {
       <Tasks
         items={[
           {
-            label: 'Guarda tutti e quattro i tipi: cambiano solo le posizioni in cui è richiesta un’uscita (nodi pieni).',
+            label: tx(
+              'Guarda tutti e quattro i tipi: cambiano solo le posizioni in cui è richiesta un’uscita (nodi pieni).',
+              'Look at all four types: only the positions where an output is required (filled nodes) change.',
+            ),
             done: !!seenK.iso && !!seenK.next && !!seenK.gen,
           },
         ]}
@@ -244,7 +281,7 @@ export function Idnn() {
   return (
     <div>
       <div className="pipe16__scroll">
-        <svg className="sq20" viewBox="0 0 520 230" style={{ minWidth: 500 }} role="img" aria-label="IDNN: una finestra scorrevole sulla sequenza, elaborata da un MLP">
+        <svg className="sq20" viewBox="0 0 520 230" style={{ minWidth: 500 }} role="img" aria-label={tx('IDNN: una finestra scorrevole sulla sequenza, elaborata da un MLP', 'IDNN: a sliding window over the sequence, processed by an MLP')}>
           <rect className="sq20__win" x={sx(p) - 30} y={12} width={(win - 1) * STEP + 60} height={56} rx={12} />
           <Chain n={N} y={40} hot={(i) => i >= p && i < p + win} />
           <path className="sq20__funnel" d={`M${sx(p) - 26},74L${sx(out) - 34},116H${sx(out) + 34}L${sx(p + win - 1) + 26},74Z`} />
@@ -267,7 +304,7 @@ export function Idnn() {
       </div>
       <Controls>
         <Slider
-          label="dimensione della finestra"
+          label={tx('dimensione della finestra', 'window size')}
           min={1}
           max={4}
           step={1}
@@ -289,17 +326,38 @@ export function Idnn() {
             }
           }}
         >
-          {playing ? 'Ferma' : 'Fai scorrere la finestra'}
+          {playing ? tx('Ferma', 'Stop') : tx('Fai scorrere la finestra', 'Slide the window')}
         </Btn>
         <div className="readouts">
-          <Readout label="input dell’MLP" tone="accent" value={`${win} elementi`} sub="il numero di pesi cresce con la finestra" />
-          <Readout label="memoria" value={`${win - 1} passi indietro`} sub="finita, fissata in anticipo" />
+          <Readout
+            label={tx('input dell’MLP', 'MLP input')}
+            tone="accent"
+            value={tx(`${win} elementi`, win === 1 ? '1 element' : `${win} elements`)}
+            sub={tx('il numero di pesi cresce con la finestra', 'the number of weights grows with the window')}
+          />
+          <Readout
+            label={tx('memoria', 'memory')}
+            value={tx(`${win - 1} passi indietro`, win - 1 === 1 ? '1 step back' : `${win - 1} steps back`)}
+            sub={tx('finita, fissata in anticipo', 'finite, fixed in advance')}
+          />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Fai scorrere la finestra fino in fondo: a ogni posizione l’MLP vede solo gli elementi nella finestra.', done: seen.end },
-          { label: 'Cambia la dimensione della finestra: cambiano l’input dell’MLP (quindi i suoi pesi) e la prima uscita disponibile.', done: seen.win },
+          {
+            label: tx(
+              'Fai scorrere la finestra fino in fondo: a ogni posizione l’MLP vede solo gli elementi nella finestra.',
+              'Slide the window all the way to the end: at each position the MLP sees only the elements in the window.',
+            ),
+            done: seen.end,
+          },
+          {
+            label: tx(
+              'Cambia la dimensione della finestra: cambiano l’input dell’MLP (quindi i suoi pesi) e la prima uscita disponibile.',
+              'Change the window size: the input of the MLP (hence its weights) and the first available output change.',
+            ),
+            done: seen.win,
+          },
         ]}
       />
     </div>
@@ -325,7 +383,7 @@ export function RecurrentUnit() {
   return (
     <div>
       <div className="wgrid wgrid--even">
-        <svg className="ru20 ru20--wide" viewBox="0 0 390 230" role="img" aria-label="Unità ricorrente con self-loop e ritardo unitario">
+        <svg className="ru20 ru20--wide" viewBox="0 0 390 230" role="img" aria-label={tx('Unità ricorrente con self-loop e ritardo unitario', 'Recurrent unit with self-loop and unit delay')}>
           <defs>
             <marker id="ru20a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0L10,5L0,10z" className="ru20__head" />
@@ -360,7 +418,7 @@ export function RecurrentUnit() {
             x(t − 1)
           </text>
           <text className="ru20__s" x={258} y={180}>
-            stato / contesto
+            {tx('stato / contesto', 'state / context')}
           </text>
           <text className="ru20__s" x={196} y={78}>
             self-loop
@@ -392,7 +450,7 @@ export function RecurrentUnit() {
                         setBits(bits.map((v, j) => (j === i ? 1 - v : v)))
                         setFlip(true)
                       }}
-                      aria-label={`input al passo ${i + 1}: ${b}`}
+                      aria-label={tx(`input al passo ${i + 1}: ${b}`, `input at step ${i + 1}: ${b}`)}
                     >
                       {b}
                     </button>
@@ -410,7 +468,7 @@ export function RecurrentUnit() {
                 ))}
               </tr>
               <tr>
-                <th>«1» finora</th>
+                <th>{tx('«1» finora', '“1”s so far')}</th>
                 {ones.map((s, i) => (
                   <td key={i} className="ru20__ones">
                     {s}
@@ -420,7 +478,9 @@ export function RecurrentUnit() {
             </tbody>
           </table>
           <span className={'verdict ' + (counts ? 'verdict--good' : 'verdict--info')}>
-            {counts ? 'Lo stato è il numero di «1» ricevuti finora.' : 'Lo stato non coincide con il conteggio degli «1».'}
+            {counts
+              ? tx('Lo stato è il numero di «1» ricevuti finora.', 'The state is the number of “1”s received so far.')
+              : tx('Lo stato non coincide con il conteggio degli «1».', 'The state does not match the count of the “1”s.')}
           </span>
           <div className="wmath">
             <Tex>{`x(t) = f\\big(${fmt(w, 1)}\\,l(t) + ${fmt(wr, 1)}\\,x(t-1)\\big), \\quad x(0) = 0`}</Tex>
@@ -434,24 +494,43 @@ export function RecurrentUnit() {
           size="sm"
           label={
             <>
-              attivazione <Tex>{'f'}</Tex>
+              {tx('attivazione', 'activation')} <Tex>{'f'}</Tex>
             </>
           }
           value={act}
           onChange={setAct}
           options={[
-            { value: 'lin', label: 'lineare' },
-            { value: 'sig', label: 'sigmoide' },
+            { value: 'lin', label: tx('lineare', 'linear') },
+            { value: 'sig', label: tx('sigmoide', 'sigmoid') },
           ]}
         />
       </Controls>
       <p className="wnote">
-        Bias <Tex>{'\\theta = 0'}</Tex>. La parte nuova rispetto a un neurone normale è il termine <Tex>{'\\hat w\\,x(t-1)'}</Tex>.
+        {tx(
+          <>
+            Bias <Tex>{'\\theta = 0'}</Tex>. La parte nuova rispetto a un neurone normale è il termine <Tex>{'\\hat w\\,x(t-1)'}</Tex>.
+          </>,
+          <>
+            Bias <Tex>{'\\theta = 0'}</Tex>. The new part with respect to an ordinary neuron is the term <Tex>{'\\hat w\\,x(t-1)'}</Tex>.
+          </>,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Risolvi l’esercizio: trova w e ŵ (con unità lineare) per cui lo stato conta gli «1» ricevuti.', done: seen.ok },
-          { label: 'Con quei pesi cambia la sequenza di input: lo stato continua a contare, qualunque sia la sequenza.', done: seen.ok2 },
+          {
+            label: tx(
+              'Risolvi l’esercizio: trova w e ŵ (con unità lineare) per cui lo stato conta gli «1» ricevuti.',
+              'Solve the exercise: find w and ŵ (with a linear unit) such that the state counts the “1”s received.',
+            ),
+            done: seen.ok,
+          },
+          {
+            label: tx(
+              'Con quei pesi cambia la sequenza di input: lo stato continua a contare, qualunque sia la sequenza.',
+              'With those weights change the input sequence: the state keeps counting, whatever the sequence.',
+            ),
+            done: seen.ok2,
+          },
         ]}
       />
     </div>
@@ -468,7 +547,7 @@ export function StateSystem() {
     <div>
       <div className="ss20">
         <div className="pipe16__scroll">
-          <svg className="sq20" viewBox="0 0 520 150" style={{ minWidth: 440 }} role="img" aria-label="Formazione dello stato nel tempo: lo stato al tempo t codifica la sotto-sequenza fino a t">
+          <svg className="sq20" viewBox="0 0 520 150" style={{ minWidth: 440 }} role="img" aria-label={tx('Formazione dello stato nel tempo: lo stato al tempo t codifica la sotto-sequenza fino a t', 'Formation of the state over time: the state at time t encodes the subsequence up to t')}>
             {Array.from({ length: N }, (_, i) => N - 1 - i).map((i) =>
               i < t ? (
                 <rect
@@ -489,12 +568,12 @@ export function StateSystem() {
               </text>
             ))}
             <text className="sq20__cap" x={sx(0) - 30} y={136}>
-              x({t}) codifica la sotto-sequenza{' '}
+              x({t}) {tx('codifica la sotto-sequenza', 'encodes the subsequence')}{' '}
               {Array.from({ length: t }, (_, i) => `l${i + 1}`).join(' ')}
             </text>
           </svg>
         </div>
-        <svg className="ru20 ru20--small" viewBox="0 0 200 210" role="img" aria-label="Modello grafico: input l, stato x con auto-anello di ritardo, uscita y">
+        <svg className="ru20 ru20--small" viewBox="0 0 200 210" role="img" aria-label={tx('Modello grafico: input l, stato x con auto-anello di ritardo, uscita y', 'Graphical model: input l, state x with a delay self-loop, output y')}>
           <defs>
             <marker id="ss20a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0L10,5L0,10z" className="ru20__head" />
@@ -524,13 +603,16 @@ export function StateSystem() {
         </svg>
       </div>
       <Controls>
-        <Slider label={<>istante <Tex>{'t'}</Tex></>} min={1} max={5} step={1} value={t} onChange={setT} width={220} />
-        <Legend items={[{ label: 'la sotto-sequenza riassunta dallo stato', color: 'var(--accent)', kind: 'area' }]} />
+        <Slider label={<>{tx('istante', 'time')} <Tex>{'t'}</Tex></>} min={1} max={5} step={1} value={t} onChange={setT} width={220} />
+        <Legend items={[{ label: tx('la sotto-sequenza riassunta dallo stato', 'the subsequence summarized by the state'), color: 'var(--accent)', kind: 'area' }]} />
       </Controls>
       <Tasks
         items={[
-          { label: 'Porta t a 1: lo stato codifica il solo primo elemento.', done: seen.one },
-          { label: 'Porta t a 5: lo stato, di dimensione fissa, riassume tutta la sequenza.', done: seen.all },
+          { label: tx('Porta t a 1: lo stato codifica il solo primo elemento.', 'Set t to 1: the state encodes the first element only.'), done: seen.one },
+          {
+            label: tx('Porta t a 5: lo stato, di dimensione fissa, riassume tutta la sequenza.', 'Set t to 5: the state, of fixed size, summarizes the whole sequence.'),
+            done: seen.all,
+          },
         ]}
       />
     </div>

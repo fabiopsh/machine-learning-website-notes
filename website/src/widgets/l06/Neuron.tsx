@@ -5,6 +5,7 @@ import { subDigits } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { sigmoid } from './NetSvg'
 
@@ -12,12 +13,21 @@ import { sigmoid } from './NetSvg'
 
 type Part = 'dendriti' | 'soma' | 'assone' | 'mielina' | 'terminali' | 'sinapsi'
 const PARTS: Record<Part, string> = {
-  dendriti: 'Dendriti: ricevono gli input dagli altri neuroni.',
-  soma: 'Soma (corpo cellulare): somma gli effetti degli input sul potenziale della cellula.',
-  assone: 'Assone: conduce lo spike fino ai terminali.',
-  mielina: 'Guaina mielinica: riveste l’assone.',
-  terminali: 'Bottoni terminali: forniscono gli output alle sinapsi dei neuroni successivi.',
-  sinapsi: 'Sinapsi: eccitatorie (+) o inibitorie (−); la loro forza, il «peso», cambia con l’apprendimento.',
+  dendriti: tx('Dendriti: ricevono gli input dagli altri neuroni.', 'Dendrites: they receive the inputs from the other neurons.'),
+  soma: tx(
+    'Soma (corpo cellulare): somma gli effetti degli input sul potenziale della cellula.',
+    'Soma (cell body): it sums the effects of the inputs on the potential of the cell.',
+  ),
+  assone: tx('Assone: conduce lo spike fino ai terminali.', 'Axon: it carries the spike to the terminals.'),
+  mielina: tx('Guaina mielinica: riveste l’assone.', 'Myelin sheath: it coats the axon.'),
+  terminali: tx(
+    'Bottoni terminali: forniscono gli output alle sinapsi dei neuroni successivi.',
+    'Terminal buttons: they deliver the outputs to the synapses of the next neurons.',
+  ),
+  sinapsi: tx(
+    'Sinapsi: eccitatorie (+) o inibitorie (−); la loro forza, il «peso», cambia con l’apprendimento.',
+    'Synapses: excitatory (+) or inhibitory (−); their strength, the “weight,” changes with learning.',
+  ),
 }
 const SYN = [
   { x: 52, y: 58, sign: 1 },
@@ -66,7 +76,7 @@ export function BioNeuron() {
   return (
     <div>
       <div className="wscroll">
-        <svg viewBox="0 0 720 300" className="bio__svg" role="img" aria-label="Neurone biologico con dendriti, soma, assone e terminali">
+        <svg viewBox="0 0 720 300" className="bio__svg" role="img" aria-label={tx('Neurone biologico con dendriti, soma, assone e terminali', 'Biological neuron with dendrites, soma, axon and terminals')}>
           {/* dendriti */}
           <g
             className={`bio__part bio__dend${part === 'dendriti' ? ' is-hot' : ''}`}
@@ -85,7 +95,10 @@ export function BioNeuron() {
               onPointerLeave={() => setPart(null)}
               role="button"
               tabIndex={0}
-              aria-label={`stimola la sinapsi ${i + 1} (${s.sign > 0 ? 'eccitatoria' : 'inibitoria'})`}
+              aria-label={tx(
+                `stimola la sinapsi ${i + 1} (${s.sign > 0 ? 'eccitatoria' : 'inibitoria'})`,
+                `stimulate synapse ${i + 1} (${s.sign > 0 ? 'excitatory' : 'inhibitory'})`,
+              )}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && stimulate(i)}
             >
               <circle r={9 + w[i] * 10} />
@@ -148,7 +161,7 @@ export function BioNeuron() {
             />
             <line x1={-4} x2={44} y1={56 - (THRESH / 1.2) * 52} y2={56 - (THRESH / 1.2) * 52} className="bio__thresh" />
             <text x={52} y={56 - (THRESH / 1.2) * 52 + 4} className="bio__lbl">
-              soglia
+              {tx('soglia', 'threshold')}
             </text>
           </g>
           <text x={40} y={24} className="bio__lbl bio__lbl--io">
@@ -159,21 +172,46 @@ export function BioNeuron() {
           </text>
         </svg>
       </div>
-      <p className="bio__info">{part ? PARTS[part] : 'Passa sulle parti del neurone; clicca le sinapsi per stimolarle.'}</p>
+      <p className="bio__info">
+        {part
+          ? PARTS[part]
+          : tx('Passa sulle parti del neurone; clicca le sinapsi per stimolarle.', 'Hover over the parts of the neuron; click the synapses to stimulate them.')}
+      </p>
       <div className="controls">
         <div className="readouts">
-          <Readout label="potenziale" value={fmt(pot, 2)} sub={`soglia ${fmt(THRESH, 1)}`} />
-          <Readout label="spike emessi" tone="accent" value={String(spikes)} />
-          <Readout label="pesi sinaptici" value={w.map((v, i) => (SYN[i].sign > 0 ? '+' : '−') + fmt(v, 2)).join('  ')} />
+          <Readout label={tx('potenziale', 'potential')} value={fmt(pot, 2)} sub={tx(`soglia ${fmt(THRESH, 1)}`, `threshold ${fmt(THRESH, 1)}`)} />
+          <Readout label={tx('spike emessi', 'spikes fired')} tone="accent" value={String(spikes)} />
+          <Readout
+            label={tx('pesi sinaptici', 'synaptic weights')}
+            value={w.map((v, i) => (SYN[i].sign > 0 ? '+' : '−') + fmt(v, 2)).join('  ')}
+          />
         </div>
-        <Toggle label="plasticità (Hebb)" checked={hebb} onChange={setHebb} />
-        <Btn icon="reset" onClick={() => setW([0.45, 0.45, 0.5])} title="Pesi iniziali" />
+        <Toggle label={tx('plasticità (Hebb)', 'plasticity (Hebb)')} checked={hebb} onChange={setHebb} />
+        <Btn icon="reset" onClick={() => setW([0.45, 0.45, 0.5])} title={tx('Pesi iniziali', 'Initial weights')} />
       </div>
       <Tasks
         items={[
-          { label: 'Stimola le sinapsi eccitatorie in rapida successione fino a superare la soglia: parte uno spike.', done: seen.spike },
-          { label: 'Stimola la sinapsi inibitoria: il potenziale scende invece di salire.', done: seen.inh },
-          { label: 'Accendi la plasticità e genera qualche spike: le sinapsi coinvolte si rafforzano.', done: seen.hebb },
+          {
+            label: tx(
+              'Stimola le sinapsi eccitatorie in rapida successione fino a superare la soglia: parte uno spike.',
+              'Stimulate the excitatory synapses in quick succession until the threshold is exceeded: a spike is fired.',
+            ),
+            done: seen.spike,
+          },
+          {
+            label: tx(
+              'Stimola la sinapsi inibitoria: il potenziale scende invece di salire.',
+              'Stimulate the inhibitory synapse: the potential goes down instead of up.',
+            ),
+            done: seen.inh,
+          },
+          {
+            label: tx(
+              'Accendi la plasticità e genera qualche spike: le sinapsi coinvolte si rafforzano.',
+              'Turn on plasticity and generate a few spikes: the synapses involved are strengthened.',
+            ),
+            done: seen.hebb,
+          },
         ]}
       />
     </div>
@@ -184,9 +222,9 @@ export function BioNeuron() {
 
 type Act = 'lin' | 'step' | 'sig'
 const ACT: Record<Act, { f: (v: number) => number; name: string }> = {
-  lin: { f: (v) => v, name: 'lineare (identità)' },
-  step: { f: (v) => (v > 0 ? 1 : 0), name: 'a soglia (Perceptron)' },
-  sig: { f: (v) => sigmoid(v), name: 'logistica (sigmoide)' },
+  lin: { f: (v) => v, name: tx('lineare (identità)', 'linear (identity)') },
+  step: { f: (v) => (v > 0 ? 1 : 0), name: tx('a soglia (Perceptron)', 'threshold (Perceptron)') },
+  sig: { f: (v) => sigmoid(v), name: tx('logistica (sigmoide)', 'logistic (sigmoid)') },
 }
 
 export function Unit() {
@@ -208,7 +246,10 @@ export function Unit() {
           viewBox="-18 0 658 230"
           className="unit__svg"
           role="img"
-          aria-label="Unità artificiale: input, pesi, somma pesata e funzione di attivazione"
+          aria-label={tx(
+            'Unità artificiale: input, pesi, somma pesata e funzione di attivazione',
+            'Artificial unit: inputs, weights, weighted sum and activation function',
+          )}
         >
           <text x={40} y={22} textAnchor="middle" className="unit__head">
             input
@@ -303,13 +344,13 @@ export function Unit() {
       </div>
       <div className="controls">
         <Segmented
-          label="funzione di attivazione f"
+          label={tx('funzione di attivazione f', 'activation function f')}
           value={act}
           onChange={setAct}
           options={[
-            { value: 'lin', label: 'lineare' },
-            { value: 'step', label: 'soglia' },
-            { value: 'sig', label: 'logistica' },
+            { value: 'lin', label: tx('lineare', 'linear') },
+            { value: 'step', label: tx('soglia', 'threshold') },
+            { value: 'sig', label: tx('logistica', 'logistic') },
           ]}
         />
         <div className="readouts">
@@ -319,9 +360,18 @@ export function Unit() {
       </div>
       <Tasks
         items={[
-          { label: 'Cambia input e pesi fino a rendere negativo l’input netto.', done: seen.neg },
-          { label: 'Passa alla soglia: l’uscita diventa 0 o 1 (è il Perceptron).', done: seen.step },
-          { label: 'Passa alla lineare: l’uscita coincide con net.', done: seen.lin },
+          {
+            label: tx('Cambia input e pesi fino a rendere negativo l’input netto.', 'Change inputs and weights until the net input becomes negative.'),
+            done: seen.neg,
+          },
+          {
+            label: tx(
+              'Passa alla soglia: l’uscita diventa 0 o 1 (è il Perceptron).',
+              'Switch to the threshold: the output becomes 0 or 1 (it is the Perceptron).',
+            ),
+            done: seen.step,
+          },
+          { label: tx('Passa alla lineare: l’uscita coincide con net.', 'Switch to the linear one: the output coincides with net.'), done: seen.lin },
         ]}
       />
     </div>
@@ -376,15 +426,27 @@ export function Activations() {
               <Label x={-3.8} y={k === 'lin' ? 3.4 : 1.08} className="plot-label--muted">
                 o = {fmt(ACT[k].f(net), 2)}
               </Label>
-              <Handle x={net} y={k === 'lin' ? -4 : -0.2} axis="x" label="input netto" onMove={(p) => setNet(Math.round(p.x * 10) / 10)} />
+              <Handle x={net} y={k === 'lin' ? -4 : -0.2} axis="x" label={tx('input netto', 'net input')} onMove={(p) => setNet(Math.round(p.x * 10) / 10)} />
             </Plot>
           </div>
         ))}
       </div>
       <Tasks
         items={[
-          { label: 'Porta net sotto zero: la soglia dà 0, la logistica scende sotto 0,5, la lineare diventa negativa.', done: seen.neg },
-          { label: 'Porta net molto in alto: la logistica si «satura» vicino a 1, come la soglia.', done: seen.big },
+          {
+            label: tx(
+              'Porta net sotto zero: la soglia dà 0, la logistica scende sotto 0,5, la lineare diventa negativa.',
+              'Bring net below zero: the threshold gives 0, the logistic drops below 0.5, the linear one becomes negative.',
+            ),
+            done: seen.neg,
+          },
+          {
+            label: tx(
+              'Porta net molto in alto: la logistica si «satura» vicino a 1, come la soglia.',
+              'Bring net very high: the logistic “saturates” close to 1, like the threshold.',
+            ),
+            done: seen.big,
+          },
         ]}
       />
     </div>

@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { Tex } from '../../components/prose/Tex'
+import { tx } from '../../lib/i18n'
 
 /** Scalare → vettore → matrice → tensore: quanti indici servono per individuare un numero. */
 export function TensorFigure() {
   const [hot, setHot] = useState<{ k: number; idx: number[] } | null>(null)
   const cell = 22
   const items = [
-    { name: 'scalare', tex: 'x', axes: 0 },
-    { name: 'vettore', tex: '\\mathbf{x}', axes: 1 },
-    { name: 'matrice', tex: 'X', axes: 2 },
-    { name: 'tensore', tex: 'X_{i,j,k}', axes: 3 },
+    { name: tx('scalare', 'scalar'), tex: 'x', axes: 0 },
+    { name: tx('vettore', 'vector'), tex: '\\mathbf{x}', axes: 1 },
+    { name: tx('matrice', 'matrix'), tex: 'X', axes: 2 },
+    { name: tx('tensore', 'tensor'), tex: 'X_{i,j,k}', axes: 3 },
   ]
   const label = (k: number, idx: number[]) =>
     k === 0 ? 'x' : k === 1 ? `x_{${idx[0]}}` : k === 2 ? `X_{${idx[0]},${idx[1]}}` : `X_{${idx[0]},${idx[1]},${idx[2]}}`
@@ -59,7 +60,7 @@ export function TensorFigure() {
                 ))}
             </svg>
             <div className="tens__name">
-              {it.name} · {it.axes} {it.axes === 1 ? 'asse' : 'assi'}
+              {it.name} · {it.axes} {it.axes === 1 ? tx('asse', 'axis') : tx('assi', 'axes')}
             </div>
             <div className="tens__tex">
               <Tex>{hot && hot.k === k ? label(k, hot.idx) : it.tex}</Tex>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 
 /**
@@ -207,7 +208,7 @@ export function DigitsFigure() {
 
   return (
     <div className="digits">
-      <div className="digits__grid" role="group" aria-label="Esempi di cifre scritte a mano, 8×8 pixel">
+      <div className="digits__grid" role="group" aria-label={tx('Esempi di cifre scritte a mano, 8×8 pixel', 'Examples of handwritten digits, 8×8 pixels')}>
         {bank ? (
           <>
             {bank.samples.map((row, ri) => (
@@ -220,7 +221,7 @@ export function DigitsFigure() {
                       setSel({ img, label: d, drawn: false })
                       setDone((v) => ({ ...v, pick: true }))
                     }}
-                    aria-label={`esempio della cifra ${d}`}
+                    aria-label={tx(`esempio della cifra ${d}`, `example of the digit ${d}`)}
                   >
                     <Pix img={img} size={34} />
                   </button>
@@ -245,13 +246,13 @@ export function DigitsFigure() {
             </div>
           </>
         ) : (
-          <div className="digits__loading">Genero le cifre…</div>
+          <div className="digits__loading">{tx('Genero le cifre…', 'Generating the digits…')}</div>
         )}
       </div>
 
       <div className="digits__pipe">
         <div className="digits__stage">
-          <div className="digits__stage-label">1 · Disegna una cifra</div>
+          <div className="digits__stage-label">{tx('1 · Disegna una cifra', '1 · Draw a digit')}</div>
           <canvas
             ref={pad}
             width={200}
@@ -278,10 +279,10 @@ export function DigitsFigure() {
             onPointerCancel={() => {
               drawing.current = false
             }}
-            aria-label="Area di disegno: disegna una cifra con il mouse o il dito"
+            aria-label={tx('Area di disegno: disegna una cifra con il mouse o il dito', 'Drawing area: draw a digit with the mouse or your finger')}
           />
           <Btn icon="reset" onClick={clear}>
-            Cancella
+            {tx('Cancella', 'Clear')}
           </Btn>
         </div>
 
@@ -290,7 +291,7 @@ export function DigitsFigure() {
         </div>
 
         <div className="digits__stage">
-          <div className="digits__stage-label">2 · Immagine 8 × 8 (valori 0–16)</div>
+          <div className="digits__stage-label">{tx('2 · Immagine 8 × 8 (valori 0–16)', '2 · 8 × 8 image (values 0–16)')}</div>
           {sel && (
             <div className="digits__matrix" onMouseLeave={() => setHot(null)}>
               {sel.img.map((v, i) => (
@@ -316,7 +317,7 @@ export function DigitsFigure() {
 
         <div className="digits__stage digits__stage--out">
           <div className="digits__stage-label">
-            3 · Il classificatore <Tex>f</Tex>
+            {tx('3 · Il classificatore', '3 · The classifier')} <Tex>f</Tex>
           </div>
           <div className="digits__f">
             <span className="digits__fbox">
@@ -324,7 +325,9 @@ export function DigitsFigure() {
             </span>
             <span className="digits__out">{pred ? pred.label : '·'}</span>
             <span className="digits__conf">
-              {pred && (sel?.drawn ? `classe predetta · voti ${Math.round(pred.conf * 100)}%` : `classe corretta: ${sel?.label}`)}
+              {pred && (sel?.drawn
+                  ? tx(`classe predetta · voti ${Math.round(pred.conf * 100)}%`, `predicted class · votes ${Math.round(pred.conf * 100)}%`)
+                  : tx(`classe corretta: ${sel?.label}`, `correct class: ${sel?.label}`))}
             </span>
           </div>
         </div>
@@ -333,11 +336,13 @@ export function DigitsFigure() {
       {sel && (
         <div className="digits__vector">
           <div className="digits__stage-label">
-            L’input <Tex>{'\\mathbf{x} \\in \\mathbb{R}^{64}'}</Tex>: le 8 righe messe una dopo l’altra
+            {tx('L’input', 'The input')} <Tex>{'\\mathbf{x} \\in \\mathbb{R}^{64}'}</Tex>
+            {tx(': le 8 righe messe una dopo l’altra', ': the 8 rows placed one after the other')}
             {hot !== null && (
               <span className="digits__xi">
                 {' '}
-                · <Tex>{`x_{${hot + 1}} = ${sel.img[hot]}`}</Tex> (riga {Math.floor(hot / 8) + 1}, colonna {(hot % 8) + 1})
+                · <Tex>{`x_{${hot + 1}} = ${sel.img[hot]}`}</Tex>{' '}
+                {tx(`(riga ${Math.floor(hot / 8) + 1}, colonna ${(hot % 8) + 1})`, `(row ${Math.floor(hot / 8) + 1}, column ${(hot % 8) + 1})`)}
               </span>
             )}
           </div>
@@ -356,14 +361,28 @@ export function DigitsFigure() {
 
       <Tasks
         items={[
-          { label: 'Clicca un esempio della griglia: vedi i suoi 64 valori.', done: done.pick },
-          { label: 'Disegna una cifra nel riquadro: viene ridotta a 8 × 8 come gli esempi.', done: done.draw },
-          { label: 'Passa sopra a una casella della matrice: è una componente del vettore x.', done: done.cell },
+          { label: tx('Clicca un esempio della griglia: vedi i suoi 64 valori.', 'Click an example in the grid: you see its 64 values.'), done: done.pick },
+          {
+            label: tx(
+              'Disegna una cifra nel riquadro: viene ridotta a 8 × 8 come gli esempi.',
+              'Draw a digit in the box: it is reduced to 8 × 8 like the examples.',
+            ),
+            done: done.draw,
+          },
+          {
+            label: tx(
+              'Passa sopra a una casella della matrice: è una componente del vettore x.',
+              'Hover over a cell of the matrix: it is a component of the vector x.',
+            ),
+            done: done.cell,
+          },
         ]}
       />
       <p className="wnote digits__disclaimer">
-        Il classificatore qui è un giocattolo: confronta il disegno con esempi generati al computer e sceglie i più simili (è un
-        K-nearest neighbors, che si studierà nella lezione 5). Scrivere a mano le regole, invece, sarebbe di fatto impossibile.
+        {tx(
+          'Il classificatore qui è un giocattolo: confronta il disegno con esempi generati al computer e sceglie i più simili (è un K-nearest neighbors, che si studierà nella lezione 5). Scrivere a mano le regole, invece, sarebbe di fatto impossibile.',
+          'The classifier here is a toy: it compares the drawing with computer-generated examples and picks the most similar ones (it is a K-nearest neighbors, which will be studied in lesson 5). Writing the rules by hand, instead, would be practically impossible.',
+        )}
       </p>
     </div>
   )

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { tx } from '../../lib/i18n'
 import { Icon } from '../ui/Icon'
 import { Rich, Tex, renderTex } from './Tex'
 
@@ -93,7 +94,8 @@ export function Formula({ f, tex }: { f?: FormulaDef; tex?: string }) {
             </>
           ) : (
             <span className="formula__hint-idle">
-              <Icon name="hand" size={14} /> Passa sopra ai simboli (o toccali) per sapere cosa significano
+              <Icon name="hand" size={14} />{' '}
+              {tx('Passa sopra ai simboli (o toccali) per sapere cosa significano', 'Hover over the symbols (or tap them) to see what they mean')}
             </span>
           )}
         </div>
@@ -103,17 +105,17 @@ export function Formula({ f, tex }: { f?: FormulaDef; tex?: string }) {
         <span className="formula__tabs" role="tablist">
           {def.read && (
             <button role="tab" aria-selected={panel === 'read'} onClick={() => toggle('read')}>
-              Come si legge
+              {tx('Come si legge', 'How to read it')}
             </button>
           )}
           {parts.length > 0 && (
             <button role="tab" aria-selected={panel === 'parts'} onClick={() => toggle('parts')}>
-              Tutti i simboli
+              {tx('Tutti i simboli', 'All symbols')}
             </button>
           )}
           {def.why && (
             <button role="tab" aria-selected={panel === 'why'} onClick={() => toggle('why')}>
-              Il ragionamento
+              {tx('Il ragionamento', 'The reasoning')}
             </button>
           )}
         </span>

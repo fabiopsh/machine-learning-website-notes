@@ -12,8 +12,14 @@
         var base = '/'
         if (/\.github\.io$/.test(location.hostname) && parts.length) base = '/' + parts.shift() + '/'
         if (parts[parts.length - 1] === 'index.html') parts.pop()
+        // gli indirizzi sotto /en/ aprono il sito in inglese
+        var query = ''
+        if (parts[0] === 'en') {
+          parts.shift()
+          query = '?lang=en'
+        }
         var route = parts.length ? '#/' + parts.join('/') : ''
-        location.replace(base + route)
+        location.replace(base + query + route)
       })()
     </script>
   </head>

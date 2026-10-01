@@ -4,6 +4,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { N, digit, shift, type Img } from './digits'
 
@@ -56,7 +57,7 @@ export function ZipDigits() {
               key={`${r}-${d}`}
               type="button"
               className={'zip16__cell' + (sel[0] === r && sel[1] === d ? ' is-on' : '')}
-              aria-label={`cifra ${d}, riga ${r + 1}`}
+              aria-label={tx(`cifra ${d}, riga ${r + 1}`, `digit ${d}, row ${r + 1}`)}
               aria-pressed={sel[0] === r && sel[1] === d}
               onClick={() => {
                 setSel([r, d])
@@ -75,40 +76,56 @@ export function ZipDigits() {
         </div>
         <div className="wside">
           <div className="readouts">
-            <Readout label="input della rete" value="256" sub="un valore per pixel (16 × 16)" />
-            <Readout label="pixel che cambiano" tone="accent" value={`${nDiff}`} sub={`la cifra ne occupa ${ink}`} />
+            <Readout label={tx('input della rete', 'network inputs')} value="256" sub={tx('un valore per pixel (16 × 16)', 'one value per pixel (16 × 16)')} />
+            <Readout
+              label={tx('pixel che cambiano', 'pixels that change')}
+              tone="accent"
+              value={`${nDiff}`}
+              sub={tx(`la cifra ne occupa ${ink}`, `the digit covers ${ink}`)}
+            />
           </div>
-          <div className="zip16__pad" role="group" aria-label="Sposta la cifra">
-            <Btn onClick={() => move(-1, 0)} title="sposta a sinistra">
+          <div className="zip16__pad" role="group" aria-label={tx('Sposta la cifra', 'Shift the digit')}>
+            <Btn onClick={() => move(-1, 0)} title={tx('sposta a sinistra', 'shift left')}>
               ←
             </Btn>
-            <Btn onClick={() => move(0, -1)} title="sposta in alto">
+            <Btn onClick={() => move(0, -1)} title={tx('sposta in alto', 'shift up')}>
               ↑
             </Btn>
-            <Btn onClick={() => move(0, 1)} title="sposta in basso">
+            <Btn onClick={() => move(0, 1)} title={tx('sposta in basso', 'shift down')}>
               ↓
             </Btn>
-            <Btn onClick={() => move(1, 0)} title="sposta a destra">
+            <Btn onClick={() => move(1, 0)} title={tx('sposta a destra', 'shift right')}>
               →
             </Btn>
             <Btn icon="reset" onClick={() => setOff([0, 0])} disabled={off[0] === 0 && off[1] === 0}>
-              Rimetti a posto
+              {tx('Rimetti a posto', 'Put it back')}
             </Btn>
           </div>
           <p className="wnote">
-            Spostamento: {off[0]} pixel in orizzontale, {off[1]} in verticale. I pixel riquadrati sono quelli che hanno cambiato valore
-            rispetto alla cifra di partenza.
+            {tx(
+              <>
+                Spostamento: {off[0]} pixel in orizzontale, {off[1]} in verticale. I pixel riquadrati sono quelli che hanno cambiato valore
+                rispetto alla cifra di partenza.
+              </>,
+              <>
+                Shift in pixels: {off[0]} horizontally, {off[1]} vertically. The outlined pixels are those whose value has changed with respect
+                to the original digit.
+              </>,
+            )}
           </p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Scegli una cifra dalla griglia.', done: picked },
+          { label: tx('Scegli una cifra dalla griglia.', 'Pick a digit from the grid.'), done: picked },
           {
-            label: 'Spostala di un pixel: per noi è la stessa cifra, ma per una rete con un input per pixel molti dei 256 valori sono cambiati.',
+            label: tx(
+              'Spostala di un pixel: per noi è la stessa cifra, ma per una rete con un input per pixel molti dei 256 valori sono cambiati.',
+              'Shift it by one pixel: for us it is the same digit, but for a network with one input per pixel many of the 256 values have changed.',
+            ),
             done: seen.shift,
           },
-          { label: 'Spostala di due o più pixel e guarda quanti input cambiano.', done: seen.two },
+          { label: tx('Spostala di due o più pixel e guarda quanti input cambiano.', 'Shift it by two or more pixels and see how many inputs change.'), done: seen.two },
         ]}
       />
     </div>
@@ -136,9 +153,9 @@ export function Conv1D() {
   return (
     <div>
       <div className="c1d16__scroll">
-        <svg className="c1d16" viewBox="0 0 560 300" role="img" aria-label="Convoluzione 1D: un’unità con tre pesi scorre sulla sequenza di input">
+        <svg className="c1d16" viewBox="0 0 560 300" role="img" aria-label={tx('Convoluzione 1D: un’unità con tre pesi scorre sulla sequenza di input', '1D convolution: a unit with three weights slides over the input sequence')}>
           <text className="c1d16__cap" x={cx(t)} y={22} textAnchor="middle">
-            finestra scorrevole
+            {tx('finestra scorrevole', 'sliding window')}
           </text>
           <rect className="c1d16__win" x={cx(t - 1) - 34} y={34} width={2 * DX + 68} height={64} rx={12} />
           {[1, 2, 3, 4].map((i) => (
@@ -190,14 +207,14 @@ export function Conv1D() {
         </svg>
       </div>
       <div className="wpanel">
-        <div className="wpanel__title">L’uscita nella posizione t = {t}</div>
+        <div className="wpanel__title">{tx(<>L’uscita nella posizione t = {t}</>, <>The output at position t = {t}</>)}</div>
         <div className="wmath">
           <Tex>{`o_${t} = w_1 x_${t - 1} + w_2 x_${t} + w_3 x_${t + 1} = ${term(0)} + ${term(1)} + ${term(2)} = ${fmt(out(t), 1)}`}</Tex>
         </div>
       </div>
       <Controls>
         <Segmented
-          label="posizione dell’unità"
+          label={tx('posizione dell’unità', 'position of the unit')}
           value={t}
           onChange={setT}
           options={[2, 3, 4].map((v) => ({ value: v, label: <Tex>{`t = ${v}`}</Tex> }))}
@@ -218,8 +235,20 @@ export function Conv1D() {
       </Controls>
       <Tasks
         items={[
-          { label: 'Sposta l’unità in t = 3 e poi in t = 4: legge una finestra diversa, ma con gli stessi tre pesi.', done: seen.t3 && seen.t4 },
-          { label: 'Cambia un peso: cambiano tutte le uscite insieme, perché il peso è condiviso tra le posizioni.', done: changed },
+          {
+            label: tx(
+              'Sposta l’unità in t = 3 e poi in t = 4: legge una finestra diversa, ma con gli stessi tre pesi.',
+              'Move the unit to t = 3 and then to t = 4: it reads a different window, but with the same three weights.',
+            ),
+            done: seen.t3 && seen.t4,
+          },
+          {
+            label: tx(
+              'Cambia un peso: cambiano tutte le uscite insieme, perché il peso è condiviso tra le posizioni.',
+              'Change a weight: all the outputs change together, because the weight is shared among the positions.',
+            ),
+            done: changed,
+          },
         ]}
       />
     </div>
@@ -290,8 +319,8 @@ export function Conv2D({ stride: stride0 = 1, pickStride = false }: { stride?: n
       <div className="wbar">
         <Legend
           items={[
-            { label: 'immagine di input', color: 'var(--c-blue)', kind: 'square' },
-            { label: 'padding (zeri)', color: 'var(--ink-4)', kind: 'square' },
+            { label: tx('immagine di input', 'input image'), color: 'var(--c-blue)', kind: 'square' },
+            { label: tx('padding (zeri)', 'padding (zeros)'), color: 'var(--ink-4)', kind: 'square' },
             { label: 'feature map', color: 'var(--c-green)', kind: 'square' },
           ]}
         />
@@ -314,7 +343,7 @@ export function Conv2D({ stride: stride0 = 1, pickStride = false }: { stride?: n
       </div>
       <div className="c2d16">
         <div>
-          <div className="htf__title">Input 5 × 5 con padding</div>
+          <div className="htf__title">{tx('Input 5 × 5 con padding', '5 × 5 input with padding')}</div>
           <Cells cols={SZ + 2 * PAD} cls="cg16--in">
             {Array.from({ length: (SZ + 2) * (SZ + 2) }, (_, k) => {
               const i = Math.floor(k / (SZ + 2))
@@ -353,7 +382,10 @@ export function Conv2D({ stride: stride0 = 1, pickStride = false }: { stride?: n
                   setPlay(false)
                   setSteps((n) => n + 1)
                 }}
-                aria-label={`uscita riga ${Math.floor(k / on) + 1}, colonna ${(k % on) + 1}`}
+                aria-label={tx(
+                  `uscita riga ${Math.floor(k / on) + 1}, colonna ${(k % on) + 1}`,
+                  `output row ${Math.floor(k / on) + 1}, column ${(k % on) + 1}`,
+                )}
               >
                 {fmt(convAt(Math.floor(k / on), k % on, stride), 0)}
               </button>
@@ -363,16 +395,28 @@ export function Conv2D({ stride: stride0 = 1, pickStride = false }: { stride?: n
       </div>
       <div className="wpanel">
         <div className="wpanel__title">
-          Uscita in riga {r + 1}, colonna {c + 1}
+          {tx(
+            <>
+              Uscita in riga {r + 1}, colonna {c + 1}
+            </>,
+            <>
+              Output at row {r + 1}, column {c + 1}
+            </>,
+          )}
         </div>
         <div className="wmath">
           <Tex>{`${terms.length ? terms.join(' + ') : '0'} = ${val}`}</Tex>
         </div>
-        <p className="wnote">Somma dei prodotti tra i 9 valori sotto il kernel e i 9 pesi (i prodotti nulli sono omessi).</p>
+        <p className="wnote">
+          {tx(
+            'Somma dei prodotti tra i 9 valori sotto il kernel e i 9 pesi (i prodotti nulli sono omessi).',
+            'Sum of the products between the 9 values under the kernel and the 9 weights (zero products are omitted).',
+          )}
+        </p>
       </div>
       <Controls>
         <Btn icon={play ? 'pause' : 'play'} variant="soft" onClick={() => setPlay(!play)}>
-          {play ? 'Ferma' : 'Fai scorrere il kernel'}
+          {play ? tx('Ferma', 'Stop') : tx('Fai scorrere il kernel', 'Slide the kernel')}
         </Btn>
         <Btn
           icon="step"
@@ -382,19 +426,43 @@ export function Conv2D({ stride: stride0 = 1, pickStride = false }: { stride?: n
             setSteps(steps + 1)
           }}
         >
-          Avanti di un passo
+          {tx('Avanti di un passo', 'One step forward')}
         </Btn>
       </Controls>
       <Tasks
         items={
           pickStride
             ? [
-                { label: 'Fai avanzare il kernel: si sposta di due pixel alla volta, saltando una posizione.', done: steps >= 2 },
-                { label: 'Confronta con stride 1: la feature map passa da 5 × 5 a 3 × 3.', done: seenOther },
+                {
+                  label: tx(
+                    'Fai avanzare il kernel: si sposta di due pixel alla volta, saltando una posizione.',
+                    'Advance the kernel: it moves two pixels at a time, skipping one position.',
+                  ),
+                  done: steps >= 2,
+                },
+                {
+                  label: tx(
+                    'Confronta con stride 1: la feature map passa da 5 × 5 a 3 × 3.',
+                    'Compare with stride 1: the feature map goes from 5 × 5 to 3 × 3.',
+                  ),
+                  done: seenOther,
+                },
               ]
             : [
-                { label: 'Fai scorrere il kernel: è sempre lo stesso neurone, con gli stessi 9 pesi, in posizioni diverse.', done: steps >= 3 },
-                { label: 'Clicca una cella della feature map per vedere da quale zona dell’immagine dipende.', done: steps >= 1 && !play },
+                {
+                  label: tx(
+                    'Fai scorrere il kernel: è sempre lo stesso neurone, con gli stessi 9 pesi, in posizioni diverse.',
+                    'Slide the kernel: it is always the same neuron, with the same 9 weights, at different positions.',
+                  ),
+                  done: steps >= 3,
+                },
+                {
+                  label: tx(
+                    'Clicca una cella della feature map per vedere da quale zona dell’immagine dipende.',
+                    'Click a cell of the feature map to see which region of the image it depends on.',
+                  ),
+                  done: steps >= 1 && !play,
+                },
               ]
         }
       />
@@ -468,7 +536,10 @@ export function ConvExample() {
       <Tasks
         items={[
           {
-            label: 'Passa sulle celle dell’output (o cliccale): ognuna è la somma dei prodotti del kernel con una porzione 2 × 2 dell’input.',
+            label: tx(
+              'Passa sulle celle dell’output (o cliccale): ognuna è la somma dei prodotti del kernel con una porzione 2 × 2 dell’input.',
+              'Hover over the cells of the output (or click them): each one is the sum of the products of the kernel with a 2 × 2 portion of the input.',
+            ),
             done: n >= 1 || cur !== 0,
           },
         ]}
@@ -494,18 +565,18 @@ export function MaxPool() {
       <div className="wbar">
         <Segmented
           size="sm"
-          label="operazione"
+          label={tx('operazione', 'operation')}
           value={mode}
           onChange={setMode}
           options={[
-            { value: 'max', label: 'massimo' },
-            { value: 'mean', label: 'media' },
+            { value: 'max', label: tx('massimo', 'maximum') },
+            { value: 'mean', label: tx('media', 'average') },
           ]}
         />
       </div>
       <div className="pool16">
         <div>
-          <div className="htf__title">Feature map originale 4 × 4</div>
+          <div className="htf__title">{tx('Feature map originale 4 × 4', 'Original 4 × 4 feature map')}</div>
           <Cells cols={4} cls="cg16--pool">
             {vals.map((v, k) => {
               const b = blockOf(k)
@@ -519,7 +590,7 @@ export function MaxPool() {
                     setVals(vals.map((x, q) => (q === k ? (x + 1) % 10 : x)))
                     setEdits(edits + 1)
                   }}
-                  aria-label={`valore ${v}, clicca per aumentarlo`}
+                  aria-label={tx(`valore ${v}, clicca per aumentarlo`, `value ${v}, click to increase it`)}
                 >
                   {v}
                 </button>
@@ -531,7 +602,7 @@ export function MaxPool() {
           →
         </div>
         <div>
-          <div className="htf__title">Feature map ridotta 2 × 2</div>
+          <div className="htf__title">{tx('Feature map ridotta 2 × 2', 'Reduced 2 × 2 feature map')}</div>
           <Cells cols={2} cls="cg16--pool">
             {outs.map((v, b) => (
               <span key={b} className={`cg16__c is-b${b}`}>
@@ -549,14 +620,25 @@ export function MaxPool() {
           }}
           disabled={vals === POOL0}
         >
-          Valori della figura
+          {tx('Valori della figura', 'Values of the figure')}
         </Btn>
-        <p className="wnote">Filtro 2 × 2 con stride 2: un valore di uscita per ogni blocco colorato. Clicca un numero per aumentarlo.</p>
+        <p className="wnote">
+          {tx(
+            'Filtro 2 × 2 con stride 2: un valore di uscita per ogni blocco colorato. Clicca un numero per aumentarlo.',
+            '2 × 2 filter with stride 2: one output value for each colored block. Click a number to increase it.',
+          )}
+        </p>
       </Controls>
       <Tasks
         items={[
-          { label: 'Aumenta un valore che non è il massimo del suo blocco: l’uscita del max pooling non cambia.', done: edits >= 1 },
-          { label: 'Passa alla media: ora ogni valore del blocco conta.', done: seen.mean },
+          {
+            label: tx(
+              'Aumenta un valore che non è il massimo del suo blocco: l’uscita del max pooling non cambia.',
+              'Increase a value that is not the maximum of its block: the output of max pooling does not change.',
+            ),
+            done: edits >= 1,
+          },
+          { label: tx('Passa alla media: ora ogni valore del blocco conta.', 'Switch to the average: now every value of the block counts.'), done: seen.mean },
         ]}
       />
     </div>

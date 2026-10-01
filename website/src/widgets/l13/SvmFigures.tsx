@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { g, isSv, rbfK, svrAt, trainSvc, trainSvr, weights, type Vec } from './solver'
@@ -104,8 +105,8 @@ function Band({ w, b }: { w: Vec; b: number }) {
 }
 
 const LEG_CLASSES = [
-  { label: <>classe +1</>, color: POS, kind: 'dot' as const },
-  { label: <>classe −1</>, color: NEG, kind: 'dot' as const },
+  { label: tx(<>classe +1</>, <>class +1</>), color: POS, kind: 'dot' as const },
+  { label: tx(<>classe −1</>, <>class −1</>), color: NEG, kind: 'dot' as const },
 ]
 
 /* ------------------------------------------------------------------ Fig. 13.1 */
@@ -139,8 +140,8 @@ function useLinePanel({ X, d, dom, start }: { X: Vec[]; d: number[]; dom: [numbe
         <Axes xTicks={[]} yTicks={[]} xLabel="" yLabel="" />
         <Polyline pts={linePts(a, b)} color="var(--c-red)" width={2.2} />
         <Pts X={X} d={d} />
-        <Handle x={a.x} y={a.y} label="primo punto della retta" onMove={setA} />
-        <Handle x={b.x} y={b.y} label="secondo punto della retta" onMove={setB} />
+        <Handle x={a.x} y={a.y} label={tx('primo punto della retta', 'first point of the line')} onMove={setA} />
+        <Handle x={b.x} y={b.y} label={tx('secondo punto della retta', 'second point of the line')} onMove={setB} />
       </Plot>
     ),
   }
@@ -169,24 +170,34 @@ export function Separable() {
   return (
     <div>
       <div className="wbar">
-        <Legend items={[...LEG_CLASSES, { label: 'retta (trascina le due maniglie)', color: 'var(--c-red)' }]} />
+        <Legend items={[...LEG_CLASSES, { label: tx('retta (trascina le due maniglie)', 'line (drag the two handles)'), color: 'var(--c-red)' }]} />
       </div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Linearmente separabili</div>
+          <div className="htf__title">{tx('Linearmente separabili', 'Linearly separable')}</div>
           {left.node}
-          <Readout label="errori della retta" tone={left.e === 0 ? 'accent' : undefined} value={String(left.e)} />
+          <Readout label={tx('errori della retta', 'errors of the line')} tone={left.e === 0 ? 'accent' : undefined} value={String(left.e)} />
         </div>
         <div>
-          <div className="htf__title">Non linearmente separabili</div>
+          <div className="htf__title">{tx('Non linearmente separabili', 'Non-linearly separable')}</div>
           {right.node}
-          <Readout label="errori della retta" value={String(right.e)} sub="nessuna retta arriva a zero" />
+          <Readout
+            label={tx('errori della retta', 'errors of the line')}
+            value={String(right.e)}
+            sub={tx('nessuna retta arriva a zero', 'no line gets to zero')}
+          />
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'A sinistra, sposta la retta finché gli errori sono zero.', done: seen.left },
-          { label: 'A destra, cerca la retta migliore: sbaglia sempre una parte dei punti.', done: seen.right },
+          { label: tx('A sinistra, sposta la retta finché gli errori sono zero.', 'On the left, move the line until the errors are zero.'), done: seen.left },
+          {
+            label: tx(
+              'A destra, cerca la retta migliore: sbaglia sempre una parte dei punti.',
+              'On the right, look for the best line: it always misclassifies some of the points.',
+            ),
+            done: seen.right,
+          },
         ]}
       />
     </div>
@@ -240,8 +251,8 @@ export function MarginExplorer() {
         <Legend
           items={[
             ...LEG_CLASSES,
-            { label: 'iperpiano', color: 'var(--c-red)' },
-            { label: 'bordi del margine', color: 'var(--ink-3)', kind: 'dash' },
+            { label: tx('iperpiano', 'hyperplane'), color: 'var(--c-red)' },
+            { label: tx('bordi del margine', 'edges of the margin'), color: 'var(--ink-3)', kind: 'dash' },
           ]}
         />
       </div>
@@ -251,33 +262,52 @@ export function MarginExplorer() {
           {!errors && <Margins w={w} b={b0} band />}
           {errors > 0 && <Polyline pts={linePts(a, b)} color="var(--c-red)" width={2.4} />}
           <Pts X={SEP_X} d={SEP_D} sv={(i) => !errors && near[i]} />
-          <Handle x={a.x} y={a.y} label="primo punto dell’iperpiano" onMove={(p) => (setA(p), setUsedOpt(false))} />
-          <Handle x={b.x} y={b.y} label="secondo punto dell’iperpiano" onMove={(p) => (setB(p), setUsedOpt(false))} />
+          <Handle x={a.x} y={a.y} label={tx('primo punto dell’iperpiano', 'first point of the hyperplane')} onMove={(p) => (setA(p), setUsedOpt(false))} />
+          <Handle x={b.x} y={b.y} label={tx('secondo punto dell’iperpiano', 'second point of the hyperplane')} onMove={(p) => (setB(p), setUsedOpt(false))} />
         </Plot>
         <div className="wside">
           <div className="readouts">
             <Readout
-              label={
+              label={tx(
                 <>
                   margine <Tex>\rho</Tex> di questa retta
-                </>
-              }
+                </>,
+                <>
+                  margin <Tex>\rho</Tex> of this line
+                </>,
+              )}
               tone="accent"
               value={errors ? '—' : fmt(rho, 2)}
             />
-            <Readout label={<>margine massimo</>} value={fmt(RHO_MAX, 2)} />
+            <Readout label={tx(<>margine massimo</>, <>maximum margin</>)} value={fmt(RHO_MAX, 2)} />
           </div>
           <div className={`verdict ${errors ? 'verdict--bad' : rho > RHO_MAX - 1e-3 ? 'verdict--good' : 'verdict--info'}`}>
             <span>
               {errors
-                ? `La retta sbaglia ${errors} punti: non è un iperpiano separatore.`
+                ? tx(
+                    `La retta sbaglia ${errors} punti: non è un iperpiano separatore.`,
+                    `The line misclassifies ${errors} ${errors === 1 ? 'point' : 'points'}: it is not a separating hyperplane.`,
+                  )
                 : rho > RHO_MAX - 1e-3
-                  ? 'Iperpiano ottimo: nessuna retta separatrice ha un margine più largo.'
-                  : 'Separa le classi, ma un’altra retta ha un margine più largo.'}
+                  ? tx(
+                      'Iperpiano ottimo: nessuna retta separatrice ha un margine più largo.',
+                      'Optimal hyperplane: no separating line has a wider margin.',
+                    )
+                  : tx(
+                      'Separa le classi, ma un’altra retta ha un margine più largo.',
+                      'It separates the classes, but another line has a wider margin.',
+                    )}
             </span>
           </div>
           <p className="wnote">
-            La zona grigia è larga <Tex>\rho</Tex>: il doppio della distanza tra la retta e il punto più vicino (cerchiato).
+            {tx(
+              <>
+                La zona grigia è larga <Tex>\rho</Tex>: il doppio della distanza tra la retta e il punto più vicino (cerchiato).
+              </>,
+              <>
+                The gray zone is <Tex>\rho</Tex> wide: twice the distance between the line and the closest point (circled).
+              </>,
+            )}
           </p>
           <Btn
             icon="sparkle"
@@ -289,14 +319,23 @@ export function MarginExplorer() {
               setUsedOpt(true)
             }}
           >
-            Iperpiano ottimo
+            {tx('Iperpiano ottimo', 'Optimal hyperplane')}
           </Btn>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Ruota e sposta la retta per allargare il margine senza sbagliare punti.', done: seen.better },
-          { label: 'Mostra l’iperpiano ottimo: è quello a margine massimo.', done: seen.opt },
+          {
+            label: tx(
+              'Ruota e sposta la retta per allargare il margine senza sbagliare punti.',
+              'Rotate and move the line to widen the margin without misclassifying points.',
+            ),
+            done: seen.better,
+          },
+          {
+            label: tx('Mostra l’iperpiano ottimo: è quello a margine massimo.', 'Show the optimal hyperplane: it is the maximum-margin one.'),
+            done: seen.opt,
+          },
         ]}
       />
     </div>
@@ -329,7 +368,10 @@ function Clickable({
           onClick={() => onClick(i)}
           role="button"
           tabIndex={0}
-          aria-label={`punto ${i + 1}: ${removed.has(i) ? 'rimosso, clic per rimetterlo' : 'clic per toglierlo'}`}
+          aria-label={tx(
+            `punto ${i + 1}: ${removed.has(i) ? 'rimosso, clic per rimetterlo' : 'clic per toglierlo'}`,
+            `point ${i + 1}: ${removed.has(i) ? 'removed, click to put it back' : 'click to remove it'}`,
+          )}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick(i)}
         >
           <circle r={14} className="svm13__hit" />
@@ -396,20 +438,26 @@ export function SupportVectors() {
         <div className="wside">
           <div className="readouts">
             <Readout
-              label={
+              label={tx(
                 <>
                   support vector <Tex>{'N_s'}</Tex>
-                </>
-              }
+                </>,
+                <>
+                  support vectors <Tex>{'N_s'}</Tex>
+                </>,
+              )}
               value={String(svIdx.size)}
-              sub={`su ${keep.length} punti`}
+              sub={tx(`su ${keep.length} punti`, `out of ${keep.length} points`)}
             />
             <Readout
-              label={
+              label={tx(
                 <>
                   margine <Tex>\rho</Tex>
-                </>
-              }
+                </>,
+                <>
+                  margin <Tex>\rho</Tex>
+                </>,
+              )}
               tone="accent"
               value={w ? fmt(2 / Math.hypot(w[0], w[1]), 2) : '—'}
             />
@@ -417,15 +465,24 @@ export function SupportVectors() {
           <div className={`verdict ${removed.size === 0 ? 'verdict--info' : changed ? 'verdict--warn' : 'verdict--good'}`}>
             <span>
               {removed.size === 0
-                ? 'Clicca un punto per toglierlo dal training set (e di nuovo per rimetterlo).'
+                ? tx(
+                    'Clicca un punto per toglierlo dal training set (e di nuovo per rimetterlo).',
+                    'Click a point to remove it from the training set (and again to put it back).',
+                  )
                 : changed
-                  ? `L’iperpiano è cambiato: ${removedSv ? 'hai tolto un support vector' : 'i punti rimasti hanno un altro ottimo'}.`
-                  : 'L’iperpiano non cambia: i punti tolti non erano support vector.'}
+                  ? tx(
+                      `L’iperpiano è cambiato: ${removedSv ? 'hai tolto un support vector' : 'i punti rimasti hanno un altro ottimo'}.`,
+                      `The hyperplane has changed: ${removedSv ? 'you removed a support vector' : 'the remaining points have a different optimum'}.`,
+                    )
+                  : tx(
+                      'L’iperpiano non cambia: i punti tolti non erano support vector.',
+                      'The hyperplane does not change: the removed points were not support vectors.',
+                    )}
             </span>
           </div>
           {m && (
             <div className="wpanel">
-              <div className="wpanel__title">Moltiplicatori non nulli</div>
+              <div className="wpanel__title">{tx('Moltiplicatori non nulli', 'Nonzero multipliers')}</div>
               <div className="svm13__alphas">
                 {keep
                   .map((i, j) => ({ i, a: m.alpha[j] }))
@@ -436,18 +493,30 @@ export function SupportVectors() {
                     </span>
                   ))}
               </div>
-              <p className="wnote">Tutti gli altri punti hanno α = 0.</p>
+              <p className="wnote">{tx('Tutti gli altri punti hanno α = 0.', 'All the other points have α = 0.')}</p>
             </div>
           )}
           <Btn icon="reset" variant="ghost" onClick={() => setRemoved(new Set())} disabled={removed.size === 0}>
-            Rimetti tutti i punti
+            {tx('Rimetti tutti i punti', 'Put all points back')}
           </Btn>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Togli un punto lontano dal confine: l’iperpiano resta identico.', done: seen.same },
-          { label: 'Togli un support vector (cerchiato): l’iperpiano si sposta e il margine cresce.', done: seen.diff },
+          {
+            label: tx(
+              'Togli un punto lontano dal confine: l’iperpiano resta identico.',
+              'Remove a point far from the boundary: the hyperplane stays the same.',
+            ),
+            done: seen.same,
+          },
+          {
+            label: tx(
+              'Togli un support vector (cerchiato): l’iperpiano si sposta e il margine cresce.',
+              'Remove a support vector (circled): the hyperplane moves and the margin grows.',
+            ),
+            done: seen.diff,
+          },
         ]}
       />
     </div>
@@ -501,12 +570,15 @@ export function Distance() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'iperpiano ottimo', color: 'var(--c-red)' },
+            { label: tx('iperpiano ottimo', 'optimal hyperplane'), color: 'var(--c-red)' },
             {
-              label: (
+              label: tx(
                 <>
                   distanza <Tex>r</Tex>
-                </>
+                </>,
+                <>
+                  distance <Tex>r</Tex>
+                </>,
               ),
               color: 'var(--c-violet)',
             },
@@ -537,7 +609,7 @@ export function Distance() {
           <Label x={(p.x + xp.x) / 2} y={(p.y + xp.y) / 2} dx={8} dy={4} className="plot-label--math plot-label--strong">
             r
           </Label>
-          <Handle x={p.x} y={p.y} label="punto x" onMove={setP} />
+          <Handle x={p.x} y={p.y} label={tx('punto x', 'point x')} onMove={setP} />
           <Label x={p.x} y={p.y} dx={12} dy={-10} className="plot-label--math plot-label--strong">
             x
           </Label>
@@ -549,7 +621,14 @@ export function Distance() {
             <Readout label={<Tex>{'r = g(\\mathbf{x}) / \\|\\mathbf{w}_o\\|'}</Tex>} tone="violet" value={fmt(r, 3)} />
           </div>
           <p className="wnote">
-            Su un support vector <Tex>{'g = 1'}</Tex> e quindi <Tex>{'r = 1/\\|\\mathbf{w}_o\\| = \\rho/2'}</Tex> = {fmt(1 / nw, 3)}.
+            {tx(
+              <>
+                Su un support vector <Tex>{'g = 1'}</Tex> e quindi <Tex>{'r = 1/\\|\\mathbf{w}_o\\| = \\rho/2'}</Tex> = {fmt(1 / nw, 3)}.
+              </>,
+              <>
+                On a support vector <Tex>{'g = 1'}</Tex> and therefore <Tex>{'r = 1/\\|\\mathbf{w}_o\\| = \\rho/2'}</Tex> = {fmt(1 / nw, 3)}.
+              </>,
+            )}
           </p>
           <Btn
             variant="soft"
@@ -558,14 +637,26 @@ export function Distance() {
               setP({ x: q[0], y: q[1] })
             }}
           >
-            Porta x su un support vector
+            {tx('Porta x su un support vector', 'Move x onto a support vector')}
           </Btn>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Porta x dall’altra parte dell’iperpiano: g e r diventano negativi.', done: seen.neg },
-          { label: 'Porta x su un support vector: la distanza è metà del margine.', done: seen.sv },
+          {
+            label: tx(
+              'Porta x dall’altra parte dell’iperpiano: g e r diventano negativi.',
+              'Move x to the other side of the hyperplane: g and r become negative.',
+            ),
+            done: seen.neg,
+          },
+          {
+            label: tx(
+              'Porta x su un support vector: la distanza è metà del margine.',
+              'Move x onto a support vector: the distance is half the margin.',
+            ),
+            done: seen.sv,
+          },
         ]}
       />
     </div>
@@ -632,16 +723,19 @@ export function SoftMargin() {
               </Label>
             ) : null,
           )}
-          <Handle x={ip.x} y={ip.y} r={4} color={POS} label="punto della classe +1" onMove={setIp} />
-          <Handle x={ineg.x} y={ineg.y} r={4} color={NEG} label="punto della classe −1" onMove={setIneg} />
+          <Handle x={ip.x} y={ip.y} r={4} color={POS} label={tx('punto della classe +1', 'point of class +1')} onMove={setIp} />
+          <Handle x={ineg.x} y={ineg.y} r={4} color={NEG} label={tx('punto della classe −1', 'point of class −1')} onMove={setIneg} />
         </Plot>
         <div className="wside">
           <Slider
-            label={
+            label={tx(
               <>
                 iperparametro <Tex>C</Tex>
-              </>
-            }
+              </>,
+              <>
+                hyperparameter <Tex>C</Tex>
+              </>,
+            )}
             min={-2}
             max={3}
             step={0.05}
@@ -651,31 +745,58 @@ export function SoftMargin() {
           />
           <div className="readouts">
             <Readout
-              label={
+              label={tx(
                 <>
                   margine <Tex>{'\\rho = 2/\\|\\mathbf{w}\\|'}</Tex>
-                </>
-              }
+                </>,
+                <>
+                  margin <Tex>{'\\rho = 2/\\|\\mathbf{w}\\|'}</Tex>
+                </>,
+              )}
               tone="accent"
               value={fmt(2 / nw, 2)}
             />
-            <Readout label="support vector" value={String(nSv)} sub={`${atC} con α = C (nel margine)`} />
             <Readout
-              label={
+              label={tx('support vector', 'support vectors')}
+              value={String(nSv)}
+              sub={tx(`${atC} con α = C (nel margine)`, `${atC} with α = C (in the margin)`)}
+            />
+            <Readout
+              label={tx(
                 <>
                   errori di training (<Tex>{'\\xi_i > 1'}</Tex>)
-                </>
-              }
+                </>,
+                <>
+                  training errors (<Tex>{'\\xi_i > 1'}</Tex>)
+                </>,
+              )}
               value={String(errs)}
             />
           </div>
-          <p className="wnote">Trascina i due punti con la maniglia: dentro il margine dal lato giusto, o dal lato sbagliato.</p>
+          <p className="wnote">
+            {tx(
+              'Trascina i due punti con la maniglia: dentro il margine dal lato giusto, o dal lato sbagliato.',
+              'Drag the two points with the handle: inside the margin on the right side, or onto the wrong side.',
+            )}
+          </p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Abbassa C: il margine si allarga e ammette più punti al suo interno (rischio di underfitting).', done: seen.low },
-          { label: 'Alza C: nessun errore tollerato, il margine si stringe (rischio di overfitting).', done: seen.high },
+          {
+            label: tx(
+              'Abbassa C: il margine si allarga e ammette più punti al suo interno (rischio di underfitting).',
+              'Lower C: the margin widens and allows more points inside it (risk of underfitting).',
+            ),
+            done: seen.low,
+          },
+          {
+            label: tx(
+              'Alza C: nessun errore tollerato, il margine si stringe (rischio di overfitting).',
+              'Raise C: no errors tolerated, the margin shrinks (risk of overfitting).',
+            ),
+            done: seen.high,
+          },
         ]}
       />
     </div>
@@ -754,12 +875,12 @@ export function FeatureMap() {
   return (
     <div>
       <div className="wbar">
-        <Legend items={[...LEG_CLASSES, { label: 'confine: ellisse / piano', color: 'var(--c-red)' }]} />
+        <Legend items={[...LEG_CLASSES, { label: tx('confine: ellisse / piano', 'boundary: ellipse / plane'), color: 'var(--c-red)' }]} />
       </div>
       <div className="wgrid wgrid--even">
         <div>
           <div className="htf__title">
-            Spazio di input <Tex>{'(x_1, x_2)'}</Tex>
+            {tx('Spazio di input', 'Input space')} <Tex>{'(x_1, x_2)'}</Tex>
           </div>
           <Plot xDomain={[-1.5, 1.5]} yDomain={[-1.5, 1.5]} equal aspect={1} maxH={300} margin={{ l: 26, r: 10, t: 10, b: 26 }}>
             <Axes xTicks={[-1, 0, 1]} yTicks={[-1, 0, 1]} xLabel="x₁" yLabel="x₂" />
@@ -776,14 +897,14 @@ export function FeatureMap() {
         </div>
         <div>
           <div className="htf__title">
-            Spazio delle feature <Tex>{'(x_1^2, \\sqrt{2}x_1x_2, x_2^2)'}</Tex>
+            {tx('Spazio delle feature', 'Feature space')} <Tex>{'(x_1^2, \\sqrt{2}x_1x_2, x_2^2)'}</Tex>
           </div>
           <svg
             className="fm13__svg"
             viewBox={`0 0 ${W} ${H}`}
             {...handlers}
             role="img"
-            aria-label="Spazio delle feature in 3D, trascina per ruotarlo"
+            aria-label={tx('Spazio delle feature in 3D, trascina per ruotarlo', 'Feature space in 3D, drag to rotate it')}
           >
             {axis([0, 0, 0], [2.4, 0, 0], 'z1')}
             {axis([0, -1.6, 0], [0, 1.8, 0], 'z2')}
@@ -794,17 +915,21 @@ export function FeatureMap() {
             ))}
           </svg>
           <p className="wnote">
-            Trascina per ruotare. Il piano è <Tex>{`z_1/${fmt(A * A, 2)} + z_3/${fmt(B * B, 2)} = 1`}</Tex>.
+            {tx('Trascina per ruotare. Il piano è', 'Drag to rotate. The plane is')}{' '}
+            <Tex>{`z_1/${fmt(A * A, 2)} + z_3/${fmt(B * B, 2)} = 1`}</Tex>.
           </p>
         </div>
       </div>
       <div className="controls">
         <Slider
-          label={
+          label={tx(
             <>
               semiasse <Tex>a</Tex> dell’ellisse
-            </>
-          }
+            </>,
+            <>
+              semi-axis <Tex>a</Tex> of the ellipse
+            </>,
+          )}
           min={0.6}
           max={1.35}
           step={0.05}
@@ -813,11 +938,14 @@ export function FeatureMap() {
           format={(v) => fmt(v, 2)}
         />
         <Slider
-          label={
+          label={tx(
             <>
               semiasse <Tex>b</Tex>
-            </>
-          }
+            </>,
+            <>
+              semi-axis <Tex>b</Tex>
+            </>,
+          )}
           min={0.6}
           max={1.35}
           step={0.05}
@@ -828,8 +956,20 @@ export function FeatureMap() {
       </div>
       <Tasks
         items={[
-          { label: 'Ruota lo spazio delle feature: le due classi stanno ai due lati di un piano.', done: seen.rot },
-          { label: 'Cambia la forma dell’ellisse: nello spazio delle feature cambia solo l’inclinazione del piano.', done: seen.shape },
+          {
+            label: tx(
+              'Ruota lo spazio delle feature: le due classi stanno ai due lati di un piano.',
+              'Rotate the feature space: the two classes lie on the two sides of a plane.',
+            ),
+            done: seen.rot,
+          },
+          {
+            label: tx(
+              'Cambia la forma dell’ellisse: nello spazio delle feature cambia solo l’inclinazione del piano.',
+              'Change the shape of the ellipse: in the feature space only the tilt of the plane changes.',
+            ),
+            done: seen.shape,
+          },
         ]}
       />
     </div>
@@ -885,9 +1025,9 @@ export function Architecture() {
           <Cells cells={cells} n={G} />
           <Axes xTicks={[0, 1, 2, 3]} yTicks={[0, 1, 2, 3]} xLabel="x₁" yLabel="x₂" />
           <Pts X={ARCH_X} d={ARCH_D} sv={(i) => isSv(m, i)} />
-          <Handle x={q.x} y={q.y} label="pattern x da classificare" onMove={setQ} />
+          <Handle x={q.x} y={q.y} label={tx('pattern x da classificare', 'pattern x to classify')} onMove={setQ} />
         </Plot>
-        <svg className="arch13" viewBox={`0 0 ${VW} ${VH}`} role="img" aria-label="Architettura della SVM">
+        <svg className="arch13" viewBox={`0 0 ${VW} ${VH}`} role="img" aria-label={tx('Architettura della SVM', 'Architecture of the SVM')}>
           {svs.map((i, k) => (
             <g key={i}>
               {[0, 1].map((u) => (
@@ -936,11 +1076,14 @@ export function Architecture() {
       </div>
       <div className="controls">
         <Slider
-          label={
+          label={tx(
             <>
               larghezza <Tex>\sigma</Tex> del kernel RBF
-            </>
-          }
+            </>,
+            <>
+              width <Tex>\sigma</Tex> of the RBF kernel
+            </>,
+          )}
           min={0.3}
           max={1.2}
           step={0.05}
@@ -948,28 +1091,41 @@ export function Architecture() {
           onChange={setSigma}
           format={(v) => fmt(v, 2)}
         />
-        <Readout label="unità nascoste = support vector" tone="accent" value={String(n)} />
+        <Readout label={tx('unità nascoste = support vector', 'hidden units = support vectors')} tone="accent" value={String(n)} />
         <Readout
-          label={
+          label={tx(
             <>
               uscita <Tex>{'\\operatorname{sign}(g(\\mathbf{x}))'}</Tex>
-            </>
-          }
+            </>,
+            <>
+              output <Tex>{'\\operatorname{sign}(g(\\mathbf{x}))'}</Tex>
+            </>,
+          )}
           value={out >= 0 ? '+1' : '−1'}
         />
       </div>
       <Tasks
         items={[
           {
-            label: (
+            label: tx(
               <>
                 Trascina il pattern <Tex>{'\\mathbf{x}'}</Tex>: ogni unità nascosta risponde con{' '}
                 <Tex>{'K(\\mathbf{x}, \\mathbf{x}_i)'}</Tex>, più alta vicino al suo support vector.
-              </>
+              </>,
+              <>
+                Drag the pattern <Tex>{'\\mathbf{x}'}</Tex>: each hidden unit responds with{' '}
+                <Tex>{'K(\\mathbf{x}, \\mathbf{x}_i)'}</Tex>, higher near its support vector.
+              </>,
             ),
             done: seen.move,
           },
-          { label: 'Cambia σ: cambiano i support vector, e con loro il numero di unità nascoste.', done: seen.sig },
+          {
+            label: tx(
+              'Cambia σ: cambiano i support vector, e con loro il numero di unità nascoste.',
+              'Change σ: the support vectors change, and with them the number of hidden units.',
+            ),
+            done: seen.sig,
+          },
         ]}
       />
     </div>
@@ -1029,15 +1185,18 @@ export function EpsLoss() {
         </Label>
         <FnPath f={L} color="var(--c-red)" width={2.6} samples={400} />
         <Dot x={r} y={L(r)} r={5} color="var(--c-red)" />
-        <Handle x={r} y={0} axis="x" label="residuo d − y" onMove={(p) => setR(p.x)} />
+        <Handle x={r} y={0} axis="x" label={tx('residuo d − y', 'residual d − y')} onMove={(p) => setR(p.x)} />
       </Plot>
       <div className="controls">
         <Slider
-          label={
+          label={tx(
             <>
               ampiezza <Tex>\varepsilon</Tex>
-            </>
-          }
+            </>,
+            <>
+              width <Tex>\varepsilon</Tex>
+            </>,
+          )}
           min={0}
           max={1.2}
           step={0.05}
@@ -1050,13 +1209,22 @@ export function EpsLoss() {
           label={<Tex>{'L_\\varepsilon'}</Tex>}
           tone="red"
           value={fmt(L(r), 2)}
-          sub={Math.abs(r) < eps ? 'dentro il tubo: costo zero' : 'fuori dal tubo'}
+          sub={Math.abs(r) < eps ? tx('dentro il tubo: costo zero', 'inside the tube: zero cost') : tx('fuori dal tubo', 'outside the tube')}
         />
       </div>
       <Tasks
         items={[
-          { label: 'Porta il residuo tra −ε e +ε: l’errore non costa nulla.', done: seen.zero },
-          { label: 'Allarga ε fino a 1: il tratto piatto cresce e più errori diventano gratuiti.', done: seen.big },
+          {
+            label: tx('Porta il residuo tra −ε e +ε: l’errore non costa nulla.', 'Move the residual between −ε and +ε: the error costs nothing.'),
+            done: seen.zero,
+          },
+          {
+            label: tx(
+              'Allarga ε fino a 1: il tratto piatto cresce e più errori diventano gratuiti.',
+              'Widen ε up to 1: the flat segment grows and more errors become free.',
+            ),
+            done: seen.big,
+          },
         ]}
       />
     </div>
@@ -1094,20 +1262,26 @@ export function EpsTube() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'dati', color: POS, kind: 'dot' },
+            { label: tx('dati', 'data'), color: POS, kind: 'dot' },
             {
-              label: (
+              label: tx(
                 <>
                   modello <Tex>{'h(\\mathbf{x})'}</Tex>
-                </>
+                </>,
+                <>
+                  model <Tex>{'h(\\mathbf{x})'}</Tex>
+                </>,
               ),
               color: 'var(--c-red)',
             },
             {
-              label: (
+              label: tx(
                 <>
                   tubo <Tex>\pm\varepsilon</Tex>
-                </>
+                </>,
+                <>
+                  tube <Tex>\pm\varepsilon</Tex>
+                </>,
               ),
               color: 'var(--c-red)',
               kind: 'area',
@@ -1151,11 +1325,14 @@ export function EpsTube() {
       </Plot>
       <div className="controls">
         <Slider
-          label={
+          label={tx(
             <>
               ampiezza del tubo <Tex>\varepsilon</Tex>
-            </>
-          }
+            </>,
+            <>
+              tube width <Tex>\varepsilon</Tex>
+            </>,
+          )}
           min={0}
           max={0.6}
           step={0.02}
@@ -1164,11 +1341,14 @@ export function EpsTube() {
           format={(v) => fmt(v, 2)}
         />
         <Slider
-          label={
+          label={tx(
             <>
               iperparametro <Tex>C</Tex>
-            </>
-          }
+            </>,
+            <>
+              hyperparameter <Tex>C</Tex>
+            </>,
+          )}
           min={-1}
           max={2}
           step={0.05}
@@ -1176,12 +1356,28 @@ export function EpsTube() {
           onChange={setLc}
           format={(v) => fmt(10 ** v, v < 0 ? 2 : 0)}
         />
-        <Readout label="support vector (cerchiati)" tone="accent" value={`${nSv} su ${TUBE.length}`} />
+        <Readout
+          label={tx('support vector (cerchiati)', 'support vectors (circled)')}
+          tone="accent"
+          value={tx(`${nSv} su ${TUBE.length}`, `${nSv} of ${TUBE.length}`)}
+        />
       </div>
       <Tasks
         items={[
-          { label: 'Allarga il tubo: i punti dentro non contano e i support vector diminuiscono.', done: seen.wide },
-          { label: 'Porta ε a zero: ogni errore costa, e quasi tutti i punti diventano support vector.', done: seen.zero },
+          {
+            label: tx(
+              'Allarga il tubo: i punti dentro non contano e i support vector diminuiscono.',
+              'Widen the tube: the points inside do not count and the support vectors decrease.',
+            ),
+            done: seen.wide,
+          },
+          {
+            label: tx(
+              'Porta ε a zero: ogni errore costa, e quasi tutti i punti diventano support vector.',
+              'Set ε to zero: every error costs, and almost all the points become support vectors.',
+            ),
+            done: seen.zero,
+          },
         ]}
       />
     </div>

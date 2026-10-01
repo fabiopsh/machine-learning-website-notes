@@ -1,0 +1,318 @@
+import * as F from '../formulas/l19'
+import { Clustering } from '../../widgets/l03/Clustering'
+import { VoronoiCells, Quant1D, KMeans } from '../../widgets/l19/Vq'
+import { SomMapping, Homunculus, SomTraining, WelfareMap } from '../../widgets/l19/Som'
+
+<Lead>This lecture is a light introduction to **unsupervised learning** with neural networks. The focus is on **clustering** seen as **vector quantization**: we start from the classic **K-means** and arrive at a historical neural model, Kohonen’s **Self-Organizing Maps** (SOM), which add to clustering the property of preserving the topology and hence of visualizing the data.</Lead>
+
+## Unsupervised learning
+
+In <T id="non-supervisionato">**unsupervised**</T> learning **there is no teacher**: the training set contains only **unlabeled** data $\langle \mathbf{x}\rangle$. The main tasks:
+
+- **Clustering**: finding natural groupings in the data.
+- **Dimensionality reduction**, visualization, preprocessing: multidimensional data are projected onto a lower-dimensional space (PCA, Multi-Dimensional Scaling, Independent Component Analysis…).
+- Modeling the density of the data (not covered in the course).
+
+What is it for? Examples: organizing life forms into a taxonomy (what are mammals?); newborns learn to recognize (to “group”) familiar faces before they understand language. Above all, **unlabeled data cost much less**: for example, 10 million YouTube frames made state-of-the-art results possible in the recognition of objects in 22,000 categories.
+
+### Clustering
+
+<Callout type="definition" title="Clustering">
+
+Partitioning the data into **clusters** (subsets of “similar” data): the patterns of a cluster are more similar to each other than to a pattern of another cluster. Each cluster is represented by a <T id="centroide">**centroid**</T> (also called prototype, reference vector, cluster center, codevector; the set of centroids is the **codebook**).
+
+</Callout>
+
+<Figure n="19.1" title="Clustering">
+  <Clustering />
+  <Caption>Clustering: partition of the data into groups represented by centroids. Two groups of points in space, each with its own centroid: drag the centroids (it is the figure of [lesson 3](#/lezione/03)).</Caption>
+</Figure>
+
+Clustering has been addressed in a great many contexts and disciplines, with thousands of different algorithms: this reflects its usefulness as a step of exploratory data analysis. Here we adopt the perspective of **vector quantization** for **partitional clustering**.
+
+<Callout type="warning" title="The metric dominates">
+
+As for K-NN, it is the **assumed distance** that says which examples are similar, and the algorithm decides the groupings on the basis of that metric. The Euclidean distance is popular but it is **only one choice**, and the choice can have deep implications (for example, outliers can be given less weight by using $1 -$ a Gaussian centered on the prototype).
+
+</Callout>
+
+---
+
+## Vector quantization
+
+<Callout type="definition" title="Vector Quantization (VQ)">
+
+<T id="quantizzazione-vettoriale">Vector quantization</T> techniques encode a data manifold $V \subseteq \mathbb{R}^n$ using only a finite set $\mathbf{w} = (\mathbf{w}_1, \dots, \mathbf{w}_K)$ of reference vectors (the codebook) $\mathbf{w}_i \in \mathbb{R}^n$. A vector $\mathbf{x} \in V$ is described by the **winning** (best-matching) reference vector $\mathbf{w}_{i^*(\mathbf{x})}$, the one with minimum distortion $d(\mathbf{x}, \mathbf{w}_{i^*(\mathbf{x})})$.
+
+</Callout>
+
+This divides the manifold into subregions, the **Voronoi polyhedra**:
+
+<Formula f={F.voronoi} />
+
+and each $\mathbf{x}$ is described by the corresponding reference vector.
+
+<Figure n="19.2" title="Voronoi diagram" size="wide">
+  <VoronoiCells />
+  <Caption>Voronoi diagram in the plane: polygonal cells around the centers, gray and white. Each cell contains the points that are closer to its center than to any other. Drag the vector $\mathbf{x}$ and change the number of centers.</Caption>
+</Figure>
+
+Our problem is the opposite of the K-NN one: **given the dataset, find the centers** that minimize the loss. In general it is hard: finding the optimal codebook is **NP-complete**.
+
+<Callout type="example" title="Quantization in 1D">
+
+In digital signal processing, **quantization** approximates a continuous range of values (or a very large set of discrete values) with a relatively small set of discrete symbols, making a quantization error (distortion). It is what happens to music in digital devices.
+
+</Callout>
+
+<Figure n="19.3" title="Quantization in one dimension">
+  <Quant1D />
+  <Caption>Quantization in 1D: a line divided into intervals (Voronoi cells) by tick marks, with one centroid for each cell. Each value is replaced by the centroid of the cell it falls in. Drag the value and change the number of symbols.</Caption>
+</Figure>
+
+**VQ and clustering.** Clustering has the more general goal of finding **interesting or useful** groupings, where “interesting” is often defined implicitly by the procedure itself and not necessarily by the minimum quantization error. Nevertheless, VQ provides a useful framework, and its algorithms are often used for clustering.
+
+### The quantization error
+
+The goal is to optimally partition an unknown distribution in the input space into regions approximated by prototypes: a set of quantizers $\mathbf{x} \mapsto c(\mathbf{x}) = \mathbf{w}_{i^*(\mathbf{x})}$, from a continuous space to a discrete one. We consider the **squared distortion** $d(\mathbf{x}, c(\mathbf{x})) = \|\mathbf{x} - c(\mathbf{x})\|^2$; its mean value over the input distribution is the expected distortion (or reconstruction error, or quantization error). **This is our loss**:
+
+$$
+E = \int f\big(d(\mathbf{x}, \mathbf{w}_{i^*(\mathbf{x})})\big)\,p(\mathbf{x})\,d\mathbf{x} = \int \|\mathbf{x} - \mathbf{w}_{i^*(\mathbf{x})}\|^2\,p(\mathbf{x})\,d\mathbf{x},
+$$
+
+where $p(\mathbf{x})$ is the input distribution. In discrete form, over $l$ data points and $K$ prototypes:
+
+<Formula f={F.quantError} />
+
+$$
+\delta_{winner}(i,j) = \begin{cases} 1 & \text{if } j \text{ is the winner for } \mathbf{x}_i \\ 0 & \text{otherwise} \end{cases}
+$$
+
+($\delta_{winner}$ is the characteristic function of the receptive field of $\mathbf{w}_j$).
+
+Minimizing $E$ with respect to $\mathbf{w}$ is the VQ problem. Warning: the integrand is **not continuously differentiable**, because the winner $\mathbf{w}_{i^*(\mathbf{x})}$ changes discretely as $\mathbf{x}$ varies; the derivatives are however computed **locally**, with $\mathbf{x}$ fixed in a Voronoi cell.
+
+---
+
+## K-means
+
+### On-line version
+
+Differentiating $E$ with respect to the $\mathbf{w}_j$ gives the learning rule of VQ, that is the well-known <T id="k-means">**K-means**</T> algorithm of Lloyd and MacQueen (on-line version): for each $\mathbf{x}_i$,
+
+<Formula f={F.kmeansOnline} />
+
+(The derivative of $\|\mathbf{x}_i - \mathbf{w}_j\|^2$ with respect to $\mathbf{w}_j$ is $-2(\mathbf{x}_i - \mathbf{w}_j)$; moving in the direction opposite to the gradient brings $\mathbf{w}_j$ closer to $\mathbf{x}_i$.)
+
+- **Only the winning prototype** is modified, by moving it toward $\mathbf{x}$.
+- It is a stochastic gradient descent → **local minima**; the method depends on the **initialization**.
+- The **number of clusters** must be provided in advance.
+
+### Batch version
+
+<Callout type="abstract" title="Batch K-means algorithm (Linde-Buzo-Gray, or generalized Lloyd)">
+
+1. Choose $K$ centers: $K$ patterns drawn at random, or $K$ random points in the hypervolume that contains the patterns.
+2. Assign each pattern to the nearest center (the **winner**):
+
+$$
+i^*(\mathbf{x}) = \arg\min_i \|\mathbf{x} - \mathbf{w}_i\|^2, \qquad \|\mathbf{x} - \mathbf{w}_i\|^2 = \sum_{j=1}^{n}(x_j - w_{ij})^2.
+$$
+
+3. Recompute the centers as the **mean** (geometric centroid) of the members of the cluster:
+
+$$
+\mathbf{w}_i = \frac{1}{|\text{cluster}_i|}\sum_{\mathbf{x}_j \in \text{cluster}_i}\mathbf{x}_j.
+$$
+
+4. If the convergence criterion is not satisfied (no or minimal reassignment of the patterns, minimal decrease of the squared error), go back to step 2.
+
+</Callout>
+
+(Exercise: from the on-line version to the batch one. Summing — or averaging — the on-line delta with $\eta = 1$ over the patterns of a cluster gives $\mathbf{w}_{new} = \mathbf{w}_{old} + \frac{1}{|C|}\sum_{\mathbf{x} \in C}(\mathbf{x} - \mathbf{w}_{old}) = \frac{1}{|C|}\sum_{\mathbf{x} \in C}\mathbf{x}$: exactly the mean.)
+
+<Figure n="19.4" title="K-means with K = 3" size="wide">
+  <KMeans />
+  <Caption>Example of K-means with $K = 3$: initialization of three prototypes $c_1, c_2, c_3$; assignment of the points to the nearest prototype (colors red, blue, green); computation of the new prototypes as the mean of the points of each cluster (the arrows show the displacement); new assignment of the points. Run the steps one at a time.</Caption>
+</Figure>
+
+### Strengths and weaknesses
+
+- It is the simplest and most widely used algorithm with a squared-error criterion; it is popular because it is easy to implement and generally efficient.
+- The number $K$ of clusters must be provided.
+- The local minima of $E$ make the method dependent on the initialization, with only suboptimal choices of the prototypes.
+- It works very well for **compact and hyperspherical** clusters; with clusters of other shapes (for example two intertwined “spirals”) it fails.
+- **No visualization property**: it does not allow the data to be projected onto a lower-dimensional space, and the indexing of the $\mathbf{w}$ is arbitrary, so the mapping is not ordered.
+
+### Soft-max
+
+To avoid local minima, a **soft-max** adaptation rule is introduced: not only the winner is modified, but **all** the centers, according to their **proximity** to $\mathbf{x}$, with a step that decreases with the distance $d(\mathbf{x}, \mathbf{w}_i)$ (for example maximum-entropy clustering with Gaussian distances). An instance of this strategy in neural networks is **Kohonen’s SOM**, where however the proximity between the reference vectors is defined on an **ordered map**, that is a neural grid on which they are arranged.
+
+---
+
+## Self-Organizing Map
+
+<T id="som">**Self-Organizing Maps**</T> (SOM), or **Kohonen maps** (1981), are networks of $N$ neurons arranged on a **regular low-dimensional grid** (usually 2D, a lattice).
+
+- Each unit is identified by its **coordinates** on the map.
+- Each unit receives **the same input** $\mathbf{x}$.
+- Each unit has a **weight** $\mathbf{w}$, with $\dim(\mathbf{w}) = \dim(\mathbf{x}) = n$.
+
+### Goal
+
+The SOM learns a map from the input space to a lattice of neural units that **preserves the topology**:
+
+- units that are close on the map respond to similar input patterns;
+- points that are close in the input space are mapped onto the same unit or onto nearby units;
+- the output map (2D) has **visualization** properties.
+
+<Figure n="19.5" title="From the input space to the map" size="wide">
+  <SomMapping />
+  <Caption>A SOM maps the input space (here 3D) onto a 2D neural grid: the unit whose weight vector is closest to the input is the winner. Click a point or a unit of the map.</Caption>
+</Figure>
+
+Uses of the SOM:
+
+- **clustering**: the clusters are identified on the map (structures in the data are found quickly);
+- **pattern recognition and VQ**: the input is transformed into the weight vector of the nearest neuron (the codebook vector);
+- **compression**: the input is transformed into the index (code) of the winning unit;
+- **projection and exploration**: the distribution of multidimensional data is visualized in a lower-dimensional space (the 2D map).
+
+### Competitive learning and biological inspiration
+
+<T id="apprendimento-competitivo">**Competitive learning**</T> is an adaptive process in which the neurons gradually become sensitive (specialized) to different categories or sets of inputs: the neurons **compete** for a data point, and the winner learns the most.
+
+Nature exploits this mechanism: in the **somatosensory** (and motor) **cortex** there is a **topologically ordered** map of the body, the **homunculus**. Adjacent neurons represent sources of activation that are close in the body, and the most sensitive parts occupy larger areas of the cortex. In a topology-preserving map, physically close units respond to classes of inputs that are in turn close.
+
+<Figure n="19.6" title="The homunculus">
+  <Homunculus />
+  <Caption>The homunculus: a topologically ordered map of the body in the cortex. Along a section of the cortex the parts of the body (toes, hip, trunk, shoulder, arm, hand, fingers, eye, face, lips, tongue…) are arranged in order, with larger areas for the most sensitive parts. The diagram replaces the original anatomical drawing. Click a zone.</Caption>
+</Figure>
+
+### The algorithm
+
+<Callout type="abstract" title="SOM algorithm">
+
+- Initialize the weights of the map at random.
+- Draw an input $\mathbf{x}$.
+- **Competitive stage**: the winner is the unit with $\mathbf{w}$ most similar to $\mathbf{x}$.
+- **Cooperative stage**: update the weights of the units that have topological relations **on the map** with the winner (a form of soft-max).
+- Continue until convergence (no change).
+
+**Key factor**: the neighbors **on the map** (whereas the standard soft-max uses proximity in the data space).
+
+</Callout>
+
+#### Competitive stage
+
+The input $\mathbf{x}$ is compared with the weights of all the units using the Euclidean distance. The standard SOM adopts a **winner-take-all** strategy (like K-means):
+
+$$
+i^*(\mathbf{x}) = \arg\min_i \|\mathbf{x} - \mathbf{w}_i\|,
+$$
+
+where $i$ is an index on the map (for example the 2D coordinates).
+
+#### Cooperative stage
+
+The weights of the winner **and of the units in its neighborhood** are moved closer to the input (<T id="hebb">Hebbian</T> learning). At iteration $t$:
+
+<Formula f={F.somUpdate} />
+
+where $h$ is the <T id="funzione-di-vicinato">**neighborhood function**</T> (neighborhood kernel), which decreases monotonically as the distance **on the map** between unit $i$ and the winner increases. For example a Gaussian:
+
+<Formula f={F.neighborhood} />
+
+with $\mathbf{r}_i$ the coordinates of unit $i$ on the grid and $\sigma(t)$ the width.
+
+The **learning rate** $\eta$ and the **neighborhood radius** $\sigma$ decrease with the iterations: the neighborhood is **wide at the beginning** (global ordering of the map) and then shrinks slowly during learning (convergence, local refinement). In practice the shape of the neighborhood is chosen among standard geometric shapes on the grid (rectangular, hexagonal…) that include a finite set of units.
+
+### The emergence of topological order
+
+The rule of the cooperative stage is **fundamental** for the formation of topographically ordered maps. The weights are not modified independently, but **by topologically related subsets**: at each step the neighborhood of the winner on the grid is selected, and all the units of the subset receive similar updates. In this way the topological information is passed on to the map: the winner and its neighbors on the grid receive similar updates and, after learning, respond to similar inputs. Although it seems natural, a formal proof of the ordering is difficult.
+
+<Callout type="tip" title="K-means versus SOM">
+
+- **K-means**: it updates only the winner; the prototypes have no order; there is no visualization.
+- **SOM**: it updates the winner **and its neighbors on the grid**, with a neighborhood that shrinks over time; the prototypes are arranged on an ordered map that **preserves the topology**, which allows visualization; the wide initial neighborhood also helps to avoid local minima. (With a neighborhood of radius zero, the SOM reduces to on-line K-means.)
+
+</Callout>
+
+<Figure n="19.7" title="Training a SOM on uniform data">
+  <SomTraining />
+  <Caption>Training a SOM on uniform data in 2D: the reference vectors, connected by lines according to the grid, start concentrated in one point (iteration 0), expand (20, 100) and unfold until they cover the square uniformly (1000, 5000, 100,000). Choose the iteration; also try the neighborhood of radius zero.</Caption>
+</Figure>
+
+During training the units “come to represent” the clusters of the data.
+
+### Visualization
+
+The map can be used to visualize various characteristics of the SOM and of the data:
+
+- the **density** of the reference vectors (color proportional to the number of “hits”);
+- the **distances** between the prototypes of neighboring units (<T id="u-matrix">**U-matrix**</T>): dark colors indicate large distances between adjacent units, light colors small distances;
+- Sammon maps (with lines)…
+
+This makes the SOM easily **interpretable**.
+
+<Callout type="example" title="Welfare and poverty in the world (Kaski and Kohonen, 1995)">
+
+39 welfare indicators for 77 countries (World Development Report 1992). On the 13×9 map, the gray between two units indicates the (scaled and smoothed) distance between their reference vectors: the light areas are clusters of similar countries, the dark areas the boundaries between clusters. No a priori assumption on the shape of the clusters is needed.
+
+</Callout>
+
+<Figure n="19.8" title="U-matrix of the welfare map" size="wide">
+  <WelfareMap mode="umatrix" />
+  <Caption>Smoothed U-matrix of a 13×9 SOM on the welfare data: the country codes (BEL, SWE, ITA, USA, CAN, ETH…) are arranged on the map, with light areas that group similar countries and dark areas that separate the groups. Click a unit.</Caption>
+</Figure>
+
+<Figure n="19.9" title="The same map in color" size="wide">
+  <WelfareMap mode="colors" />
+  <Caption>The same map with colored hexagonal cells: similar colors (from the yellow-orange of the industrialized countries to the purple-blue of the poorest countries) indicate countries with similar indicators. Click a unit.</Caption>
+</Figure>
+
+---
+
+## Evaluating a clustering (outline)
+
+How is the result of a clustering evaluated? What distinguishes a good result from a poor one?
+
+- The evaluation is often **subjective**: there are few “gold standards”, except in well-defined subdomains.
+- **Objective** measures, such as the quantization error (which however depends on the number of centroids).
+- The label of an underlying classification task is **not** trivially used (purity, with entropy, mutual information…): if the labels are available, one might as well use a classifier.
+- Quality of the model/clustering versus quality of the results (domain-dependent).
+
+Other topics of unsupervised learning: hierarchical clustering (dendrograms), principal component analysis (and principal curves and surfaces), association rules, ICA, Multidimensional Scaling, t-SNE, Generative Topographic Mapping, ART networks.
+
+<Exam>
+<Q q="Define clustering and vector quantization. What is the quantization error?">
+
+Clustering: partitioning the data into clusters of similar patterns (more similar to each other than to the patterns of other clusters), each represented by a centroid. Vector quantization: encoding a data manifold $V \subseteq \mathbb{R}^n$ with a finite set of reference vectors (the codebook); each $\mathbf{x}$ is described by the winning vector, the one with minimum distortion, and $V$ ends up divided into Voronoi polyhedra. The quantization error is the mean squared distortion, $E = \int \|\mathbf{x} - \mathbf{w}_{i^*(\mathbf{x})}\|^2 p(\mathbf{x})\,d\mathbf{x}$; in discrete form $E = \sum_i\sum_j \|\mathbf{x}_i - \mathbf{w}_j\|^2\,\delta_{winner}(i,j)$. It is the loss to be minimized with respect to the prototypes.
+
+</Q>
+<Q q="Derive the on-line rule of K-means and move on to the batch version.">
+
+With $\mathbf{x}_i$ fixed in a Voronoi cell, the derivative of $\|\mathbf{x}_i - \mathbf{w}_j\|^2$ with respect to $\mathbf{w}_j$ is $-2(\mathbf{x}_i - \mathbf{w}_j)$, nonzero only for the winner. Going in the direction opposite to the gradient: $\Delta\mathbf{w}_{i^*} = \eta\,\delta_{winner}(i, i^*)(\mathbf{x}_i - \mathbf{w}_{i^*})$, that is only the winning prototype is moved toward the data point. Batch: averaging the delta over the patterns of a cluster $C$ with $\eta = 1$, $\mathbf{w}_{new} = \mathbf{w}_{old} + \frac{1}{|C|}\sum_{\mathbf{x} \in C}(\mathbf{x} - \mathbf{w}_{old}) = \frac{1}{|C|}\sum_{\mathbf{x} \in C}\mathbf{x}$, the mean. The batch algorithm alternates assignment to the nearest center and recomputation of the centers as means, until convergence.
+
+</Q>
+<Q q="Strengths and weaknesses of K-means.">
+
+Strengths: simple, easy to implement, generally efficient; it works very well for compact and hyperspherical clusters. Weaknesses: $K$ must be provided in advance; the local minima of $E$ make it dependent on the initialization; it fails with clusters of other shapes (the two spirals); it has no visualization property, because the indexing of the prototypes is arbitrary and the mapping is not ordered.
+
+</Q>
+<Q q="Describe the SOM: architecture, competitive stage, cooperative stage, neighborhood function.">
+
+$N$ neurons on a regular low-dimensional grid (usually 2D); each unit has its coordinates on the map, receives the same input $\mathbf{x}$ and has a weight $\mathbf{w}$ of the same dimension. Competitive stage: winner-take-all, $i^*(\mathbf{x}) = \arg\min_i \|\mathbf{x} - \mathbf{w}_i\|$. Cooperative stage: $\mathbf{w}_i(t+1) = \mathbf{w}_i(t) + \eta(t)\,h_{i,i^*}(t)[\mathbf{x} - \mathbf{w}_i(t)]$, that is the winner and the units in its neighborhood on the map are moved closer to the input. The neighborhood function $h$ decreases with the distance on the grid from the winner, for example $h_{i,i^*} = \exp(-\|\mathbf{r}_i - \mathbf{r}_{i^*}\|^2 / 2\sigma^2(t))$; $\eta$ and $\sigma$ decrease with the iterations (wide neighborhood at the beginning, then narrow).
+
+</Q>
+<Q q="Why does the SOM preserve the topology? Differences between K-means and SOM.">
+
+Because the weights are not modified independently but by topologically related subsets: the winner and its neighbors on the grid receive similar updates and end up responding to similar inputs, so units that are close on the map represent nearby regions of the input space. K-means updates only the winner, the prototypes have no order and there is no visualization; the SOM also updates the neighbors, with a neighborhood that shrinks, and arranges the prototypes on an ordered map that can be visualized; the wide initial neighborhood helps against local minima. With a neighborhood of radius zero the SOM is on-line K-means.
+
+</Q>
+<Q q="How is a SOM visualized (U-matrix)?">
+
+On the 2D map one can show the density of the reference vectors (number of “hits” per unit), the Sammon maps and above all the U-matrix: for each pair of adjacent units, the distance between their prototypes is represented, dark if large and light if small. The light areas are clusters, the dark areas the boundaries between clusters. In the welfare example (39 indicators, 77 countries, 13×9 map) similar countries appear grouped together, with no assumption on the shape of the clusters.
+
+</Q>
+</Exam>

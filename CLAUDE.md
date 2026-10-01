@@ -9,6 +9,7 @@ e del sito che li rende interattivi. Rispondere all'utente in italiano.
 - `website/` — il sito: Vite + React 19 + TypeScript + MDX + KaTeX, routing a hash, pubblicato su
   GitHub Pages (https://fabiopsh.github.io/machine-learning-website-notes/) da `.github/workflows/deploy.yml`.
 - `docs/GUIDA-LEZIONI.md` — **come si converte una lezione** (regole, procedura, componenti, stile, verifica).
+- `docs/GUIDA-INGLESE.md` — **come funziona e come si aggiorna la versione inglese** (selettore IT | EN, `tx()`, `lessons-en/`).
 - `docs/STATO.md` — lezioni fatte/da fare, immagini → figure, aggiunte rispetto agli appunti.
 
 ## Regole fondamentali (dettagli in docs/GUIDA-LEZIONI.md §1)
@@ -20,6 +21,8 @@ e del sito che li rende interattivi. Rispondere all'utente in italiano.
 4. Stile editoriale sobrio e coerente con le lezioni già fatte: niente "AI slop", niente emoji,
    solo i token di design (`website/src/styles/tokens.css`), temi chiaro/scuro/Liquid Glass sempre funzionanti.
 5. Le lezioni si fanno in ordine (05, 06, …) e dopo che l'utente ha confermato lo stile (vedi `docs/STATO.md`).
+6. Il sito è bilingue: ogni modifica a una lezione italiana (testo, widget, formule, glossario) va riportata nella
+   traduzione inglese nella stessa sessione (`docs/GUIDA-INGLESE.md` §5). Ogni testo visibile nei widget passa da `tx(it, en)`.
 
 ## Per convertire una lezione
 
@@ -33,8 +36,10 @@ npm install && npm run dev            # sviluppo su http://localhost:5173
 npm run verify                        # typecheck + lint + controllo contenuti
 npm run check:math -- NN              # formule degli appunti assenti dal sito (da riguardare a mano)
 npm run check:text -- NN              # frasi degli appunti assenti dal sito (da riguardare a mano)
+npm run check:en -- NN                # traduzione inglese allineata all'originale (struttura, formule, glossario)
+npm run figs -- NN --lang en          # screenshot di tutte le figure di una lezione (anche --w 390, --style glass)
 npm run smoke -- --only NN            # test nel browser: NON usarlo (lento, l'utente lo ritiene inutile)
-npm run shot -- lezione/NN nome --sel "#fig-N-k"   # screenshot in website/.shots/
+npm run shot -- lezione/NN nome --sel "#fig-N-k"   # screenshot in website/.shots/ (--lang en per l'inglese)
 npm run og                            # rigenera le anteprime dei link (public/og/): dopo ogni cambio di titolo o summary
 npm run build                         # build di produzione (dist/), con pagine statiche per lezione e sitemap
 ```
@@ -42,5 +47,5 @@ npm run build                         # build di produzione (dist/), con pagine 
 Tutte le 21 lezioni sono convertite (stato in `docs/STATO.md`): restano solo revisioni.
 
 Prima di dichiarare finita una lezione (o una revisione): `npm run verify` pulito (niente `npm run smoke`, su
-richiesta dell'utente), `check:math` e `check:text` riguardati voce per voce, screenshot di ogni figura guardati (chiaro, scuro, glass, mobile), `docs/STATO.md` aggiornato.
+richiesta dell'utente), `check:math`, `check:text` e `check:en` riguardati voce per voce, screenshot di ogni figura guardati (chiaro, scuro, glass, mobile), `docs/STATO.md` aggiornato.
 Pubblicare = commit + push su `main` (solo se l'utente lo chiede).

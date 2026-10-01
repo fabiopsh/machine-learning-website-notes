@@ -5,6 +5,7 @@ import { subDigits, svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { contourSegments, segsToPath } from '../common/contours'
@@ -57,7 +58,7 @@ export function BpNetwork() {
             edges={fullEdges(SIZES)}
             r={15}
             hot={hot}
-            ariaLabel="MLP con input i, unità nascoste j e unità di uscita k"
+            ariaLabel={tx('MLP con input i, unità nascoste j e unità di uscita k', 'MLP with inputs i, hidden units j and output units k')}
             onNodeClick={pick}
           >
             {nodes
@@ -71,37 +72,61 @@ export function BpNetwork() {
                 </g>
               ))}
             <text x={4} y={154} className="net__side">
-              nascoste j
+              {tx('nascoste j', 'hidden j')}
             </text>
             <text x={4} y={259} className="net__side">
               input i
             </text>
             <text x={4} y={64} className="net__side">
-              uscita k
+              {tx('uscita k', 'output k')}
             </text>
           </NetSvg>
         </div>
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">I pesi evidenziati</div>
+            <div className="wpanel__title">{tx('I pesi evidenziati', 'The highlighted weights')}</div>
             <p className="wnote">
-              <Tex>{`w_{ji} = w_{${sel.j + 1}${sel.i + 1}}`}</Tex>: dall’input {sel.i + 1} verso l’unità nascosta {sel.j + 1}.
+              <Tex>{`w_{ji} = w_{${sel.j + 1}${sel.i + 1}}`}</Tex>
+              {tx(
+                <>
+                  : dall’input {sel.i + 1} verso l’unità nascosta {sel.j + 1}.
+                </>,
+                <>
+                  : from input {sel.i + 1} to hidden unit {sel.j + 1}.
+                </>,
+              )}
             </p>
             <p className="wnote">
-              <Tex>{`w_{kj} = w_{${sel.k + 1}${sel.j + 1}}`}</Tex>: dall’unità nascosta {sel.j + 1} verso l’uscita {sel.k + 1}, che si
-              confronta con il target <Tex>{`d_{${sel.k + 1}}`}</Tex>.
+              <Tex>{`w_{kj} = w_{${sel.k + 1}${sel.j + 1}}`}</Tex>
+              {tx(
+                <>
+                  : dall’unità nascosta {sel.j + 1} verso l’uscita {sel.k + 1}, che si confronta con il target{' '}
+                </>,
+                <>
+                  : from hidden unit {sel.j + 1} to output {sel.k + 1}, which is compared with the target{' '}
+                </>,
+              )}
+              <Tex>{`d_{${sel.k + 1}}`}</Tex>.
             </p>
           </div>
-          <p className="wnote">Clicca un’unità di uno strato per cambiare i, j o k. Il primo indice di ogni peso è l’unità che riceve.</p>
+          <p className="wnote">
+            {tx(
+              'Clicca un’unità di uno strato per cambiare i, j o k. Il primo indice di ogni peso è l’unità che riceve.',
+              'Click a unit of a layer to change i, j or k. The first index of each weight is the receiving unit.',
+            )}
+          </p>
         </div>
       </div>
       <Tasks
         items={[
           {
-            label: (
+            label: tx(
               <>
                 Scegli un’altra unità nascosta j: cambiano sia <Tex>{'w_{ji}'}</Tex> sia <Tex>{'w_{kj}'}</Tex>.
-              </>
+              </>,
+              <>
+                Choose another hidden unit j: both <Tex>{'w_{ji}'}</Tex> and <Tex>{'w_{kj}'}</Tex> change.
+              </>,
             ),
             done: seen.moved,
           },
@@ -169,7 +194,7 @@ export function NonConvexSurface() {
           items={[
             { label: <Tex>{'\\nabla E'}</Tex>, color: 'var(--c-orange)' },
             { label: <Tex>{'-\\nabla E'}</Tex>, color: 'var(--c-green)' },
-            { label: 'percorso della discesa', color: 'var(--accent)' },
+            { label: tx('percorso della discesa', 'descent path'), color: 'var(--accent)' },
           ]}
         />
       </div>
@@ -185,7 +210,7 @@ export function NonConvexSurface() {
           floorGap={0.3}
           aspect={0.9}
           axisLabels={['w₁', 'w₂', 'E']}
-          ariaLabel="Superficie d’errore non convessa con più minimi"
+          ariaLabel={tx('Superficie d’errore non convessa con più minimi', 'Non-convex error surface with several minima')}
         />
         <Plot xDomain={R} yDomain={R} equal aspect={1} maxH={360} margin={{ l: 30, r: 10, t: 10, b: 28 }}>
           <Axes xTicks={[-2, -1, 0, 1, 2]} yTicks={[-2, -1, 0, 1, 2]} xLabel="w₁" yLabel="w₂" />
@@ -211,7 +236,7 @@ export function NonConvexSurface() {
           <Handle
             x={z[0]}
             y={z[1]}
-            label="punto di partenza Z"
+            label={tx('punto di partenza Z', 'starting point Z')}
             onMove={(p) => {
               setZ([p.x, p.y])
               setSteps(0)
@@ -221,21 +246,34 @@ export function NonConvexSurface() {
       </div>
       <div className="controls">
         <Btn icon="step" variant="soft" onClick={() => setSteps((s) => s + 1)}>
-          Un passo
+          {tx('Un passo', 'One step')}
         </Btn>
         <Btn icon="play" onClick={() => setSteps((s) => s + 40)}>
-          Quaranta passi
+          {tx('Quaranta passi', 'Forty steps')}
         </Btn>
-        <Btn icon="reset" onClick={() => setSteps(0)} title="Ricomincia da Z" />
+        <Btn icon="reset" onClick={() => setSteps(0)} title={tx('Ricomincia da Z', 'Restart from Z')} />
         <div className="readouts">
-          <Readout label="E nel punto" tone="accent" value={fmt(E(end[0], end[1]), 3)} />
-          <Readout label="‖∇E‖" value={fmt(gn, 3)} sub={gn < 0.02 ? 'minimo raggiunto' : `${steps} passi`} />
+          <Readout label={tx('E nel punto', 'E at the point')} tone="accent" value={fmt(E(end[0], end[1]), 3)} />
+          <Readout
+            label="‖∇E‖"
+            value={fmt(gn, 3)}
+            sub={gn < 0.02 ? tx('minimo raggiunto', 'minimum reached') : tx(`${steps} passi`, steps === 1 ? '1 step' : `${steps} steps`)}
+          />
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Scendi fino a un minimo (il gradiente si annulla).', done: seen.min },
-          { label: 'Sposta il punto di partenza Z e raggiungi un minimo diverso: la superficie non è convessa.', done: seen.two },
+          {
+            label: tx('Scendi fino a un minimo (il gradiente si annulla).', 'Descend to a minimum (the gradient vanishes).'),
+            done: seen.min,
+          },
+          {
+            label: tx(
+              'Sposta il punto di partenza Z e raggiungi un minimo diverso: la superficie non è convessa.',
+              'Move the starting point Z and reach a different minimum: the surface is not convex.',
+            ),
+            done: seen.two,
+          },
         ]}
       />
     </div>
@@ -262,24 +300,33 @@ const FOCUS: Record<Focus, { tex: string; hot: string[]; note: ReactNode }> = {
   wkj: {
     tex: '\\Delta w_{kj} = \\eta\\,\\delta_k\\, o_j',
     hot: ['j', 'k', 'jk'],
-    note: (
+    note: tx(
       <>
         Servono solo il delta dell’unità k (che riceve) e l’uscita <Tex>{'o_j'}</Tex> dell’unità j (che invia).
-      </>
+      </>,
+      <>
+        Only the delta of unit k (the receiver) and the output <Tex>{'o_j'}</Tex> of unit j (the sender) are needed.
+      </>,
     ),
   },
   dj: {
     tex: "\\delta_j = \\Big(\\sum_k \\delta_k\\, w_{kj}\\Big)\\, f'_j(net_j)",
     hot: ['j', 'k', 'k2', 'k3', 'jk', 'jk2', 'jk3'],
-    note: 'L’unità j raccoglie i delta delle unità sopra di lei, pesati con gli stessi pesi usati in avanti.',
+    note: tx(
+      'L’unità j raccoglie i delta delle unità sopra di lei, pesati con gli stessi pesi usati in avanti.',
+      'Unit j collects the deltas of the units above it, weighted by the same weights used in the forward pass.',
+    ),
   },
   wji: {
     tex: '\\Delta w_{ji} = \\eta\\,\\delta_j\\, o_i',
     hot: ['i', 'j', 'ij'],
-    note: (
+    note: tx(
       <>
         Servono solo il delta di j e l’uscita <Tex>{'o_i'}</Tex> dell’unità di input i: ancora quantità adiacenti al peso.
-      </>
+      </>,
+      <>
+        Only the delta of j and the output <Tex>{'o_i'}</Tex> of the input unit i are needed: again quantities adjacent to the weight.
+      </>,
     ),
   },
 }
@@ -300,7 +347,7 @@ export function Locality() {
               value: 'wkj',
               label: (
                 <>
-                  aggiornare <Tex>{'w_{kj}'}</Tex>
+                  {tx('aggiornare', 'update')} <Tex>{'w_{kj}'}</Tex>
                 </>
               ),
             },
@@ -308,7 +355,7 @@ export function Locality() {
               value: 'dj',
               label: (
                 <>
-                  calcolare <Tex>{'\\delta_j'}</Tex>
+                  {tx('calcolare', 'compute')} <Tex>{'\\delta_j'}</Tex>
                 </>
               ),
             },
@@ -316,7 +363,7 @@ export function Locality() {
               value: 'wji',
               label: (
                 <>
-                  aggiornare <Tex>{'w_{ji}'}</Tex>
+                  {tx('aggiornare', 'update')} <Tex>{'w_{ji}'}</Tex>
                 </>
               ),
             },
@@ -324,7 +371,7 @@ export function Locality() {
         />
       </div>
       <div className="wgrid">
-        <svg viewBox="0 0 360 300" className="loc7" role="img" aria-label="Porzione di rete: unità i, j e k con i pesi w_ji e w_kj">
+        <svg viewBox="0 0 360 300" className="loc7" role="img" aria-label={tx('Porzione di rete: unità i, j e k con i pesi w_ji e w_kj', 'Portion of the network: units i, j and k with the weights w_ji and w_kj')}>
           {[
             ['ij', 70, 250, 180, 150],
             ['i2j', 180, 250, 180, 150],
@@ -386,18 +433,24 @@ export function Locality() {
       <Tasks
         items={[
           {
-            label: (
+            label: tx(
               <>
                 Guarda cosa serve per calcolare <Tex>{'\\delta_j'}</Tex>: le unità sopra j e i pesi che le collegano.
-              </>
+              </>,
+              <>
+                See what is needed to compute <Tex>{'\\delta_j'}</Tex>: the units above j and the weights that connect them.
+              </>,
             ),
             done: seen.dj,
           },
           {
-            label: (
+            label: tx(
               <>
                 Passa a <Tex>{'w_{ji}'}</Tex>: di nuovo solo unità e pesi adiacenti.
-              </>
+              </>,
+              <>
+                Switch to <Tex>{'w_{ji}'}</Tex>: again only adjacent units and weights.
+              </>,
             ),
             done: seen.wji,
           },
@@ -436,15 +489,21 @@ function update(n: Net): Net {
   }
 }
 const PHASES: ReactNode[] = [
-  'Calcolo in avanti: le uscite di tutte le unità, strato per strato.',
+  tx(
+    'Calcolo in avanti: le uscite di tutte le unità, strato per strato.',
+    'Forward computation: the outputs of all the units, layer by layer.',
+  ),
   <>
-    Errori e delta nello strato di uscita: <Tex>{"\\delta_k = (d_k - o_k)\\, f'_k(net_k)"}</Tex>.
+    {tx('Errori e delta nello strato di uscita:', 'Errors and deltas in the output layer:')}{' '}
+    <Tex>{"\\delta_k = (d_k - o_k)\\, f'_k(net_k)"}</Tex>.
   </>,
   <>
-    Propagazione all’indietro: <Tex>{"\\delta_j = \\big(\\sum_k \\delta_k\\, w_{kj}\\big)\\, f'_j(net_j)"}</Tex>.
+    {tx('Propagazione all’indietro:', 'Backward propagation:')}{' '}
+    <Tex>{"\\delta_j = \\big(\\sum_k \\delta_k\\, w_{kj}\\big)\\, f'_j(net_j)"}</Tex>.
   </>,
   <>
-    Aggiornamento dei pesi (bias compresi): <Tex>{'w_{tu} \\leftarrow w_{tu} + \\eta\\, \\delta_t\\, o_u'}</Tex>.
+    {tx('Aggiornamento dei pesi (bias compresi):', 'Update of the weights (biases included):')}{' '}
+    <Tex>{'w_{tu} \\leftarrow w_{tu} + \\eta\\, \\delta_t\\, o_u'}</Tex>.
   </>,
 ]
 
@@ -493,13 +552,13 @@ export function BackpropFlow() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'uscite o (in avanti)', color: 'var(--ink)' },
-            { label: 'delta (all’indietro)', color: 'var(--c-red)', kind: 'dash' },
+            { label: tx('uscite o (in avanti)', 'outputs o (forward)'), color: 'var(--ink)' },
+            { label: tx('delta (all’indietro)', 'deltas (backward)'), color: 'var(--c-red)', kind: 'dash' },
           ]}
         />
       </div>
       <div className="wgrid">
-        <NetSvg W={440} H={310} nodes={nodes} edges={edges} r={20} hot={hot} ariaLabel="Retropropagazione dei delta in una rete 2-3-2">
+        <NetSvg W={440} H={310} nodes={nodes} edges={edges} r={20} hot={hot} ariaLabel={tx('Retropropagazione dei delta in una rete 2-3-2', 'Backpropagation of the deltas in a 2-3-2 network')}>
           {phase >= 2 &&
             [0, 1].flatMap((k) =>
               [0, 1, 2].map((j) => {
@@ -573,14 +632,20 @@ export function BackpropFlow() {
                 {p}
               </li>
             ))}
-            <li className={phase === 3 ? 'is-on' : undefined}>Si ricomincia, fino al criterio di arresto.</li>
+            <li className={phase === 3 ? 'is-on' : undefined}>
+              {tx('Si ricomincia, fino al criterio di arresto.', 'Start again, until the stopping criterion is met.')}
+            </li>
           </ol>
           <div className="delta__btns">
             <Btn icon="step" variant="soft" onClick={next}>
-              {phase < 0 ? 'Calcolo in avanti' : phase === 3 ? 'Nuovo ciclo' : 'Passo successivo'}
+              {phase < 0
+                ? tx('Calcolo in avanti', 'Forward pass')
+                : phase === 3
+                  ? tx('Nuovo ciclo', 'New cycle')
+                  : tx('Passo successivo', 'Next step')}
             </Btn>
             <Btn icon="play" onClick={many}>
-              50 cicli
+              {tx('50 cicli', '50 cycles')}
             </Btn>
             <Btn
               icon="reset"
@@ -590,7 +655,7 @@ export function BackpropFlow() {
                 setCycles(0)
                 setPrevE(null)
               }}
-              title="Pesi iniziali"
+              title={tx('Pesi iniziali', 'Initial weights')}
             />
           </div>
           <div className="readouts">
@@ -598,24 +663,33 @@ export function BackpropFlow() {
               label={<Tex>{'E_p'}</Tex>}
               tone="accent"
               value={fmt(f.Ep, 4)}
-              sub={prevE !== null ? `prima: ${fmt(prevE, 4)}` : `η = ${fmt(ETA4, 1)}`}
+              sub={prevE !== null ? tx(`prima: ${fmt(prevE, 4)}`, `before: ${fmt(prevE, 4)}`) : `η = ${fmt(ETA4, 1)}`}
             />
-            <Readout label="cicli" value={String(cycles)} />
+            <Readout label={tx('cicli', 'cycles')} value={String(cycles)} />
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Avanza fino alla propagazione all’indietro: i delta delle uscite scendono verso le unità nascoste.', done: seen.back },
           {
-            label: (
+            label: tx(
+              'Avanza fino alla propagazione all’indietro: i delta delle uscite scendono verso le unità nascoste.',
+              'Advance to the backward propagation: the deltas of the outputs move down to the hidden units.',
+            ),
+            done: seen.back,
+          },
+          {
+            label: tx(
               <>
                 Completa un ciclo con l’aggiornamento dei pesi: <Tex>{'E_p'}</Tex> diminuisce.
-              </>
+              </>,
+              <>
+                Complete a cycle with the update of the weights: <Tex>{'E_p'}</Tex> decreases.
+              </>,
             ),
             done: seen.one,
           },
-          { label: 'Esegui 50 cicli: le uscite si avvicinano ai target.', done: seen.many },
+          { label: tx('Esegui 50 cicli: le uscite si avvicinano ai target.', 'Run 50 cycles: the outputs approach the targets.'), done: seen.many },
         ]}
       />
     </div>
@@ -656,11 +730,11 @@ export function NumericExample() {
   const rows: [string, number, string][] = [
     ['net_j = w_{ji}\\,x', netj, 'forward'],
     ['o_j = \\sigma(net_j)', oj, 'forward'],
-    ['o_k = w_{kj}\\,o_j', ok, 'forward (uscita lineare)'],
-    ['\\delta_k = (d - o_k)\\cdot 1', dk, 'delta di uscita'],
-    ["\\delta_j = \\delta_k\\, w_{kj}\\, \\sigma'(net_j)", dj, 'delta nascosto'],
-    ['\\Delta w_{kj} = \\eta\\,\\delta_k\\,o_j', dwkj, 'aggiornamento'],
-    ['\\Delta w_{ji} = \\eta\\,\\delta_j\\,x', dwji, 'aggiornamento'],
+    ['o_k = w_{kj}\\,o_j', ok, tx('forward (uscita lineare)', 'forward (linear output)')],
+    ['\\delta_k = (d - o_k)\\cdot 1', dk, tx('delta di uscita', 'output delta')],
+    ["\\delta_j = \\delta_k\\, w_{kj}\\, \\sigma'(net_j)", dj, tx('delta nascosto', 'hidden delta')],
+    ['\\Delta w_{kj} = \\eta\\,\\delta_k\\,o_j', dwkj, tx('aggiornamento', 'update')],
+    ['\\Delta w_{ji} = \\eta\\,\\delta_j\\,x', dwji, tx('aggiornamento', 'update')],
   ]
   return (
     <div>
@@ -668,9 +742,9 @@ export function NumericExample() {
         <table className="hyp__table num7">
           <thead>
             <tr>
-              <th>quantità</th>
-              <th>valore</th>
-              <th>fase</th>
+              <th>{tx('quantità', 'quantity')}</th>
+              <th>{tx('valore', 'value')}</th>
+              <th>{tx('fase', 'phase')}</th>
             </tr>
           </thead>
           <tbody>
@@ -693,30 +767,40 @@ export function NumericExample() {
           <Slider label={<Tex>{'\\eta'}</Tex>} min={0.01} max={1} step={0.01} value={eta} onChange={setEta} format={(v) => fmt(v, 2)} />
           <div className="delta__btns">
             <Btn icon="step" variant="soft" onClick={apply}>
-              Applica l’aggiornamento
+              {tx('Applica l’aggiornamento', 'Apply the update')}
             </Btn>
-            <Btn icon="reset" onClick={reset} title="Valori degli appunti" />
+            <Btn icon="reset" onClick={reset} title={tx('Valori degli appunti', 'Values of the notes')} />
           </div>
           <Readout
             label={<Tex>{'E = \\tfrac12 (d - o_k)^2'}</Tex>}
             tone="accent"
             value={fmt(E, 4)}
-            sub={`aggiornamenti applicati: ${applied}`}
+            sub={tx(`aggiornamenti applicati: ${applied}`, `updates applied: ${applied}`)}
           />
         </div>
       </div>
       <p className="wnote">
-        Con i valori iniziali (quelli dell’esempio) si ritrovano <Tex>{`\\Delta w_{kj} \\approx ${n2(0.0235, 4)}`}</Tex> e{' '}
+        {tx('Con i valori iniziali (quelli dell’esempio) si ritrovano', 'With the initial values (those of the example) one recovers')}{' '}
+        <Tex>{`\\Delta w_{kj} \\approx ${n2(0.0235, 4)}`}</Tex> {tx('e', 'and')}{' '}
         <Tex>{`\\Delta w_{ji} \\approx ${n2(0.0089, 4)}`}</Tex>.
       </p>
       <Tasks
         items={[
-          { label: 'Applica l’aggiornamento una volta: entrambi i pesi aumentano e l’uscita sale verso il target.', done: seen.one },
           {
-            label: (
+            label: tx(
+              'Applica l’aggiornamento una volta: entrambi i pesi aumentano e l’uscita sale verso il target.',
+              'Apply the update once: both weights increase and the output rises toward the target.',
+            ),
+            done: seen.one,
+          },
+          {
+            label: tx(
               <>
                 Continua ad applicarlo finché <Tex>{'o_k'}</Tex> dista meno di 0,05 dal target.
-              </>
+              </>,
+              <>
+                Keep applying it until <Tex>{'o_k'}</Tex> is less than 0.05 away from the target.
+              </>,
             ),
             done: seen.close,
           },

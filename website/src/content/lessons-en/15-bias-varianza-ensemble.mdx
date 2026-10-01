@@ -1,0 +1,253 @@
+import * as F from '../formulas/l15'
+import { TwentyPoints, FiftyFits, SpaceView, VarianceFits, Darts, LambdaFits, Tradeoff } from '../../widgets/l15/BiasVar'
+
+<Lead>SLT explained underfitting and overfitting in terms of the complexity of the model and the number of data points. The **bias-variance decomposition** offers another, complementary point of view: it takes into account the fact that the training set is **only one** of the possible realizations of the data, and it splits the expected error into three components — **bias**, **variance** and **noise**. From here one arrives naturally at **ensembles** (bagging, boosting), which exploit precisely the reduction of the variance.</Lead>
+
+## The idea
+
+A training set is only one possible realization from the universe of data: **different training sets produce different estimates**. The expected error (over the various training sets) at a point $\mathbf{x}$ decomposes into:
+
+- **Bias**: it quantifies the discrepancy between the true function and $h(\mathbf{x})$ (averaged over the data). It is high if $H$ is too small (the model is too rigid).
+- **Variance**: it quantifies the variability of the response of the model $h$ for different realizations of the training data. It is due to excessive flexibility.
+- **Noise**: the labels contain a random error (for example, for a given $\mathbf{x}$ there may be several possible values of $d$).
+
+We assume the **regression** scenario with target $y$ and squared loss.
+
+## Analysis in regression
+
+Suppose we have examples $\langle \mathbf{x}, y\rangle$ with true function $y = f(\mathbf{x}) + \varepsilon$, where $\varepsilon$ is Gaussian noise with zero mean and standard deviation $\sigma$. With linear regression, given a set of examples $\langle\mathbf{x}_i, y_i\rangle$, $i = 1..l$, we fit a linear hypothesis $h(\mathbf{x}) = \mathbf{w}\mathbf{x} + w_0$ by minimizing $\sum_{i=1}^l (y_i - h(\mathbf{x}_i))^2$. Two facts:
+
+1. for the chosen class of hypotheses (linear ones), for some $f$ there will be a **systematic prediction error**;
+2. depending on the dataset, the parameters $\mathbf{w}$ found **will be different**.
+
+<Callout type="example" title="20 points and 50 fits">
+
+True function $y = x + 2\sin(1.5x) + \mathcal{N}(0; 0.2)$. With 20 points we fit a line. Repeating this with 50 different datasets (of 20 points each), we obtain 50 different lines.
+
+</Callout>
+
+<Figure n="15.1" title="20 points, the true function and the fitted line">
+  <TwentyPoints />
+  <Caption>A dataset of 20 points generated from $y = x + 2\sin(1.5x)$ plus noise, the true function (wavy curve, green) and the linear hypothesis fitted to the data (red). Draw a new dataset to see how the line changes.</Caption>
+</Figure>
+
+<Figure n="15.2" title="50 fits on 50 different datasets">
+  <FiftyFits />
+  <Caption>50 fits, each on 20 points, overlaid on the true function: the lines vary from one dataset to the next. Change the number of datasets shown.</Caption>
+</Figure>
+
+### The expected prediction error
+
+Given a new point $\mathbf{x}$, what is the **expected prediction error**? We assume that the data are drawn <T id="iid">**i.i.d.**</T> (independent and identically distributed) from a single distribution $P$. The goal is to compute, for an arbitrary $\mathbf{x}$,
+
+<Formula f={F.expectedError} />
+
+where $y$ is the value of $\mathbf{x}$ that could appear in a dataset, and the expectation is **over all the training sets** drawn according to $P$. Note: for each training set “drawn” there is a different $h$ (and a different $y$).
+
+### Statistics refresher
+
+For a discrete random variable $Z$: $\bar Z = E_P[Z] = \sum_i z_i P(z_i)$ and $\operatorname{Var}[Z] = E[(Z - \bar Z)^2]$.
+
+<Callout type="theorem" title="Variance lemma">
+
+$$
+\operatorname{Var}[Z] = E[Z^2] - \bar Z^2 \qquad\Longleftrightarrow\qquad E[Z^2] = \bar Z^2 + \operatorname{Var}[Z].
+$$
+
+**Proof.**
+
+$$
+\begin{aligned}
+\operatorname{Var}[Z] &= \sum_i (z_i - \bar Z)^2 P(z_i) \\
+&= \sum_i z_i^2P(z_i) - 2\bar Z\sum_i z_iP(z_i) + \bar Z^2\sum_i P(z_i) \\
+&= E[Z^2] - 2\bar Z^2 + \bar Z^2 = E[Z^2] - \bar Z^2.
+\end{aligned}
+$$
+
+</Callout>
+
+### The decomposition
+
+Expanding the square and using the linearity of expectation (and the fact that $y$ and $h(\mathbf{x})$ are independent, because $y$ is a new data point and $h$ depends on the training set):
+
+$$
+\begin{aligned}
+E_P\big[(y - h(\mathbf{x}))^2\big] &= E_P\big[h(\mathbf{x})^2 - 2yh(\mathbf{x}) + y^2\big] \\
+&= E_P\big[h(\mathbf{x})^2\big] + E_P\big[y^2\big] - 2E_P[y]\,E_P[h(\mathbf{x})].
+\end{aligned}
+$$
+
+Let $\bar h(\mathbf{x}) = E_P[h(\mathbf{x})]$ be the **mean prediction** of the hypothesis at $\mathbf{x}$, when $h$ is trained on data drawn from $P$.
+
+- **First term**, by the lemma: $E_P[h(\mathbf{x})^2] = E_P\big[(h(\mathbf{x}) - \bar h(\mathbf{x}))^2\big] + \bar h(\mathbf{x})^2$.
+- Note that $E_P[y] = E_P[f(\mathbf{x}) + \varepsilon] = f(\mathbf{x})$ (the noise has zero mean).
+- **Second term**, by the lemma: $E_P[y^2] = E_P\big[(y - f(\mathbf{x}))^2\big] + f(\mathbf{x})^2$.
+
+Putting everything together:
+
+$$
+\begin{aligned}
+E_P\big[(y - h(\mathbf{x}))^2\big] &= E_P\big[(h(\mathbf{x}) - \bar h(\mathbf{x}))^2\big] + \underbrace{\bar h(\mathbf{x})^2 - 2f(\mathbf{x})\bar h(\mathbf{x}) + f(\mathbf{x})^2}_{(\bar h(\mathbf{x}) - f(\mathbf{x}))^2} + E_P\big[(y - f(\mathbf{x}))^2\big] \\
+&= \underbrace{E_P\big[(h(\mathbf{x}) - \bar h(\mathbf{x}))^2\big]}_{\text{variance}} + \underbrace{\big(\bar h(\mathbf{x}) - f(\mathbf{x})\big)^2}_{\text{bias}^2} + \underbrace{E_P\big[(y - f(\mathbf{x}))^2\big]}_{\text{noise}^2} \\
+&= \operatorname{Var}[h(\mathbf{x})] + \operatorname{Bias}[h(\mathbf{x})]^2 + E_P[\varepsilon^2] \\
+&= \operatorname{Var}[h(\mathbf{x})] + \operatorname{Bias}[h(\mathbf{x})]^2 + \sigma^2.
+\end{aligned}
+$$
+
+<Formula f={F.decomposition} />
+
+<Callout type="theorem" title="Bias-variance decomposition">
+
+$$
+\text{Expected prediction error} = \text{Variance} + \text{Bias}^2 + \text{Noise}^2.
+$$
+
+</Callout>
+
+### Interpretation of the three components
+
+- <T id="bias-statistico">**Bias**</T> $\big(\bar h(\mathbf{x}) - f(\mathbf{x})\big)^2$: the discrepancy between the true function and the **mean** prediction over the different training sets. It is a **systematic error**, due for example to a space $H$ that is too small or to a model that is too rigid.
+- <T id="varianza-modello">**Variance**</T>: the variability of the response of the model for different realizations of the training set. It is due to **excessive flexibility**.
+- <T id="rumore-irriducibile">**Noise**</T>: even the optimal solution can be wrong (for example if several values of $d$ are possible for a given $\mathbf{x}$). It is **irreducible**: it does not depend on the model and represents a tolerance on the response ($\sigma$).
+
+<Figure n="15.3" title="Bias, variance and noise in the space of functions" size="wide">
+  <SpaceView />
+  <Caption>Graphical view: the space of functions (light blue) contains the region (blue) of the solutions obtained with different training sets (black points; in red their mean). The variance is the width of this region, the bias the distance between its center and the optimal solution, the noise the distance between the optimal solution and the data. The width of the region depends on the width of the set of functions: try changing it.</Caption>
+</Figure>
+
+Going back to the example: the **bias** is evident in the mean $\bar h$ of the 50 lines, which stays far from the wavy true function (the linear model is too rigid); the **variance** is the spread of the 50 lines around $\bar h$; the **noise** is the spread of the data around the true function.
+
+<Figure n="15.4" title="The variance: the 50 hypotheses around their mean">
+  <VarianceFits />
+  <Caption>The variance: the spread of the 50 hypotheses (black) around the mean prediction $\bar h(\mathbf{x})$ (in red). Drag the point $x$: the violet segment is the spread of the lines at that point (one standard deviation above and below the mean), and the three terms of the decomposition are computed on the 50 fits.</Caption>
+</Figure>
+
+<Callout type="example" title="The darts analogy">
+
+The center is the true function, each dart is a model trained on a different training set. **High bias and low variance** (bottom left) corresponds to **underfitting**; **low bias and high variance** (top right) to **overfitting**. The analogy is not perfect for ML, but it helps.
+
+</Callout>
+
+<Figure n="15.5" title="The darts analogy">
+  <Darts />
+  <Caption>Four targets: low bias and low variance (darts all at the center); low bias and high variance (scattered around the center); high bias and low variance (clustered but far from the center); high bias and high variance (scattered and far away). Click a target.</Caption>
+</Figure>
+
+---
+
+## Bias, variance and regularization
+
+Recall the regularized loss:
+
+<Formula f={F.regLoss} />
+
+By varying $\lambda$ we obtain less regularized solutions (complex, low $\lambda$) or more regularized ones (less complex, high $\lambda$). (The intercept is typically excluded from the penalty.)
+
+Bishop’s example: 25 datasets drawn from the sinusoid, a model (an RBF network) trained on each of them with different values of $\lambda$.
+
+<Figure n="15.6" title="Effect of λ on bias and variance" size="wide">
+  <LambdaFits />
+  <Caption>Effect of $\lambda$ on bias and variance, for $\ln\lambda = 2.6$; $-0.31$; $-2.4$. On the left the 25 hypotheses, on the right their mean $\bar h(x)$ (red) and the true function (green). With high $\lambda$ the curves are similar to one another but the mean is far from the sinusoid; with low $\lambda$ the curves are very different but the mean coincides with the sinusoid. The curves are actually computed (25 datasets of 25 points, 24 Gaussian basis functions); the value of $\ln\lambda$ is shared with figure 15.7.</Caption>
+</Figure>
+
+- **High $\lambda$**: **high bias, low variance**. The penalty dominates, the model depends little on the data and is “too rigid”: the curves resemble one another but their mean is far from the sinusoid.
+- **Medium $\lambda$**: lower bias, higher variance. As $\lambda$ decreases, the model depends more on the particular training set.
+- **Very low $\lambda$**: **low bias, high variance**. The test error for a single training set can be high (because of the variance component), but even though the curves are very different from one another, **on average** they are correct (plot on the right).
+
+<Figure n="15.7" title="The bias-variance trade-off as ln λ varies">
+  <Tradeoff />
+  <Caption>The bias-variance trade-off as $\ln\lambda$ varies: squared bias (blue), variance (red), their sum (violet) and test error (black). The variance decreases and the bias increases as $\lambda$ grows; the sum has a minimum that roughly coincides with the minimum of the test error. Note: here the complexity is higher on the **left** (the opposite of the usual plots). The curves are computed on the same 25 datasets as figure 15.6, so the values are not those of Bishop’s figure.</Caption>
+</Figure>
+
+An **over-regularized** model (large $\lambda$) has high bias; an **under-regularized** one (small $\lambda$) has high variance. Once again, **the trade-off**: the minimum of bias² + variance roughly coincides with the minimum of the test error.
+
+The same figure seen in validation ([lesson 9](#/lezione/09)) shows, as the complexity grows, training and test errors on 100 training sets: a complex model has **low bias and high variance**, hence a risk of overfitting, and depending on the training set one can be lucky or unlucky.
+
+<Callout type="tip" title="The link with SLT">
+
+Bias and variance are another face of the trade-off between fitting the data and complexity: the bias corresponds to the inability of the model to represent the function (high $R_{emp}$, underfitting), the variance to the sensitivity to the specific data (high <T id="vc-confidence">VC-confidence</T>, overfitting).
+
+</Callout>
+
+---
+
+## Ensemble learning
+
+The idea of <T id="ensemble">**ensembles**</T> is to exploit **several models** by combining their responses.
+
+In the simplest case (**voting scheme**):
+
+- **Regression**: a simple-average <T id="comitato">committee</T>, $o(\mathbf{x}) = \frac{1}{K}\sum_{i=1}^K h_i(\mathbf{x})$.
+- **Classification**: a vote over many classifiers (provided they give **diversified** responses), or one classifies after averaging the continuous outputs.
+
+Alternatively (<T id="stacking">**stacking**</T>) the combiner is itself an ML model.
+
+<Callout type="theorem" title="The committee is no worse than the average of its members">
+
+For a convex loss such as the squared error, the error of the committee is less than or equal to the average of the errors of the individual models:
+
+<Formula f={F.committee} />
+
+(This is Jensen’s inequality.) Example with target $t = 5$ and two models that predict 2 and 4: the average of the errors is $\frac{(5-2)^2 + (5-4)^2}{2} = 5$, while the error of the committee ($o = 3$) is $(5-3)^2 = 4$. With predictions 6 and 4: average of the errors $\frac{1 + 1}{2} = 1$, error of the committee $(5-5)^2 = 0$.
+
+</Callout>
+
+### Bagging (bootstrap aggregating)
+
+- $K$ classifiers are trained on **different subsets** of the training set, differentiated by means of the <T id="bootstrap">**bootstrap**</T> (resampling with replacement).
+- Regression: the average is used; classification: a vote of the $K$ classifiers.
+
+The link with bias-variance is direct (recall the “low $\lambda$” case): models with **high variance** and **low bias** can work well **on average**. In other words, **averaging the $h$ reduces the variance** without increasing the bias. Moreover, <T id="bagging">bagging</T> tends to increase the **margin** of a classifier: the average of $K$ separating curves tends to lie “in the middle” (*in medio stat virtus*).
+
+### Boosting (e.g. AdaBoost)
+
+If the models make the **same errors**, combining them is of no use. <T id="boosting">Boosting</T> differentiates them on purpose:
+
+1. it trains the classifiers in sequence, focusing on the **errors**: the second one gives more weight to the instances misclassified by the first (for example, they are more likely to be in its training set), and so on;
+2. it combines the results with a **weighted vote**, giving more weight to the classifiers with lower error.
+
+If it is not stopped, boosting learns to classify **all** the training instances correctly using <T id="weak-learner">**weak learners**</T> (classifiers barely better than chance, with error below $1/2$ in the binary case), incrementally building complex models. It can greatly improve the performance of weak learners; it reduces the bias without increasing the variance (it resists overfitting) and, like bagging, it tends to produce separating curves “in the middle” (maximum margin). However, it **suffers with noisy data** (which are given more and more weight), and it does not by itself solve the underfitting/overfitting problem.
+
+## Feature selection (outline)
+
+Finding the subset of the most informative features for the problem brings great benefits: **dimensionality reduction** (effects on the VC-dim of networks, on the <T id="curse-of-dimensionality">curse of dimensionality</T>…), filtering of irrelevant information and noise (with possibly large improvements in performance), **interpretability** (finding useful descriptors). But:
+
+- it is **computationally hard** (a huge number of possible subsets, and each evaluation requires retraining);
+- a **heuristic search** is typically used (greedy, genetic algorithms or other optimization techniques), including the learner or not;
+- the results are particularly sensitive to the validation method: beware of the <T id="subset-selection-bias">**feature subset selection bias**</T>, that is, the mistake of doing the selection on the whole dataset (see the slides on cross-validation).
+
+Other related topics: PAC learning; comparison of inductive principles (SRM, MDL, Bayesian inference, regularization) with respect to complexity control.
+
+<Callout type="abstract" title="Summary">
+
+The expected error (over the training sets) decomposes into **variance + bias² + noise**. Rigid (or heavily regularized) models have high bias and low variance (underfitting); flexible (lightly regularized) models have low bias and high variance (overfitting); the noise is irreducible. **Ensembles** exploit the decomposition: **bagging** averages high-variance models, thereby reducing the variance; **boosting** combines weak learners by focusing on the errors.
+
+</Callout>
+
+<Exam>
+<Q q="Derive the bias-variance decomposition for the squared loss.">
+
+We start from $E_P[(y - h(\mathbf{x}))^2]$ with $y = f(\mathbf{x}) + \varepsilon$ and the expectation over the training sets. We expand the square: $E_P[h^2] + E_P[y^2] - 2E_P[y]E_P[h]$ (linearity; $y$ and $h$ are independent). By the lemma $E[Z^2] = \bar Z^2 + \operatorname{Var}[Z]$: $E_P[h^2] = E_P[(h - \bar h)^2] + \bar h^2$ and $E_P[y^2] = E_P[(y - f)^2] + f^2$, with $E_P[y] = f$ because the noise has zero mean. The terms $\bar h^2 - 2f\bar h + f^2$ form the square $(\bar h - f)^2$. Result: $\operatorname{Var}[h(\mathbf{x})] + \operatorname{Bias}[h(\mathbf{x})]^2 + \sigma^2$.
+
+</Q>
+<Q q="What do bias, variance and noise represent? Which component is irreducible?">
+
+The bias is the discrepancy between the true function and the mean prediction over the different training sets: a systematic error, coming from a space $H$ that is too small or from a model that is too rigid. The variance is the variability of the response of the model as the training set varies, due to excessive flexibility. The noise is the random error in the labels: even the optimal solution can be wrong. The noise is irreducible, because it does not depend on the model ($\sigma^2$).
+
+</Q>
+<Q q="How do bias and variance vary with the regularization parameter $\lambda$?">
+
+With high $\lambda$ the penalty dominates and the model depends little on the data: high bias, low variance (over-regularized, underfitting). As $\lambda$ decreases, the bias goes down and the variance goes up; with very low $\lambda$ we have low bias and high variance (under-regularized, overfitting), even though on average the hypotheses are correct. The minimum of bias² + variance roughly coincides with the minimum of the test error.
+
+</Q>
+<Q q="Why is a committee no worse than the average of its members?">
+
+For a convex loss such as the squared error, Jensen’s inequality holds: $\text{loss}(E_i[h_i]) \le E_i[\text{loss}(h_i)]$. Example with target 5: predictions 2 and 4 have an average error of 5, while the committee predicts 3 with error 4; predictions 6 and 4 have an average error of 1, while the committee predicts 5 with error 0.
+
+</Q>
+<Q q="Difference between bagging and boosting; why does bagging reduce the variance?">
+
+Bagging trains $K$ models on different subsets of the training set obtained with the bootstrap and averages them (or takes a vote). Boosting trains the classifiers in sequence, each one giving more weight to the instances misclassified by the previous ones, and combines them with a vote weighted according to the error; it uses weak learners and reduces the bias, but it suffers with noisy data. Bagging reduces the variance because models with high variance and low bias are correct on average: the average of the $h$ gets close to $\bar h$, damping the spread due to the single training set, without increasing the bias.
+
+</Q>
+</Exam>

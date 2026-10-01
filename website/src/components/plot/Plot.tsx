@@ -10,6 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
+import { tx } from '../../lib/i18n'
 import { useWidth } from '../../lib/useSize'
 import { clamp, fmtTick, scaleLinear, type Scale } from './scale'
 import { subDigits } from './svgText'
@@ -405,7 +406,7 @@ export function Handle({ x: hx, y: hy, onMove, axis = 'both', label, step, color
       transform={`translate(${x(hx)} ${y(hy)})`}
       tabIndex={0}
       role="slider"
-      aria-label={label ?? 'maniglia trascinabile'}
+      aria-label={label ?? tx('maniglia trascinabile', 'draggable handle')}
       aria-valuetext={`${hx.toFixed(2)}, ${hy.toFixed(2)}`}
       onPointerDown={down}
       onPointerMove={move}

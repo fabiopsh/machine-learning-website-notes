@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { createPortal } from 'react-dom'
 import { getLesson } from '../../content/lessons'
 import { glossaryById } from '../../content/glossary'
+import { tx } from '../../lib/i18n'
 import { glossaryHref, lessonHref } from '../../lib/router'
 import { slugify } from '../../lib/slug'
 import { Icon } from '../ui/Icon'
@@ -107,7 +108,7 @@ export function T({ id, children }: { id: string; children?: ReactNode }) {
                 <Icon name="arrowRight" size={14} />
               </a>
               <a href={glossaryHref(entry.id)} onClick={() => setOpen(false)} className="term-pop__gloss">
-                Glossario
+                {tx('Glossario', 'Glossary')}
               </a>
             </div>
           </div>,

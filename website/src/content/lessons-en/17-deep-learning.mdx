@@ -1,0 +1,534 @@
+import * as F from '../formulas/l17'
+import { Hierarchy, FaceFeatures, VectorArithmetic } from '../../widgets/l17/Hier'
+import { ParityTwoLayer, ParityTree, Svhn } from '../../widgets/l17/Depth'
+import { Autoencoder, LocalDistributed, Disentangle, WordEmbedding } from '../../widgets/l17/Repr'
+import { DoubleDescent, PolyDescent, Clipping, Dropout, L1L2 } from '../../widgets/l17/Tech'
+
+<Lead>This lecture introduces **deep learning** (DL) from the point of view of the course: not the details of the architectures for applications (which are covered in later courses of the AI curriculum, such as Pattern Recognition and NLP), but an **overview** of networks with many layers, the concepts that make them effective (**are many layers really needed?**, **representation learning**, **distributed representations**) and the main training **techniques**, many of which are useful in the “basic” case too.</Lead>
+
+## What deep learning is
+
+<Callout type="quote" title="LeCun, Bengio, Hinton, Nature (2015)">
+
+*“Deep learning allows computational models that are composed of multiple processing layers to learn representations of data with multiple levels of abstraction. These methods have dramatically improved the state of the art in speech recognition, visual object recognition, object detection and many other domains.”*
+
+</Callout>
+
+### A bit of history
+
+Since about 2010 deep learning has had a strong impact on industry, because of three factors:
+
+- **large datasets** available (millions of images);
+- **computing power** (GPUs are the enabling factor);
+- **new ideas** to make training easier.
+
+Learning with deep architectures is no longer “infeasible”. The new state-of-the-art results in speech recognition, machine translation (Google Neural Translator since 2016, DeepL) and image recognition have attracted a great many researchers. In the past an improvement was expected from changing the scale of models and data, but not necessarily such a leap in performance. All the big IT companies now base their research and development strategies on these approaches.
+
+### The general framework
+
+DL is a **general framework** that includes different models:
+
+- **deep neural networks** (MLPs with many layers);
+- **convolutional networks** (the winners in computer vision);
+- deep belief networks and generative approaches;
+- **recurrent** and **recursive** networks;
+- …
+
+It is contrasted with <T id="shallow">**“shallow” models**</T>, for example networks with fewer than 3 layers. The aspects common to the various approaches are:
+
+- **multiple layers** of **nonlinear** processing units;
+- learning (supervised or unsupervised) of **feature representations** in each layer, with the layers forming a **hierarchy** from low-level features to high-level features (different levels of abstraction);
+- hence, a **hierarchical, sparse and distributed representation** of the data.
+
+(The differences depend on the specific models: max pooling in CNNs, energy-based training in RBMs, etc.)
+
+### The conceptual ingredients: hierarchical abstraction
+
+Recall the XOR solved with two layers ([lesson 6](#/lezione/06)): the hidden layer creates an **internal re-representation** that makes the task easy for the output layer, and this composition of intermediate operations can be extended over many levels of abstraction.
+
+- Unsupervised or semi-supervised <T id="feature-learning">**feature learning**</T> and hierarchical feature extraction, **instead of feature engineering** (features extracted by hand, from experience, such as texture in images): one moves to the concept of **learning representations of the data**.
+- **Increasing levels of abstraction** through the layers. An image can be represented as a vector of pixel intensities, or more abstractly as a set of edges, regions of particular shape, etc.: **edges form motifs, motifs assemble into parts, parts form objects**… over many levels.
+- It works best when the input has some form of **structure** (spatial, temporal, …).
+
+<Figure n="17.1" title="From pixels to the identity of the object" size="wide">
+  <Hierarchy />
+  <Caption>From pixels to the identity of the object: a series of hidden layers extracts increasingly abstract features (edges → corners and contours → object parts), and the output indicates the identity (car, person, animal). The features in the units are schematic drawings (in the original figure, images learned by a network and the photograph of a person). Click a unit.</Caption>
+</Figure>
+
+Deep learning solves the difficulty of a complicated mapping (pixels → identity) **by breaking it down into a series of nested simple mappings**, each described by a different layer. The new representation **simplifies classification** in the last layer. There are analogies with the biological visual system.
+
+In networks these abstract features **are learned from the examples**: with backpropagation, the error on the output layer (for example to tell cars from people) propagates through the layers via the deltas, and the units specialize to provide high-level features useful for that purpose (the wheel for the car, the hand for the person…). The link between the automatically developed features and reality is a fascinating aspect; and surprisingly the first filters extract horizontal or vertical lines, just as a simple linear convolutional filter would.
+
+<Figure n="17.2" title="Low-, mid- and high-level features" size="wide">
+  <FaceFeatures />
+  <Caption>Another example: a deep network for face recognition goes from the raw data (the photo of a face) to low-level features (edges), mid-level features (parts of the face) and high-level features (whole faces). The boxes are schematic drawings, not the learned images. Click a level.</Caption>
+</Figure>
+
+### Combining to generalize
+
+The abstract features can be **reused** at the higher levels (e.g. gender, glasses…) and **combined** to generalize to cases never seen in training: if the network has seen women without glasses and men with glasses, it can easily represent a woman with glasses too.
+
+<Figure n="17.3" title="Operations on the learned representations">
+  <VectorArithmetic />
+  <Caption>Operations on the vector representations learned by the model and used to generate new images: “man with glasses − man + woman = woman with glasses”. The faces are schematic (in the original figure, generated images). Look at the examples with words too.</Caption>
+</Figure>
+
+The same happens in language: in the vector space developed by the internal layers of a deep model,
+
+- $\text{Rep}(\text{king}) - \text{Rep}(\text{male}) + \text{Rep}(\text{female}) \approx \text{Rep}(\text{queen})$: the difference between “king” and “male” captures the concept of monarchy;
+- $\text{Rep}(\text{Paris}) - \text{Rep}(\text{France}) + \text{Rep}(\text{Poland}) \approx \text{Rep}(\text{Warsaw})$: the difference captures the concept of capital.
+
+---
+
+## Are many layers really needed?
+
+### An example from logic circuits
+
+The general idea (<T id="no-flattening">**no-flattening**</T>): *when a function can be represented compactly with a deep architecture, it might require a very large architecture to be represented with an insufficiently deep one.*
+
+A **two-layer** logic circuit can represent **any** Boolean function, written as a sum of products (disjunctive normal form): AND gates in the first layer (with possible negation of the inputs) and one OR gate in the second. But **with depth-two circuits, most Boolean functions require an exponential number of gates** (with respect to the input size).
+
+<Callout type="example" title="The parity function">
+
+**Odd parity** extends the XOR to $N$ inputs: it returns 1 if and only if the number of 1s among the $N$ bits is odd. (NOT gates are assumed to be available too; with 2 inputs 3 gates are enough.)
+
+**With 2 layers** all the positive configurations must be listed: for 3 inputs, $x_1x_2x_3 + x_1\bar x_2\bar x_3 + \bar x_1x_2\bar x_3 + \bar x_1\bar x_2x_3$ (1 if the input is 111, 100, 010 or 001), that is, 4 AND + 1 OR = 5 gates. For 4 inputs 9 gates are needed, for 8 inputs **129 gates**, for $N$ inputs $2^N/2 + 1 = 2^{N-1} + 1$ gates: an **exponential** number.
+
+**With $\log N$ layers** a **complete binary tree** of XORs is used: a tree with $N$ leaves has $N - 1$ internal nodes, each one an XOR made of 3 AND/OR gates, for a total of $3(N-1)$ gates, a **polynomial** number. For 8 inputs $3 \times 7 = 21$ gates are enough, against the 129 of the 2-layer solution.
+
+</Callout>
+
+<Figure n="17.4" title="Parity with 2 layers: an exponential number of gates" size="wide">
+  <ParityTwoLayer />
+  <Caption>Parity with 2 layers: the formula as a sum of products (for 3 inputs, 4 products) and the corresponding AND-OR circuit; the count grows up to 129 gates for 8 inputs. Change $N$ and the input bits.</Caption>
+</Figure>
+
+<Figure n="17.5" title="Parity with log N layers: a tree of XORs" size="wide">
+  <ParityTree />
+  <Caption>Parity with $\log N$ layers: a tree of XOR gates that combines the 8 input bits in pairs, then the pairs in pairs, down to a single output; each XOR is built with 3 AND/OR gates, for a polynomial number of gates. Click the bits.</Caption>
+</Figure>
+
+This, however, **does not hold for all classes of functions**: characterizing the classes that gain an (exponential) advantage from a multi-layer structure is an open research problem.
+
+### The case of neural networks
+
+Recall that the <T id="approssimazione-universale">**universal approximation theorem**</T> shows that one hidden layer is enough in general, but it does not guarantee that a **small** number of units is enough. There are, however, **no-flattening** results (about efficiency, not expressiveness):
+
+1. **shallow networks**: there are cases in which the implementation with a single hidden layer requires an **exponential** number of units (with respect to the input dimension $n$) or of nonzero weights. This is easy to see in the binary case: there are $2^{2^n}$ Boolean functions on $\{0,1\}^n$, and in the worst case one hidden unit may be needed for each input configuration to be distinguished (as in the parity example). It is not just a matter of network size: it also means that it becomes **hard to learn with few examples** (and this is the most relevant point for ML);
+2. **no-flattening of deep networks**: there are families of functions that can be approximated efficiently with depth greater than $d$, but that require a much larger model (up to an exponential gain) if the depth is at most $d$. Examples for logic gates (1986), networks with standard activations (1990–1994), ReLU (2014)…
+
+The question remains: is it easy to train an MLP with many layers? (See the techniques below.)
+
+<Callout type="note" title="Theoretical analysis (open research)">
+
+The **no-flattening theorems** identify compositional functions that a deep network implements well and that cannot be implemented with the same efficiency by “flattening” the network (for example going from a linear to an exponential number of units). But there is no guarantee that a given task has this property: a complete list of the no-flattening theorems would tell exactly when deep networks are more efficient than shallow ones.
+
+</Callout>
+
+### Why: compositionality
+
+Deep networks can exploit the <T id="composizionalita">**compositionality of the internal representations**</T>: there is an exponential gain in representational power because the simple concepts represented in one layer are used as **primitives** by the next layer to represent more complex concepts, avoiding the explicit, combinatorial representation (and learning) of the features.
+
+For example, the individual words or sub-patterns must be learned, but not directly all their possible combinations: one can learn without seeing all the configurations. And perhaps nature itself (not only images and language) has a hierarchical structure (phenomena observed at different scales in space and time).
+
+<Callout type="tip" title="Less is more!">
+
+Deep networks should not be seen as **huge** models compared with small shallow models (just because gigantic instances are seen in applications: deep does not mean large). They can be seen as **compact** models compared with shallow models that are potentially much larger for the same task (even exponentially). So they are “something less” and more efficient. And not only for computational reasons: **fewer units and fewer weights help learning** on complex tasks, making it possible to generalize well with **fewer examples** (that is, making it feasible). A “small deep network” with 50,000 units can replace a “huge shallow network” with one million units.
+
+</Callout>
+
+### The inductive bias
+
+Choosing a deep model encodes a **very general belief**: that the function to be learned is a **composition of simpler functions** (or of nested factors of variation). If the task matches this <T id="bias-induttivo">bias</T>, the deep form is suitable, and generalization turns out better precisely thanks to the many layers.
+
+Typically hierarchical tasks: the structure of **images** (composition of graphical parts), the structure of **language** (text and speech), perhaps music; new fields are being discovered. But not necessarily all data and tasks! It is in any case a much more **general** bias than ad hoc constraints for specific tasks (such as the hand-chosen $\phi$ in LBE or engineered features). But, again, nothing is magic without assumptions.
+
+<Figure n="17.6" title="With the same number of parameters, deeper networks generalize better">
+  <Svhn />
+  <Caption>Empirical results (SVHN, ICLR 2014): test accuracy on the Street View House Numbers dataset as a function of the number of parameters. With the same number of parameters, the 11-layer convolutional networks outperform the 3-layer ones (convolutional and fully connected); increasing the parameters without increasing the depth does not help, and beyond 20 million parameters there is overfitting. The points are read off the original figure. Drag the vertical line.</Caption>
+</Figure>
+
+When the task matches the bias, deeper models tend to work better: generalization is better than that of a model with fewer layers and **the same number of units/weights**.
+
+### Curse of dimensionality and bias
+
+Other arguments in favor of deep models concern the <T id="curse-of-dimensionality">**curse of dimensionality**</T> and manifold learning (the distribution of real images and texts seems to be concentrated on a manifold that occupies only a small fraction of the volume of all possible random images or texts).
+
+- Many learners are based on **local approximations** (a local smoothness prior): K-NN, local kernels, decision trees… But often this is not enough: examples are needed to generalize in the neighborhood of each region, and in high dimension a great many examples are needed to cover the whole space. To distinguish $O(k)$ regions, all these methods require $O(k)$ examples.
+- To work with $O(k)$ examples on an **exponential** (in $k$) number of regions, that is, to generalize **non-locally**, additional assumptions on the distribution that generates the data are needed (an inductive bias).
+- One could make strong assumptions specific to each task (losing generality). Deep learning chooses instead a **general** bias, tied to the **composition of functions**: the data are assumed to be generated by the composition of factors or features, potentially on several levels of a hierarchy. When the assumption is true, a potentially exponential gain is obtained between the number of examples and the number of distinguishable regions, generalization is non-local, and learning requires fewer examples.
+
+### Practical issues
+
+How many layers? How many units? There is still no general answer (it is a model selection problem). In general deep networks often use fewer units per layer, hence fewer parameters and less data to generalize well; but many layers can be **harder to optimize**. The hyperparameters of these very large models can be too many: **experience** makes the difference in fixing many architectural aspects.
+
+---
+
+## Representation learning
+
+<Callout type="definition" title="Representation learning">
+
+*“Representation learning is a set of methods that allows a machine to be fed with raw data and to automatically discover the representations needed for detection or classification.”* (LeCun, Bengio, Hinton, 2015)
+
+</Callout>
+
+Deep learning methods are <T id="representation-learning">representation learning</T> methods with **multiple levels** of representation (representations expressed in terms of other, simpler ones). But the concept is more abstract and applies to many models (for example neural networks in general). Note that one speaks of learning the representation mainly for **raw data** (images, text strings), not when a small set of features is already provided.
+
+### Basic ideas
+
+- Many information processing tasks are easy or extremely hard **depending on how the information is represented** (this holds throughout computer science).
+- In ML, **a good representation is one that makes the subsequent learning task easier**.
+- Designing features by hand is hard: entire decades of work for some communities (language, images). It amounts to hand-engineering the $\phi(\mathbf{x})$ of the LBE.
+- Supervised learning of an MLP leads to an **automatic representation** in each hidden layer, with properties that make the task of the output layer easier (the XOR!). That is, $\phi(\mathbf{x}, \mathbf{w})$ is learned by finding the best $\mathbf{w}$.
+- In CNNs the raw image is used as input and the model learns to extract the features salient for the task, without patterns or features specified in advance.
+
+How can the hidden representations be obtained or exploited (besides the full training of MLPs and CNNs)?
+
+- **Obtaining them** (the historical case): with **semi-supervised** learning a representation is learned from the unlabeled data and used for supervised tasks → **pre-training**.
+- **Exploiting them**: the learned representation is used for other tasks → **transfer learning**.
+
+### Pre-training
+
+Greedy layer-wise unsupervised pretraining (about 2006) was the first approach that made it possible to train deep supervised networks (apart from CNNs and RNNs). **Unsupervised** learning is used to capture the shape of the input distribution, **layer by layer**, and the network is initialized in this way, making the overall training easier (rather than doing an end-to-end training with gradient descent right away, which was hard for deep models).
+
+Why does it help? Each layer is optimized independently in an unsupervised way, providing a <T id="pre-training">pre-training</T> for the final **fine-tuning**. It works both as a **good initialization strategy** and as a **regularization**: not in the sense of a simpler model, but of discovering features that capture the regularities of the data. If the true functions are complicated and shaped by the regularities of the input distribution, unsupervised learning can be a more appropriate regularizer. It also reduces the **variance** of the estimation process (pre-trained models tend to end up in a smaller region).
+
+#### Autoencoder
+
+<Callout type="definition" title="Autoencoder">
+
+An <T id="autoencoder">**autoencoder**</T> is a neural network trained to **copy its own input to its output**. Internally it has a hidden layer $\mathbf{h}$ that describes a **code** used to represent the input. It consists of an **encoder** $\mathbf{h} = f(\mathbf{x})$ and a **decoder** that produces the reconstruction $\mathbf{r} = g(\mathbf{h})$.
+
+</Callout>
+
+<Figure n="17.7" title="An autoencoder">
+  <Autoencoder />
+  <Caption>An autoencoder: the input $\mathbf{x}$ is encoded with the weights $W_1$ (encoder) in the hidden layer $\mathbf{h}$, and decoded with the weights $W_1'$ (decoder) into a reconstruction of the input. Change the number of hidden units.</Caption>
+</Figure>
+
+- **Undercomplete**: the hidden layer is **smaller** than the input, and the architectural constraint forces the network to capture the most salient features. (With a linear decoder and a quadratic loss one obtains PCA.)
+- **Overcomplete**: the hidden layer is **larger** than the input, but a regularization is used that imposes sparsity, robustness to noise or other properties, besides the trivial ability to copy.
+- It is **unsupervised** learning.
+
+Example of use: **denoising autoencoders** and auto-associative memories. One trains on images looking for a good representation (*“a good representation is one that can be obtained robustly from a corrupted input and that is useful for recovering the clean input”*), then the original image is recovered by presenting a noisy version of it and repeating the encoding and decoding phases.
+
+#### The pre-training algorithm (Bengio)
+
+<Callout type="abstract" title="Layer-wise pre-training">
+
+1. Train the first layer as an **autoassociator** to minimize the reconstruction error of the raw input (unsupervised: unlabeled examples are enough).
+2. Use the outputs of the hidden units as input for another layer, also trained as an autoassociator.
+3. Repeat up to the desired number of layers.
+4. Use the output of the last hidden layer as input for a supervised layer, initialized (randomly or with supervised training, keeping the rest fixed).
+5. <T id="fine-tuning">**Fine-tuning**</T> of all the parameters with respect to the supervised criterion.
+
+The hope is that the unsupervised initialization has brought the parameters into a region from which local descent reaches a good local optimum.
+
+</Callout>
+
+Autoencoders are used as RBMs (Restricted Boltzmann Machines, energy-based models, in Hinton’s deep belief networks) or as stacked (denoising) autoencoders (Bengio, 2007).
+
+<Callout type="note" title="Is pre-training still needed?">
+
+Pre-training made it possible to **get deep learning started** and still gives improvements in some tasks (especially NLP, where it makes it possible to exploit large text corpora to learn distributed representations of words). But it is hard to manage (hyperparameters split into two phases) and today *“unsupervised pre-training is largely abandoned”* (DL book, ch. 15): modern techniques are enough for a good **end-to-end** training from scratch with backpropagation.
+
+</Callout>
+
+<Callout type="note" title="Encoders and decoders today">
+
+- **Variational autoencoders** use a Bayesian framework: the latent space is a mixture of distributions instead of a fixed vector.
+- **Neural machine translation** is carried out with encoder-decoder architectures in which the output does not coincide with the input but is in another language.
+- **Transformers** (such as GPT, Generative Pre-trained Transformer) are encoder/decoder networks with an **attention** mechanism. One can use only the encoder (BERT, for various NLP tasks) or only the decoder, for generative purposes (the GPT series for autoregressive text generation).
+
+</Callout>
+
+### Transfer learning
+
+The representation discovered by one model is used to **improve another model**, assuming that there are features useful in different contexts or tasks, corresponding to common underlying factors. Different forms of <T id="transfer-learning">transfer learning</T> (they are true subfields of ML, not just terminology):
+
+- from the autoencoder to the classifier (as above);
+- **multi-task learning**: same inputs, different targets (an implicit regularization);
+- **domain adaptation**: different input domain but shared features (e.g. sentiment analysis on reviews of videos and of smartphones);
+- reuse of models **pre-trained** on larger datasets.
+
+<Callout type="example" title="Transfer learning with AlexNet">
+
+AlexNet is a CNN trained on about 1.2 million ImageNet images in 1000 categories: it has learned **rich representations** for a wide range of images, with low-level primitives shared among different images. It has 5 convolutional layers and 3 fully connected ones. For a new task **the last 3 layers are replaced** and only those are trained with a few new images, or the whole network is **fine-tuned**. Many pre-trained CNNs (VGG, ResNet, GoogLeNet…) are available in the libraries.
+
+</Callout>
+
+---
+
+## Distributed representations
+
+<Callout type="definition" title="Distributed representation">
+
+*“In a distributed representation the elements (the features) are not mutually exclusive and their many configurations correspond to the variations seen in the observed data.”* (LeCun, Bengio, Hinton, 2015)
+
+</Callout>
+
+Deep learning methods exploit <T id="rappresentazione-distribuita">distributed representations</T> on multiple levels, but the concept applies to many models (neural networks in general, on the hidden units; probabilistic graphical models, with several latent variables).
+
+<Figure n="17.8" title="Symbolic (one-hot) and distributed representation" size="wide">
+  <LocalDistributed />
+  <Caption>Symbolic (one-hot) and distributed representation for the concepts dog, cat, tiger: in the localist one each concept has a single active unit (values 0/1); in the distributed one each concept is a pattern of real-valued activations over all the units (values such as 0.6). Compare the distances between pairs of concepts.</Caption>
+</Figure>
+
+| Symbolic (one-hot) | Distributed |
+|---|---|
+| a single unit is 1, the others 0 | vectors of real numbers (dense) |
+| distance always $\sqrt{2}$ between different concepts | each concept is the set of the activations of all the units |
+| | similarity can be shared among more than two concepts |
+| | (learned) features can be shared |
+| | distance reflects meaning |
+
+Note: here one **does not classify**, one **represents**. Distributed representations are richer and smoother, and the shared attributes make it possible to generalize across different concepts.
+
+**Input or internal representation?** The argument is general, but learning acts on the **internal** representation. A distributed representation in **input** is used only if domain knowledge makes it possible to fix it (rare and difficult; fixing it arbitrarily can harm the task). Usually a <T id="one-hot">one-hot</T> (uninformed) input is used anyway and the model is left to develop **internally** the distributed representation it needs.
+
+### Counting the difference
+
+Four concepts: blue car, blue bike, red car, red bike. 4 neurons are not needed: **2** are enough ($2^2$ concepts), one for blue/red and one for car/bike. And the neuron that describes “red” learns red from images of both cars and bikes, not only from one specific category.
+
+In general, with $n$ features with $k$ values a distributed representation describes $k^n$ different concepts (for example $2^n$ binary configurations), against the $n$ of a symbolic one-hot representation. A unique code can be assigned to an **exponential** number of regions: models with distributed representations (such as networks with hidden units) distinguish exponentially more regions than non-distributed ones.
+
+Models based on **non-distributed** representations: K-NN (one or a few prototypes per input, without sharing information with the whole training set), RBF kernels (they reduce to K-NN, as seen for SVMs), mixtures of Gaussians, decision trees (a single leaf is activated).
+
+### Shared attributes: disentangling the concepts
+
+<Figure n="17.9" title="A shared column disentangles the concept of “red”" size="wide">
+  <Disentangle />
+  <Caption>Localist representation with 4 one-hot columns for red car, red bike, blue car, blue bike; distributed representation with two columns (car/bike, red/blue). By sharing a column (feature) the concept of “red”, common to different objects, is separated out (disentangled). Choose which object has never been seen in training.</Caption>
+</Figure>
+
+By separating the concepts color and type, the car/bike distinction or the color can be learned **without having to see examples of all the combinations**. This **statistical separability** makes it easy to generalize to configurations never seen: having seen the other three cases, the blue bike is easily classified (for example “I don’t like it” because it is not red, if the model has learned that I like red objects); with the localist representation the blue bike would be entirely new.
+
+With **words**: instead of a one-hot symbol per word (dimension equal to the vocabulary), a distributed representation in which “dog” and “cat” share features allows the model to:
+
+1. **treat them similarly**: the sentences with “cat” inform the predictions for the sentences with “dog” and vice versa, transferring information from each training sentence to an exponential number of semantically related sentences (for example “both have a tail” → animal, not human);
+2. **learn automatically that they are similar**, bringing their representations closer because they appear in similar contexts: this is <T id="word-embedding">**word embedding**</T> (for example word2vec). In the one-hot space each word is at distance $\sqrt{2}$ from all the others; in the learned space words with similar meaning become close.
+
+<Figure n="17.10" title="Word embedding: similar words end up close together" size="wide">
+  <WordEmbedding />
+  <Caption>Word embedding: two zooms on a space learned by a network for translation, projected in 2D. Semantically similar words end up close together: in one the names of countries and languages, in the other the years (1995–2009). The model automatically “discovers” countries and years through learning. The positions are read off the original figure. Click a word.</Caption>
+</Figure>
+
+<Callout type="tip" title="A remark on the results">
+
+The model learns not only the grammar (no surprise) but **semantically meaningful** representations, and it does so automatically, just by reading text. Why does our semantics coincide with what the network learns? Probably language (and images) intrinsically have a **hierarchical** structure and the deep network has the right inductive bias to learn it in a distributed way (real images are a tiny fraction of white-noise images). It is still an open field.
+
+</Callout>
+
+The debate on distributed representations extends to the one between **logical-symbolic** and **neural** paradigms for cognition: the successes in translation cast doubt on the need for symbolic approaches to understand sentences.
+
+<Callout type="warning" title="Interpretability">
+
+The other side of the coin: a distributed representation is **less easy to interpret** than a localist one.
+
+</Callout>
+
+### Deep distributed representations
+
+DL exploits distributed representations **across many layers**, obtained by composing levels of abstraction or a hierarchy of reused features. Compositionality brings a further exponential gain in statistical efficiency, on top of that of distributed representations: **two potentially exponential advantages** over non-distributed and shallow models. Overall, DL models learn a distributed representation of the data by finding (disentangling) the **shared causal factors** that generate them, on different levels of abstraction.
+
+Application examples: the combination of CNNs and RNNs to generate **image captions** (with an attention mechanism that focuses on the part of the image related to each generated word); the classification of **skin cancers** with a deep network trained on 130,000 cases, with a competence comparable to that of dermatologists (*Nature* 2017).
+
+---
+
+## Other insights and recent results
+
+- **Smoothness through structure**: with the same number of parameters, deeper networks impose more smoothness than shallow ones (each layer works on the already smooth surface produced by the previous one), and they seem to learn better with the same total number of neurons: **implicit** smoothness constraints, rather than explicit ones.
+- **The non-overfitting puzzle**: huge, over-parameterized networks, able to drive the training error to zero even on **random** labels, and yet they generalize. One explanation: gradient descent imposes a form of **implicit regularization**, with convergence toward the **maximum-margin** solution (Poggio et al., 2017–2019). Variants of SGD with batch/weight normalization maximize the normalized margin, and even standard gradient descent maximizes the $L^2$ margin without explicit normalization or regularization.
+- <T id="double-descent">**Double descent**</T>: in CNNs, ResNets and transformers, as the size of the model (or of the data, or the training time) grows, performance first improves, then gets worse (the classical U) and then **improves again** beyond the interpolation threshold (where the training error becomes almost zero). The effect is often avoided with careful regularization; it is not yet fully understood and is an important research direction. (It does not necessarily concern the small models of the project.)
+
+<Figure n="17.11" title="The deep double descent phenomenon">
+  <DoubleDescent />
+  <Caption>The *deep double descent* phenomenon: training and test error of ResNet18 on CIFAR-10 with 15% noisy labels, as the width varies. In the classical regime the test error goes down and back up; around the interpolation threshold there is a peak; in the modern regime, with larger models, the test error goes down again. The values are read off the original figure. Drag the width.</Caption>
+</Figure>
+
+<Figure n="17.12" title="Double descent with polynomial regression">
+  <PolyDescent />
+  <Caption>A toy example with regularized polynomial regression: median training error (blue) and test error (orange) over 250 runs, as a function of the degree. Double descent appears here too: the test error goes down, rises to a peak at the degree at which the training error reaches zero, then goes down again. Past zero training error, as the degree increases the fit is driven only by the penalty term and the polynomial becomes more and more “piecewise linear”. The values are read off the original figure. Drag the degree.</Caption>
+</Figure>
+
+- **Redundancy**: in deep models there is significant redundancy in the parameters; given a few weights per feature the others can be predicted, up to more than 95% of the weights without loss of accuracy (Denil et al., 2013). The parameters can also be **compressed** (pruning, quantization, Huffman coding) without losses (Han et al., 2015): it seems that small networks are enough!
+- <T id="lottery-ticket">**Lottery ticket hypothesis**</T> (Frankle and Carbin, 2018): why then do we train large networks? Because good performance depends on a **lucky initialization** of one or more sub-networks, and large networks contain exponentially more of them. Retraining the pruned network with the same initialization gives similar performance.
+- The role of **randomness** (randomly initialized networks and random-weight networks) is receiving more and more attention (see [lesson 18](#/lezione/18)).
+
+---
+
+## Techniques
+
+Many layers can be hard to optimize, so the emphasis is on methods to improve **gradient descent** (also against the vanishing gradient), **regularization** (large networks) and the **exploitation of data** (semi-supervised, reinforcement learning, multi-task, adversarial learning…). Added to this are larger datasets, public software infrastructures and hardware improvements.
+
+<Callout type="abstract" title="Key techniques for DL">
+
+- Originally: **pre-training** approaches (still used in domains such as NLP for word embeddings).
+- Today (in the most popular libraries), largely already known:
+  - **SGD with <T id="momentum">momentum</T>** (with decay of $\eta$, mini-batches) or **Adam**;
+  - **ReLU** activations in the hidden units;
+  - **maximum likelihood** loss (<T id="cross-entropy">cross-entropy</T>) with <T id="softmax">**softmax**</T> at the output (also to avoid saturation and small gradients);
+  - regularization: early stopping, weight decay, **dropout**, **batch normalization**.
+
+</Callout>
+
+### Gradient problems
+
+What happens to the norm of the gradient when it is backpropagated through many layers?
+
+- if the weights are **small**, the gradients **shrink exponentially** (<T id="vanishing-gradient">vanishing gradient</T>), also because of the derivative of the sigmoids;
+- if the weights are **large**, the gradients **grow exponentially** (exploding gradient).
+
+#### The vanishing gradient
+
+Traditional activations such as tanh have gradients in $(-1, 1)$, and backpropagation computes the gradients with the chain rule repeated through the layers. In a network with $d$ layers, $d$ of these small numbers are multiplied to compute the gradients of the layers close to the input: the gradient (the delta) **decreases exponentially with $d$** and the layers close to the input train extremely slowly.
+
+<Callout type="note" title="Formal sketch">
+
+If $\mathbf{h}_l = F_l(\mathbf{h}_{l-1})$ and $F = F_M \circ \dots \circ F_1$, then
+
+<Formula f={F.gradProduct} />
+
+With $\rho$ less than 1 the gradient vanishes, with $\rho$ greater than 1 it explodes.
+
+</Callout>
+
+The approaches to tackle it range from R-prop to shortcut connections, up to randomized networks, and to ReLUs.
+
+#### Gradient clipping
+
+The repeated multiplication through the layers can introduce **cliffs** in the cost function: extremely high derivatives that “catapult” the weights very far away. <T id="gradient-clipping">**Clipping**</T> limits the norm of the gradient while keeping its direction:
+
+<Formula f={F.clipping} />
+
+with $v$ a threshold on the norm.
+
+<Figure n="17.13" title="A cliff of the cost function, without and with clipping">
+  <Clipping />
+  <Caption>Without clipping and with clipping in front of a cliff of the cost function: without clipping a gradient step on the cliff catapults the weights very far away; with clipping the reaction is moderate. Here the cost function has a single weight (in the original figure two, $w$ and $b$). Turn on clipping and change the threshold.</Caption>
+</Figure>
+
+### ReLU
+
+<Callout type="definition" title="ReLU (Rectified Linear Unit)">
+
+<Formula f={F.relu} />
+
+</Callout>
+
+Why use it in DL (since 2009)?
+
+- Better **gradient propagation** through many layers: it avoids the saturation of the sigmoids, because $f'(x) = 1$ for every positive net.
+- **Sparse activation**: in a randomly initialized network about 50% of the hidden units are active (nonzero output).
+- **Efficient computation**: only comparisons, sums and products.
+- It still has a neuroscientific inspiration, and it allows faster and more effective training of deep networks.
+
+The <T id="relu">ReLU</T> **is not differentiable at 0**, but in the libraries the derivative is usually assumed to be 0 (left) or 1 (right): the approximation is acceptable and safe, because with numerical approximations it is unlikely to evaluate exactly $f(0)$. (A more rigorous approach uses nondifferentiable optimization for piecewise linear functions.)
+
+A trick: start with **positive nets**, for example with small positive biases (0.1), so that the ReLUs are initially active for most of the inputs and let the derivatives through.
+
+Variants: **ELU** (Exponential Linear Unit), $f(x) = \alpha(e^x - 1)$ for $x \le 0$ and $x$ for $x > 0$; **Leaky ReLU**, $f(x) = 0.01x$ for negative $x$ and $x$ for $x \ge 0$. They learn on the left part too (the neurons do not “switch off”) and have a mean activation closer to zero. Many variants have comparable performance; in general they avoid some drawbacks while keeping the linear part, which makes the model easier to optimize.
+
+### Batch normalization
+
+<T id="batch-normalization">**Batch normalization**</T> normalizes each mini-batch by computing its statistics (mean and variance) for each layer: the matrix [examples of the batch × activations of the units] is normalized to zero mean and unit variance, and the transformation is included in backpropagation. Just as normalizing the input is standard practice, so BN keeps the data flowing between the intermediate layers normalized. Effects: **regularization** (because of the noise introduced by the mini-batch) and **faster learning** with higher accuracy (relevant because it made it possible to train CNNs and deep models with sigmoids effectively). (Details not required at the exam, unless you use it.)
+
+### Dropout
+
+<T id="dropout">**Dropout**</T> randomly selects a subset of the network during training. It is explained with two concepts already known: <T id="ensemble">**ensemble**</T> (an implicit bagging of different sub-networks, but computationally cheap) and **regularization**.
+
+<T id="bagging">Bagging</T> trains $n$ models on different subsets of the training set and averages their outputs: models with high variance and low bias work well on average. Dropout approximates and exploits this process with an **exponential** number of sub-networks, while having **a single network** at test time, and it maximizes the diversity of the ensemble by avoiding complex co-adaptations on the training data.
+
+<Figure n="17.14" title="Dropout trains the ensemble of all the sub-networks" size="wide">
+  <Dropout />
+  <Caption>Dropout trains the ensemble of all the sub-networks that can be obtained by removing non-output units from the base network (two inputs, two hidden units, one output: sixteen sub-networks). Some sub-networks do not work, because they no longer connect input and output, but in large networks it is unlikely that there is no path at all from the input to the output. Remove units or sample a mask.</Caption>
+</Figure>
+
+<Callout type="abstract" title="Dropout algorithm">
+
+- Each time an example is loaded into a mini-batch, a different **binary mask** is sampled to be applied to all the input and hidden units, independently for each unit. The probability of including a unit is a hyperparameter (typically 0.8 for the input and 0.5 for the hidden units).
+- Each unit is multiplied by its mask (zero amounts to removing it, dropping it out): a sub-network is obtained.
+- Forward pass, backpropagation and update are carried out as usual, training a subset of units at a time.
+- The removed units are then put back with their original weights.
+
+</Callout>
+
+Only a small fraction of the sub-networks is trained (each for a single step), but **parameter sharing** means that the others arrive at good parameters too: an exponential number of models is handled with tractable memory. To approximate the prediction of the ensemble at test time the weight scaling inference rule is used: the weights are multiplied by the inclusion probability (typically 0.5), so that the expected output of each unit is the same as in training.
+
+Regularizing effect: it avoids training all the units on all the data by reducing their interactions (and diversifying them, as committees need); it reduces the variance like bagging; it injects **structured noise** (for example recognizing a face without the unit that detects the nose). Above all, it regularizes each unit to be not only a good feature, but **a feature that is good in many contexts** (different sub-networks). For linear regression it is equivalent to $L^2$ weight decay with a different $\lambda$ for each input. It can be used with any model with a distributed representation trained with SGD.
+
+### L1 regularization
+
+Using the $L^1$ norm (sum of the absolute values) instead of the $L^2$ in the penalty (for linear models this is the <T id="lasso">**LASSO**</T>) favors the **elimination** of features (weights exactly at zero), whereas the $L^2$ usually only reduces the magnitude of the weights: simpler models are obtained. The solution requires nondifferentiable optimization techniques (subgradient, smooth approximations of the $L^1$ norm…).
+
+<Figure n="17.15" title="Why L1 produces sparse solutions" size="wide">
+  <L1L2 />
+  <Caption>Why L1 produces sparse solutions: on the left the $L^1$ norm (a diamond) and on the right the $L^2$ norm (a circle) in the $w_1$–$w_2$ plane, with a red line representing the constraints of the data. The level curves of the $L^1$ norm have “corners” on the axes, where one coordinate is zero: with $L^1$ the solution falls on a vertex of the diamond ($w_1 = 0$), with $L^2$ at a generic point of the circle. Change the slope of the line.</Caption>
+</Figure>
+
+### Adversarial learning
+
+<T id="gan">**Generative Adversarial Networks**</T> (GANs) are two competing networks: one **generates** candidates, the other **evaluates** them (telling the real ones from the generated ones). They are used for example to generate photorealistic images of people who do not exist.
+
+---
+
+## Applications, challenges and conclusions
+
+DL is successful in **NLP** (speech recognition, translation, sentiment analysis, question answering…), in **computer vision** (images and video: object recognition, medical applications, image synthesis…) with performance never reached before, and in the game of **Go**. It is discussed in more depth in the NLP and ISPR courses.
+
+Open challenges: theoretical analysis and framework; optimal design of the architecture (how many layers? which units? cross-validation can be too expensive); efficiency for big data; processing of streams (on-line); structured data (sequences, trees, graphs).
+
+Hardware has changed too: Google’s TPUs (initially only for inference), Nvidia GPUs, NPUs in smartphone chips (Huawei Kirin 970), Apple’s Neural Engine (since 2017).
+
+<Callout type="abstract" title="Summary">
+
+- Technical progress and the availability of data have made it possible to learn with deep and very large networks, with state-of-the-art results especially where the **compositionality** of the features is relevant (vision, language).
+- Two potentially exponential advantages: **depth** (composition of functions, no-flattening) and **distributed representations** (shared attributes).
+- The most general concept that has emerged is **representation learning**.
+- Techniques: ReLU, cross-entropy with softmax, SGD with momentum/Adam, dropout, batch normalization, gradient clipping.
+- ML makes it relatively easier to develop sophisticated AI systems (and software in general) for real problems.
+
+</Callout>
+
+<Exam>
+<Q q="What is meant by deep learning? What are the aspects common to the various approaches?">
+
+Models composed of multiple processing layers that learn representations of the data with multiple levels of abstraction; a general framework that comprises MLPs with many layers, convolutional networks, deep belief networks and generative approaches, recurrent and recursive networks, contrasted with shallow models. Common aspects: multiple layers of nonlinear units; learning (supervised or not) of feature representations in each layer, with a hierarchy from low-level features to high-level features; hence a hierarchical, sparse and distributed representation of the data.
+
+</Q>
+<Q q="Are many layers really needed? Discuss the parity example and the no-flattening results.">
+
+A function represented compactly by a deep architecture may require a very large architecture if the depth is insufficient. The parity of $N$ bits with a 2-layer circuit (AND, then OR) requires one AND gate for each positive configuration: $2^{N-1} + 1$ gates (129 for 8 inputs); with $\log N$ layers a tree of $N - 1$ XORs of 3 gates each is enough, $3(N-1)$ gates (21 for 8 inputs). For networks: one hidden layer is enough in general (universal approximation), but it may require an exponential number of units, and then it is also hard to learn with few examples; there are families of functions that are efficient with depth greater than $d$ and that require much larger models with depth at most $d$. This does not hold for all classes of functions, and there is no guarantee that a given task has this property.
+
+</Q>
+<Q q="What is the inductive bias of deep models?">
+
+The very general belief that the function to be learned is a composition of simpler functions (or of factors of variation nested on several levels of a hierarchy). If the task matches the bias (images, language), generalization is better than that of a less deep model with the same number of weights, and one generalizes non-locally with fewer examples; it does not necessarily hold for all data. It is a more general bias than ad hoc constraints (the hand-chosen $\phi$, engineered features).
+
+</Q>
+<Q q="What is representation learning? Pre-training and transfer learning.">
+
+A set of methods that allows a machine to be fed with raw data and to automatically discover the representations needed for detection or classification: a good representation makes the subsequent learning task easier. Pre-training: unsupervised learning layer by layer (stacked autoassociators) to initialize the network, followed by a supervised layer and by the fine-tuning of all the parameters; it works as initialization and as regularization, and is today largely abandoned in favor of end-to-end training. Transfer learning: the representation discovered by one model is used to improve another (from the autoencoder to the classifier, multi-task learning, domain adaptation, pre-trained models such as AlexNet whose last layers are replaced).
+
+</Q>
+<Q q="What is an autoencoder?">
+
+A network trained to copy its own input to its output, in an unsupervised way: an encoder $\mathbf{h} = f(\mathbf{x})$ produces the code in the hidden layer, a decoder the reconstruction $\mathbf{r} = g(\mathbf{h})$. Undercomplete if the hidden layer is smaller than the input (it captures the most salient features; with a linear decoder and a quadratic loss it is PCA); overcomplete if it is larger, with a regularization (sparsity, robustness to noise). The denoising autoencoder recovers the clean input from a corrupted version.
+
+</Q>
+<Q q="Symbolic versus distributed representations: advantages of the latter.">
+
+One-hot: a single unit at 1, distance always $\sqrt{2}$ between different concepts, $n$ units for $n$ concepts. Distributed: dense vectors of real numbers, each concept is the set of the activations of all the units; with $n$ features with $k$ values $k^n$ concepts are described, distance reflects meaning, features are shared among concepts. Shared attributes disentangle the concepts (the “red” common to cars and bikes) and make it possible to generalize to combinations never seen; with words this is word embedding. The other side of the coin: it is less interpretable.
+
+</Q>
+<Q q="What is the vanishing gradient? How is it tackled (ReLU, clipping…)?">
+
+Backpropagating through many layers multiplies many factors: with small weights (and derivatives of the sigmoids less than 1) the gradient decreases exponentially with depth, and the layers close to the input train extremely slowly; with large weights it grows exponentially (exploding gradient). It is tackled with R-prop, shortcut connections, randomized networks and above all with ReLUs, which have derivative 1 for every positive net. Against the cliffs of the cost function gradient clipping is used, which limits the norm of the gradient to a threshold $v$ while keeping its direction.
+
+</Q>
+<Q q="Describe dropout and explain its regularizing effect.">
+
+For each example of the mini-batch a binary mask is sampled on the input and hidden units (typical inclusion probabilities 0.8 and 0.5), the remaining sub-network is trained and then the units are put back; at test time a single network is used with the weights multiplied by the inclusion probability. It is an implicit, cheap bagging of an exponential number of sub-networks that share the parameters: it reduces the variance, avoids co-adaptations among units, injects structured noise and pushes each unit to be a feature that is good in many contexts. For linear regression it is equivalent to an $L^2$ weight decay with a different $\lambda$ for each input.
+
+</Q>
+</Exam>

@@ -3,6 +3,7 @@ import { Arrow, Axes, Dot, Label, Plot } from '../../components/plot/Plot'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Segmented } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 
 /* ------------------------------------------------------------------ piccoli disegni delle feature (generati, non fotografie) */
@@ -41,13 +42,48 @@ const PARTS: ReactNode[] = [
 
 type Unit = { layer: number; i: number }
 const LAYER_INFO = [
-  { name: 'Strato visibile', sub: 'pixel di input', text: 'I pixel dell’immagine: la rappresentazione più grezza, un vettore di intensità.' },
-  { name: '1° strato nascosto', sub: 'bordi', text: 'Le prime unità rilevano bordi (linee orizzontali, verticali…) combinando i pixel: proprio come farebbe un semplice filtro convolutivo lineare.' },
-  { name: '2° strato nascosto', sub: 'angoli e contorni', text: 'I bordi formano motivi: angoli e contorni, ottenuti combinando i bordi dello strato precedente.' },
-  { name: '3° strato nascosto', sub: 'parti di oggetti', text: 'I motivi si assemblano in parti di oggetti (la ruota per l’auto, il volto o la mano per la persona…).' },
-  { name: 'Output', sub: 'identità dell’oggetto', text: 'Le parti formano oggetti: sulla nuova rappresentazione la classificazione nell’ultimo strato è semplice.' },
+  {
+    name: tx('Strato visibile', 'Visible layer'),
+    sub: tx('pixel di input', 'input pixels'),
+    text: tx(
+      'I pixel dell’immagine: la rappresentazione più grezza, un vettore di intensità.',
+      'The pixels of the image: the rawest representation, a vector of intensities.',
+    ),
+  },
+  {
+    name: tx('1° strato nascosto', '1st hidden layer'),
+    sub: tx('bordi', 'edges'),
+    text: tx(
+      'Le prime unità rilevano bordi (linee orizzontali, verticali…) combinando i pixel: proprio come farebbe un semplice filtro convolutivo lineare.',
+      'The first units detect edges (horizontal, vertical lines…) by combining the pixels: just as a simple linear convolutional filter would.',
+    ),
+  },
+  {
+    name: tx('2° strato nascosto', '2nd hidden layer'),
+    sub: tx('angoli e contorni', 'corners and contours'),
+    text: tx(
+      'I bordi formano motivi: angoli e contorni, ottenuti combinando i bordi dello strato precedente.',
+      'Edges form motifs: corners and contours, obtained by combining the edges of the previous layer.',
+    ),
+  },
+  {
+    name: tx('3° strato nascosto', '3rd hidden layer'),
+    sub: tx('parti di oggetti', 'object parts'),
+    text: tx(
+      'I motivi si assemblano in parti di oggetti (la ruota per l’auto, il volto o la mano per la persona…).',
+      'Motifs assemble into object parts (the wheel for the car, the face or the hand for the person…).',
+    ),
+  },
+  {
+    name: 'Output',
+    sub: tx('identità dell’oggetto', 'object identity'),
+    text: tx(
+      'Le parti formano oggetti: sulla nuova rappresentazione la classificazione nell’ultimo strato è semplice.',
+      'Parts form objects: on the new representation, classification in the last layer is simple.',
+    ),
+  },
 ]
-const OUT = ['auto', 'persona', 'animale']
+const OUT = tx(['auto', 'persona', 'animale'], ['car', 'person', 'animal'])
 
 export function Hierarchy() {
   const [sel, setSel] = useState<Unit>({ layer: 2, i: 0 })
@@ -62,7 +98,7 @@ export function Hierarchy() {
   }
   return (
     <div className="wgrid">
-      <svg className="hier17" viewBox="0 0 520 432" role="img" aria-label="Rete profonda: dai pixel ai bordi, agli angoli e contorni, alle parti di oggetti, all’identità">
+      <svg className="hier17" viewBox="0 0 520 432" role="img" aria-label={tx('Rete profonda: dai pixel ai bordi, agli angoli e contorni, alle parti di oggetti, all’identità', 'Deep network: from pixels to edges, to corners and contours, to object parts, to the identity')}>
         {[0, 1, 2, 3].map((l) =>
           X.map((x1, i) =>
             X.map((x2, j) => {
@@ -94,7 +130,7 @@ export function Hierarchy() {
                 transform={`translate(${x} ${Y(l)})`}
                 role="button"
                 tabIndex={0}
-                aria-label={`${LAYER_INFO[l].name}, unità ${i + 1}`}
+                aria-label={tx(`${LAYER_INFO[l].name}, unità ${i + 1}`, `${LAYER_INFO[l].name}, unit ${i + 1}`)}
                 aria-pressed={on}
                 onClick={() => pick({ layer: l, i })}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && pick({ layer: l, i })}
@@ -124,7 +160,7 @@ export function Hierarchy() {
           </g>
         ))}
         <text className="hier17__sub" x={98} y={Y(0) + 4} textAnchor="end">
-          immagine →
+          {tx('immagine →', 'image →')}
         </text>
       </svg>
       <div className="wside">
@@ -133,13 +169,38 @@ export function Hierarchy() {
             {info.name}: {info.sub}
           </div>
           {info.text}
-          {sel.layer > 0 && <p className="wnote">Le linee evidenziate sono le unità dello strato precedente che questa unità combina.</p>}
+          {sel.layer > 0 && (
+            <p className="wnote">
+              {tx(
+                'Le linee evidenziate sono le unità dello strato precedente che questa unità combina.',
+                'The highlighted lines are the units of the previous layer that this unit combines.',
+              )}
+            </p>
+          )}
         </div>
         <Tasks
           items={[
-            { label: 'Clicca un’unità del 1° strato nascosto: un bordo è una combinazione di pixel.', done: !!seen[1] },
-            { label: 'Sali al 3° strato: una parte di oggetto è fatta di angoli e contorni, fatti a loro volta di bordi.', done: !!seen[3] },
-            { label: 'Clicca un’uscita: l’identità dell’oggetto si decide sulle parti, non sui pixel.', done: !!seen[4] },
+            {
+              label: tx(
+                'Clicca un’unità del 1° strato nascosto: un bordo è una combinazione di pixel.',
+                'Click a unit of the 1st hidden layer: an edge is a combination of pixels.',
+              ),
+              done: !!seen[1],
+            },
+            {
+              label: tx(
+                'Sali al 3° strato: una parte di oggetto è fatta di angoli e contorni, fatti a loro volta di bordi.',
+                'Go up to the 3rd layer: an object part is made of corners and contours, made in turn of edges.',
+              ),
+              done: !!seen[3],
+            },
+            {
+              label: tx(
+                'Clicca un’uscita: l’identità dell’oggetto si decide sulle parti, non sui pixel.',
+                'Click an output: the identity of the object is decided on the parts, not on the pixels.',
+              ),
+              done: !!seen[4],
+            },
           ]}
         />
       </div>
@@ -185,12 +246,30 @@ function Face({ k }: { k: number }) {
 const LEVELS = [
   {
     id: 'raw',
-    name: 'Dati grezzi',
-    text: 'L’immagine di input (nella figura originale, la fotografia di un volto): solo intensità dei pixel.',
+    name: tx('Dati grezzi', 'Raw data'),
+    text: tx(
+      'L’immagine di input (nella figura originale, la fotografia di un volto): solo intensità dei pixel.',
+      'The input image (in the original figure, the photograph of a face): only pixel intensities.',
+    ),
   },
-  { id: 'low', name: 'Feature di basso livello', text: 'I primi strati estraggono bordi con orientamenti diversi.' },
-  { id: 'mid', name: 'Feature di livello medio', text: 'Gli strati intermedi combinano i bordi in parti del volto: occhi, naso, bocca…' },
-  { id: 'high', name: 'Feature di alto livello', text: 'Gli ultimi strati combinano le parti in volti interi.' },
+  {
+    id: 'low',
+    name: tx('Feature di basso livello', 'Low-level features'),
+    text: tx('I primi strati estraggono bordi con orientamenti diversi.', 'The first layers extract edges with different orientations.'),
+  },
+  {
+    id: 'mid',
+    name: tx('Feature di livello medio', 'Mid-level features'),
+    text: tx(
+      'Gli strati intermedi combinano i bordi in parti del volto: occhi, naso, bocca…',
+      'The intermediate layers combine the edges into parts of the face: eyes, nose, mouth…',
+    ),
+  },
+  {
+    id: 'high',
+    name: tx('Feature di alto livello', 'High-level features'),
+    text: tx('Gli ultimi strati combinano le parti in volti interi.', 'The last layers combine the parts into whole faces.'),
+  },
 ] as const
 
 export function FaceFeatures() {
@@ -246,7 +325,7 @@ export function FaceFeatures() {
           </button>
         ))}
       </div>
-      <svg className="dnn17" viewBox="0 0 640 150" role="img" aria-label="Rete profonda: dall’input al risultato">
+      <svg className="dnn17" viewBox="0 0 640 150" role="img" aria-label={tx('Rete profonda: dall’input al risultato', 'Deep network: from the input to the result')}>
         <text className="dnn17__t" x={8} y={79}>
           Input
         </text>
@@ -273,7 +352,7 @@ export function FaceFeatures() {
           )
         })}
         <text className="dnn17__t" x={632} y={79} textAnchor="end">
-          Risultato
+          {tx('Risultato', 'Result')}
         </text>
       </svg>
       <div className="wgrid">
@@ -282,15 +361,26 @@ export function FaceFeatures() {
           {LEVELS[lv].text}
         </div>
         <div className="wpanel">
-          <div className="wpanel__title">I numeri dell’applicazione (dalla slide)</div>
-          Obiettivo: identificare un volto. Dati di training: 10–100 milioni di immagini. Architettura: circa 10 strati, 1 miliardo di
-          parametri. Addestramento: circa 30 exaflop, circa 30 giorni di GPU.
+          <div className="wpanel__title">{tx('I numeri dell’applicazione (dalla slide)', 'The numbers of the application (from the slide)')}</div>
+          {tx(
+            <>
+              Obiettivo: identificare un volto. Dati di training: 10–100 milioni di immagini. Architettura: circa 10 strati, 1 miliardo di
+              parametri. Addestramento: circa 30 exaflop, circa 30 giorni di GPU.
+            </>,
+            <>
+              Goal: identify a face. Training data: 10–100 million images. Architecture: about 10 layers, 1 billion parameters. Training:
+              about 30 exaflops, about 30 GPU days.
+            </>,
+          )}
         </div>
       </div>
       <Tasks
         items={[
           {
-            label: 'Clicca i tre livelli di feature, dal basso all’alto: nella rete si accendono gli strati che li calcolano.',
+            label: tx(
+              'Clicca i tre livelli di feature, dal basso all’alto: nella rete si accendono gli strati che li calcolano.',
+              'Click the three feature levels, from low to high: in the network the layers that compute them light up.',
+            ),
             done: !!seen[1] && !!seen[2] && !!seen[3],
           },
         ]}
@@ -331,24 +421,33 @@ type Ex = {
 const EXS: Ex[] = [
   {
     id: 'occhiali',
-    label: 'occhiali',
-    names: ['uomo con occhiali', 'uomo', 'donna', 'donna con occhiali'],
-    axes: ['genere', 'occhiali'],
-    note: 'La differenza tra «uomo con occhiali» e «uomo» cattura il concetto di occhiali, che si può sommare a «donna».',
+    label: tx('occhiali', 'glasses'),
+    names: tx(['uomo con occhiali', 'uomo', 'donna', 'donna con occhiali'], ['man with glasses', 'man', 'woman', 'woman with glasses']),
+    axes: tx(['genere', 'occhiali'], ['gender', 'glasses']),
+    note: tx(
+      'La differenza tra «uomo con occhiali» e «uomo» cattura il concetto di occhiali, che si può sommare a «donna».',
+      'The difference between “man with glasses” and “man” captures the concept of glasses, which can be added to “woman”.',
+    ),
   },
   {
     id: 're',
-    label: 're e regina',
-    names: ['re', 'maschio', 'femmina', 'regina'],
-    axes: ['genere', 'monarchia'],
-    note: 'La differenza tra «re» e «maschio» cattura il concetto di monarchia.',
+    label: tx('re e regina', 'king and queen'),
+    names: tx(['re', 'maschio', 'femmina', 'regina'], ['king', 'male', 'female', 'queen']),
+    axes: tx(['genere', 'monarchia'], ['gender', 'monarchy']),
+    note: tx(
+      'La differenza tra «re» e «maschio» cattura il concetto di monarchia.',
+      'The difference between “king” and “male” captures the concept of monarchy.',
+    ),
   },
   {
     id: 'capitali',
-    label: 'capitali',
-    names: ['Parigi', 'Francia', 'Polonia', 'Varsavia'],
-    axes: ['paese', 'capitale'],
-    note: 'La differenza tra «Parigi» e «Francia» cattura il concetto di capitale.',
+    label: tx('capitali', 'capitals'),
+    names: tx(['Parigi', 'Francia', 'Polonia', 'Varsavia'], ['Paris', 'France', 'Poland', 'Warsaw']),
+    axes: tx(['paese', 'capitale'], ['country', 'capital']),
+    note: tx(
+      'La differenza tra «Parigi» e «Francia» cattura il concetto di capitale.',
+      'The difference between “Paris” and “France” captures the concept of capital.',
+    ),
   },
 ]
 // posizioni illustrative nello spazio delle rappresentazioni: a = (0,1), b = (0,0), c = (1,0), d ≈ (1,1)
@@ -374,7 +473,7 @@ export function VectorArithmetic() {
       <div className="wbar">
         <Segmented
           size="sm"
-          label="esempio"
+          label={tx('esempio', 'example')}
           value={k}
           onChange={(v) => {
             setK(v)
@@ -395,7 +494,7 @@ export function VectorArithmetic() {
         ))}
       </div>
       <Plot xDomain={[0, 3.4]} yDomain={[0, 3.2]} aspect={0.5} minH={220} maxH={320} margin={{ l: 30, b: 46 }}>
-        <Axes xTicks={[]} yTicks={[]} xLabel={`una direzione: ${ex.axes[0]}`} yLabel={`un’altra: ${ex.axes[1]}`} grid={false} />
+        <Axes xTicks={[]} yTicks={[]} xLabel={tx(`una direzione: ${ex.axes[0]}`, `one direction: ${ex.axes[0]}`)} yLabel={tx(`un’altra: ${ex.axes[1]}`, `another: ${ex.axes[1]}`)} grid={false} />
         <Arrow from={PB} to={PA} color="var(--c-green)" />
         <Arrow from={PC} to={res} color="var(--c-green)" />
         <Dot x={PA.x} y={PA.y} color="var(--c-blue)" r={5} />
@@ -417,13 +516,19 @@ export function VectorArithmetic() {
         </Label>
       </Plot>
       <p className="wnote">
-        {ex.note} Le frecce verdi sono la stessa differenza, applicata a due punti di partenza diversi: il risultato (cerchio vuoto) cade
-        vicino alla rappresentazione attesa (arancione). Le posizioni sono illustrative.
+        {ex.note}{' '}
+        {tx(
+          'Le frecce verdi sono la stessa differenza, applicata a due punti di partenza diversi: il risultato (cerchio vuoto) cade vicino alla rappresentazione attesa (arancione). Le posizioni sono illustrative.',
+          'The green arrows are the same difference, applied to two different starting points: the result (hollow circle) falls close to the expected representation (orange). The positions are illustrative.',
+        )}
       </p>
       <Tasks
         items={[
           {
-            label: 'Guarda anche gli esempi con le parole: la stessa operazione tra vettori funziona per «re − maschio + femmina» e per le capitali.',
+            label: tx(
+              'Guarda anche gli esempi con le parole: la stessa operazione tra vettori funziona per «re − maschio + femmina» e per le capitali.',
+              'Look at the examples with words too: the same operation between vectors works for “king − male + female” and for the capitals.',
+            ),
             done: !!seen[1] && !!seen[2],
           },
         ]}

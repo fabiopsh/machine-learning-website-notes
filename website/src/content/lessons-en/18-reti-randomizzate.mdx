@@ -1,0 +1,167 @@
+import * as F from '../formulas/l18'
+import { RandomForest, RosenblattAreas, Structure, RandomNet } from '../../widgets/l18/Random'
+
+<Lead>After deep learning, the other recent paradigm presented in the course is that of **neural networks with random weights** (“deep learning and *extreme* learning”, the professor jokes). The idea sounds paradoxical: what if the hidden layer were not trained at all? The lecture shows how randomness is a useful component of ML and how randomized networks connect to concepts already seen: basis expansion, Cover’s theorem, regularization.</Lead>
+
+## Randomness in Machine Learning
+
+A **randomized** approach uses some degree of randomness as part of its constructive strategy. Randomness can improve predictive performance and alleviate the difficulties of classical methodologies, and it is present at several levels:
+
+- **data processing**: data splitting (hold-out, K-fold CV, leave-one-out), data generation (<T id="bootstrap">bootstrap</T>, boosting, balancing techniques);
+- **learning**: order of the observations (<T id="shuffling">shuffling</T> for the mini-batch), random initialization of the network weights;
+- **hyperparameter selection** (including <T id="random-search">random search</T>);
+- **ensembles**: random differentiation among models (different initializations, sampling of the training sets in bagging and boosting);
+- **at the core of the model**.
+
+### Intrinsically random models
+
+- The stochastic neurons of the **Restricted Boltzmann Machines**.
+- The **Extremely Randomized Trees** and the <T id="random-forest">**Random Forests**</T>: an ensemble of randomized decision trees, each built on samples drawn at random from the training set and with a random choice of the input variables on which to split the nodes. They combine the advantages of ensembles and of randomness.
+- <T id="dropout">**Dropout**</T> as regularization (although here randomness is not necessary in itself).
+
+<Figure n="18.1" title="Random Forest" size="wide">
+  <RandomForest />
+  <Caption>Random Forest: an ensemble of randomized decision trees, each built on a random sample of the data and with random choices of the variables, whose outputs are combined. The trees here are drawn at random (the dice mark where randomness comes in). Present an input or reroll the dice.</Caption>
+</Figure>
+
+---
+
+## Neural networks with random weights
+
+<Callout type="question" label="Question" title="The question">
+
+Is it possible to exploit MLP (or recurrent) architectures **without long training cycles** for the hidden layers?
+
+</Callout>
+
+There is a long tradition of randomized, random-weight, random-projection networks: for example the **Random Vector Functional Link** (RVFL), since the very beginning. Recently they have been made popular under various names, among which <T id="elm">**ELM**</T> (*Extreme Learning Machine*).
+
+<Callout type="definition" title="Basic idea">
+
+- A network with one (or more) **randomly connected hidden layers**: the weights are **fixed after the random initialization** and are no longer trained.
+- **Only the output weights** are trained (a linear model: with the <T id="pseudoinversa">pseudoinverse</T> or <T id="ridge">ridge regression</T>).
+
+This overcomes the problems of the complex and computationally expensive training algorithms traditionally used for neural networks.
+
+</Callout>
+
+The roots lie in Rosenblatt’s pioneering work on the **Perceptron**, in which a “projection” area randomly connected to the retina fed an “association” area, and only the final responses were learned. Other pioneering works had stressed the importance of learning in the output layer compared with learning in the hidden one.
+
+<Figure n="18.2" title="The original Perceptron" size="wide">
+  <RosenblattAreas />
+  <Caption>The scheme of Rosenblatt’s Perceptron: the retina is linked by random connections to the projection area $A_I$, then to the association area $A_{II}$, and finally to the responses. The connections from the retina to the projection area were random. Reroll the dice and click the blocks.</Caption>
+</Figure>
+
+Randomized networks are today a growing line of research, particularly suitable when **efficiency** is crucial (training is limited to the last layer).
+
+### General structure
+
+<Figure n="18.3" title="General structure of a randomized network" size="wide">
+  <Structure />
+  <Caption>General structure: the input enters an untrained hidden layer (with the dice, that is, random) that produces a feature representation $\varphi$; this enters a trained readout layer that produces the output. Click the two layers.</Caption>
+</Figure>
+
+- **Hidden layer (untrained)**: it **non-linearly** embeds the input into a **high-dimensional feature space**, where the problem is more likely to be linearly solvable (it is an <T id="basis-expansion">**LBE**</T>!). It has a theoretical basis in Cover’s theorem.
+- <T id="readout">**Readout**</T> **(trained)**: it combines the features of the hidden space to compute the output; typically it is a **linear model**.
+
+<Callout type="theorem" title="Cover’s theorem (1965)">
+
+*“A complex pattern-classification problem, cast non-linearly into a high-dimensional space, is more likely to be linearly separable than in a low-dimensional space, provided that the space is not densely populated.”*
+
+For example, with a deterministic mapping: given $l$ examples, lift them onto the vertices of an $(l-1)$-dimensional simplex (the generalized “triangle”). Now **every** binary partition of the samples is linearly separable.
+
+</Callout>
+
+This is exactly the same property exploited by <T id="kernel">**kernels**</T> in SVMs.
+
+### Randomized feedforward networks
+
+<Figure n="18.4" title="Randomized feedforward network" size="wide">
+  <RandomNet />
+  <Caption>Randomized feedforward network: input $\mathbf{x}$, a hidden layer $\mathbf{h}$ with a random, fixed weight matrix $\mathbf{W}$ (the dice) and non-linear function $f$, and a readout layer with a trained matrix $\mathbf{W}^{out}$ that produces the output $\mathbf{o}$. In the plot, a network of this kind at work on a regression: change the number of random units and $\lambda$.</Caption>
+</Figure>
+
+The input-output relationship is implemented by an untrained hidden layer, which realizes a **large random basis expansion**.
+
+<Callout type="abstract" title="Construction, learning and use">
+
+**Construction**: fill $\mathbf{W}$ with random values (for example Gaussian noise), using **many units**.
+
+**Learning** of the readout: given $l$ examples $(\mathbf{x}_p, \mathbf{d}_p)$, as for linear models the squared error is minimized with the direct method. With $\mathbf{H} = f(\mathbf{W}\mathbf{X})$ (the hidden activations of all the patterns):
+
+$$
+\mathbf{W}^{out} = \mathbf{H}^+\mathbf{d},
+$$
+
+often with **$L^2$ regularization** (useful because of the high number of units):
+
+<Formula f={F.readout} />
+
+or with $L^1$.
+
+**Use**: the hidden activations $\mathbf{h}$ are computed as for ordinary neurons, and then the outputs
+
+<Formula f={F.output} />
+
+possibly applying a threshold (or a non-linear function) for classification.
+
+</Callout>
+
+The main reference models are the **RVFL** (*Random Vector Functional-Link*), the **ELM** (*Extreme Learning Machine*) and the **RBF networks with random centers**.
+
+<Callout type="tip" title="Why it works">
+
+Compare with “ordinary” neural networks: there the hidden layer is an **adaptive** basis expansion $\phi_j(\mathbf{x}, \mathbf{w})$ whose weights are learned; here it is a **random** but very **large** basis expansion. If the bases are numerous enough, by <T id="teorema-cover">Cover’s theorem</T> the problem becomes (almost) linearly separable in the hidden space, and a linear model at the output is enough, trainable in a single step with least squares. The training cost is that of a regularized linear regression.
+
+</Callout>
+
+### Pros and cons
+
+- The large set of hidden units plays an interesting role: the projection non-linearly expands the dimension of the input, making the data more separable.
+- A high number of units can provide a basis expansion that is **sufficient** for the task (with theoretical foundations, including universal approximation theorems).
+- **Extremely efficient**.
+- Many variants exist: incremental learning by adding neurons (like <T id="cascade-correlation">Cascade Correlation</T>), pruning, etc., often related to past research under different names.
+- “Targeted” models, with fewer adaptive units trained on the specific task, still seem **more elegant**: there is a debate between **random-feature** and **learned-feature** approaches, and it is worth knowing both.
+- They extend to recurrent networks: the **Echo State Networks** (ESN), see [lesson 20](#/lezione/20).
+
+### Where they are useful
+
+- **Big Data**, thanks to the extreme efficiency.
+- Tiny implementations for **embedded** and distributed systems, on resource-constrained devices (sensor networks, IoT, edge computing).
+- **Deep learning**, where training algorithms are particularly expensive: randomized networks alleviate the computational burden (randomized deep networks as stacks of RVFL/ELM modules, randomized CNNs).
+- **Randomized recurrent networks**: where training is even more expensive than for MLPs, and with solid theoretical foundations on the bias introduced by the dynamics of the system (stability, learnability).
+
+<Callout type="abstract" title="Conclusions">
+
+**Randomness is not an enemy: it is a friend, if you control it.** (This also holds in other fields of computer science, such as randomized algorithms, and in mathematics.) Note how the same concepts keep coming back — Cover’s theorem, LBE, regularization, feature representation: the course is by now “mature”.
+
+</Callout>
+
+<Callout type="note" title="FAQ: can ELMs be used in the project?">
+
+Yes, but as an **additional part** on top of the standard implementation of an MLP fully trained with backpropagation and SGD. They are easy to implement as a sub-part of a feedforward network.
+
+</Callout>
+
+<Exam>
+<Q q="At which levels does randomness appear in ML?">
+
+In data processing (splitting into hold-out, K-fold CV, leave-one-out; generation with bootstrap, boosting, balancing); in learning (order of the observations with shuffling, random initialization of the weights); in hyperparameter selection (random search); in ensembles (different initializations, sampling of the training sets in bagging and boosting); at the core of the model (stochastic neurons of RBMs, Extremely Randomized Trees and Random Forests, dropout, networks with random weights).
+
+</Q>
+<Q q="Describe a randomized feedforward network: construction, training of the readout, use.">
+
+Construction: the matrix $\mathbf{W}$ of the hidden layer is filled with random values (for example Gaussian noise), with many units, and is left fixed. Training: the hidden activations $\mathbf{H} = f(\mathbf{W}\mathbf{X})$ are computed and the linear readout is found with the direct method, $\mathbf{W}^{out} = \mathbf{H}^+\mathbf{d}$, often with $L^2$ regularization: $\mathbf{W}^{out} = (\mathbf{H}^T\mathbf{H} + \lambda\mathbf{I})^{-1}\mathbf{H}^T\mathbf{d}$ (or $L^1$). Use: $\mathbf{o}(\mathbf{x}) = \mathbf{W}^{out} f(\mathbf{W}\mathbf{x})$, with a threshold for classification. Reference models: RVFL, ELM, RBF networks with random centers.
+
+</Q>
+<Q q="State Cover’s theorem and explain its link with randomized networks and with kernels.">
+
+A complex classification problem, cast non-linearly into a high-dimensional space, is more likely to be linearly separable than in a low-dimensional space, provided that the space is not densely populated (limit case: $l$ examples on the vertices of an $(l-1)$-dimensional simplex, where every binary partition is separable). The random hidden layer is precisely a non-linear projection into a high-dimensional feature space (a large LBE), after which a linear readout is enough. It is the same property exploited by kernels in SVMs, which separate linearly in the feature space.
+
+</Q>
+<Q q="Pros and cons of random features compared with learned features.">
+
+Pros: extreme efficiency (only the last layer is trained, at the cost of a regularized linear regression), no complex training algorithm, theoretical foundations (Cover’s theorem, universal approximation with enough units), usefulness for Big Data, embedded systems, deep and recurrent networks (ESN). Cons: many units are needed, and “targeted” models, with fewer adaptive units trained on the task, seem more elegant; the debate is open, and it is worth knowing both approaches.
+
+</Q>
+</Exam>

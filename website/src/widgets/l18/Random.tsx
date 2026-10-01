@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, lstsq, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -84,7 +85,7 @@ export function RandomForest() {
   return (
     <div>
       <div className="pipe16__scroll">
-      <svg className="rf18" viewBox="0 0 590 300" style={{ minWidth: 540 }} role="img" aria-label="Random Forest: tre alberi di decisione randomizzati, le cui uscite vengono combinate">
+      <svg className="rf18" viewBox="0 0 590 300" style={{ minWidth: 540 }} role="img" aria-label={tx('Random Forest: tre alberi di decisione randomizzati, le cui uscite vengono combinate', 'Random Forest: three randomized decision trees, whose outputs are combined')}>
         <text className="rf18__x" x={295} y={20} textAnchor="middle">
           x
         </text>
@@ -148,24 +149,49 @@ export function RandomForest() {
       </div>
       <Controls>
         <div className="readouts">
-          <Readout label="voti dei tre alberi" value={votes.join(' · ')} />
-          <Readout label="uscita dell’ensemble" tone="accent" value={String(y)} sub="la classe più votata" />
+          <Readout label={tx('voti dei tre alberi', 'votes of the three trees')} value={votes.join(' · ')} />
+          <Readout
+            label={tx('uscita dell’ensemble', 'ensemble output')}
+            tone="accent"
+            value={String(y)}
+            sub={tx('la classe più votata', 'the most voted class')}
+          />
         </div>
         <Btn icon="play" variant="soft" onClick={() => setXs(xs + 1)}>
-          Nuovo input x
+          {tx('Nuovo input x', 'New input x')}
         </Btn>
         <Btn icon="reset" onClick={() => setSeed(seed + 1)}>
-          Rilancia i dadi (nuova foresta)
+          {tx('Rilancia i dadi (nuova foresta)', 'Reroll the dice (new forest)')}
         </Btn>
       </Controls>
       <p className="wnote">
-        In ogni nodo è scritta la variabile di input, scelta a caso, su cui l’albero divide; i quadrati sono le foglie con la classe. Il
-        percorso evidenziato è quello seguito dall’input x.
+        {tx(
+          <>
+            In ogni nodo è scritta la variabile di input, scelta a caso, su cui l’albero divide; i quadrati sono le foglie con la classe. Il
+            percorso evidenziato è quello seguito dall’input x.
+          </>,
+          <>
+            Each node shows the input variable, chosen at random, on which the tree splits; the squares are the leaves with the class. The
+            highlighted path is the one followed by the input x.
+          </>,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Presenta qualche input nuovo: ogni albero segue il proprio percorso e dà il proprio voto.', done: xs >= 2 },
-          { label: 'Rilancia i dadi: cambiano le variabili scelte nei nodi, e quindi gli alberi.', done: seed >= 1 },
+          {
+            label: tx(
+              'Presenta qualche input nuovo: ogni albero segue il proprio percorso e dà il proprio voto.',
+              'Present a few new inputs: each tree follows its own path and casts its own vote.',
+            ),
+            done: xs >= 2,
+          },
+          {
+            label: tx(
+              'Rilancia i dadi: cambiano le variabili scelte nei nodi, e quindi gli alberi.',
+              'Reroll the dice: the variables chosen in the nodes change, and so do the trees.',
+            ),
+            done: seed >= 1,
+          },
         ]}
       />
     </div>
@@ -288,7 +314,7 @@ function BlockDiagram({
       <Controls>
         {shuffle && (
           <Btn icon="reset" onClick={() => setSeed(seed + 1)}>
-            Rilancia i dadi (nuove connessioni)
+            {tx('Rilancia i dadi (nuove connessioni)', 'Reroll the dice (new connections)')}
           </Btn>
         )}
       </Controls>
@@ -296,10 +322,27 @@ function BlockDiagram({
         items={
           shuffle
             ? [
-                { label: 'Rilancia i dadi: le connessioni tra la retina e l’area di proiezione sono casuali, non apprese.', done: seed >= 1 },
-                { label: 'Clicca «Risposte»: è l’unica parte che veniva appresa.', done: sel === 'resp' },
+                {
+                  label: tx(
+                    'Rilancia i dadi: le connessioni tra la retina e l’area di proiezione sono casuali, non apprese.',
+                    'Reroll the dice: the connections between the retina and the projection area are random, not learned.',
+                  ),
+                  done: seed >= 1,
+                },
+                {
+                  label: tx('Clicca «Risposte»: è l’unica parte che veniva appresa.', 'Click “Responses”: it is the only part that was learned.'),
+                  done: sel === 'resp',
+                },
               ]
-            : [{ label: 'Clicca i due strati: uno è casuale e non si addestra, l’altro è l’unico addestrato.', done: n >= 2 }]
+            : [
+                {
+                  label: tx(
+                    'Clicca i due strati: uno è casuale e non si addestra, l’altro è l’unico addestrato.',
+                    'Click the two layers: one is random and is not trained, the other is the only one trained.',
+                  ),
+                  done: n >= 2,
+                },
+              ]
         }
       />
     </div>
@@ -311,26 +354,52 @@ export function RosenblattAreas() {
     <BlockDiagram
       shuffle
       initial="a1"
-      aria="Il Perceptron di Rosenblatt: retina, area di proiezione, area di associazione, risposte"
+      aria={tx(
+        'Il Perceptron di Rosenblatt: retina, area di proiezione, area di associazione, risposte',
+        'Rosenblatt’s Perceptron: retina, projection area, association area, responses',
+      )}
       blocks={[
-        { id: 'ret', lines: ['Retina'], kind: 'oval', w: 96, title: 'Retina', text: 'I sensori di ingresso: da qui partono le connessioni verso l’area di proiezione.' },
+        {
+          id: 'ret',
+          lines: ['Retina'],
+          kind: 'oval',
+          w: 96,
+          title: 'Retina',
+          text: tx(
+            'I sensori di ingresso: da qui partono le connessioni verso l’area di proiezione.',
+            'The input sensors: the connections toward the projection area start from here.',
+          ),
+        },
         {
           id: 'a1',
-          lines: ['Area I', 'area di proiezione'],
+          lines: ['Area I', tx('area di proiezione', 'projection area')],
           kind: 'plain',
           w: 146,
-          title: 'Area di proiezione (A I)',
-          text: 'È connessa alla retina in modo casuale: le connessioni non vengono apprese.',
+          title: tx('Area di proiezione (A I)', 'Projection area (A I)'),
+          text: tx(
+            'È connessa alla retina in modo casuale: le connessioni non vengono apprese.',
+            'It is randomly connected to the retina: the connections are not learned.',
+          ),
         },
         {
           id: 'a2',
-          lines: ['Area II', 'area di associazione'],
+          lines: ['Area II', tx('area di associazione', 'association area')],
           kind: 'plain',
           w: 150,
-          title: 'Area di associazione (A II)',
-          text: 'È alimentata dall’area di proiezione, e a sua volta alimenta le risposte.',
+          title: tx('Area di associazione (A II)', 'Association area (A II)'),
+          text: tx(
+            'È alimentata dall’area di proiezione, e a sua volta alimenta le risposte.',
+            'It is fed by the projection area, and in turn feeds the responses.',
+          ),
         },
-        { id: 'resp', lines: ['Risposte'], kind: 'trained', w: 104, title: 'Risposte', text: 'Solo le risposte finali venivano apprese.' },
+        {
+          id: 'resp',
+          lines: [tx('Risposte', 'Responses')],
+          kind: 'trained',
+          w: 104,
+          title: tx('Risposte', 'Responses'),
+          text: tx('Solo le risposte finali venivano apprese.', 'Only the final responses were learned.'),
+        },
       ]}
     />
   )
@@ -340,27 +409,36 @@ export function Structure() {
   return (
     <BlockDiagram
       initial="hid"
-      aria="Struttura generale di una rete randomizzata: input, strato nascosto non addestrato, readout addestrato, output"
-      links={[null, <tspan key="phi">rappresentazione delle feature φ</tspan>, null]}
+      aria={tx(
+        'Struttura generale di una rete randomizzata: input, strato nascosto non addestrato, readout addestrato, output',
+        'General structure of a randomized network: input, untrained hidden layer, trained readout, output',
+      )}
+      links={[null, <tspan key="phi">{tx('rappresentazione delle feature φ', 'feature representation φ')}</tspan>, null]}
       blocks={[
-        { id: 'in', lines: ['input'], kind: 'text', w: 62, title: 'Input', text: 'Il pattern di ingresso.' },
+        { id: 'in', lines: ['input'], kind: 'text', w: 62, title: 'Input', text: tx('Il pattern di ingresso.', 'The input pattern.') },
         {
           id: 'hid',
-          lines: ['Strato nascosto', 'non addestrato'],
+          lines: tx(['Strato nascosto', 'non addestrato'], ['Hidden layer', 'untrained']),
           kind: 'rand',
           w: 150,
-          title: 'Strato nascosto (non addestrato)',
-          text: 'Immerge in modo non lineare l’input in uno spazio delle feature ad alta dimensione, dove il problema ha più probabilità di essere risolvibile linearmente (è una LBE). Ha una base teorica nel teorema di Cover.',
+          title: tx('Strato nascosto (non addestrato)', 'Hidden layer (untrained)'),
+          text: tx(
+            'Immerge in modo non lineare l’input in uno spazio delle feature ad alta dimensione, dove il problema ha più probabilità di essere risolvibile linearmente (è una LBE). Ha una base teorica nel teorema di Cover.',
+            'It non-linearly embeds the input into a high-dimensional feature space, where the problem is more likely to be linearly solvable (it is an LBE). It has a theoretical basis in Cover’s theorem.',
+          ),
         },
         {
           id: 'out',
-          lines: ['Readout', 'addestrato'],
+          lines: ['Readout', tx('addestrato', 'trained')],
           kind: 'trained',
           w: 210,
-          title: 'Readout (addestrato)',
-          text: 'Combina le feature dello spazio nascosto per calcolare l’uscita; tipicamente è un modello lineare.',
+          title: tx('Readout (addestrato)', 'Readout (trained)'),
+          text: tx(
+            'Combina le feature dello spazio nascosto per calcolare l’uscita; tipicamente è un modello lineare.',
+            'It combines the features of the hidden space to compute the output; typically it is a linear model.',
+          ),
         },
-        { id: 'o', lines: ['output'], kind: 'text', w: 66, title: 'Output', text: 'L’uscita della rete.' },
+        { id: 'o', lines: ['output'], kind: 'text', w: 66, title: 'Output', text: tx('L’uscita della rete.', 'The output of the network.') },
       ]}
     />
   )
@@ -415,9 +493,9 @@ export function RandomNet() {
           <div className="wbar">
             <Legend
               items={[
-                { label: 'dati di training', color: 'var(--c-blue)', kind: 'dot' },
-                { label: 'funzione vera', color: 'var(--c-green)' },
-                { label: 'uscita della rete', color: 'var(--c-red)' },
+                { label: tx('dati di training', 'training data'), color: 'var(--c-blue)', kind: 'dot' },
+                { label: tx('funzione vera', 'true function'), color: 'var(--c-green)' },
+                { label: tx('uscita della rete', 'network output'), color: 'var(--c-red)' },
               ]}
             />
           </div>
@@ -431,7 +509,7 @@ export function RandomNet() {
           </Plot>
         </div>
         <div className="wside">
-          <svg className="rn18" viewBox="0 0 260 210" role="img" aria-label="Rete con pesi nascosti casuali W e readout addestrato W out">
+          <svg className="rn18" viewBox="0 0 260 210" role="img" aria-label={tx('Rete con pesi nascosti casuali W e readout addestrato W out', 'Network with random hidden weights W and trained readout W out')}>
             {[0, 1, 2].map((i) => [0, 1, 2, 3, 4].map((j) => <line key={`${i}-${j}`} className="rn18__w" x1={46} y1={70 + i * 34} x2={126} y2={hy(j, 5)} />))}
             {[0, 1, 2, 3, 4].map((j) => [0, 1].map((k) => <line key={`${j}-${k}`} className="rn18__wout" x1={134} y1={hy(j, 5)} x2={212} y2={88 + k * 34} />))}
             {[0, 1, 2].map((i) => (
@@ -463,13 +541,13 @@ export function RandomNet() {
             <Die x={30} y={28} s={18} face={3} />
           </svg>
           <div className="readouts">
-            <Readout label="errore di training" tone="blue" value={fmt(fit.tr, 3)} />
-            <Readout label="errore di test" tone="orange" value={fmt(fit.ts, 3)} />
+            <Readout label={tx('errore di training', 'training error')} tone="blue" value={fmt(fit.tr, 3)} />
+            <Readout label={tx('errore di test', 'test error')} tone="orange" value={fmt(fit.ts, 3)} />
           </div>
         </div>
       </div>
       <Controls>
-        <Slider label="unità nascoste (casuali)" min={1} max={MAXU} step={1} value={nu} onChange={setNu} width={220} />
+        <Slider label={tx('unità nascoste (casuali)', 'hidden units (random)')} min={1} max={MAXU} step={1} value={nu} onChange={setNu} width={220} />
         <Slider
           label={<Tex>{'\\ln\\lambda'}</Tex>}
           min={-12}
@@ -481,18 +559,44 @@ export function RandomNet() {
           width={170}
         />
         <Btn icon="reset" onClick={() => setSeed(seed + 1)}>
-          Rilancia i dadi (nuova W)
+          {tx('Rilancia i dadi (nuova W)', 'Reroll the dice (new W)')}
         </Btn>
       </Controls>
       <p className="wnote">
-        Le unità nascoste sono <Tex>{'\\tanh(w x + b)'}</Tex> con <Tex>{'w'}</Tex> e <Tex>{'b'}</Tex> estratti a caso e mai modificati. Si
-        calcola solo <Tex>{'\\mathbf{W}^{out}'}</Tex>, in un passo, con i minimi quadrati regolarizzati.
+        {tx(
+          <>
+            Le unità nascoste sono <Tex>{'\\tanh(w x + b)'}</Tex> con <Tex>{'w'}</Tex> e <Tex>{'b'}</Tex> estratti a caso e mai modificati. Si
+            calcola solo <Tex>{'\\mathbf{W}^{out}'}</Tex>, in un passo, con i minimi quadrati regolarizzati.
+          </>,
+          <>
+            The hidden units are <Tex>{'\\tanh(w x + b)'}</Tex> with <Tex>{'w'}</Tex> and <Tex>{'b'}</Tex> drawn at random and never modified.
+            Only <Tex>{'\\mathbf{W}^{out}'}</Tex> is computed, in one step, with regularized least squares.
+          </>,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Con poche unità casuali il readout lineare non basta. Aumentale oltre 40: l’espansione in basi diventa sufficiente.', done: seen.many },
-          { label: 'Con molte unità alza λ (ln λ sopra −2): la regolarizzazione liscia l’uscita.', done: seen.reg },
-          { label: 'Rilancia i dadi: lo strato nascosto cambia del tutto, ma con molte unità il risultato resta buono.', done: seen.dice },
+          {
+            label: tx(
+              'Con poche unità casuali il readout lineare non basta. Aumentale oltre 40: l’espansione in basi diventa sufficiente.',
+              'With few random units the linear readout is not enough. Increase them beyond 40: the basis expansion becomes sufficient.',
+            ),
+            done: seen.many,
+          },
+          {
+            label: tx(
+              'Con molte unità alza λ (ln λ sopra −2): la regolarizzazione liscia l’uscita.',
+              'With many units raise λ (ln λ above −2): regularization smooths the output.',
+            ),
+            done: seen.reg,
+          },
+          {
+            label: tx(
+              'Rilancia i dadi: lo strato nascosto cambia del tutto, ma con molte unità il risultato resta buono.',
+              'Reroll the dice: the hidden layer changes completely, but with many units the result stays good.',
+            ),
+            done: seen.dice,
+          },
         ]}
       />
     </div>

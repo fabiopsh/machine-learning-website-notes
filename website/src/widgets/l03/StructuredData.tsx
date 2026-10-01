@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tx } from '../../lib/i18n'
 
 /** Fig. 3.2: sequenza, molecola, rete di pagine web — tutti grafi, con struttura diversa. */
 
@@ -12,8 +13,8 @@ const hex = (i: number, cx: number, cy: number, r: number) => {
 }
 
 const SEQ: G = {
-  title: 'Sequenza',
-  sub: 'ogni elemento ha un predecessore e un successore',
+  title: tx('Sequenza', 'Sequence'),
+  sub: tx('ogni elemento ha un predecessore e un successore', 'every element has a predecessor and a successor'),
   w: 300,
   h: 150,
   nodes: [1, 2, 3, 4, 5].map((i) => ({ id: `l${i}`, x: 30 + (i - 1) * 60, y: 75, label: `l${i}`, kind: 'seq' as const })),
@@ -22,8 +23,8 @@ const SEQ: G = {
 
 const ring = [0, 1, 2, 3, 4, 5].map((i) => hex(i, 110, 110, 38))
 const MOL: G = {
-  title: 'Molecola',
-  sub: 'atomi come nodi, legami come archi',
+  title: tx('Molecola', 'Molecule'),
+  sub: tx('atomi come nodi, legami come archi', 'atoms as nodes, bonds as edges'),
   w: 300,
   h: 220,
   nodes: [
@@ -54,8 +55,8 @@ const MOL: G = {
 }
 
 const WEB: G = {
-  title: 'Rete di pagine web',
-  sub: 'pagine come nodi, hyperlink come archi orientati',
+  title: tx('Rete di pagine web', 'Network of web pages'),
+  sub: tx('pagine come nodi, hyperlink come archi orientati', 'pages as nodes, hyperlinks as directed edges'),
   w: 300,
   h: 220,
   nodes: [
@@ -145,7 +146,7 @@ function Graph({ g }: { g: G }) {
       <div className="sgraph__sub">
         {hotNode ? (
           <>
-            <strong>{hotNode.label ?? hotNode.id}</strong>: {nbrs.size} {nbrs.size === 1 ? 'vicino' : 'vicini'}
+            <strong>{hotNode.label ?? hotNode.id}</strong>: {nbrs.size} {nbrs.size === 1 ? tx('vicino', 'neighbor') : tx('vicini', 'neighbors')}
           </>
         ) : (
           g.sub

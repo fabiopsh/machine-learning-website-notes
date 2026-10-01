@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, polyfit, polyval, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { contourSegments, segsToPath } from '../common/contours'
@@ -61,10 +62,18 @@ export function BiasVariance() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'errore di training (100 training set)', color: 'var(--c-blue)' },
-            { label: 'errore di test', color: 'var(--c-orange)' },
+            { label: tx('errore di training (100 training set)', 'training error (100 training sets)'), color: 'var(--c-blue)' },
+            { label: tx('errore di test', 'test error'), color: 'var(--c-orange)' },
             ...(sel !== null
-              ? [{ label: sel === lucky ? 'il training set più fortunato' : 'il più sfortunato', color: 'var(--ink)' }]
+              ? [
+                  {
+                    label:
+                      sel === lucky
+                        ? tx('il training set più fortunato', 'the luckiest training set')
+                        : tx('il più sfortunato', 'the unluckiest'),
+                    color: 'var(--ink)',
+                  },
+                ]
               : []),
           ]}
         />
@@ -74,8 +83,8 @@ export function BiasVariance() {
           xTicks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
           yTicks={[0, 0.2, 0.4, 0.6, 0.8, 1, 1.2]}
           yFormat={(v) => fmt(v, 1)}
-          xLabel="complessità del modello (grado M)"
-          yLabel="errore"
+          xLabel={tx('complessità del modello (grado M)', 'model complexity (degree M)')}
+          yLabel={tx('errore', 'error')}
         />
         <Curves rows={BV.tr} color="var(--c-blue)" />
         <Curves rows={BV.te} color="var(--c-orange)" />
@@ -83,7 +92,7 @@ export function BiasVariance() {
         <Polyline pts={BV.mTe.map((y, x) => ({ x, y: clip(y) }))} color="var(--c-orange)" width={3} />
         {sel !== null && <Polyline pts={BV.te[sel].map((y, x) => ({ x, y: clip(y) }))} color="var(--ink)" width={2} dash="5 3" />}
         <Label x={0.2} y={1.13} className="plot-label--muted">
-          ← alto bias, bassa varianza
+          {tx('← alto bias, bassa varianza', '← high bias, low variance')}
         </Label>
         <RightLabel />
         <Polyline
@@ -95,33 +104,42 @@ export function BiasVariance() {
           width={1}
           dash="3 4"
         />
-        <Handle x={M} y={0} axis="x" label="complessità del modello" onMove={(p) => setM(Math.round(Math.max(0, Math.min(MMAX, p.x))))} />
+        <Handle x={M} y={0} axis="x" label={tx('complessità del modello', 'model complexity')} onMove={(p) => setM(Math.round(Math.max(0, Math.min(MMAX, p.x))))} />
       </Plot>
       <div className="controls">
         <div className="readouts">
           <Readout
-            label={
+            label={tx(
               <>
                 errore di test con <Tex>{`M = ${M}`}</Tex>
-              </>
-            }
+              </>,
+              <>
+                test error with <Tex>{`M = ${M}`}</Tex>
+              </>,
+            )}
             tone="orange"
             value={`${fmt(order[0][0], 2)} – ${fmt(order[order.length - 1][0], 2)}`}
-            sub="dal training set più fortunato al più sfortunato"
+            sub={tx('dal training set più fortunato al più sfortunato', 'from the luckiest training set to the unluckiest')}
           />
-          <Readout label="media" value={fmt(BV.mTe[M], 2)} />
+          <Readout label={tx('media', 'mean')} value={fmt(BV.mTe[M], 2)} />
         </div>
-        <Btn onClick={() => setSel(lucky)}>Il più fortunato</Btn>
-        <Btn onClick={() => setSel(unlucky)}>Il più sfortunato</Btn>
+        <Btn onClick={() => setSel(lucky)}>{tx('Il più fortunato', 'The luckiest')}</Btn>
+        <Btn onClick={() => setSel(unlucky)}>{tx('Il più sfortunato', 'The unluckiest')}</Btn>
       </div>
       <Tasks
         items={[
           {
-            label: 'Porta la complessità a M = 0 o 1: le curve di test sono vicine tra loro (bassa varianza) ma alte (alto bias).',
+            label: tx(
+              'Porta la complessità a M = 0 o 1: le curve di test sono vicine tra loro (bassa varianza) ma alte (alto bias).',
+              'Set the complexity to M = 0 or 1: the test curves are close to each other (low variance) but high (high bias).',
+            ),
             done: seen.low,
           },
           {
-            label: 'Con M ≥ 10 confronta il training set più fortunato con il più sfortunato: stesso modello, errori molto diversi.',
+            label: tx(
+              'Con M ≥ 10 confronta il training set più fortunato con il più sfortunato: stesso modello, errori molto diversi.',
+              'With M ≥ 10 compare the luckiest training set with the unluckiest: same model, very different errors.',
+            ),
             done: seen.spread,
           },
         ]}
@@ -135,7 +153,7 @@ function RightLabel() {
   const { w } = usePlot()
   return (
     <Label x={MMAX - 0.2} y={w < 560 ? 1.03 : 1.13} anchor="end" className="plot-label--muted">
-      basso bias, alta varianza →
+      {tx('basso bias, alta varianza →', 'low bias, high variance →')}
     </Label>
   )
 }
@@ -196,8 +214,8 @@ export function RandomTarget() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'valore 1', color: 'var(--c-blue)', kind: 'dot' },
-            { label: 'valore 0', color: 'var(--c-orange)', kind: 'dot' },
+            { label: tx('valore 1', 'value 1'), color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('valore 0', 'value 0'), color: 'var(--c-orange)', kind: 'dot' },
           ]}
         />
         <Segmented
@@ -205,8 +223,8 @@ export function RandomTarget() {
           value={correct ? 'ok' : 'bad'}
           onChange={(v) => setCorrect(v === 'ok')}
           options={[
-            { value: 'bad', label: 'selezione su tutti i dati' },
-            { value: 'ok', label: 'test separato prima' },
+            { value: 'bad', label: tx('selezione su tutti i dati', 'selection on all the data') },
+            { value: 'ok', label: tx('test separato prima', 'test set aside first') },
           ]}
         />
       </div>
@@ -217,7 +235,7 @@ export function RandomTarget() {
             <span key={p} className={`rt9__cell${v ? ' is-1' : ''}${correct && p >= l - nTs ? ' is-ts' : ''}`} />
           ))}
           <span className="rt9__lbl">
-            variabile <Tex>{`x_{${best + 1}}`}</Tex>
+            {tx('variabile', 'variable')} <Tex>{`x_{${best + 1}}`}</Tex>
           </span>
           {D.y.map((v, p) => (
             <span
@@ -228,9 +246,18 @@ export function RandomTarget() {
         </div>
         <p className="wnote">
           {correct
-            ? `Gli ultimi ${nTs} pattern (riquadrati) sono il test set, messo da parte prima di scegliere la variabile.`
-            : 'La variabile è scelta guardando tutti i pattern: è quella che coincide con il target più volte, tra 1000 variabili casuali.'}{' '}
-          Le celle segnate in basso sono i pattern su cui la variabile sbaglia.
+            ? tx(
+                `Gli ultimi ${nTs} pattern (riquadrati) sono il test set, messo da parte prima di scegliere la variabile.`,
+                `The last ${nTs} patterns (boxed) are the test set, set aside before choosing the variable.`,
+              )
+            : tx(
+                'La variabile è scelta guardando tutti i pattern: è quella che coincide con il target più volte, tra 1000 variabili casuali.',
+                'The variable is chosen by looking at all the patterns: it is the one that coincides with the target most often, among 1000 random variables.',
+              )}{' '}
+          {tx(
+            'Le celle segnate in basso sono i pattern su cui la variabile sbaglia.',
+            'The cells marked at the bottom are the patterns on which the variable is wrong.',
+          )}
         </p>
       </div>
       <div className="wgrid">
@@ -238,22 +265,31 @@ export function RandomTarget() {
         <div className="wside">
           <div className="readouts">
             <Readout
-              label={correct ? 'accuratezza sui dati di selezione' : 'accuratezza su TR, VL e TS'}
+              label={
+                correct
+                  ? tx('accuratezza sui dati di selezione', 'accuracy on the selection data')
+                  : tx('accuratezza su TR, VL e TS', 'accuracy on TR, VL and TS')
+              }
               tone="accent"
               value={`${fmt(accs[best] * 100, 0)}%`}
             />
             {correct ? (
-              <Readout label="sul test separato prima" tone="orange" value={`${fmt(tsAcc * 100, 0)}%`} sub={`${nTs} pattern`} />
+              <Readout
+                label={tx('sul test separato prima', 'on the test set aside first')}
+                tone="orange"
+                value={`${fmt(tsAcc * 100, 0)}%`}
+                sub={tx(`${nTs} pattern`, `${nTs} patterns`)}
+              />
             ) : (
               <Readout
-                label="su tre test set nuovi (10 pattern)"
+                label={tx('su tre test set nuovi (10 pattern)', 'on three new test sets (10 patterns)')}
                 tone="orange"
                 value={freshAcc.map((a) => fmt(a * 100, 0) + '%').join(' · ')}
-                sub={`su 1000 pattern nuovi: ${fmt(D.big * 100, 0)}%`}
+                sub={tx(`su 1000 pattern nuovi: ${fmt(D.big * 100, 0)}%`, `on 1000 new patterns: ${fmt(D.big * 100, 0)}%`)}
               />
             )}
           </div>
-          <Slider label="numero di pattern" min={10} max={30} step={1} value={l} onChange={setL} width={240} />
+          <Slider label={tx('numero di pattern', 'number of patterns')} min={10} max={30} step={1} value={l} onChange={setL} width={240} />
           <Btn
             icon="reset"
             onClick={() => {
@@ -261,18 +297,33 @@ export function RandomTarget() {
               setRegen((n) => n + 1)
             }}
           >
-            Nuovi dati casuali
+            {tx('Nuovi dati casuali', 'New random data')}
           </Btn>
         </div>
       </div>
       <Tasks
         items={[
           {
-            label: 'Genera nuovi dati: la variabile scelta cambia, ma sembra sempre buona; sui test nuovi resta vicina al 50%.',
+            label: tx(
+              'Genera nuovi dati: la variabile scelta cambia, ma sembra sempre buona; sui test nuovi resta vicina al 50%.',
+              'Generate new data: the chosen variable changes, but it always looks good; on the new test sets it stays close to 50%.',
+            ),
             done: seen.regen,
           },
-          { label: 'Riduci i pattern a 10–12 finché compare una variabile che «indovina» il 100%.', done: seen.perfect },
-          { label: 'Passa a «test separato prima»: ora la stima sul test è onesta, intorno al 50%.', done: seen.correct },
+          {
+            label: tx(
+              'Riduci i pattern a 10–12 finché compare una variabile che «indovina» il 100%.',
+              'Reduce the patterns to 10–12 until a variable appears that “guesses” 100%.',
+            ),
+            done: seen.perfect,
+          },
+          {
+            label: tx(
+              'Passa a «test separato prima»: ora la stima sul test è onesta, intorno al 50%.',
+              'Switch to “test set aside first”: now the estimate on the test set is honest, around 50%.',
+            ),
+            done: seen.correct,
+          },
         ]}
       />
     </div>
@@ -286,9 +337,9 @@ function Histogram({ accs, best }: { accs: number[]; best: number }) {
   const max = Math.max(...bins.values())
   return (
     <div>
-      <div className="htf__title">Accuratezza delle 1000 variabili</div>
+      <div className="htf__title">{tx('Accuratezza delle 1000 variabili', 'Accuracy of the 1000 variables')}</div>
       <Plot xDomain={[0, 100]} yDomain={[0, max * 1.1]} aspect={0.45} minH={150} maxH={220} margin={{ l: 36, b: 34 }}>
-        <Axes xTicks={[0, 25, 50, 75, 100]} xFormat={(v) => `${v}%`} yTicks={3} xLabel="accuratezza sul target" />
+        <Axes xTicks={[0, 25, 50, 75, 100]} xFormat={(v) => `${v}%`} yTicks={3} xLabel={tx('accuratezza sul target', 'accuracy on the target')} />
         <Bars keys={keys} bins={bins} best={Math.round(best * 100)} />
         <BestMark best={best * 100} top={max} />
       </Plot>
@@ -302,7 +353,7 @@ function BestMark({ best, top }: { best: number; top: number }) {
     <g className="rt9__mark">
       <line x1={x(best)} x2={x(best)} y1={y(0)} y2={y(top * 0.55)} />
       <text x={x(best)} y={y(top * 0.55) - 6} textAnchor="middle">
-        la scelta
+        {tx('la scelta', 'the choice')}
       </text>
     </g>
   )
@@ -378,14 +429,17 @@ function SearchPanel({ kind, n, seed, only1, title }: { kind: 'grid' | 'rand'; n
       </Plot>
       <div className="readouts">
         <Readout
-          label={
+          label={tx(
             <>
               valori distinti di <Tex>{'x_1'}</Tex>
-            </>
-          }
+            </>,
+            <>
+              distinct values of <Tex>{'x_1'}</Tex>
+            </>,
+          )}
           value={String(distinct)}
         />
-        <Readout label="miglior prestazione trovata" tone="accent" value={fmt(vals[bi], 3)} />
+        <Readout label={tx('miglior prestazione trovata', 'best performance found')} tone="accent" value={fmt(vals[bi], 3)} />
       </div>
     </div>
   )
@@ -440,10 +494,10 @@ export function GridRandom() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'risultati buoni', color: 'var(--c-blue)' },
-            { label: 'risultati scarsi', color: 'var(--c-orange)' },
-            { label: 'valori provati', color: 'var(--c-green)' },
-            { label: 'la prova migliore', color: 'var(--accent)', kind: 'dot' },
+            { label: tx('risultati buoni', 'good results'), color: 'var(--c-blue)' },
+            { label: tx('risultati scarsi', 'poor results'), color: 'var(--c-orange)' },
+            { label: tx('valori provati', 'values tried'), color: 'var(--c-green)' },
+            { label: tx('la prova migliore', 'the best trial'), color: 'var(--accent)', kind: 'dot' },
           ]}
         />
       </div>
@@ -455,36 +509,47 @@ export function GridRandom() {
           only1={only1}
           title={`Grid search (${Math.round(Math.sqrt(n))} × ${Math.round(Math.sqrt(n))})`}
         />
-        <SearchPanel kind="rand" n={n} seed={seed} only1={only1} title={`Random search (${n} prove)`} />
+        <SearchPanel kind="rand" n={n} seed={seed} only1={only1} title={tx(`Random search (${n} prove)`, `Random search (${n} trials)`)} />
       </div>
       <div className="controls">
         <Segmented
-          label="prove disponibili"
+          label={tx('prove disponibili', 'available trials')}
           value={n}
           onChange={setN}
           options={[25, 49, 100].map((v) => ({ value: v, label: String(v) }))}
         />
         <Toggle
-          label={
+          label={tx(
             <>
               conta solo <Tex>{'x_1'}</Tex>
-            </>
-          }
+            </>,
+            <>
+              only <Tex>{'x_1'}</Tex> matters
+            </>,
+          )}
           checked={only1}
           onChange={setOnly1}
         />
         <Btn icon="reset" onClick={() => setSeed(seed + 1)}>
-          Nuove prove casuali
+          {tx('Nuove prove casuali', 'New random trials')}
         </Btn>
       </div>
       <Tasks
         items={[
           {
-            label:
+            label: tx(
               'Fai contare solo x₁: la griglia prova appena 10 valori di x₁ e rischia di mancare il picco, la ricerca casuale ne prova 100.',
+              'Make only x₁ matter: the grid tries just 10 values of x₁ and risks missing the peak, random search tries 100.',
+            ),
             done: seen.only1,
           },
-          { label: 'Riduci le prove a 25: con lo stesso budget la griglia ha solo 5 valori per iperparametro.', done: seen.small },
+          {
+            label: tx(
+              'Riduci le prove a 25: con lo stesso budget la griglia ha solo 5 valori per iperparametro.',
+              'Reduce the trials to 25: with the same budget the grid has only 5 values per hyperparameter.',
+            ),
+            done: seen.small,
+          },
         ]}
       />
     </div>

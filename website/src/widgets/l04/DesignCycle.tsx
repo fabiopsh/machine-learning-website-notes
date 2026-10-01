@@ -1,18 +1,45 @@
 import { useState } from 'react'
+import { tx } from '../../lib/i18n'
 
 /** Fig. 4.10: il ciclo di progettazione, con la conoscenza a priori e il ritorno alle fasi precedenti. */
 
 const STEPS = [
-  { t: 'Raccolta dei dati', d: 'Selezione, integrazione, pulizia. Serve un insieme di esempi abbastanza grande e rappresentativo per training e test.' },
   {
-    t: 'Rappresentazione dei dati',
-    d: 'Dipende dal dominio e sfrutta la conoscenza dell’esperto: feature selection, outlier, scalatura, dati mancanti. Spesso è la fase più critica.',
+    t: tx('Raccolta dei dati', 'Data collection'),
+    d: tx(
+      'Selezione, integrazione, pulizia. Serve un insieme di esempi abbastanza grande e rappresentativo per training e test.',
+      'Selection, integration, cleaning. A set of examples that is large and representative enough is needed for training and test.',
+    ),
+  },
+  {
+    t: tx('Rappresentazione dei dati', 'Data representation'),
+    d: tx(
+      'Dipende dal dominio e sfrutta la conoscenza dell’esperto: feature selection, outlier, scalatura, dati mancanti. Spesso è la fase più critica.',
+      'It depends on the domain and exploits the expert’s knowledge: feature selection, outliers, scaling, missing data. It is often the most critical phase.',
+    ),
     prior: true,
   },
-  { t: 'Scelta del modello', d: 'Formulazione del problema e delle ipotesi: conoscere i limiti di applicabilità del modello e controllarne la complessità.', prior: true },
-  { t: 'Costruzione del modello', d: 'Il cuore del ML: l’algoritmo di apprendimento sui dati di training.', prior: true },
-  { t: 'Valutazione', d: 'La prestazione è l’accuratezza predittiva; si aggiungono interpretazione dei risultati, spiegazione dei dati, estrazione di conoscenza.' },
-  { t: 'Deployment', d: 'Il modello viene messo in uso.' },
+  {
+    t: tx('Scelta del modello', 'Model choice'),
+    d: tx(
+      'Formulazione del problema e delle ipotesi: conoscere i limiti di applicabilità del modello e controllarne la complessità.',
+      'Formulation of the problem and of the hypotheses: knowing the limits of applicability of the model and controlling its complexity.',
+    ),
+    prior: true,
+  },
+  {
+    t: tx('Costruzione del modello', 'Model building'),
+    d: tx('Il cuore del ML: l’algoritmo di apprendimento sui dati di training.', 'The heart of ML: the learning algorithm on the training data.'),
+    prior: true,
+  },
+  {
+    t: tx('Valutazione', 'Evaluation'),
+    d: tx(
+      'La prestazione è l’accuratezza predittiva; si aggiungono interpretazione dei risultati, spiegazione dei dati, estrazione di conoscenza.',
+      'The performance is the predictive accuracy; to this are added interpretation of the results, explanation of the data, extraction of knowledge.',
+    ),
+  },
+  { t: 'Deployment', d: tx('Il modello viene messo in uso.', 'The model is put into use.') },
 ]
 
 export function DesignCycle() {
@@ -22,7 +49,7 @@ export function DesignCycle() {
     <div className="cycle">
       <div className="cycle__flow">
         <div className="cycle__prior" aria-hidden="true">
-          <span>conoscenza a priori</span>
+          <span>{tx('conoscenza a priori', 'prior knowledge')}</span>
         </div>
         <ol className="cycle__list">
           {STEPS.map((st, i) => (
@@ -44,7 +71,12 @@ export function DesignCycle() {
           {sel + 1}. {s.t}
         </div>
         <p>{s.d}</p>
-        <p className="wnote">La freccia a destra: i risultati della valutazione possono richiedere di tornare alle fasi precedenti.</p>
+        <p className="wnote">
+          {tx(
+            'La freccia a destra: i risultati della valutazione possono richiedere di tornare alle fasi precedenti.',
+            'The arrow on the right: the results of the evaluation may require going back to the previous phases.',
+          )}
+        </p>
       </div>
     </div>
   )

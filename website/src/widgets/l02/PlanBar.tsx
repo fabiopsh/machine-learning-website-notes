@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import { tx } from '../../lib/i18n'
 
 /** Le tre voci del piano di studi del curriculum AI, in proporzione ai CFU. */
 const PARTS = [
-  { id: 'car', cfu: 60, label: 'Corsi caratterizzanti', detail: '60 CFU di corsi caratterizzanti (tra cui ML).' },
-  { id: 'grp', cfu: 27, label: 'Gruppi di esami a scelta', detail: '27 CFU: un esame da 9 CFU e tre da 6 CFU.' },
-  { id: 'free', cfu: 9, label: 'Libera scelta', detail: 'Almeno 9 CFU, coperti anche con due esami da 6 CFU.', min: true },
+  { id: 'car', cfu: 60, label: tx('Corsi caratterizzanti', 'Core courses'), detail: tx('60 CFU di corsi caratterizzanti (tra cui ML).', '60 ECTS of core courses (including ML).') },
+  { id: 'grp', cfu: 27, label: tx('Gruppi di esami a scelta', 'Groups of elective exams'), detail: tx('27 CFU: un esame da 9 CFU e tre da 6 CFU.', '27 ECTS: one 9-ECTS exam and three 6-ECTS exams.') },
+  { id: 'free', cfu: 9, label: tx('Libera scelta', 'Free choice'), detail: tx('Almeno 9 CFU, coperti anche con due esami da 6 CFU.', 'At least 9 ECTS, which can also be covered with two 6-ECTS exams.'), min: true },
 ]
 
 export function PlanBar() {
@@ -32,7 +33,12 @@ export function PlanBar() {
         ))}
       </div>
       <p className="plan__note">
-        {active ? active.detail : `Proporzioni in CFU delle tre voci (${total} CFU in tutto, contando il minimo della libera scelta).`}
+        {active
+          ? active.detail
+          : tx(
+              `Proporzioni in CFU delle tre voci (${total} CFU in tutto, contando il minimo della libera scelta).`,
+              `Proportions in ECTS of the three items (${total} ECTS in total, counting the minimum for the free choice).`,
+            )}
       </p>
     </div>
   )

@@ -4,12 +4,13 @@ import { Rich } from '../components/prose/Tex'
 import { Icon } from '../components/ui/Icon'
 import { glossary } from '../content/glossary'
 import { getLesson } from '../content/lessons'
+import { LOCALE, tx } from '../lib/i18n'
 import { lessonHref } from '../lib/router'
 import { slugify } from '../lib/slug'
 
 export function GlossaryPage({ term }: { term?: string }) {
   const [q, setQ] = useState('')
-  const sorted = useMemo(() => [...glossary].sort((a, b) => a.term.localeCompare(b.term, 'it')), [])
+  const sorted = useMemo(() => [...glossary].sort((a, b) => a.term.localeCompare(b.term, LOCALE)), [])
   const filtered = useMemo(() => {
     const n = normalize(q)
     if (!n) return sorted
@@ -37,18 +38,20 @@ export function GlossaryPage({ term }: { term?: string }) {
     <div className="page page--glossary">
       <div className="gloss">
         <header className="gloss__head">
-          <p className="gloss__eyebrow">Strumenti</p>
-          <h1>Glossario</h1>
+          <p className="gloss__eyebrow">{tx('Strumenti', 'Tools')}</p>
+          <h1>{tx('Glossario', 'Glossary')}</h1>
           <p className="gloss__lead">
-            Tutti i termini tecnici incontrati nelle lezioni, con la definizione breve e il link al punto in cui sono
-            spiegati. Nel testo li riconosci dalla sottolineatura a puntini.
+            {tx(
+              'Tutti i termini tecnici incontrati nelle lezioni, con la definizione breve e il link al punto in cui sono spiegati. Nel testo li riconosci dalla sottolineatura a puntini.',
+              'All the technical terms met in the lessons, with a short definition and a link to where they are explained. In the text you can spot them by their dotted underline.',
+            )}
           </p>
           <div className="gloss__search">
             <Icon name="search" size={17} />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filtra i termini…" aria-label="Filtra i termini" />
-            <span className="gloss__count">{filtered.length} termini</span>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx('Filtra i termini…', 'Filter terms…')} aria-label={tx('Filtra i termini', 'Filter terms')} />
+            <span className="gloss__count">{filtered.length} {tx('termini', 'terms')}</span>
           </div>
-          <nav className="gloss__letters" aria-label="Lettere">
+          <nav className="gloss__letters" aria-label={tx('Lettere', 'Letters')}>
             {groups.map(([L]) => (
               <a key={L} href={`#/glossario`} onClick={(e) => {
                 e.preventDefault()
@@ -78,7 +81,7 @@ export function GlossaryPage({ term }: { term?: string }) {
                       </p>
                       <a href={lessonHref(g.lesson, slugify(g.section))} className="gloss__link">
                         <span className="gloss__lnum">{g.lesson}</span>
-                        {lesson?.title} · <Rich text={g.section} />
+                        {lesson?.title} · <Rich text={g.sectionTitle ?? g.section} />
                         <Icon name="arrowRight" size={14} />
                       </a>
                     </dd>

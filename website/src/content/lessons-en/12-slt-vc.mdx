@@ -1,0 +1,236 @@
+import * as F from '../formulas/l12'
+import { Dichotomies, ShatterLines, FourPoints, SrmStructure, SrmTable } from '../../widgets/l12/Vc'
+
+<Lead>After the empirical validation techniques, we return to the **analytical estimate** of the expected error (the validation error, for model selection, or the test error, for assessment), introduced in [lesson 4](#/lezione/04). This lesson formally defines the **VC-dimension**, computes it for some hypothesis classes, and presents the SLT bound and the principle of **Structural Risk Minimization** (SRM), which will lead to SVMs.</Lead>
+
+Let us recall the alternatives for estimating the error:
+
+- **analytical**: AIC, BIC (limited to models that are linear in the parameters), MDL, **SRM with the VC-dimension**;
+- **by resampling**: cross-validation, bootstrap.
+
+## The VC-dimension
+
+To obtain an analytical bound we must evaluate the hypothesis space $H$. We need a measure of its **complexity** (capacity, expressive power, flexibility) that also works for **infinite** $H$ (such as linear models, with real-valued weights): so $|H|$ cannot be used. The idea of Vapnik and Chervonenkis is to measure instead **the number of distinct instances that $H$ is able to discriminate completely**.
+
+Intuitively, in the case of classification: *how well can $H$ discriminate a set of points?* What is the **maximum number of points that can be classified correctly, with no errors, for all possible labelings**?
+
+### Shattering
+
+Let $X$ be the instance space, with $N$ points (note: here $N$ is the number of instances considered, which can differ from the number of data points $l$), and let $H$ be the hypothesis space for binary classification.
+
+- There are $2^N$ possible <T id="dicotomia">**dichotomies**</T> (partitions, or labelings of the points with $-1$ or $+1$).
+- A dichotomy is **represented** in $H$ if there exists a hypothesis $h \in H$ that realizes it.
+
+<Callout type="definition" title="Shattering">
+
+$H$ <T id="shattering">**shatters**</T> $X$ if and only if $H$ can represent **all** the possible dichotomies on $X$ (with zero error): for every possible labeling of the points there exists a hypothesis $h \in H$ consistent with it.
+
+</Callout>
+
+<Callout type="example" title="Three points in the plane and the lines">
+
+Consider 3 points in $\mathbb{R}^2$ and, as $H$, the set of lines, $h(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^T\mathbf{x} + w_0)$. A specific dichotomy (for example two points at $-1$ and one at $+1$) is representable if there exists a line that separates the points correctly. The possible dichotomies are $2^3 = 8$.
+
+</Callout>
+
+<Figure n="12.1" title="The dichotomies of N points" size="wide">
+  <Dichotomies />
+  <Caption>All the $2^N$ dichotomies of $N$ points in $\mathbb{R}^2$: with 3 non-collinear points there are 8, with the filled ($+1$) and hollow ($-1$) points in all combinations. Change $N$ to see the number double.</Caption>
+</Figure>
+
+<Figure n="12.2" title="Lines shatter three points" size="wide">
+  <ShatterLines />
+  <Caption>For every dichotomy of the 3 points there exists a separating line (the arrow shows the direction of $\mathbf{w}$, that is, the $+1$ side): linear functions shatter these 3 points. Click a dichotomy to see it enlarged and drag the points: as long as they are not collinear, all 8 remain representable.</Caption>
+</Figure>
+
+### Definition of VC-dimension
+
+<Callout type="definition" title="VC-dimension">
+
+The <T id="vc-dimension">**VC-dimension**</T> of a class of functions $H$ is the **maximum cardinality of a set of points** (in some configuration) of $X$ that can be shattered by $H$. $VC(H) = p$ means that:
+
+- $H$ shatters **at least one** set (configuration) of $p$ points;
+- $H$ does **not** shatter **any** set of $p+1$ points.
+
+If sets of arbitrarily large size can be shattered, $VC(H) = \infty$.
+
+</Callout>
+
+Mind the asymmetry: for the lower bound **one** shatterable configuration is enough; for the upper bound one must show that **no** configuration of $p+1$ points is shatterable.
+
+### VC-dimension of hyperplanes in the plane
+
+- **$VC(H) \ge 3$**: we have just shown it with 3 non-collinear points. Not all configurations of 3 points are shatterable: three **collinear** points with the middle one of a different class are not linearly separable. But **one** shatterable configuration is enough.
+- **$VC(H) < 4$**: given any 4 points in the plane, one can always draw the 6 segments that connect them in pairs, and two of these cross (if the 4 points form a convex quadrilateral they are the diagonals; if one is inside the triangle of the others, one chooses the labeling with the inner point of a different class). Putting in the same class the points connected by the crossing segments, they cannot be separated linearly: it is the **XOR**.
+
+<Figure n="12.3" title="Four points cannot be shattered" size="wide">
+  <FourPoints />
+  <Caption>With 4 points there always exists an XOR-type labeling that no line can separate: if the points form a convex quadrilateral, the two endpoints of each diagonal (violet segments) in the same class; if one point is inside the triangle of the others, that point of a different class. Drag the four points wherever you like: the separable labelings never reach 16.</Caption>
+</Figure>
+
+Conclusion: **$VC(H) = 3$** for hyperplanes (LTU) in $\mathbb{R}^2$.
+
+<Callout type="theorem" title="VC-dimension of hyperplanes">
+
+The VC-dimension of the class of separating hyperplanes (LTU) in an $n$-dimensional space is $n + 1$.
+
+</Callout>
+
+It is an upper bound: constraining the model (for example by limiting the norm of the weights, as will be seen with SVMs) can decrease it.
+
+### Other examples
+
+| Class $H$ | VC-dim |
+|---|---|
+| Lines in $\mathbb{R}$ (thresholds, $\operatorname{sign}(w_1x + w_0)$) | 2 |
+| Intervals on $\mathbb{R}$ | 2 |
+| Circles centered at the origin in 2D, $\operatorname{sign}(\mathbf{x}\cdot\mathbf{x} - b)$ | 1 |
+| Circles centered at the origin, $\operatorname{sign}(k\,\mathbf{x}\cdot\mathbf{x} - b)$ | 2 |
+| Circles (free radius and center) in 2D | 3 |
+| Circles (fixed radius, free center) in 2D | 3 |
+
+(For circles centered at the origin with the single parameter $b$, the circle includes the points close to the origin: with two points at different distances one cannot label the farther one “+” and the closer one “−”. Adding $k$ makes it possible to swap inside and outside, and the VC-dim rises to 2.)
+
+The VC-dimension can be hard to compute for models with nonlinear parameters.
+
+### VC-dimension and number of parameters
+
+Is the VC-dimension the number of free parameters? **They are related but do not coincide**:
+
+- in the example of the circles, classes with the **same** number of parameters have different VC-dims, and vice versa;
+- one can add **redundant** parameters without changing anything;
+- there are models with **a single parameter and infinite VC-dim** (the classic example is $\operatorname{sign}(\sin(\alpha x))$, which with a large enough $\alpha$ shatters any set of suitably chosen points);
+- for the **nearest neighbor** the VC-dim is **infinite** (1-NN correctly classifies any labeling of the training set).
+
+---
+
+## The analytical bound on the risk
+
+Let $N$ be the number of data points ($l$).
+
+<Callout type="theorem" title="VC-bound">
+
+With probability at least $1 - \delta$, for every $h \in H$ (with $VC < N$):
+
+<Formula f={F.vcBound} />
+
+where the right-hand side is the <T id="rischio-garantito">**guaranteed risk**</T> and $\varepsilon$ is the <T id="vc-confidence">**VC-confidence**</T>. For example, for the 0/1 loss:
+
+<Formula f={F.vcEps} />
+
+</Callout>
+
+There are different formulations for different classes of functions and tasks. The interpretation is the one already seen: $\varepsilon \to 0$ as $N$ grows, $\varepsilon$ grows with the VC-dim, and the bound on $R$ is U-shaped as the VC-dim grows.
+
+The formula shows it clearly: $\varepsilon$ depends essentially on the ratio $VC/N$ (up to logarithms). Doubling the data has the same effect as halving the complexity.
+
+The bound makes it possible to **estimate the error on future data** based only on the training error and on the VC-dimension of $H$, and the VC-confidence can be computed **before** learning.
+
+<Callout type="warning" title="“Worst-case” bounds">
+
+The resulting bounds are worst case: they must hold for all functions and all training sets, except a fraction $\delta$. This is why they are often very loose.
+
+</Callout>
+
+<Callout type="tip" title="A practical consequence">
+
+For many reasonable classes (e.g. linear approximators) the VC-dim is **linear in the number of free parameters**. Hence, to learn “well”, one needs a number of examples that is **linear in the VC-dimension** (and therefore, in this case, in the number of parameters). It is a theoretical explanation of practical heuristics such as “at least $k$ examples per parameter are needed”.
+
+</Callout>
+
+---
+
+## Structural Risk Minimization
+
+<T id="srm">**SRM**</T> uses the VC-dimension as a control parameter to minimize the bound on the risk. Assuming finite VC-dims, one defines a **nested structure** of hypothesis spaces ordered by VC-dim:
+
+<Formula f={F.nested} />
+
+Examples of structures:
+
+- neural networks with an increasing number of **hidden units** (roughly), but also with an increasing number of **epochs** (we know that the size of the weights matters too: the network is a space of variable dimension);
+- polynomials of increasing **degree** $M$;
+- increasing values of $c$, where $\|\mathbf{w}\| < c$ for **regularization** (or, equivalently, controlled by $\lambda$);
+- decision trees with an increasing number of nodes (roughly).
+
+The **important hyperparameters** are precisely those related to the VC-dimension.
+
+### SRM for model selection
+
+As the VC-dim grows, the empirical (training) error **decreases** and the VC-confidence **increases**. SRM looks for the trade-off on the bound
+
+$$
+R \le R_{emp} + \varepsilon(1/l, VC, 1/\delta),
+$$
+
+that is, it chooses the model $h$ with the **best bound on the true risk**.
+
+<Figure n="12.4" title="Structural Risk Minimization" size="wide">
+  <SrmStructure />
+  <Caption>Structural Risk Minimization: on a nested structure of hypothesis spaces $H_1 \subseteq H_2 \subseteq \dots \subseteq H_n$ the empirical error (blue) decreases, the VC-confidence (orange) grows and the bound on the true risk (violet) has a minimum: one chooses the space that minimizes it. The VC-confidence is Vapnik’s with $\delta = 0.05$; the empirical error is an illustrative trend. Click a set of the structure and change the number of data points.</Caption>
+</Figure>
+
+<Figure n="12.5" title="Model selection with SRM" size="wide">
+  <SrmTable />
+  <Caption>Model selection with SRM: for six spaces $H_1, \dots, H_6$ the training error decreases, the VC-confidence grows and the probable upper bound on $R$ is their sum; $H_3$ is chosen, with the minimum bound. Same values as in figure 12.4: with more data the choice changes.</Caption>
+</Figure>
+
+<Callout type="warning" title="Warning">
+
+The VC-confidence can be **very conservative**: even hundreds of times larger than the overfitting effect observed empirically.
+
+</Callout>
+
+### What the bound is for
+
+- It provides a **theoretical foundation** for principled ML, independent of the details of the model or of the algorithm; it highlights the role of **complexity control**; it shows that the optimal choice of the complexity (on the structure) minimizes the expected risk: this is the **inductive principle of SRM**.
+- As an **estimate of the prediction error** it is rarely used:
+  - it can be very loose, but it remains useful for **model selection**, where what matters is the **relative size** (the *ranking*) of the errors;
+  - it is a probabilistic upper bound valid for **all** the functions of the class, so one can search within the class;
+  - it is hard to compute the VC-dim of specific classes;
+  - the raw bound (too pessimistic) may not be adequate for a reliable evaluation of the generalization error (**model assessment**); tighter bounds are being developed.
+- It points to a direction for developing **new models** guided by SRM, toward approaches based on principles and less on empirical trial and error.
+
+### Two practical approaches to SRM
+
+1. **Fix the structure/complexity** (and hence the VC-confidence) and **minimize the training error**. It can be used with neural networks. Training heuristics may already realize an **implicit** SRM (early stopping, ...); or SRM is realized with **Tikhonov regularization**, minimizing a loss $R_{emp}$ + complexity term, which takes both terms into account.
+2. **Fix the training error** and **automatically minimize the VC-confidence**. How? This is the idea behind **SVMs** ([lesson 13](#/lezione/13)).
+
+<Callout type="abstract" title="Summary">
+
+The **VC-dimension** measures the capacity of $H$ as the maximum number of points that $H$ is able to shatter (classify correctly for every labeling). For hyperplanes in $\mathbb{R}^n$ it equals $n+1$; it does not coincide with the number of parameters (it can be infinite with a single parameter, and it is infinite for NN). The **VC-bound** $R \le R_{emp} + \varepsilon(VC, N, \delta)$ ties together risk, training error, complexity and number of data points. **SRM** chooses, in a nested structure of spaces, the one that minimizes the bound. The bounds are often loose, but they provide the theoretical foundation of complexity control.
+
+</Callout>
+
+<Exam>
+<Q q="Define shattering and VC-dimension.">
+
+Given $N$ points there are $2^N$ dichotomies; $H$ shatters the set if for each of them there exists a hypothesis $h \in H$ that realizes it with no errors. The VC-dimension of $H$ is the maximum cardinality of a set of points (in some configuration) that can be shattered by $H$: $VC(H) = p$ if at least one configuration of $p$ points is shattered and none of $p+1$ is; it is infinite if arbitrarily large sets are shattered.
+
+</Q>
+<Q q="Prove that the VC-dim of lines in the plane is 3.">
+
+$VC \ge 3$: three non-collinear points are shattered, because for each of the 8 dichotomies there exists a separating line (one configuration is enough; three collinear points with the middle one different are not, but it does not matter). $VC < 4$: given any 4 points, either they form a convex quadrilateral, and putting in the same class the endpoints of each diagonal (which cross) gives a non-separable XOR; or one point is inside the triangle of the others, and giving it a different class no line separates it. Hence no configuration of 4 points is shattered. In general, for hyperplanes in $\mathbb{R}^n$ the VC-dim is $n+1$.
+
+</Q>
+<Q q="Does the VC-dim coincide with the number of free parameters? Examples.">
+
+No, they are related but do not coincide. Circles centered at the origin with the single parameter $b$ have VC 1, with $k$ and $b$ VC 2, while circles with fixed radius and free center (two parameters) and those with free radius and center (three) both have VC 3. One can add redundant parameters without changing anything; $\operatorname{sign}(\sin(\alpha x))$ has a single parameter and infinite VC; the nearest neighbor has infinite VC.
+
+</Q>
+<Q q="Write the VC-bound and interpret its terms.">
+
+With probability at least $1-\delta$, for every $h \in H$: $R[h] \le R_{emp}[h] + \varepsilon(VC, N, \delta)$, with, for the 0/1 loss, $\varepsilon = \sqrt{(VC(\ln(2N/VC)+1) - \ln(\delta/4))/N}$. $R$ is the true risk, $R_{emp}$ the training error, $\varepsilon$ the VC-confidence and the sum the guaranteed risk. $\varepsilon$ grows with the VC-dim, tends to zero as $N$ grows, depends essentially on $VC/N$ and is computed before learning; the bound is U-shaped as the VC-dim grows. It is a worst-case bound, often loose.
+
+</Q>
+<Q q="What is Structural Risk Minimization? Examples of nested structures.">
+
+One defines a nested structure $H_1 \subseteq \dots \subseteq H_n$ with increasing VC-dims; along the structure the empirical error drops and the VC-confidence grows, and SRM chooses the space (and the model) with the minimum bound on the risk. Structures: networks with more hidden units (or more epochs), polynomials of increasing degree, the constraint $\|\mathbf{w}\| < c$ with increasing $c$ (regularization, $\lambda$), decision trees with more nodes. In practice: fix the complexity and minimize the training error (networks, early stopping, Tikhonov regularization) or fix the training error and minimize the VC-confidence (SVMs).
+
+</Q>
+<Q q="What are the practical limits of the bound? What is it useful for anyway?">
+
+It is a worst-case bound, often very loose (the VC-confidence can be hundreds of times the observed overfitting); the VC-dim is hard to compute for specific classes; hence it is poorly suited to model assessment. It is useful, however, for model selection, where the ranking of the errors is what matters, and it holds for all the functions of the class; it gives a theoretical foundation to complexity control (the SRM principle) and guides the development of new models, such as SVMs.
+
+</Q>
+</Exam>

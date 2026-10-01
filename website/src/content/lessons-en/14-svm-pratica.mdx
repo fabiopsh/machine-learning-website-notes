@@ -1,0 +1,169 @@
+import * as F from '../formulas/l14'
+import { PolySvm, RbfSvm, CGamma, KernelObjects } from '../../widgets/l14/Kernels'
+
+<Lead>This slide deck completes [lesson 13](#/lezione/13) with a critical view: strengths and weaknesses of SVMs, examples of results, the crucial role of the hyperparameters, some common misconceptions to dispel and the generalization to **kernel methods**.</Lead>
+
+## Main characteristics
+
+<Callout type="abstract" title="Strengths">
+
+- **Built-in regularization** in the optimization problem (the margin).
+- **Approximation of the theoretical SRM** (the bound on the VC-dim of hyperplanes is minimized by the solution, in the hard margin case without kernels).
+- **Convex problem**: training always finds the **global minimum** (unlike neural networks).
+- **Implicit feature transformation** through kernels.
+
+</Callout>
+
+<Callout type="warning" title="Weaknesses">
+
+- One has to **choose the kernel and its parameters**.
+- It is a **batch** algorithm.
+- Very large problems used to be computationally intractable: beyond about 20,000 examples it was hard to solve them exactly with the standard approaches (the kernel matrix is $N \times N$). Today many solutions exist, including ones based on gradient descent.
+
+</Callout>
+
+In short, the advantages:
+
+- a **linear model** (simple, compact) with a bound on the complexity in terms of the **margin**, which is optimized directly;
+- a rich set of **nonlinear decision functions** in the input space through kernels: the separation is still linear, but in a different space, with an **efficient** treatment of the LBE. A rich set does not necessarily imply a high VC-dim, which for SVMs depends on the margin, the kernel parameters, $C$, etc.;
+- the **kernel trick** extends to other models: the **kernel methods**.
+
+## Results
+
+### The first famous application
+
+Handwritten digit recognition (**MNIST**) was a historic success story for SVMs: about 0.8% errors in 1998 with a polynomial SVM of degree 9, a remarkable result, comparable to LeNet and obtained without years of development of the architecture. The attention for SVMs and SLT (whose studies dated back to the 1960s–1970s) grew considerably: an example of the relevance of applications, or of the importance of a good theory for successful applications.
+
+### The Gaussian mixture example
+
+Let us go back to the two-class problem (mixture of Gaussians) already seen with [linear models and K-NN](#/lezione/05) and with [neural networks](#/lezione/08).
+
+<Figure n="14.1" title="SVM with a polynomial kernel" size="wide">
+  <PolySvm />
+  <Caption>SVM with a polynomial kernel of degree 4 ($C = 1$) on the two-class problem: decision boundary (black), margin borders (dashed), support vectors (black points) and Bayes boundary (violet). In the slides 42% of the data are support vectors, with training error 0.180, test error 0.245 and Bayes error 0.210; here the SVM is actually trained on the data generated in lesson 5, so the numbers are different. Change the degree and $C$.</Caption>
+</Figure>
+
+<Figure n="14.2" title="SVM with an RBF kernel" size="wide">
+  <RbfSvm />
+  <Caption>SVM with an RBF kernel ($\gamma = 1/(2\sigma^2) = 1$, $C = 1$) on the same problem: the boundary follows the shape of the classes more closely. In the slides 45% of the data are support vectors, with training error 0.160, test error 0.218 and Bayes error 0.210. Change $\gamma$ and $C$.</Caption>
+</Figure>
+
+The support vectors are the points **on the margin** (slack = 0) or **on the wrong side** of the margin (slack > 0). The radial kernel gives the best result, as one can expect given that the data come from mixtures of Gaussians. Compare with the neural network with 10 units and weight decay 0.02 (test error 0.223): similar results.
+
+<Callout type="warning" title="Many support vectors">
+
+The theory assumes that the support vectors are few, but **this is not always true**: here they are more than 40% of the data. The sparsity of the solution is not guaranteed.
+
+</Callout>
+
+## SVMs in practice
+
+<Callout type="note" title="No guarantee">
+
+*“At present there is no theory which guarantees that a given family of SVMs will have high accuracy on a given problem”* (Burges, 1998).
+
+</Callout>
+
+The nice properties of hard margin classifiers **do not extend directly** to the soft margin and to kernels: the parameter $C$ and the kernel can lead to a VC-dim that is even **infinite**. For example:
+
+- an SVM with a Gaussian kernel of **sufficiently small width $\sigma$** can correctly classify an arbitrarily large number of points (as in 1-NN, only the support vector closest to $\mathbf{x}$ contributes to the solution): infinite VC-dim, unless one regularizes;
+- at the opposite end, with a **large** width all the support vectors contribute and one obtains a sort of “global average”, with a low VC-dim.
+
+Hence **by controlling the width of the kernel one controls the VC-dim**.
+
+### The critical role of the hyperparameters
+
+<Figure n="14.3" title="Test error as C and γ vary" size="wide">
+  <CGamma />
+  <Caption>Test error of an SVM with a radial kernel as a function of $C$, for $\gamma = 1/(2\sigma^2) = 5; 1; 0.5; 0.1$ (curves computed by actually training an SVM for each pair on the two-class problem): the optimal value of $C$ changes as $\gamma$ varies. Move $C$ and see which $\gamma$ is best.</Caption>
+</Figure>
+
+With $\gamma = 5$ (small $\sigma$, very narrow kernels) a low $C$ is needed (maximum regularization); with small $\gamma$ the optimum moves toward higher $C$. **The best value of $C$ also depends on the hyperparameters of the kernel**: they must be selected **together** (<T id="grid-search">grid search</T>), usually with cross-validation, with care.
+
+To apply an SVM one therefore has to choose the **type of kernel** (and its parameters) and the value of **$C$** (and of $\varepsilon$ for regression). A rigorous selection would require an estimate of the complexity (VC-dim); the hyperparameters that affect the complexity are the ones to use in model selection. In practice one carries out, once again, a **careful empirical evaluation**: tuning the hyperparameters ($C$, $\gamma$...) can introduce overfitting, hence validation set + test set, or <T id="double-cv">double CV</T>.
+
+Performance: often good, but the comparison with other methods is not always favorable. Since 2012–2013 **deep networks** have clearly beaten the previous records in image and speech recognition.
+
+### Common misconceptions about SVMs
+
+<Callout type="question" label="Exercise" title="What is wrong?">
+
+1. *“The SVM can be used with the default values of the hyperparameters.”* → No: $C$ and the kernel parameters are critical and must be selected.
+2. *“I choose the SVM because it does not overfit.”* → No: with soft margin and kernels the VC-dim can be very high; overfitting depends on $C$ and on the kernel.
+3. *“The SVM has no problems with high-dimensional inputs (does it solve the curse of dimensionality?).”* → **No**: the SVM handles well the high dimension of the **feature space**, not of the **input space**. The <T id="curse-of-dimensionality">curse of dimensionality</T> of the input remains.
+4. *“With the SVM the number of units is found automatically.”* → The number of support vectors is determined by the solution, but it depends on $C$ and on the kernel, which must be chosen; and it is not necessarily small.
+
+</Callout>
+
+---
+
+## Kernel methods
+
+The **kernel trick** leads to <T id="metodi-kernel">**kernel methods**</T>, even without SVMs: the “**kernelization**” of traditional approaches. Whenever a **dot product** or a **similarity measure** appears in a model, it can be replaced with a kernel, making the model operate in a new implicit high-dimensional space simply by specifying (and changing) the kernel.
+
+- It is a fixed, high-dimensional **linear basis expansion**, but a very **efficient** one.
+- The choice of the basis functions is **modular**: the kernel is changed without changing the learning machine.
+- It provides a unified theoretical framework for general functions of the dot-product type.
+
+### Kernels as a similarity measure
+
+The kernel is related to a measure of **similarity** between $\mathbf{s}$ and $\mathbf{t}$; indeed it induces the distance in the feature space:
+
+<Formula f={F.kernelDist} />
+
+Similar objects (small distance) → high value of the kernel.
+
+<Callout type="tip" title="The idea of kernels">
+
+Focus on the representation and processing of **pairwise comparisons** between objects, rather than on the representation of a single object. In some domains it is easier to compare two objects than to define an abstract feature space in which to represent one.
+
+</Callout>
+
+An SVM is characterized to a large extent by the choice of the kernel. Compare with **neural networks**, where the basis functions **adapt** to the data (by learning the weights of the hidden units): in SVMs the choice of the best kernel for a problem is still a research topic.
+
+(Exercise: rethink the kernel as in distance-based methods, such as K-NN. When is a kernel good? When it groups together in the feature space the objects of the same class, reflecting the similarity that is relevant for the task. When is it bad? When the similarity it induces has nothing to do with the task, for example if all the objects turn out to be equally similar or equally different.)
+
+<Figure n="14.4" title="A good kernel for objects" size="wide">
+  <KernelObjects />
+  <Caption>A good kernel for “objects”: the map $\phi$ brings similar objects close together in the feature space, where they form compact groups. Click an object to follow its image and try the other similarities, which do not concern the task (here the class is the shape).</Caption>
+</Figure>
+
+### Advanced topics
+
+The **design of new kernels** requires choosing a function that is “good” for the specific domain, and it can be extended to **generic objects** as input, not only vectors: kernels for **strings, trees, graphs**; ad hoc kernels for the domain and the task (for example kernels based on the *edit distance* for bioinformatics, or on *suffix trees* for strings in NLP), with attention to algorithmic efficiency. **Adaptive kernels** are a research topic.
+
+A conceptual advantage: the **domain knowledge is separated from the solver**, because it lies entirely in the kernel.
+
+<Callout type="abstract" title="Summary">
+
+SVMs combine a linear model, a convex problem with a global minimum, regularization through the margin and the power of kernels. But they are not “magic”: the choice of kernel and hyperparameters ($C$, $\sigma$, $\varepsilon$) is critical and must be made with a rigorous validation; the support vectors can be many; they do not solve the curse of dimensionality of the input space. The kernel trick is a general idea (kernel methods) that makes it possible to work with similarities between objects, including structured ones.
+
+</Callout>
+
+<Exam>
+<Q q="Strengths and weaknesses of SVMs compared with neural networks.">
+
+Strengths: built-in regularization (the margin), approximation of the SRM, convex problem with a global minimum (a network can stop in local minima), implicit feature transformation with kernels, solution expressed by (some) support vectors. Weaknesses: the kernel and the parameters ($C$, $\sigma$, $\varepsilon$) must be chosen, it is a batch algorithm, the $N \times N$ kernel matrix makes large problems expensive, the support vectors can be many. In networks the basis functions adapt to the data (weights of the hidden units), in SVMs they are fixed by the kernel. On the two-class problem the results are similar.
+
+</Q>
+<Q q="Why can the VC-dim of an SVM with an RBF kernel be infinite? How is it controlled?">
+
+With a very narrow Gaussian kernel (small σ) each point is influenced only by the closest support vector, as in 1-NN: arbitrarily large sets are classified correctly, so the VC-dim is infinite unless one regularizes. With a large σ all the support vectors contribute (a global average) and the VC-dim is low. It is therefore controlled with the width of the kernel, together with $C$ (and the margin).
+
+</Q>
+<Q q="Why must $C$ and the kernel parameters be selected together?">
+
+Because the best $C$ depends on the kernel: with narrow kernels (large $\gamma$) a low $C$ is needed, that is, more regularization, while with wide kernels the optimum moves toward high $C$. Choosing them separately gives the wrong combination; one uses a grid search on both with cross-validation, keeping a separate test set (or with double CV), because tuning the hyperparameters can lead to overfitting.
+
+</Q>
+<Q q="Does the SVM solve the curse of dimensionality?">
+
+No. It handles well the high (even infinite) dimension of the feature space, thanks to the kernel trick and to the margin, which controls the complexity independently of the dimension. The curse of dimensionality concerns the input space instead, and it remains: with many inputs the data stay sparse and many examples are needed anyway.
+
+</Q>
+<Q q="What are kernel methods? What is the link between kernels and similarity?">
+
+They are the models in which every dot product (or similarity measure) is replaced with a kernel, so that the model works in an implicit high-dimensional feature space by changing only the kernel: a fixed but efficient basis expansion, modular, with the domain knowledge separated from the solver; it extends to strings, trees and graphs. The kernel induces a distance in the feature space, $d_k^2 = k(\mathbf{s},\mathbf{s}) - 2k(\mathbf{s},\mathbf{t}) + k(\mathbf{t},\mathbf{t})$: a high kernel means close objects, that is, similar ones. A good kernel groups together the objects of the same class.
+
+</Q>
+</Exam>

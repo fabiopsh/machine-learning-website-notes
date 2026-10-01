@@ -4,7 +4,7 @@
 //   npm run shot -- lezione/03 fig35 --sel "#fig-3-5"      solo la figura
 //   npm run shot -- lezione/03 pag --pages 6               6 schermate scorrendo la pagina
 //   npm run shot -- home nome                              la home (anche "glossario", "lezione/03/sezione")
-//   opzioni: --w 1440 --h 900 --dpr 1 --theme light|dark --style classic|glass --base URL --wait ms
+//   opzioni: --w 1440 --h 900 --dpr 1 --theme light|dark --style classic|glass --lang it|en --base URL --wait ms
 //            --scrollbars (mostra le barre di scorrimento, nascoste per default)
 import { baseUrl, newPage, openBrowser, opt, shotPath, wait } from './lib/browser.mjs'
 
@@ -26,6 +26,7 @@ const { page, errors } = await newPage(browser, {
   dpr: +opt(args, 'dpr', 1),
   theme: opt(args, 'theme', 'light'),
   style: opt(args, 'style', 'classic'),
+  lang: opt(args, 'lang', 'it'),
 })
 await page.goto(url, { waitUntil: 'networkidle0' })
 await wait(+opt(args, 'wait', 1200))

@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -52,10 +53,10 @@ export function Elman() {
   return (
     <div>
       <div className="wgrid">
-        <svg className="el20" viewBox="0 0 470 330" role="img" aria-label="Simple RNN di Elman con tre unità nascoste ricorrenti">
+        <svg className="el20" viewBox="0 0 470 330" role="img" aria-label={tx('Simple RNN di Elman con tre unità nascoste ricorrenti', 'Elman’s Simple RNN with three hidden recurrent units')}>
           <rect className="el20__box" x={110} y={24} width={280} height={36} rx={6} />
           <text className="el20__t" x={250} y={47} textAnchor="middle">
-            strato di uscita (eventuale)
+            {tx('strato di uscita (eventuale)', 'output layer (optional)')}
           </text>
           <line className="el20__w" x1={250} y1={24} x2={250} y2={6} />
           <text className="el20__t" x={262} y={14}>
@@ -85,7 +86,7 @@ export function Elman() {
               className={'el20__u' + (sel === i ? ' is-on' : '')}
               role="button"
               tabIndex={0}
-              aria-label={`unità nascosta ${i + 1}`}
+              aria-label={tx(`unità nascosta ${i + 1}`, `hidden unit ${i + 1}`)}
               aria-pressed={sel === i}
               onClick={() => pick(i)}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && pick(i)}
@@ -117,9 +118,17 @@ export function Elman() {
         </svg>
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">{sel !== null ? `Unità nascosta ${sel + 1}` : 'Simple RNN'}</div>
-            Riceve l’input corrente (pesi <Tex>{'w'}</Tex>, in blu) e gli stati precedenti di <b>tutte</b> le unità nascoste, attraverso i
-            ritardi <Tex>{'q^{-1}'}</Tex> (pesi <Tex>{'\\hat w'}</Tex>, in arancione).
+            <div className="wpanel__title">{sel !== null ? tx(`Unità nascosta ${sel + 1}`, `Hidden unit ${sel + 1}`) : 'Simple RNN'}</div>
+            {tx(
+              <>
+                Riceve l’input corrente (pesi <Tex>{'w'}</Tex>, in blu) e gli stati precedenti di <b>tutte</b> le unità nascoste, attraverso i
+                ritardi <Tex>{'q^{-1}'}</Tex> (pesi <Tex>{'\\hat w'}</Tex>, in arancione).
+              </>,
+              <>
+                It receives the current input (weights <Tex>{'w'}</Tex>, in blue) and the previous states of <b>all</b> the hidden units, through
+                the delays <Tex>{'q^{-1}'}</Tex> (weights <Tex>{'\\hat w'}</Tex>, in orange).
+              </>,
+            )}
             {sel !== null && (
               <div className="wmath">
                 <Tex>{`x_${sel + 1}(t) = f\\Big(\\sum_{j=1}^{m} w_{${sel + 1}j}\\,l_j(t) + \\sum_{k} \\hat w_{${sel + 1}k}\\,x_k(t-1) + \\theta_${sel + 1}\\Big)`}</Tex>
@@ -128,14 +137,24 @@ export function Elman() {
           </div>
           <Legend
             items={[
-              { label: 'pesi di input', color: 'var(--c-blue)' },
-              { label: 'pesi ricorrenti', color: 'var(--c-orange)' },
-              { label: 'stato riportato al ritardo', color: 'var(--ink-3)', kind: 'dash' },
+              { label: tx('pesi di input', 'input weights'), color: 'var(--c-blue)' },
+              { label: tx('pesi ricorrenti', 'recurrent weights'), color: 'var(--c-orange)' },
+              { label: tx('stato riportato al ritardo', 'state fed back to the delay'), color: 'var(--ink-3)', kind: 'dash' },
             ]}
           />
         </div>
       </div>
-      <Tasks items={[{ label: 'Clicca le tre unità nascoste: ognuna riceve gli stessi input e gli stati precedenti di tutte e tre.', done: n >= 2 }]} />
+      <Tasks
+        items={[
+          {
+            label: tx(
+              'Clicca le tre unità nascoste: ognuna riceve gli stessi input e gli stati precedenti di tutte e tre.',
+              'Click the three hidden units: each one receives the same inputs and the previous states of all three.',
+            ),
+            done: n >= 2,
+          },
+        ]}
+      />
     </div>
   )
 }
@@ -144,12 +163,12 @@ export function Elman() {
 
 type WId = 'w1' | 'w2' | 'r11' | 'r12' | 'r21' | 'r22'
 const WNAMES: Record<WId, string> = {
-  w1: 'peso di input verso l’unità 1',
-  w2: 'peso di input verso l’unità 2',
-  r11: 'peso ricorrente dall’unità 1 all’unità 1',
-  r12: 'peso ricorrente dall’unità 2 all’unità 1',
-  r21: 'peso ricorrente dall’unità 1 all’unità 2',
-  r22: 'peso ricorrente dall’unità 2 all’unità 2',
+  w1: tx('peso di input verso l’unità 1', 'input weight to unit 1'),
+  w2: tx('peso di input verso l’unità 2', 'input weight to unit 2'),
+  r11: tx('peso ricorrente dall’unità 1 all’unità 1', 'recurrent weight from unit 1 to unit 1'),
+  r12: tx('peso ricorrente dall’unità 2 all’unità 1', 'recurrent weight from unit 2 to unit 1'),
+  r21: tx('peso ricorrente dall’unità 1 all’unità 2', 'recurrent weight from unit 1 to unit 2'),
+  r22: tx('peso ricorrente dall’unità 2 all’unità 2', 'recurrent weight from unit 2 to unit 2'),
 }
 
 export function Unfolding() {
@@ -176,11 +195,11 @@ export function Unfolding() {
   return (
     <div>
       <div className="pipe16__scroll">
-        <svg className="uf20" viewBox={`0 0 500 ${Math.max(H, 250)}`} style={{ minWidth: 470 }} role="img" aria-label="Unfolding di una RNN a due unità lungo la sequenza di input">
+        <svg className="uf20" viewBox={`0 0 500 ${Math.max(H, 250)}`} style={{ minWidth: 470 }} role="img" aria-label={tx('Unfolding di una RNN a due unità lungo la sequenza di input', 'Unfolding of an RNN with two units along the input sequence')}>
           {/* la RNN originale */}
           <g transform={`translate(0 ${Math.max(H, 250) / 2 - 110})`}>
             <text className="uf20__t" x={110} y={12} textAnchor="middle">
-              la RNN
+              {tx('la RNN', 'the RNN')}
             </text>
             <path className="uf20__fb" d="M70,66V40H196V212H110V196" />
             <path className="uf20__fb" d="M150,58V48H182V204H166V196" />
@@ -233,25 +252,49 @@ export function Unfolding() {
             </g>
           ))}
           <text className="uf20__t" x={UX[1] + 28} y={ly(k) - 22}>
-            presente
+            {tx('presente', 'present')}
           </text>
           <text className="uf20__t" x={UX[1] + 28} y={ly(0) + 26}>
-            passato
+            {tx('passato', 'past')}
           </text>
         </svg>
       </div>
       <Controls>
-        <Slider label="lunghezza della sequenza di input" min={1} max={6} step={1} value={k} onChange={setK} width={230} />
+        <Slider label={tx('lunghezza della sequenza di input', 'length of the input sequence')} min={1} max={6} step={1} value={k} onChange={setK} width={230} />
         <div className="readouts">
-          <Readout label="strati della rete srotolata" tone="accent" value={String(k)} sub="una replica del modello per passo" />
-          <Readout label="pesi liberi" value="6" sub="sempre gli stessi, condivisi tra le repliche" />
+          <Readout
+            label={tx('strati della rete srotolata', 'layers of the unrolled network')}
+            tone="accent"
+            value={String(k)}
+            sub={tx('una replica del modello per passo', 'one replica of the model per step')}
+          />
+          <Readout label={tx('pesi liberi', 'free weights')} value="6" sub={tx('sempre gli stessi, condivisi tra le repliche', 'always the same, shared among the replicas')} />
         </div>
       </Controls>
-      <p className="wnote">{hot ? `Evidenziato: ${WNAMES[hot]}, in tutte le sue repliche.` : 'Passa sopra un peso (o toccalo): lo stesso colore indica lo stesso peso, replicato a ogni passo.'}</p>
+      <p className="wnote">
+        {hot
+          ? tx(`Evidenziato: ${WNAMES[hot]}, in tutte le sue repliche.`, `Highlighted: ${WNAMES[hot]}, in all its replicas.`)
+          : tx(
+              'Passa sopra un peso (o toccalo): lo stesso colore indica lo stesso peso, replicato a ogni passo.',
+              'Hover over a weight (or tap it): the same color indicates the same weight, replicated at each step.',
+            )}
+      </p>
       <Tasks
         items={[
-          { label: 'Evidenzia un peso della RNN: compare, identico, in ogni strato della rete srotolata (pesi condivisi).', done: touched },
-          { label: 'Allunga la sequenza a 5 o più passi: la rete di codifica diventa profonda, una rete diversa per ogni lunghezza.', done: seen.deep },
+          {
+            label: tx(
+              'Evidenzia un peso della RNN: compare, identico, in ogni strato della rete srotolata (pesi condivisi).',
+              'Highlight a weight of the RNN: it appears, identical, in every layer of the unrolled network (shared weights).',
+            ),
+            done: touched,
+          },
+          {
+            label: tx(
+              'Allunga la sequenza a 5 o più passi: la rete di codifica diventa profonda, una rete diversa per ogni lunghezza.',
+              'Lengthen the sequence to 5 or more steps: the encoding network becomes deep, a different network for each length.',
+            ),
+            done: seen.deep,
+          },
         ]}
       />
     </div>
@@ -262,14 +305,26 @@ export function Unfolding() {
 
 type EsnPart = 'in' | 'res' | 'out'
 const ESN_TEXT: Record<EsnPart, { title: string; text: string }> = {
-  in: { title: 'Strato di input', text: 'L’input u(t) (prima indicato con l(t)) entra nel reservoir con i pesi W_in: casuali, non addestrati.' },
+  in: {
+    title: tx('Strato di input', 'Input layer'),
+    text: tx(
+      'L’input u(t) (prima indicato con l(t)) entra nel reservoir con i pesi W_in: casuali, non addestrati.',
+      'The input u(t) (previously denoted by l(t)) enters the reservoir with the weights W_in: random, not trained.',
+    ),
+  },
   res: {
     title: 'Reservoir',
-    text: 'Un grande insieme di unità ricorrenti connesse in modo sparso e casuale (pesi Ŵ): non viene addestrato dopo l’inizializzazione casuale. Il suo stato è x(t).',
+    text: tx(
+      'Un grande insieme di unità ricorrenti connesse in modo sparso e casuale (pesi Ŵ): non viene addestrato dopo l’inizializzazione casuale. Il suo stato è x(t).',
+      'A large set of sparsely and randomly connected recurrent units (weights Ŵ): it is not trained after the random initialization. Its state is x(t).',
+    ),
   },
   out: {
     title: 'Readout',
-    text: 'Un semplice strato feedforward di unità lineari (pesi W_out) che legge lo stato x(t) e produce y(t): è l’unica parte addestrata, con metodi lineari efficienti (es. ridge regression).',
+    text: tx(
+      'Un semplice strato feedforward di unità lineari (pesi W_out) che legge lo stato x(t) e produce y(t): è l’unica parte addestrata, con metodi lineari efficienti (es. ridge regression).',
+      'A simple feedforward layer of linear units (weights W_out) that reads the state x(t) and produces y(t): it is the only trained part, with efficient linear methods (e.g. ridge regression).',
+    ),
   },
 }
 
@@ -312,7 +367,7 @@ export function Esn() {
   return (
     <div>
       <div className="pipe16__scroll">
-        <svg className="esn20" viewBox="0 0 600 270" style={{ minWidth: 540 }} role="img" aria-label="Echo State Network: input, reservoir casuale, readout lineare">
+        <svg className="esn20" viewBox="0 0 600 270" style={{ minWidth: 540 }} role="img" aria-label={tx('Echo State Network: input, reservoir casuale, readout lineare', 'Echo State Network: input, random reservoir, linear readout')}>
           <defs>
             <marker id="esn20a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
               <path d="M0,0L10,5L0,10z" className="ru20__head" />
@@ -332,7 +387,7 @@ export function Esn() {
                 {svgScript('W', 'in')}
               </text>
               <text className="esn20__t" x={79} y={246} textAnchor="middle">
-                strato di input · u(t)
+                {tx('strato di input · u(t)', 'input layer · u(t)')}
               </text>
               <Die x={108} y={74} />
             </>,
@@ -394,19 +449,28 @@ export function Esn() {
       </div>
       <div className="wpanel">
         <div className="wpanel__title">
-          {ESN_TEXT[sel].title} — {sel === 'out' ? 'addestrato' : 'non addestrato'}
+          {ESN_TEXT[sel].title} — {sel === 'out' ? tx('addestrato', 'trained') : tx('non addestrato', 'not trained')}
         </div>
         {ESN_TEXT[sel].text}
       </div>
       <Controls>
         <Btn icon="reset" onClick={() => setSeed(seed + 1)}>
-          Rilancia i dadi (nuovo reservoir)
+          {tx('Rilancia i dadi (nuovo reservoir)', 'Reroll the dice (new reservoir)')}
         </Btn>
       </Controls>
       <Tasks
         items={[
-          { label: 'Clicca le tre parti: input e reservoir sono casuali e non addestrati, solo il readout si addestra.', done: !!clicked.in && !!clicked.out },
-          { label: 'Rilancia i dadi: le connessioni del reservoir sono sparse e casuali.', done: seed >= 1 },
+          {
+            label: tx(
+              'Clicca le tre parti: input e reservoir sono casuali e non addestrati, solo il readout si addestra.',
+              'Click the three parts: input and reservoir are random and not trained, only the readout is trained.',
+            ),
+            done: !!clicked.in && !!clicked.out,
+          },
+          {
+            label: tx('Rilancia i dadi: le connessioni del reservoir sono sparse e casuali.', 'Reroll the dice: the connections of the reservoir are sparse and random.'),
+            done: seed >= 1,
+          },
         ]}
       />
     </div>
@@ -466,7 +530,7 @@ export function MarkovStates() {
     <div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Stringhe di input (clicca una lettera per cambiarla)</div>
+          <div className="htf__title">{tx('Stringhe di input (clicca una lettera per cambiarla)', 'Input strings (click a letter to change it)')}</div>
           <div className="mk20__strs">
             {strs.map((s, k) => (
               <div key={k} className="mk20__str">
@@ -480,7 +544,7 @@ export function MarkovStates() {
                       setStrs(strs.map((q, j) => (j === k ? q.slice(0, i) + (ch === 'a' ? 'b' : 'a') + q.slice(i + 1) : q)))
                       setEdits(edits + 1)
                     }}
-                    aria-label={`stringa ${k + 1}, simbolo ${i + 1}: ${ch}`}
+                    aria-label={tx(`stringa ${k + 1}, simbolo ${i + 1}: ${ch}`, `string ${k + 1}, symbol ${i + 1}: ${ch}`)}
                   >
                     {ch}
                   </button>
@@ -488,14 +552,19 @@ export function MarkovStates() {
               </div>
             ))}
           </div>
-          <p className="wnote">Il tempo scorre da sinistra a destra: gli ultimi due simboli (riquadrati) sono il suffisso, cioè gli input più recenti.</p>
+          <p className="wnote">
+            {tx(
+              'Il tempo scorre da sinistra a destra: gli ultimi due simboli (riquadrati) sono il suffisso, cioè gli input più recenti.',
+              'Time runs from left to right: the last two symbols (boxed) are the suffix, that is, the most recent inputs.',
+            )}
+          </p>
           <div className="readouts">
-            <Readout label="distanza tra le prime due" value={fmt(dist(pts[0].x, pts[1].x), 2)} sub={`${strs[0]} · ${strs[1]}`} />
-            <Readout label="tra la prima e la terza" value={fmt(dist(pts[0].x, pts[2].x), 2)} sub={`${strs[0]} · ${strs[2]}`} />
+            <Readout label={tx('distanza tra le prime due', 'distance between the first two')} value={fmt(dist(pts[0].x, pts[1].x), 2)} sub={`${strs[0]} · ${strs[1]}`} />
+            <Readout label={tx('tra la prima e la terza', 'between the first and third')} value={fmt(dist(pts[0].x, pts[2].x), 2)} sub={`${strs[0]} · ${strs[2]}`} />
           </div>
         </div>
         <div>
-          <div className="htf__title">Spazio degli stati</div>
+          <div className="htf__title">{tx('Spazio degli stati', 'State space')}</div>
           <Plot xDomain={[-1.1, 1.1]} yDomain={[-1.1, 1.1]} equal aspect={0.85} minH={220} maxH={320} margin={{ l: 30, b: 30 }}>
             <Axes origin xTicks={[]} yTicks={[]} grid={false} />
             <StatePts pts={pts} />
@@ -508,23 +577,49 @@ export function MarkovStates() {
         </div>
       </div>
       <Controls>
-        <Slider label="contrattività (raggio spettrale ρ)" min={0.1} max={1.2} step={0.05} value={rho} onChange={setRho} format={(v) => fmt(v, 2)} width={250} />
+        <Slider label={tx('contrattività (raggio spettrale ρ)', 'contractivity (spectral radius ρ)')} min={0.1} max={1.2} step={0.05} value={rho} onChange={setRho} format={(v) => fmt(v, 2)} width={250} />
         <Btn icon="reset" onClick={() => setSeed(seed + 1)}>
-          Rilancia i dadi
+          {tx('Rilancia i dadi', 'Reroll the dice')}
         </Btn>
         <Btn onClick={() => setStrs(STR0)} disabled={strs === STR0}>
-          Stringhe della figura
+          {tx('Stringhe della figura', 'Strings of the figure')}
         </Btn>
       </Controls>
       <p className="wnote">
-        Un reservoir vero, con due sole unità per poterne disegnare lo stato, a pesi casuali e mai addestrati. Il colore indica il suffisso
-        di due simboli.
+        {tx(
+          <>
+            Un reservoir vero, con due sole unità per poterne disegnare lo stato, a pesi casuali e mai addestrati. Il colore indica il suffisso
+            di due simboli.
+          </>,
+          <>
+            A real reservoir, with only two units so that its state can be drawn, with random weights that are never trained. The color
+            indicates the two-symbol suffix.
+          </>,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Cambia i primi simboli di una stringa: il punto si sposta poco. Cambia l’ultimo: salta lontano.', done: edits >= 2 },
-          { label: 'Porta ρ vicino a 1 o oltre: la funzione di transizione non è più contrattiva e il passato lontano pesa di più.', done: seen.high },
-          { label: 'Rilancia i dadi: con pesi casuali diversi le stringhe con lo stesso suffisso restano vicine.', done: seed >= 1 },
+          {
+            label: tx(
+              'Cambia i primi simboli di una stringa: il punto si sposta poco. Cambia l’ultimo: salta lontano.',
+              'Change the first symbols of a string: the point moves a little. Change the last one: it jumps far away.',
+            ),
+            done: edits >= 2,
+          },
+          {
+            label: tx(
+              'Porta ρ vicino a 1 o oltre: la funzione di transizione non è più contrattiva e il passato lontano pesa di più.',
+              'Bring ρ close to 1 or beyond: the transition function is no longer contractive and the distant past weighs more.',
+            ),
+            done: seen.high,
+          },
+          {
+            label: tx(
+              'Rilancia i dadi: con pesi casuali diversi le stringhe con lo stesso suffisso restano vicine.',
+              'Reroll the dice: with different random weights the strings with the same suffix stay close.',
+            ),
+            done: seed >= 1,
+          },
         ]}
       />
     </div>
@@ -570,7 +665,7 @@ function TreeSvg({ tree, step, chem }: { tree: T; step: number; chem?: boolean }
   const py = (y: number) => 68 + y * DY
   const bottom = (n: Laid): number => (n.kids.length ? Math.max(...n.kids.map(bottom)) : n.depth)
   return (
-    <svg className="tr20" viewBox={`0 0 ${W} ${H}`} style={{ maxWidth: W * 1.25 }} role="img" aria-label="Codifica di un albero dalle foglie alla radice">
+    <svg className="tr20" viewBox={`0 0 ${W} ${H}`} style={{ maxWidth: W * 1.25 }} role="img" aria-label={tx('Codifica di un albero dalle foglie alla radice', 'Encoding of a tree from the leaves to the root')}>
       {/* riquadri annidati: ogni nodo già codificato racchiude il proprio sotto-albero */}
       {nodes
         .slice()
@@ -649,18 +744,21 @@ export function TreeEncoding() {
   const [seenB, setSeenB] = useState(false)
   const msg =
     st.step === 0
-      ? 'Nessun vertice è ancora stato codificato.'
+      ? tx('Nessun vertice è ancora stato codificato.', 'No vertex has been encoded yet.')
       : st.step === 1
-        ? 'Si parte dalle foglie: lo stato di una foglia dipende solo dal suo label.'
+        ? tx('Si parte dalle foglie: lo stato di una foglia dipende solo dal suo label.', 'We start from the leaves: the state of a leaf depends only on its label.')
         : st.done
-          ? 'La radice è codificata: il suo stato riassume tutto l’albero.'
-          : 'Lo stato di ogni vertice dipende dal suo label e dagli stati dei suoi figli.'
+          ? tx('La radice è codificata: il suo stato riassume tutto l’albero.', 'The root is encoded: its state summarizes the whole tree.')
+          : tx(
+              'Lo stato di ogni vertice dipende dal suo label e dagli stati dei suoi figli.',
+              'The state of each vertex depends on its label and on the states of its children.',
+            )
   return (
     <div>
       <div className="wbar">
         <Segmented
           size="sm"
-          label="struttura"
+          label={tx('struttura', 'structure')}
           value={which}
           onChange={(v) => {
             setWhich(v)
@@ -668,8 +766,8 @@ export function TreeEncoding() {
             setSeenB(true)
           }}
           options={[
-            { value: 'a', label: 'albero della figura' },
-            { value: 'b', label: 'c spostato sotto d' },
+            { value: 'a', label: tx('albero della figura', 'tree of the figure') },
+            { value: 'b', label: tx('c spostato sotto d', 'c moved under d') },
           ]}
         />
       </div>
@@ -678,7 +776,7 @@ export function TreeEncoding() {
           <TreeSvg tree={tree} step={st.step} />
         </div>
         <div className="wside">
-          <svg className="ru20" viewBox="0 0 230 200" role="img" aria-label="Modello grafico per alberi: lo stato riceve l’input e gli stati dei figli attraverso i ritardi q1…qk">
+          <svg className="ru20" viewBox="0 0 230 200" role="img" aria-label={tx('Modello grafico per alberi: lo stato riceve l’input e gli stati dei figli attraverso i ritardi q1…qk', 'Graphical model for trees: the state receives the input and the states of the children through the delays q1…qk')}>
             <defs>
               <marker id="tr20a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M0,0L10,5L0,10z" className="ru20__head" />
@@ -714,27 +812,41 @@ export function TreeEncoding() {
               y
             </text>
           </svg>
-          <p className="wnote">Modello grafico per alberi: lo stato x riceve il label l e gli stati dei figli, uno per ogni ritardo.</p>
+          <p className="wnote">
+            {tx(
+              'Modello grafico per alberi: lo stato x riceve il label l e gli stati dei figli, uno per ogni ritardo.',
+              'Graphical model for trees: the state x receives the label l and the states of the children, one for each delay.',
+            )}
+          </p>
         </div>
       </div>
       <div className="wpanel">
         <div className="wpanel__title">
-          Passo {st.step} di {max}
+          {tx('Passo', 'Step')} {st.step} {tx('di', 'of')} {max}
         </div>
         {msg}
       </div>
       <Controls>
         <Btn icon="step" variant="soft" onClick={st.next} disabled={st.done}>
-          Codifica il livello successivo
+          {tx('Codifica il livello successivo', 'Encode the next level')}
         </Btn>
         <Btn icon="reset" onClick={st.reset} disabled={st.step === 0}>
-          Ricomincia
+          {tx('Ricomincia', 'Restart')}
         </Btn>
       </Controls>
       <Tasks
         items={[
-          { label: 'Segui la codifica dal basso verso l’alto, dalle foglie fino alla radice.', done: st.done },
-          { label: 'Cambia la struttura dell’albero e ripeti: la codifica cambia di conseguenza.', done: seenB && st.step >= 2 },
+          {
+            label: tx('Segui la codifica dal basso verso l’alto, dalle foglie fino alla radice.', 'Follow the encoding bottom-up, from the leaves to the root.'),
+            done: st.done,
+          },
+          {
+            label: tx(
+              'Cambia la struttura dell’albero e ripeti: la codifica cambia di conseguenza.',
+              'Change the structure of the tree and repeat: the encoding changes accordingly.',
+            ),
+            done: seenB && st.step >= 2,
+          },
         ]}
       />
     </div>
@@ -759,26 +871,35 @@ export function RecNN() {
       </div>
       <div className="wpanel">
         <div className="wpanel__title">
-          Passo {st.step} di {max}
+          {tx('Passo', 'Step')} {st.step} {tx('di', 'of')} {max}
         </div>
         {st.step === 0
-          ? 'Due frammenti chimici rappresentati come alberi. La codifica parte dalle foglie («Start»).'
+          ? tx(
+              'Due frammenti chimici rappresentati come alberi. La codifica parte dalle foglie («Start»).',
+              'Two chemical fragments represented as trees. The encoding starts from the leaves (“Start”).',
+            )
           : st.done
-            ? 'Alla radice la rete produce l’uscita per l’albero (la freccia in alto).'
-            : 'La stessa rete si srotola lungo ciascuna struttura: le unità (e i pesi) sono le stesse per tutti i vertici di un albero e per tutti gli alberi.'}
+            ? tx('Alla radice la rete produce l’uscita per l’albero (la freccia in alto).', 'At the root the network produces the output for the tree (the arrow at the top).')
+            : tx(
+                'La stessa rete si srotola lungo ciascuna struttura: le unità (e i pesi) sono le stesse per tutti i vertici di un albero e per tutti gli alberi.',
+                'The same network is unrolled along each structure: the units (and the weights) are the same for all the vertices of a tree and for all the trees.',
+              )}
       </div>
       <Controls>
         <Btn icon="step" variant="soft" onClick={st.next} disabled={st.done}>
-          {st.step === 0 ? 'Start: codifica le foglie' : 'Codifica il livello successivo'}
+          {st.step === 0 ? tx('Start: codifica le foglie', 'Start: encode the leaves') : tx('Codifica il livello successivo', 'Encode the next level')}
         </Btn>
         <Btn icon="reset" onClick={st.reset} disabled={st.step === 0}>
-          Ricomincia
+          {tx('Ricomincia', 'Restart')}
         </Btn>
       </Controls>
       <Tasks
         items={[
           {
-            label: 'Porta la codifica fino alle radici dei due alberi: strutture diverse danno reti srotolate diverse, con gli stessi pesi.',
+            label: tx(
+              'Porta la codifica fino alle radici dei due alberi: strutture diverse danno reti srotolate diverse, con gli stessi pesi.',
+              'Carry the encoding up to the roots of the two trees: different structures give different unrolled networks, with the same weights.',
+            ),
             done: st.done,
           },
         ]}

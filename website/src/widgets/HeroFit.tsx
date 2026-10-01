@@ -3,6 +3,7 @@ import { Axes, FnPath, Handle, Plot } from '../components/plot/Plot'
 import { fmt } from '../components/plot/scale'
 import { Slider } from '../components/ui/Controls'
 import { Tex } from '../components/prose/Tex'
+import { tx } from '../lib/i18n'
 import { polyfit, polyval, sse } from '../lib/math'
 
 /** Piccolo laboratorio in copertina: trascina i dati e cambia la complessità del modello. */
@@ -46,7 +47,7 @@ export function HeroFit() {
             y={p.y}
             r={5.5}
             color="var(--c-blue)"
-            label={`dato ${i + 1}`}
+            label={`${tx('dato', 'data point')} ${i + 1}`}
             bounds={{ x: [0.01, 0.99], y: [-1.5, 1.5] }}
             onMove={(q) => setPts((ps) => ps.map((pp, j) => (j === i ? q : pp)))}
           />
@@ -56,7 +57,7 @@ export function HeroFit() {
         <Slider
           label={
             <>
-              grado del polinomio <Tex>M</Tex>
+              {tx('grado del polinomio', 'polynomial degree')} <Tex>M</Tex>
             </>
           }
           min={0}
@@ -66,11 +67,20 @@ export function HeroFit() {
           onChange={setM}
         />
         <div className="herofit__err">
-          <span>errore sui dati</span>
+          <span>{tx('errore sui dati', 'error on the data')}</span>
           <strong>{fmt(E, 3)}</strong>
         </div>
       </div>
-      <p className="herofit__hint">Trascina i punti blu. Con <Tex>M = 7</Tex> la curva passa per tutti: è davvero la migliore?</p>
+      <p className="herofit__hint">
+        {tx(
+          <>
+            Trascina i punti blu. Con <Tex>M = 7</Tex> la curva passa per tutti: è davvero la migliore?
+          </>,
+          <>
+            Drag the blue points. With <Tex>M = 7</Tex> the curve goes through all of them: is it really the best?
+          </>,
+        )}
+      </p>
     </div>
   )
 }

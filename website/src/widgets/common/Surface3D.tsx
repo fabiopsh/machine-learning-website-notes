@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent as RKeyboardEvent, type PointerEvent as RPointerEvent } from 'react'
+import { tx } from '../../lib/i18n'
 import { useWidth } from '../../lib/useSize'
 import { cssVar, useLook, useTheme } from '../../lib/theme'
 import { splitSubDigits } from '../../components/plot/svgText'
@@ -153,7 +154,7 @@ export function Surface3D({
         onPointerCancel={onUp}
         onKeyDown={onKey}
       />
-      <span className={`s3d__hint${touched ? ' is-hidden' : ''}`}>trascina per ruotare</span>
+      <span className={`s3d__hint${touched ? ' is-hidden' : ''}`}>{tx('trascina per ruotare', 'drag to rotate')}</span>
     </div>
   )
 }

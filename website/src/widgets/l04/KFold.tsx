@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Segmented } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, polyfit, polyval, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -91,7 +92,7 @@ export function KFold() {
     <div className="kfold">
       <div className="wbar">
         <Segmented
-          label={<>numero di fold <Tex>k</Tex></>}
+          label={tx(<>numero di fold <Tex>k</Tex></>, <>number of folds <Tex>k</Tex></>)}
           value={k}
           onChange={(v) => {
             setK(v)
@@ -106,7 +107,7 @@ export function KFold() {
           ]}
         />
         <Segmented
-          label={<>modello: polinomio di grado <Tex>M</Tex></>}
+          label={tx(<>modello: polinomio di grado <Tex>M</Tex></>, <>model: polynomial of degree <Tex>M</Tex></>)}
           size="sm"
           value={M}
           onChange={setM}
@@ -141,7 +142,11 @@ export function KFold() {
             </span>
           </button>
         ))}
-        {k > 10 && <div className="wnote">… e così via per tutti i {k} fold: ognuno contiene un solo esempio.</div>}
+        {k > 10 && (
+          <div className="wnote">
+            {tx(`… e così via per tutti i ${k} fold: ognuno contiene un solo esempio.`, `… and so on for all the ${k} folds: each contains a single example.`)}
+          </div>
+        )}
       </div>
 
       <div className="wgrid">
@@ -154,33 +159,65 @@ export function KFold() {
         </Plot>
         <div className="wside">
           <div className="readouts">
-            <Readout label={<>fold di validazione</>} value={`${j + 1} di ${k}`} sub={`${DATA.length - tr.length} esempi in validazione, ${tr.length} in training`} />
-            <Readout label={<>errore di cross-validation <Tex>{'\\frac{1}{k}\\sum_i E_i'}</Tex></>} tone="accent" value={fmt(mean, 3)} />
+            <Readout
+              label={tx(<>fold di validazione</>, <>validation fold</>)}
+              value={tx(`${j + 1} di ${k}`, `${j + 1} of ${k}`)}
+              sub={tx(
+                `${DATA.length - tr.length} esempi in validazione, ${tr.length} in training`,
+                `${DATA.length - tr.length} ${DATA.length - tr.length === 1 ? 'example' : 'examples'} in validation, ${tr.length} in training`,
+              )}
+            />
+            <Readout
+              label={tx(
+                <>errore di cross-validation <Tex>{'\\frac{1}{k}\\sum_i E_i'}</Tex></>,
+                <>cross-validation error <Tex>{'\\frac{1}{k}\\sum_i E_i'}</Tex></>,
+              )}
+              tone="accent"
+              value={fmt(mean, 3)}
+            />
           </div>
           <div className="kfold__byM">
-            <div className="wpanel__title">Errore di CV al variare di M</div>
+            <div className="wpanel__title">{tx('Errore di CV al variare di M', 'CV error as M varies')}</div>
             {byM.map((q) => (
               <button key={q.m} className={`kfold__mrow${q.m === M ? ' is-on' : ''}`} onClick={() => setM(q.m)}>
                 <span>M = {q.m}</span>
                 <span className="kfold__mbar">
                   <span className={q.e > 0.6 ? 'is-over' : undefined} style={{ width: `${Math.min(100, (q.e / 0.6) * 100)}%` }} />
                 </span>
-                <span className="kfold__mval">{q.e > 0.6 ? '> 0,6' : fmt(q.e, 3)}</span>
+                <span className="kfold__mval">{q.e > 0.6 ? tx('> 0,6', '> 0.6') : fmt(q.e, 3)}</span>
               </button>
             ))}
           </div>
           <div className="gradx__btns" style={{ marginLeft: 0 }}>
             <Btn icon={play ? 'pause' : 'play'} variant="soft" onClick={() => setPlay((p) => !p)}>
-              {play ? 'Ferma' : 'Scorri i fold'}
+              {play ? tx('Ferma', 'Stop') : tx('Scorri i fold', 'Step through folds')}
             </Btn>
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Scorri tutti i fold: ogni esempio finisce in validazione esattamente una volta.', done: fold.visited.length >= Math.min(k, 4) },
-          { label: 'Prova leave-one-out: k = l, ogni fold contiene un solo esempio (e il costo sale).', done: seen.loo },
-          { label: 'Scegli il grado M con l’errore di CV più basso: è una model selection.', done: seen.sel },
+          {
+            label: tx(
+              'Scorri tutti i fold: ogni esempio finisce in validazione esattamente una volta.',
+              'Step through all the folds: each example ends up in validation exactly once.',
+            ),
+            done: fold.visited.length >= Math.min(k, 4),
+          },
+          {
+            label: tx(
+              'Prova leave-one-out: k = l, ogni fold contiene un solo esempio (e il costo sale).',
+              'Try leave-one-out: k = l, each fold contains a single example (and the cost goes up).',
+            ),
+            done: seen.loo,
+          },
+          {
+            label: tx(
+              'Scegli il grado M con l’errore di CV più basso: è una model selection.',
+              'Choose the degree M with the lowest CV error: it is a model selection.',
+            ),
+            done: seen.sel,
+          },
         ]}
       />
     </div>

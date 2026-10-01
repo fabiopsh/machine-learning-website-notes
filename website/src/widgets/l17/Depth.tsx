@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Segmented } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 
 /* ------------------------------------------------------------------ Fig. 17.4: parità con due strati */
@@ -12,7 +13,7 @@ const parity = (bits: number[]) => bits.reduce((s, b) => s ^ b, 0)
 
 function Bits({ bits, onToggle }: { bits: number[]; onToggle: (i: number) => void }) {
   return (
-    <div className="par17__bits" role="group" aria-label="Bit di input">
+    <div className="par17__bits" role="group" aria-label={tx('Bit di input', 'Input bits')}>
       {bits.map((b, i) => (
         <button key={i} type="button" className={'par17__bit' + (b ? ' is-1' : '')} aria-pressed={!!b} onClick={() => onToggle(i)}>
           <Tex>{`x_${i + 1}`}</Tex>
@@ -47,7 +48,7 @@ export function ParityTwoLayer() {
     <div>
       <div className="wbar">
         <Segmented
-          label={<>numero di input N</>}
+          label={<>{tx('numero di input N', 'number of inputs N')}</>}
           value={n}
           onChange={setN}
           options={[2, 3, 4, 5, 6, 7, 8].map((v) => ({ value: v, label: String(v) }))}
@@ -60,7 +61,9 @@ export function ParityTwoLayer() {
           setFlips(flips + 1)
         }}
       />
-      <div className="par17__layer">Primo strato: una porta AND per ogni configurazione positiva</div>
+      <div className="par17__layer">
+        {tx('Primo strato: una porta AND per ogni configurazione positiva', 'First layer: one AND gate for each positive configuration')}
+      </div>
       <div className={'par17__ands' + (n > 4 ? ' is-small' : '')}>
         {pats.map((p, i) => (
           <span key={i} className={'par17__and' + (i === active ? ' is-on' : '')} title={p.join('')}>
@@ -68,32 +71,54 @@ export function ParityTwoLayer() {
           </span>
         ))}
       </div>
-      <div className="par17__layer">Secondo strato: una porta OR</div>
+      <div className="par17__layer">{tx('Secondo strato: una porta OR', 'Second layer: one OR gate')}</div>
       <div className="par17__or">
         <span className={'par17__and par17__and--or' + (active >= 0 ? ' is-on' : '')}>OR</span>
         <span className="par17__res">
-          uscita = <b>{parity(cur)}</b> ({cur.reduce((s, v) => s + v, 0)} bit a 1: {parity(cur) ? 'dispari' : 'pari'})
+          {tx(
+            <>
+              uscita = <b>{parity(cur)}</b> ({cur.reduce((s, v) => s + v, 0)} bit a 1: {parity(cur) ? 'dispari' : 'pari'})
+            </>,
+            <>
+              output = <b>{parity(cur)}</b> ({cur.reduce((s, v) => s + v, 0)} {cur.reduce((s, v) => s + v, 0) === 1 ? 'bit' : 'bits'} at 1:{' '}
+              {parity(cur) ? 'odd' : 'even'})
+            </>,
+          )}
         </span>
       </div>
       {n <= 4 && (
         <div className="wpanel">
-          <div className="wpanel__title">La funzione come somma di prodotti</div>
+          <div className="wpanel__title">{tx('La funzione come somma di prodotti', 'The function as a sum of products')}</div>
           <div className="wmath">
             <Tex>{pats.map(termTex).join(' + ')}</Tex>
           </div>
-          <p className="wnote">Vale 1 se e solo se l’input è {pats.map((p) => p.join('')).join(', ')}.</p>
+          <p className="wnote">
+            {tx(
+              `Vale 1 se e solo se l’input è ${pats.map((p) => p.join('')).join(', ')}.`,
+              `It is 1 if and only if the input is ${pats.map((p) => p.join('')).join(', ')}.`,
+            )}
+          </p>
         </div>
       )}
       <Controls>
         <div className="readouts">
-          <Readout label="porte AND" value={String(pats.length)} sub={<Tex>{'2^{N-1}'}</Tex>} />
-          <Readout label="porte in tutto" tone="accent" value={String(pats.length + 1)} sub={<Tex>{'2^{N-1} + 1'}</Tex>} />
+          <Readout label={tx('porte AND', 'AND gates')} value={String(pats.length)} sub={<Tex>{'2^{N-1}'}</Tex>} />
+          <Readout label={tx('porte in tutto', 'gates in total')} tone="accent" value={String(pats.length + 1)} sub={<Tex>{'2^{N-1} + 1'}</Tex>} />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Cambia i bit di input: si accende la sola porta AND che riconosce quella configurazione (se i bit a 1 sono dispari).', done: flips >= 2 },
-          { label: 'Porta N a 8: servono 128 porte AND più una OR, 129 in tutto.', done: seen.big },
+          {
+            label: tx(
+              'Cambia i bit di input: si accende la sola porta AND che riconosce quella configurazione (se i bit a 1 sono dispari).',
+              'Change the input bits: only the AND gate that recognizes that configuration lights up (if the number of bits at 1 is odd).',
+            ),
+            done: flips >= 2,
+          },
+          {
+            label: tx('Porta N a 8: servono 128 porte AND più una OR, 129 in tutto.', 'Set N to 8: 128 AND gates plus one OR are needed, 129 in total.'),
+            done: seen.big,
+          },
         ]}
       />
     </div>
@@ -126,16 +151,16 @@ export function ParityTree() {
   return (
     <div>
       <div className="wbar">
-        <Segmented label={<>numero di input N</>} value={n} onChange={setN} options={[2, 4, 8].map((v) => ({ value: v, label: String(v) }))} />
+        <Segmented label={<>{tx('numero di input N', 'number of inputs N')}</>} value={n} onChange={setN} options={[2, 4, 8].map((v) => ({ value: v, label: String(v) }))} />
         <Legend
           items={[
-            { label: 'valore 1', color: 'var(--c-blue)', kind: 'dot' },
-            { label: 'valore 0', color: 'var(--ink-4)', kind: 'dot' },
+            { label: tx('valore 1', 'value 1'), color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('valore 0', 'value 0'), color: 'var(--ink-4)', kind: 'dot' },
           ]}
         />
       </div>
       <div className="wgrid">
-        <svg className="tree17" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Albero di porte XOR per la parità">
+        <svg className="tree17" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tx('Albero di porte XOR per la parità', 'Tree of XOR gates for parity')}>
           {levels.slice(1).map((lv, l) =>
             lv.map((_, i) =>
               [0, 1].map((c) => (
@@ -187,23 +212,35 @@ export function ParityTree() {
         </svg>
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">Ogni XOR: 3 porte AND/OR</div>
+            <div className="wpanel__title">{tx('Ogni XOR: 3 porte AND/OR', 'Each XOR: 3 AND/OR gates')}</div>
             <div className="wmath">
               <Tex>{'x_1 \\oplus x_2 = x_1 \\cdot \\bar x_2 + \\bar x_1 \\cdot x_2'}</Tex>
             </div>
-            <p className="wnote">Due AND (con le negazioni degli input) e una OR.</p>
+            <p className="wnote">{tx('Due AND (con le negazioni degli input) e una OR.', 'Two ANDs (with the negations of the inputs) and one OR.')}</p>
           </div>
           <div className="readouts">
-            <Readout label="nodi XOR" value={String(n - 1)} sub={<Tex>{'N - 1'}</Tex>} />
-            <Readout label="porte con l’albero" tone="blue" value={String(3 * (n - 1))} sub={<Tex>{'3(N-1)'}</Tex>} />
-            <Readout label="porte con 2 strati" tone="orange" value={String(2 ** (n - 1) + 1)} sub={<Tex>{'2^{N-1}+1'}</Tex>} />
+            <Readout label={tx('nodi XOR', 'XOR nodes')} value={String(n - 1)} sub={<Tex>{'N - 1'}</Tex>} />
+            <Readout label={tx('porte con l’albero', 'gates with the tree')} tone="blue" value={String(3 * (n - 1))} sub={<Tex>{'3(N-1)'}</Tex>} />
+            <Readout label={tx('porte con 2 strati', 'gates with 2 layers')} tone="orange" value={String(2 ** (n - 1) + 1)} sub={<Tex>{'2^{N-1}+1'}</Tex>} />
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Clicca un bit: cambia l’uscita di un solo XOR per livello, fino all’uscita finale.', done: flips >= 1 },
-          { label: 'Con N = 2 l’albero costa quanto i due strati (3 porte); con N = 8 bastano 21 porte contro 129.', done: seen.small },
+          {
+            label: tx(
+              'Clicca un bit: cambia l’uscita di un solo XOR per livello, fino all’uscita finale.',
+              'Click a bit: the output of a single XOR per level changes, down to the final output.',
+            ),
+            done: flips >= 1,
+          },
+          {
+            label: tx(
+              'Con N = 2 l’albero costa quanto i due strati (3 porte); con N = 8 bastano 21 porte contro 129.',
+              'With N = 2 the tree costs as much as the two layers (3 gates); with N = 8, 21 gates are enough against 129.',
+            ),
+            done: seen.small,
+          },
         ]}
       />
     </div>
@@ -215,7 +252,7 @@ export function ParityTree() {
 /** punti letti dalla figura originale: [parametri in unità di 10^8, accuratezza di test in %] */
 const SVHN: { name: string; color: string; pts: [number, number][] }[] = [
   {
-    name: '3 strati, convoluzionale',
+    name: tx('3 strati, convoluzionale', '3 layers, convolutional'),
     color: 'var(--c-blue)',
     pts: [
       [0.065, 91.6],
@@ -227,7 +264,7 @@ const SVHN: { name: string; color: string; pts: [number, number][] }[] = [
     ],
   },
   {
-    name: '3 strati, completamente connessa',
+    name: tx('3 strati, completamente connessa', '3 layers, fully connected'),
     color: 'var(--c-green)',
     pts: [
       [0.325, 93.25],
@@ -236,7 +273,7 @@ const SVHN: { name: string; color: string; pts: [number, number][] }[] = [
     ],
   },
   {
-    name: '11 strati, convoluzionale',
+    name: tx('11 strati, convoluzionale', '11 layers, convolutional'),
     color: 'var(--c-red)',
     pts: [
       [0.052, 93.8],
@@ -271,8 +308,8 @@ export function Svhn() {
           xTicks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
           yTicks={[91, 92, 93, 94, 95, 96, 97]}
           xFormat={(v) => `${Math.round(v * 100)} M`}
-          xLabel="numero di parametri (milioni)"
-          yLabel="accuratezza di test (%)"
+          xLabel={tx('numero di parametri (milioni)', 'number of parameters (millions)')}
+          yLabel={tx('accuratezza di test (%)', 'test accuracy (%)')}
         />
         {SVHN.map((s) => (
           <Polyline key={s.name} pts={s.pts.map(([px, py]) => ({ x: px, y: py }))} color={s.color} width={2.2} />
@@ -288,13 +325,13 @@ export function Svhn() {
           dash="3 4"
         />
         <Label x={0.36} y={92.15} className="plot-label--muted">
-          overfitting oltre 20 milioni di parametri
+          {tx('overfitting oltre 20 milioni di parametri', 'overfitting beyond 20 million parameters')}
         </Label>
         <Handle
           x={x}
           y={91}
           axis="x"
-          label="numero di parametri"
+          label={tx('numero di parametri', 'number of parameters')}
           onMove={(p) => {
             setX(Math.round(p.x * 200) / 200)
             setMoved(true)
@@ -303,20 +340,23 @@ export function Svhn() {
       </Plot>
       <div className="controls">
         <div className="readouts">
-          <Readout label="parametri" tone="accent" value={`${fmt(x * 100, 1)} milioni`} />
+          <Readout label={tx('parametri', 'parameters')} tone="accent" value={tx(`${fmt(x * 100, 1)} milioni`, `${fmt(x * 100, 1)} million`)} />
           {SVHN.map((s) => {
             const v = at(s.pts, x)
             return <Readout key={s.name} label={s.name} value={v === null ? '—' : `${fmt(v, 1)}%`} />
           })}
         </div>
         <Btn icon="reset" onClick={() => setX(0.16)}>
-          16 milioni (come nella figura)
+          {tx('16 milioni (come nella figura)', '16 million (as in the figure)')}
         </Btn>
       </div>
       <Tasks
         items={[
           {
-            label: 'Sposta la linea verso destra: aumentare i parametri della rete a 3 strati non la porta al livello di quella a 11 strati, anzi peggiora.',
+            label: tx(
+              'Sposta la linea verso destra: aumentare i parametri della rete a 3 strati non la porta al livello di quella a 11 strati, anzi peggiora.',
+              'Move the line to the right: increasing the parameters of the 3-layer network does not bring it to the level of the 11-layer one; in fact it gets worse.',
+            ),
             done: seen.over,
           },
         ]}

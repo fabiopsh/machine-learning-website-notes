@@ -1,0 +1,179 @@
+import { ModelsTable, UnitsTable, KnnLoo } from '../../widgets/l11/Choice'
+
+<Lead>The last part on validation collects practical advice on the use of cross-validation, the **most frequent mistakes** (especially in the projects) and some examples of model selection, partly taken from the slides of Andrew W. Moore (CMU).</Lead>
+
+## Stopping the training
+
+### Do not fix an arbitrary number of epochs
+
+<Callout type="warning" title="Frequent mistake">
+
+Avoid stopping the training of a network after a **fixed, arbitrary number of epochs**.
+
+</Callout>
+
+Why:
+
+- if it is small, we may stop **too early** (underfitting, or high learning rates, which need fewer epochs, are favored);
+- if it is large, we may stop **too late** (overfitting or wasted time);
+- the same value cannot be right for all the configurations and all the iterations of a K-fold CV;
+- and which number should be used in the final retraining?
+
+**Selecting the number of epochs through model selection** is not the best practice either: it is better than a fixed number but still imprecise (because of the problems with K-fold CV and because better criteria exist). The solutions that work well with a **well-regularized** system are those seen in [lesson 8](#/lezione/08): looking at the convergence of training (a threshold on the decrease of the error or on the gradient), or <T id="early-stopping">**early stopping**</T> if we can/want to use a validation set.
+
+### Early stopping
+
+<Callout type="warning" title="Early stopping and model selection">
+
+The early stopping (ES) criterion is **part of model selection** (it must not be applied on the TS): in principle it requires a **VL set every time** the model is trained.
+
+</Callout>
+
+It is delicate: it uses part of the data only to decide when to stop, without giving a concrete hyperparameter value, and it can become complex inside a CV. The problem: how do we choose the stopping point for the **final retraining**, if every fold of the CV has a different stopping point?
+
+- We could treat the number of epochs as a hyperparameter and take the **mean** over the folds. But when the amount of data changes in the retraining, the optimal stopping point may change (for example with more data per epoch, and hence more updates per epoch in on-line mode, fewer epochs are needed): we risk under- or over-training.
+- **Much better**: take the **mean of the training error** at the best validation point and use it as a threshold in the retraining, to reach the same level of fitting (avoiding under-training effects).
+- Otherwise a VL set is needed every time: for example CV with ES active in every validation fold (together with the other hyperparameters); once the best hyperparameters are found, we retrain on the recomposed dataset, again using part of the data as VL for the ES.
+
+It is a choice: use ES or rely on **regularized models** with standard stopping criteria (e.g. no improvement on training). In any case regularization helps to avoid strong over-training and reduces the dependence on ES.
+
+<Deep title="Why the threshold on the training error works better than the mean of the epochs" kind="intuizione">
+
+The number of epochs does not have the same meaning with different amounts of data: in the retraining there is more data, so every epoch (in on-line mode) makes more updates and the same number of epochs takes the training further. The training error, instead, directly measures **how much** the model has fitted the data: stopping when it reaches the mean value it had at the best validation point reproduces the same level of fitting, whatever the number of epochs needed.
+
+</Deep>
+
+## Random initialization and model selection
+
+Different initializations of the weights lead to **different models**. How do we choose the final one (a choice that must be stated in the report)?
+
+- We compute the **mean and variance** of the error/accuracy over the different trials: a random case will fall in that interval, so the risk is under control, unless the variance is high (which is a negative sign anyway, see the lesson on bias and variance).
+- We can use **all** the models, with an <T id="ensemble">**ensemble**</T> (mean of the outputs or vote).
+- If we choose **one** of them, that is a **model selection** and a VL set is needed: the **best** (minimum error on the VL), the **median** (a more cautious choice), or a **random** one (in this case no VL set is needed).
+- We can also discard the “unlucky” cases by looking only at the training error.
+
+## Sequential selection of the hyperparameters
+
+<Callout type="warning" title="Frequent mistake">
+
+Selecting the <T id="iperparametri">hyperparameters</T> **one at a time**, in sequence, introduces a <T id="selezione-sequenziale">**bias tied to the order**</T>. Example: choosing the best $\eta$ with 10 units and then using it with 100 units as well.
+
+</Callout>
+
+The correct procedure:
+
+1. initial trials to determine the right **ranges** (for example by looking at the stability of training) and the most **influential** hyperparameters (for example by looking at the variance of the results);
+2. a search over a <T id="grid-search">**grid with all the combinations**</T> of the hyperparameters (more hyperparameters and values → a larger table);
+3. possibly **nested** grids, from coarse to fine, over smaller and smaller ranges, but considering **all the significant hyperparameters together**, to take the cross effects into account.
+
+But: reason, select the relevant aspects, do not rely only on systematic and expensive automatic approaches. The time constraints of the project should push towards simple and fast schemes that are nonetheless correct and reasonable.
+
+## What to do after selection and assessment?
+
+<Callout type="question" title="Can I redesign the model based on the result on the test?">
+
+No: it is not the correct way and it is not really advantageous (unless new data are available for a new test set). By repeating this procedure on the same data we can obtain any result we want, by fitting the model to that dataset: the model can become perfect on it and not in future use, and **we are no longer estimating the risk**.
+
+*We must not tune the predictor (by hand or automatically) on the basis of the test error, because we could not do so on future examples.* In competitions the <T id="blind-test-set">blind test</T> prevents exactly this. The assessment on an internal test still remains useful to **check one’s own approach**.
+
+</Callout>
+
+The temptation to decide on the basis of the results is a “psychological” problem, external to ML methods. At least be aware of it, or better:
+
+- to build a **good model** we must do a **good model selection**;
+- to estimate the **real performance** we must do a **rigorous** estimate on the test.
+
+## Cross-validation can overfit
+
+Can an intensive use of cross-validation lead to overfitting? **Yes**, and it keeps the problems already seen. An example with <T id="feature-selection">feature selection</T>:
+
+- a dataset with 20–30 records and 1000 attributes;
+- we try 1000 linear regression models, each with a single attribute;
+- the best of the 1000 looks good (on the validation set)... but it would have looked good even with a **purely random** output!
+
+Or (wrong use): approximating a random target we find, with a K-fold CV for the test, an error of 3% instead of the true 50%, after having chosen the features by best correlation with the targets. **Why?** The selection was made on **all** the examples (it is the [counterexample of part 1](#/lezione/09/un-controesempio-istruttivo)).
+
+What to do? Set the samples aside **before** selecting:
+
+- keep an **additional test set** aside before any model selection and check that the best model works well on it too;
+- for model selection with CV: use “**CV + test**” or the <T id="double-cv">**double CV**</T> (redoing the selection for every fold);
+- for assessment with CV: do the **feature selection inside every fold**. This gives the correct estimate, about 50% for the random task.
+
+## Which cross-validation?
+
+| | Disadvantages | Advantages |
+|---|---|---|
+| **Test set (<T id="hold-out">hold-out</T>)** | variance: unreliable estimate of future performance (good/bad luck) | cheap |
+| **<T id="leave-one-out">Leave-one-out</T>** | expensive; has some weird behavior | does not waste data |
+| **10-fold** | wastes 10% of the data; 10 times more expensive than the test set | wastes only 10%; only 10 times more expensive instead of $R$ times |
+| **3-fold** | wastes more data than 10-fold; more expensive than the test set | slightly better than the test set |
+| **R-fold** ($R = l$) | identical to leave-one-out | |
+
+## Examples of model selection
+
+### Example 1: different models
+
+<Figure n="11.1" title="Choosing among six classes of models" size="wide">
+  <ModelsTable />
+  <Caption>Choice among six classes of models $f_1, \dots, f_6$ with 10-fold CV: for each one the training error (blue) and the 10-fold CV error (orange), i.e. the validation error; $f_3$ is chosen, with the minimum CV error. The bars reproduce the lengths in the figure of the slides (arbitrary scale). Change the selection criterion to see what happens when the training error is used.</Caption>
+</Figure>
+
+We choose the class of models with the **best CV score**, retrain it on all the data, and that is the predictive model to use. The choice is made by looking **only at the validation error**, **not** at the training error (nor at an average of the two).
+
+### Example 2: number of hidden units
+
+<Figure n="11.2" title="Number of hidden units" size="wide">
+  <UnitsTable />
+  <Caption>Choice of the number of hidden units of a network with one hidden layer, from 0 to 5 units: the training error decreases with the number of units, the 10-fold CV error has its minimum with 2 units, which are chosen. Bars as in the figure of the slides (arbitrary scale). Change the selection criterion.</Caption>
+</Figure>
+
+The training error always decreases with the number of units, but the CV error has a minimum (here 2 units). In practice the search is done over values such as 10, 20, 30... (or with other steps).
+
+### Example 3: K-NN
+
+<Figure n="11.3" title="Choosing K for K-NN" size="wide">
+  <KnnLoo />
+  <Caption>Choice of $k$ for K-NN with leave-one-out CV, actually computed on 40 points ($\sin(2\pi x)$ with noise, K-NN for regression): the training error is zero for $K = 1$ and grows with $K$; the leave-one-out error between $K = 1$ and $6$ has its minimum at $K = 4$, which is chosen. Try the exponentially growing values and show the error for all the $K$ up to 20.</Caption>
+</Figure>
+
+Why **leave-one-out** for K-NN and 10-fold for networks? For **computational** reasons: for K-NN (and the other nonparametric methods) LOOCV costs as much as a normal prediction (there is no model to train). And why stop at $K = 6$? Only because things seemed to get worse as $K$ grew; and there is no guarantee that a local optimum of $K$ with respect to LOOCV is the global one (the relationship can be very irregular). To explore many values we can use exponentially growing values ($K = 1, 2, 4, 8, 16, \dots$) or a *hill-climbing* search starting from an initial value.
+
+## Practical conclusions
+
+- The **simple hold-out** is widely used: sometimes the test set is already given separately or “taken” from previous applications. Be careful with little data and check the error rates on TR and VL.
+- **5- or 10-fold CV** is recommended as a good compromise (between bias and variance of the estimate) with respect to leave-one-out (Hastie et al.).
+
+In the [next lesson](#/lezione/12) we go back to the **analytical** estimate of the expected error, with Structural Risk Minimization and the VC-dimension: it offers interesting insights for the selection and comparison of models (where the **relative size** of the errors matters), as an alternative to purely empirical evaluation.
+
+<Exam>
+<Q q="Why should we not stop training after a fixed number of epochs?">
+
+A small number stops too early (underfitting, and it favors high learning rates, which converge in fewer epochs); a large one stops too late (overfitting or wasted time). No value is right for all the configurations and for all the iterations of a K-fold CV, and we do not know which one to use in the final retraining. Choosing the epochs with model selection is imprecise too: with a well-regularized model, a convergence criterion (a threshold on the decrease of the error or on the gradient) or early stopping with a validation set is better.
+
+</Q>
+<Q q="How is early stopping handled with cross-validation and the final retraining?">
+
+Early stopping is part of model selection (never on the TS) and requires a VL at every training. In the CV every fold has a different stopping point: the mean of the epochs is risky, because with more data the optimal point changes. It is much better to use as the retraining threshold the mean of the training error at the best validation point, so as to obtain the same level of fitting. Alternatively a VL is kept in the final retraining too. Or we give up ES and use regularized models with standard stopping criteria.
+
+</Q>
+<Q q="How do we choose the final model with several random initializations?">
+
+We report the mean and variance of the results over the trials (a random case falls in the interval; a high variance is a negative sign). We can use all the models in an ensemble (mean of the outputs or vote). Choosing one is a model selection that requires a VL: the best on the VL, the median (more cautious) or a random one (without a VL). The unlucky cases can be discarded by looking only at the training error.
+
+</Q>
+<Q q="What is the mistake of sequential hyperparameter selection?">
+
+Choosing the hyperparameters one at a time, fixing the previous ones, introduces a bias tied to the order and ignores the cross effects: for example the best $\eta$ found with 10 units may not be the best with 100. The correct procedure: initial trials to find the ranges and the influential hyperparameters, then a grid with all the combinations, possibly nested from coarse to fine but always over all the significant hyperparameters together.
+
+</Q>
+<Q q="Can cross-validation overfit? How can it be avoided?">
+
+Yes: by trying a great many models (e.g. 1000 regressions with a single attribute on 20–30 records) the best one looks good in validation even with a random output; and if the features are chosen on all the examples, a K-fold for the test gives 3% instead of the true 50%. It is avoided by setting the data aside before selecting: an additional test set before any model selection; for selection with CV the CV + test scheme or the double CV (selection redone for every fold); for assessment with CV the feature selection inside every fold.
+
+</Q>
+<Q q="Compare hold-out, K-fold and leave-one-out.">
+
+Hold-out is cheap but the estimate has high variance (it depends on the luck of the split). Leave-one-out does not waste data but is expensive and can behave strangely; for K-NN it costs only one prediction per example and is therefore convenient. 10-fold wastes 10% of the data and costs 10 times the hold-out instead of $l$ times; 3-fold wastes more and is only slightly better than the hold-out. 5- or 10-fold is the recommended compromise between bias and variance of the estimate.
+
+</Q>
+</Exam>

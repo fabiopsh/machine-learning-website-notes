@@ -1,4 +1,5 @@
 import { getLesson } from '../content/lessons'
+import { isEn, tx } from './i18n'
 import type { Route } from './router'
 
 /**
@@ -9,8 +10,10 @@ import type { Route } from './router'
 
 // i valori dell'index.html (la home), letti una volta sola
 const HOME = {
-  title: document.title,
-  description: document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '',
+  title: isEn ? 'Interactive Machine Learning notes — University of Pisa' : document.title,
+  description: isEn
+    ? 'The lessons of the Machine Learning course of the University of Pisa as pages to explore: formulas explained symbol by symbol, figures to manipulate, a glossary and exam questions with answer outlines.'
+    : (document.querySelector('meta[name="description"]')?.getAttribute('content') ?? ''),
   canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? '',
 }
 
@@ -24,13 +27,18 @@ export function applyMeta(route: Route) {
   let path = ''
   if (route.name === 'lesson') {
     const l = getLesson(route.id)
-    title = `${l?.title ?? 'Lezione'} · Appunti di Machine Learning`
+    title = `${l?.title ?? tx('Lezione', 'Lesson')} · ${tx('Appunti di Machine Learning', 'Machine Learning notes')}`
     description = l?.summary ?? HOME.description
-    path = `lezione/${route.id}/`
+    path = `${isEn ? 'en/' : ''}lezione/${route.id}/`
   } else if (route.name === 'glossary') {
-    title = 'Glossario di Machine Learning — Appunti interattivi'
-    description = 'I termini del corso di Machine Learning: una definizione breve per ciascuno e il rimando alla lezione in cui è spiegato.'
-    path = 'glossario/'
+    title = tx('Glossario di Machine Learning — Appunti interattivi', 'Machine Learning glossary — Interactive notes')
+    description = tx(
+      'I termini del corso di Machine Learning: una definizione breve per ciascuno e il rimando alla lezione in cui è spiegato.',
+      'The terms of the Machine Learning course: a short definition for each and a pointer to the lesson where it is explained.',
+    )
+    path = `${isEn ? 'en/' : ''}glossario/`
+  } else if (isEn) {
+    path = 'en/'
   }
   const url = HOME.canonical + path
   document.title = title

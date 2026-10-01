@@ -119,6 +119,18 @@ Decisioni di stile confermate dall'utente:
   `sitemap.xml`; 22 immagini di anteprima generate da `npm run og`; titolo, descrizione e canonical aggiornati
   nell'app (`src/lib/meta.ts`). Dettagli in `docs/GUIDA-LEZIONI.md` §10.
 
+- 2026-10-01 — **Versione inglese** di tutto il sito. Selettore `IT | EN` nella barra in alto (accanto a stile e
+  tema); la lingua viene da `?lang=`, poi dalla scelta salvata, poi dalla lingua del browser (italiano → italiano,
+  qualsiasi altra → inglese) e cambiarla ricarica la pagina sulla sezione che si stava leggendo. Un solo sorgente per
+  widget e formule (`tx(it, en)` di `src/lib/i18n.ts`), MDX tradotti in `src/content/lessons-en/`, glossario in
+  `src/content/glossary-en/lNN.ts`, titoli e riassunti in `src/content/lessons.en.ts`. Gli id delle sezioni sono gli
+  stessi nelle due lingue (quelli italiani), quindi link, glossario e indirizzi condivisi valgono per entrambe.
+  Numeri con il punto decimale in inglese (`fmt`). Pagine statiche e anteprime in inglese sotto `en/`
+  (`plugins/seo.ts`, `public/og/en/`, `hreflang`). Nuovi script: `npm run check:en` (traduzione allineata
+  all'originale: struttura, formule, glossario, italiano rimasto) e `npm run figs -- NN --lang en` (tutte le figure
+  di una lezione in una passata); `npm run shot` accetta `--lang`. Regole e procedura in `docs/GUIDA-INGLESE.md`.
+  Le 21 lezioni sono state tradotte in parallelo (un agente per lezione, lezione 02 come modello).
+
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),

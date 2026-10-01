@@ -262,6 +262,19 @@
   border-color: var(--glass-edge);
   box-shadow: var(--glass-rim);
 }
+:root[data-style='glass'] .lang-switch {
+  border-radius: 999px;
+  background: var(--glass-inner);
+  border-color: var(--glass-edge);
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .lang-switch button {
+  border-radius: 999px;
+}
+:root[data-style='glass'] .lang-switch button.is-on {
+  background: var(--glass-strong);
+  box-shadow: var(--glass-rim), 0 4px 12px -4px rgba(30, 44, 120, 0.3);
+}
 :root[data-style='glass'] .look-btn.is-on {
   color: var(--accent-ink);
   background: var(--accent-soft);

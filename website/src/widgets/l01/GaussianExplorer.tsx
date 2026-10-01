@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Readout, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { normCdf, normPdf } from '../../lib/math'
 
 export function GaussianExplorer() {
@@ -54,7 +55,7 @@ export function GaussianExplorer() {
         <Label x={t} y={0} dy={-8} dx={-6} anchor="end" className="plot-label--strong">
           {fmt(area * 100, 1)}%
         </Label>
-        <Handle x={t} y={0} axis="x" label="soglia" onMove={(p) => update({ t: p.x })} bounds={{ x: [-4.4, 4.4] }} />
+        <Handle x={t} y={0} axis="x" label={tx('soglia', 'threshold')} onMove={(p) => update({ t: p.x })} bounds={{ x: [-4.4, 4.4] }} />
         {hover !== null && (
           <Polyline
             pts={[
@@ -73,7 +74,7 @@ export function GaussianExplorer() {
       <Controls>
         <Slider label={<Tex>{'\\mu'}</Tex>} min={-2.5} max={2.5} step={0.05} value={mu} onChange={(v) => update({ mu: v })} format={(v) => fmt(v)} />
         <Slider label={<Tex>{'\\sigma'}</Tex>} min={0.6} max={2.5} step={0.01} value={sigma} onChange={(v) => update({ sigma: v })} format={(v) => fmt(v)} />
-        <Readout label={<>area a sinistra della soglia</>} tone="accent" value={`${fmt(area * 100, 2)}%`} sub={`soglia x = ${fmt(t)}`} />
+        <Readout label={tx(<>area a sinistra della soglia</>, <>area to the left of the threshold</>)} tone="accent" value={`${fmt(area * 100, 2)}%`} sub={tx(`soglia x = ${fmt(t)}`, `threshold x = ${fmt(t)}`)} />
         <Btn
           icon="reset"
           onClick={() => {
@@ -81,19 +82,38 @@ export function GaussianExplorer() {
           }}
           variant="soft"
         >
-          Normale standard, soglia −1,96
+          {tx('Normale standard, soglia −1,96', 'Standard normal, threshold −1.96')}
         </Btn>
       </Controls>
       {at196 && (
         <p className="wnote" style={{ marginTop: 10 }}>
-          Esatto: per la normale standard l’area a sinistra di −1,96 vale circa il <strong>2,5%</strong>.
+          {tx(
+            <>
+              Esatto: per la normale standard l’area a sinistra di −1,96 vale circa il <strong>2,5%</strong>.
+            </>,
+            <>
+              Exactly: for the standard normal the area to the left of −1.96 is about <strong>2.5%</strong>.
+            </>,
+          )}
         </p>
       )}
       <Tasks
         items={[
-          { label: 'Torna alla normale standard (μ = 0, σ = 1) con la soglia in −1,96: l’area vale il 2,5%.', done: seen.std196 },
-          { label: 'Aumenta σ: la campana si allarga e si abbassa, perché l’area totale resta sempre 1.', done: seen.wide },
-          { label: 'Sposta μ: la curva trasla senza cambiare forma.', done: seen.shift },
+          {
+            label: tx(
+              'Torna alla normale standard (μ = 0, σ = 1) con la soglia in −1,96: l’area vale il 2,5%.',
+              'Go back to the standard normal (μ = 0, σ = 1) with the threshold at −1.96: the area is 2.5%.',
+            ),
+            done: seen.std196,
+          },
+          {
+            label: tx(
+              'Aumenta σ: la campana si allarga e si abbassa, perché l’area totale resta sempre 1.',
+              'Increase σ: the bell gets wider and lower, because the total area always remains 1.',
+            ),
+            done: seen.wide,
+          },
+          { label: tx('Sposta μ: la curva trasla senza cambiare forma.', 'Move μ: the curve shifts without changing shape.'), done: seen.shift },
         ]}
       />
     </div>

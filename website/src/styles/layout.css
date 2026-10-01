@@ -342,6 +342,40 @@ a.sidebar__lesson:hover {
   text-align: left;
 }
 
+/* lingua: due sigle affiancate, quella attiva in rilievo (stesso linguaggio dei selettori delle figure) */
+.lang-switch {
+  flex: none;
+  display: inline-flex;
+  height: 36px;
+  padding: 3px;
+  gap: 2px;
+  margin: 0 4px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+}
+.lang-switch button {
+  padding: 0 9px;
+  border-radius: 7px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  transition:
+    background-color 0.15s var(--ease),
+    color 0.15s var(--ease);
+}
+.lang-switch button:hover {
+  color: var(--ink);
+}
+.lang-switch button.is-on {
+  background: var(--plot-bg);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm), 0 0 0 1px var(--line);
+  cursor: default;
+}
+
 kbd {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -572,5 +606,16 @@ kbd {
   .topbar {
     padding: 0 12px 0 16px;
     gap: 8px;
+  }
+  .topbar__actions {
+    gap: 2px;
+  }
+  .lang-switch {
+    height: 32px;
+    margin: 0 2px;
+  }
+  .lang-switch button {
+    padding: 0 7px;
+    font-size: 11.5px;
   }
 }

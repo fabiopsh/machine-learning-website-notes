@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { contourSegments, segsToPath } from '../common/contours'
 import { floorOf, Surface3D, type Overlay, type V3 } from '../common/Surface3D'
@@ -30,7 +31,7 @@ const FNS: Record<Preset, Fn> = {
     z: [0, 2.1],
     levels: [0.15, 0.4, 0.7, 1.0, 1.3, 1.6, 1.85],
     start: [0.9, -0.7],
-    kind: 'un massimo',
+    kind: tx('un massimo', 'a maximum'),
   },
   bowl: {
     f: (x, y) => 0.5 * x * x + 0.25 * y * y,
@@ -38,7 +39,7 @@ const FNS: Record<Preset, Fn> = {
     z: [0, 3.7],
     levels: [0.15, 0.45, 0.9, 1.5, 2.2, 3.0],
     start: [-1.6, 1.4],
-    kind: 'un minimo',
+    kind: tx('un minimo', 'a minimum'),
   },
   saddle: {
     f: (x, y) => 0.35 * (x * x - y * y),
@@ -46,7 +47,7 @@ const FNS: Record<Preset, Fn> = {
     z: [-1.75, 1.75],
     levels: [-1.2, -0.8, -0.4, -0.1, 0.1, 0.4, 0.8, 1.2],
     start: [1.3, 0.25],
-    kind: 'un punto di sella',
+    kind: tx('un punto di sella', 'a saddle point'),
   },
 }
 
@@ -134,16 +135,16 @@ export function GradientExplorer() {
           value={preset}
           onChange={choose}
           options={[
-            { value: 'dome', label: 'Cupola' },
-            { value: 'bowl', label: 'Conca' },
-            { value: 'saddle', label: 'Sella' },
+            { value: 'dome', label: tx('Cupola', 'Dome') },
+            { value: 'bowl', label: tx('Conca', 'Bowl') },
+            { value: 'saddle', label: tx('Sella', 'Saddle') },
           ]}
         />
         <Legend
           items={[
             { label: <Tex>{'\\nabla f'}</Tex>, color: 'var(--c-orange)' },
             { label: <Tex>{'-\\nabla f'}</Tex>, color: 'var(--c-green)' },
-            { label: 'curve di livello', color: 'var(--c-blue)' },
+            { label: tx('curve di livello', 'level curves'), color: 'var(--c-blue)' },
           ]}
         />
       </div>
@@ -157,7 +158,10 @@ export function GradientExplorer() {
           overlays={overlays}
           floorGap={GAP}
           aspect={0.95}
-          ariaLabel="Superficie z = f(x1, x2) con il punto selezionato e le curve di livello sul piano"
+          ariaLabel={tx(
+            'Superficie z = f(x1, x2) con il punto selezionato e le curve di livello sul piano',
+            'Surface z = f(x1, x2) with the selected point and the level curves on the plane',
+          )}
         />
         <Plot xDomain={R} yDomain={R} equal aspect={1} maxH={380} margin={{ l: 34, r: 12, t: 12, b: 30 }}>
           {({ x, y }) => (
@@ -181,7 +185,7 @@ export function GradientExplorer() {
               <Handle
                 x={p[0]}
                 y={p[1]}
-                label="punto sul piano"
+                label={tx('punto sul piano', 'point on the plane')}
                 onMove={(q) => {
                   setP([q.x, q.y])
                   setTrail([])
@@ -195,34 +199,58 @@ export function GradientExplorer() {
       </div>
       <div className="controls">
         <div className="readouts">
-          <Readout label={<Tex>{'(x_1, x_2)'}</Tex>} value={`(${fmt(p[0])}; ${fmt(p[1])})`} />
+          <Readout label={<Tex>{'(x_1, x_2)'}</Tex>} value={tx(`(${fmt(p[0])}; ${fmt(p[1])})`, `(${fmt(p[0])}, ${fmt(p[1])})`)} />
           <Readout label={<Tex>{'f(x_1,x_2)'}</Tex>} value={fmt(z, 3)} />
-          <Readout label={<Tex>{'\\nabla f'}</Tex>} tone="orange" value={`(${fmt(gx)}; ${fmt(gy)})`} />
-          <Readout label={<Tex>{'\\|\\nabla f\\|'}</Tex>} value={fmt(gn, 3)} sub={stationary ? 'punto stazionario' : gn > 1 ? 'pendenza ripida' : gn > 0.35 ? 'pendenza media' : 'quasi piatto'} />
+          <Readout label={<Tex>{'\\nabla f'}</Tex>} tone="orange" value={tx(`(${fmt(gx)}; ${fmt(gy)})`, `(${fmt(gx)}, ${fmt(gy)})`)} />
+          <Readout label={<Tex>{'\\|\\nabla f\\|'}</Tex>} value={fmt(gn, 3)} sub={stationary ? tx('punto stazionario', 'stationary point') : gn > 1 ? tx('pendenza ripida', 'steep slope') : gn > 0.35 ? tx('pendenza media', 'moderate slope') : tx('quasi piatto', 'almost flat')} />
         </div>
         <div className="gradx__btns">
           <Btn icon="step" onClick={step} variant="soft">
-            Passo di discesa
+            {tx('Passo di discesa', 'Descent step')}
           </Btn>
           <Btn icon={auto ? 'pause' : 'play'} onClick={() => setAuto((a) => !a)}>
-            {auto ? 'Ferma' : 'Discesa automatica'}
+            {auto ? tx('Ferma', 'Stop') : tx('Discesa automatica', 'Automatic descent')}
           </Btn>
-          <Btn icon="reset" onClick={() => choose(preset)} title="Ricomincia" />
+          <Btn icon="reset" onClick={() => choose(preset)} title={tx('Ricomincia', 'Restart')} />
         </div>
       </div>
       {stationary && (
         <p className="gradx__verdict">
           <span className="verdict verdict--info">
-            <Tex>{'\\nabla f = \\mathbf{0}'}</Tex>: qui c’è {F.kind}
+            <Tex>{'\\nabla f = \\mathbf{0}'}</Tex>{tx(`: qui c’è ${F.kind}`, `: here there is ${F.kind}`)}
           </span>
         </p>
       )}
       <Tasks
         items={[
-          { label: 'Trascina il punto: la freccia arancione resta sempre perpendicolare alla curva di livello (in nero).', done: done.dragged },
-          { label: 'Porta il punto dove il gradiente si annulla (un punto stazionario).', done: reached.stationary },
-          { label: 'Nella “Sella” trova il punto stazionario: non è né un minimo né un massimo.', done: reached.saddle },
-          { label: 'Premi “Passo di discesa”: il punto si sposta lungo −∇f, verso valori di f più bassi.', done: done.descent },
+          {
+            label: tx(
+              'Trascina il punto: la freccia arancione resta sempre perpendicolare alla curva di livello (in nero).',
+              'Drag the point: the orange arrow always stays perpendicular to the level curve (in black).',
+            ),
+            done: done.dragged,
+          },
+          {
+            label: tx(
+              'Porta il punto dove il gradiente si annulla (un punto stazionario).',
+              'Move the point to where the gradient vanishes (a stationary point).',
+            ),
+            done: reached.stationary,
+          },
+          {
+            label: tx(
+              'Nella “Sella” trova il punto stazionario: non è né un minimo né un massimo.',
+              'In the “Saddle”, find the stationary point: it is neither a minimum nor a maximum.',
+            ),
+            done: reached.saddle,
+          },
+          {
+            label: tx(
+              'Premi “Passo di discesa”: il punto si sposta lungo −∇f, verso valori di f più bassi.',
+              'Press “Descent step”: the point moves along −∇f, toward lower values of f.',
+            ),
+            done: done.descent,
+          },
         ]}
       />
     </div>

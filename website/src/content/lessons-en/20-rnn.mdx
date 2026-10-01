@@ -1,0 +1,284 @@
+import * as F from '../formulas/l20'
+import { Transductions, TransductionTypes, Idnn, RecurrentUnit, StateSystem } from '../../widgets/l20/Seq'
+import { Elman, Unfolding, Esn, MarkovStates, TreeEncoding, RecNN } from '../../widgets/l20/Rec'
+
+<Lead>This is a light introduction to **recurrent neural networks** (RNNs), which will be studied in depth in the ISPR and CNS courses. So far the networks were **feedforward** (direction input → output) and worked on **vectors**. RNNs add **feedback connections** (cycles) to the topology: the presence of self-connections gives the network **dynamical properties** and a **memory** (a state) of past computations. This extends the representational capacity of the model to the processing of **sequences** (and of structured data). RNNs are also biologically plausible: biological neural networks are recurrent.</Lead>
+
+## Why sequential data
+
+Models for sequences are needed when the output depends on the **history of the inputs** (for example over time: dynamical models), or when the domain is made of **variable-length sequences**:
+
+- dynamical processes, signal processing (filters, control), robotics;
+- **language**: speech recognition, NLP, formal languages, information retrieval;
+- vision and reasoning about temporal events;
+- **time series**: financial forecasting, signal processing;
+- genomics and proteomics (bioinformatics): for example predicting the structure of a protein from its amino acid sequence;
+- human activity recognition from sensor data.
+
+<T id="rnn">RNNs</T> (and related approaches) have been the reference for sequence processing, with state-of-the-art results in **speech recognition** and **text processing** (machine translation…), but also for “fun” applications such as music composition and text and speech generation.
+
+## From flat data to structured data
+
+So far the data were **flat** (vectors). **Structured** data are sequences, trees, graphs, multi-relational data: strings, proteins, time series, small molecules, networks.
+
+### The new domain: sequences and transductions
+
+- **Data**: discrete sequences of **vectors** (with a serial order, for example time), of variable length. Each element $\mathbf{l}_t$ is a vector (e.g. $\mathbf{l}_t = [1, 0, 1, 0.7]$).
+- **Task**: a <T id="trasduzione">**transduction**</T> in the sequential domain, that is, a mapping *input sequence → output value or sequence*.
+
+<Figure n="20.1" title="Sequence classification and transduction" size="wide">
+  <Transductions />
+  <Caption>Sequence recognition/classification (a single output, at the end) and sequence transduction or next-step prediction (one output for each input step). Choose the task, change the length and click an element to see its vector.</Caption>
+</Figure>
+
+<Figure n="20.2" title="Types of transduction" size="wide">
+  <TransductionTypes />
+  <Caption>Types of transduction: sequence classification, IO-isomorphic transduction (one output for each input), next-step prediction, sequence generation; below, a general transduction in which empty and filled nodes represent the different cases. Autoregressive prediction uses a single sequence.</Caption>
+</Figure>
+
+---
+
+## Memory in neural networks
+
+The goal is for the output to depend on the **previous** inputs.
+
+### Approach 1: finite memory (IDNN)
+
+The first approach is “spatial”, with **finite memory**: the <T id="idnn">**Input Delay Neural Network**</T> (in the class of <T id="tdnn">Time-Delay NNs</T>, already seen at the beginning of CNNs). The delays are in the connections and act as a memory of the input: a **shift register** of finite size, a **sliding window** over the sequence. (CNNs extended this idea to 2D images.)
+
+<Figure n="20.3" title="IDNN: a sliding window over the sequence">
+  <Idnn />
+  <Caption>IDNN: a sliding window of fixed size (here three elements) over the sequence $l_1 \dots l_5$ is given as input to an MLP, which produces one output for each position of the window. Slide the window and change its size.</Caption>
+</Figure>
+
+- The size of the window must be **known in advance**.
+- The number of weights **depends on the size of the buffer**.
+- If the buffer contains enough information, the problem is solved with ordinary MLP training (for example NETtalk, 1988).
+
+### Approach 2: recurrent units
+
+A **recurrent neural unit** has a feedback connection (a self-loop) and uses both the current input and the **state** information:
+
+<Formula f={F.recUnit} />
+
+where $\mathbf{l}(t)$ is the input (label) at time $t$, $f$ is the activation (sigmoidal), $\hat{w}$ is the **recurrent weight**, $\theta$ the bias, and $x(t-1)$ is the state at the previous step, provided by a unit delay $q^{-1}$. The new part with respect to an ordinary neuron is the term $\hat{w}\,x(t-1)$.
+
+<Figure n="20.4" title="A recurrent unit" size="wide">
+  <RecurrentUnit />
+  <Caption>A recurrent unit: it receives the input $l(t)$ with weight $w$ and its own previous state $x(t-1)$ through a unit delay $q^{-1}$ with weight $\hat w$, and produces the new state $x(t)$. The self-loop with unit delay brings in the previous state as an additional input. On the right, the state step by step on a sequence of 0s and 1s: change the weights and the inputs.</Caption>
+</Figure>
+
+- The <T id="stato-rnn">**state**</T> summarizes the past information (the **context**): its value changes following the flow of the inputs.
+- The **encoding of the past is adaptive**, because it depends on the free weights of the model.
+
+<Callout type="example" title="Exercise: counting the “1”s">
+
+Build an RNN with a single unit (finding the values of $w$ and $\hat w$) that returns the number of “1”s received so far in a sequence of 0s and 1s.
+
+**Solution**: a linear unit with $w = 1$, $\hat w = 1$, $\theta = 0$, that is, $x(t) = l(t) + x(t-1)$. With the input $1, 0, 1, 1, 0, 1$ the state is $1, 1, 2, 3, 3, 4$: **the state accumulates the sum of the “1”s** received. The RNN summarizes the information of the past subsequence, which an IDNN **cannot do** for variable-length sequences (its memory is limited to the window).
+
+</Callout>
+
+### State transition systems
+
+In general, a recurrent model is a **state transition system**:
+
+<Formula f={F.stateSystem} />
+
+<Figure n="20.5" title="State transition system" size="wide">
+  <StateSystem />
+  <Caption>State transition system. On the left, the formation of the state over time: $x(1)$ encodes $l_1$, $x(2)$ encodes $l_1 l_2$, and so on, with nested boxes representing the subsequences: the state at time $t$ encodes (is an *embedding* of) the whole subsequence up to $t$. On the right, the graphical model with input $l$, state $x$ with a delay self-loop and output $y$. Change the time $t$.</Caption>
+</Figure>
+
+- $\tau$ is the **state transition function** (next-state function), implemented by a neural network.
+- The state summarizes the past inputs: it is an **encoding** (embedding) of the subsequences.
+- The state has **continuous** (real) values (unlike, for example, automata or HMMs, which have discrete states).
+- $\mathbf{x}(t)$ can be a set of states, to compose a network of recurrent units.
+
+### A recurrent network (Simple RNN)
+
+With many hidden recurrent units we obtain Elman’s <T id="simple-rnn">**Simple RNN**</T>: each hidden unit receives the input and the previous states of **all** the hidden units (through the delays), and an (optional) output layer produces $\mathbf{y}(t)$.
+
+<Figure n="20.6" title="A Simple RNN (Elman)" size="wide">
+  <Elman />
+  <Caption>A Simple RNN (Elman) with several hidden recurrent units: the input units $l_1 \dots l_m$ are connected with weights $w$ to three hidden units, which also receive their own previous outputs through delays $q^{-1}$ with weights $\hat w$; an output layer produces $y(t)$. Click a hidden unit.</Caption>
+</Figure>
+
+<Callout type="example" title="Exercise: the equations">
+
+For hidden unit $i$:
+
+$$
+x_i(t) = f\left(\sum_{j=1}^{m} w_{ij}\,l_j(t) + \sum_{k} \hat w_{ik}\,x_k(t-1) + \theta_i\right),
+$$
+
+and in vector form
+
+<Formula f={F.elman} />
+
+</Callout>
+
+### Properties
+
+Even the simple RNN is already very powerful:
+
+- it is a **universal approximator** of nonlinear dynamical systems;
+- it is **Turing-equivalent** (it can simulate any automaton);
+- it is a (non-autonomous) nonlinear dynamical system, which can be studied with the theory of dynamical systems (chaos, fractals…).
+
+Recurrent models rest on three assumptions:
+
+- **Causality**: the output at time $t_0$ depends only on the inputs at times $t \le t_0$. It is necessary and sufficient to have an internal state.
+- **Stationarity**: time invariance (after training): the transition function $\tau$ is **the same** at every time step, regardless of the length of the sequences. This is what makes it possible to process variable-length data with a model of fixed size.
+- **Adaptivity**: the transition functions are implemented by neural networks with free weights, hence **learned from data**.
+
+---
+
+## Learning: unfolding
+
+The same model is **unrolled** (<T id="unfolding">*unfolding*</T>) in time along the input sequence: a feedforward MLP is built (the **encoding network**) that is equivalent to the RNN on the $k$ steps of the sequence, with **one replica of the model for each step**. By stationarity, the replicas **share the weights**.
+
+<Figure n="20.7" title="Unfolding of an RNN" size="wide">
+  <Unfolding />
+  <Caption>Unfolding of an RNN with 2 units over 3 input steps: on the left, the RNN with two recurrent units; on the right, the same network unrolled over the steps $l(1), l(2), l(3)$, with the copies of the units stacked from the past (bottom) to the present (top) and the recurrent weights connecting each copy to the next. The result is a feedforward network with many layers, different for each input sequence. Change the length of the sequence and highlight a weight.</Caption>
+</Figure>
+
+<Callout type="tip" title="The key point">
+
+<T id="backpropagation">**Backpropagation**</T> can be applied to the unrolled encoding network! We obtain a different network for each input sequence, with **many layers** (as many as the steps): it is in fact a **deep** network, with weights shared across the layers.
+
+</Callout>
+
+Supervised learning algorithms for RNNs must take into account all the encoding transitions developed by the model at each step:
+
+- <T id="bptt">**BPTT**</T> (*Back-Propagation Through Time*);
+- **RTRL** (*Real-Time Recurrent Learning*).
+
+They compute in different ways the same gradient of the output errors on the equivalent unrolled network.
+
+<Callout type="warning" title="Long-term dependencies">
+
+Since the unrolled network is very deep, the <T id="vanishing-gradient">**vanishing gradient**</T> makes it hard to learn **long-term dependencies** (when the output depends on inputs very far in the past).
+
+</Callout>
+
+### Advanced models
+
+It is a rapidly growing research field, with many variants:
+
+- <T id="lstm">**LSTM**</T> (*Long Short-Term Memory*): they try to solve the vanishing gradient with **“gate” units** able to select the flow of the past and of the gradient. They were designed for **long** dependencies: they are not suited to short series, so, despite their popularity, they should not be used uncritically;
+- **GRU** (*Gated Recurrent Units*): a simplified LSTM;
+- **BRNN** (bidirectional RNNs): they consider both the left and the right context;
+- deep networks and RNNs are often merged;
+- against the vanishing gradient: Hessian-free optimizers, pre-training techniques…
+
+They are included in the main libraries (PyTorch, Keras, Matlab…). Some figures on their spread: in 2015 LSTMs were used in 2 billion Android phones and 1 billion iPhones (Siri); in 2016 almost 30% of the computing power for inference in Google’s datacenters was used for LSTMs; in 2017 they were in Alexa and in Facebook (30 billion translations per week). A curious example: generating the **handwritten** version of a text by predicting one point $(x,y)$ of the pen trajectory at a time (Graves, 2013).
+
+---
+
+## Related approaches
+
+- SOMs and unsupervised networks for sequential domains.
+- **Hidden Markov Models** (they model the probability distribution of the state transitions).
+- **Transformers**.
+- **Randomized RNNs**: **Reservoir Computing** (ESN, Liquid State Machine).
+- Distance-based models (string matching), string kernels, grammatical inference, ILP.
+
+### Transformers and attention
+
+A <T id="transformer">**transformer**</T> (2017) is a deep learning architecture based on the **multi-head attention** mechanism in parallel. Attention allows the model to **access any previous point** of the sequence; encoders and/or decoders plus feedforward networks complete the architecture for different purposes.
+
+The **attention layer** weighs all the previous states according to a measure of **learned relevance**, potentially providing information even about very distant tokens. It has proved particularly useful in translation, where a distant context can be essential for the meaning of a word. It was first used to improve RNNs, then also on its own (*“Attention is all you need”*). All the tokens are processed **simultaneously**, computing weights between their representations (embeddings) in successive layers: they are simply **scaled dot-product** units between *query* vectors and word vectors, which look for the highest correlations between the words of a sentence (for example in “see that girl”, “that” is associated with “girl”). It also applies to image *patches* instead of words (*vision transformer*).
+
+### Randomized recurrent networks: Echo State Networks
+
+Can we directly exploit this state machine to encode the sequences, and then use the resulting embedding to learn the output mapping? Yes, **even with randomly connected recurrent networks with fixed weights** (not trained)! This is the class of <T id="reservoir-computing">**Reservoir Computing**</T> (RC): Echo State Networks, liquid state machines, fractal machines (see [lesson 18](#/lezione/18)).
+
+<Figure n="20.8" title="An Echo State Network" size="wide">
+  <Esn />
+  <Caption>An Echo State Network: the input $u(t)$ enters with weights $W_{in}$ a large reservoir of sparsely and randomly connected recurrent units (weights $\hat W$), whose state $x(t)$ is read by a linear readout with weights $W_{out}$ that produces $y(t)$; input and reservoir are untrained, the readout is trained. Click the parts and reroll the dice.</Caption>
+</Figure>
+
+<Callout type="definition" title="Echo State Network (ESN)">
+
+An <T id="esn">ESN</T> is made of:
+
+- a large **reservoir** of sparsely connected recurrent units, **not trained** after a random initialization;
+- a simple feedforward <T id="readout">**readout**</T> of **linear** units, trained with efficient linear methods (e.g. <T id="ridge">**ridge regression**</T>).
+
+**Echo State Property**: the state transition function must be **contractive** (the spectral radius of the reservoir weights is bounded, that is, the stability of the dynamical system is guaranteed). In this way the recurrent state depends asymptotically (like an “echo”) **only on the history of the inputs**, and not on the initial conditions of the state.
+
+</Callout>
+
+ESNs are **very efficient** (no training of the recurrent units) and solve tasks well under certain conditions.
+
+#### Markovian organization of the state space
+
+<Figure n="20.9" title="Markovian organization of the state space" size="wide">
+  <MarkovStates />
+  <Caption>The reservoir projects the sequences into the state space in a “Markovian” way: four input strings (aaaaa, abbaa, abaab, bbbab) projected into the state space, where the strings that share the final suffix (aa or ab) end up at nearby points. Change the strings, the contractivity and the random weights.</Caption>
+</Figure>
+
+The reservoir acts as a **projection** (embedding) of the input sequences into the state vector $\mathbf{x}(t)$, and is intrinsically able to **discriminate the sequences on the basis of their suffix**, without training the recurrent weights: the longer the **common suffix**, the closer the states (recent inputs count more, because of contractivity). This makes it easy to learn **Markovian** tasks (also for trained RNNs, but ESNs are much more efficient), and it is an **architectural bias** that also holds for recurrent models with learning (Gallicchio, Micheli, 2011).
+
+**Deep Reservoir Computing.** Several reservoirs can be stacked (**DeepESN**, with many results from the CIML group in Pisa), combining the power of deep RNNs with the efficiency of ESNs. The layered organization shows advantages in terms of **multiple time scales** and **richness of the dynamics**: in the frequency analysis, the higher layers focus on the lower frequencies (longer time scales), forming a hierarchical temporal representation.
+
+---
+
+## Toward structured domains
+
+Can the recurrent approach be extended to **trees**? Yes: <T id="recnn">**recursive neural networks**</T> (RecNNs). The encoding proceeds **bottom-up** (from the leaves to the root), and the state of each vertex depends on its label and on the states of its **children** (extending the transition function to several states).
+
+<Figure n="20.10" title="Graphical model for trees and unfolding along the structure" size="wide">
+  <TreeEncoding />
+  <Caption>Graphical model for trees (the state $x$ receives the input $l$ and the states of the children through the delays $q_1 \dots q_k$) and unfolding of the encoding process on a tree with nodes a, b, c, d, e, f: each node encodes its own children. If the structure of the tree changes, the encoding changes accordingly. Follow the encoding step by step.</Caption>
+</Figure>
+
+<Figure n="20.11" title="A recursive network applied to different trees" size="wide">
+  <RecNN />
+  <Caption>A recursive network applied to different trees, two chemical fragments (one with OH, C and three CH₃; the other with O, CH₂, CH₃): the network is unrolled along each structure starting from the leaves (“Start”) up to the root, where it produces the output for the tree. The units are the same for all the vertices of a tree and for all the trees of the dataset (weight sharing).</Caption>
+</Figure>
+
+<Callout type="abstract" title="Summary">
+
+RNNs add **states** and **feedback** to networks, becoming **state transition systems** able to process variable-length sequences. They rest on causality, stationarity and adaptivity; they are trained by **unrolling them** in time and applying backpropagation (BPTT, RTRL), but they suffer from the **vanishing gradient** on long dependencies (hence LSTM and GRU). Alternatives and developments: transformers (attention), Echo State Networks (random reservoir + linear readout, with a Markovian bias), recursive networks for trees and graphs.
+
+</Callout>
+
+<Exam>
+<Q q="Why are models for sequential data needed? What is a transduction?">
+
+Because in many problems the output depends on the history of the inputs (dynamical models, time series, signals) or the domain is made of variable-length sequences (language, biological sequences, sensor data), which a model with a fixed-size vector input does not handle. A transduction is a mapping from an input sequence to an output value or sequence: sequence classification (output at the end), IO-isomorphic transduction (one output for each input), next-step prediction, sequence generation.
+
+</Q>
+<Q q="Difference between IDNN and RNN; why can’t an IDNN count the “1”s in arbitrary sequences?">
+
+The IDNN has finite memory: a sliding window of fixed size, known in advance, given as input to an MLP, with a number of weights that depends on the window. The RNN has a state, fed by feedback connections, that adaptively summarizes the whole past subsequence, whatever its length. To count the “1”s a linear recurrent unit with $w = 1$, $\hat w = 1$, $\theta = 0$ is enough: $x(t) = l(t) + x(t-1)$. The IDNN sees only the elements in the window: for sequences longer than the window the earlier “1”s are lost.
+
+</Q>
+<Q q="Write the equation of a recurrent unit and of a Simple RNN.">
+
+Recurrent unit: $x(t) = f\big(\mathbf{w}^T\mathbf{l}(t) + \hat w\,x(t-1) + \theta\big)$ with $x(0) = 0$; the new term is $\hat w\,x(t-1)$, the previous state fed back by the unit delay. Simple RNN (Elman), for hidden unit $i$: $x_i(t) = f\big(\sum_j w_{ij}\,l_j(t) + \sum_k \hat w_{ik}\,x_k(t-1) + \theta_i\big)$; in vector form $\mathbf{x}(t) = f\big(W\mathbf{l}(t) + \hat W\mathbf{x}(t-1) + \boldsymbol{\theta}\big)$, with an optional output layer $\mathbf{y}(t) = g(\mathbf{x}(t), \mathbf{l}(t))$.
+
+</Q>
+<Q q="What are the assumptions of causality, stationarity and adaptivity?">
+
+Causality: the output at time $t_0$ depends only on the inputs at times $t \le t_0$ (necessary and sufficient to have an internal state). Stationarity: the transition function $\tau$ is the same at every time step, regardless of the length of the sequences; it makes it possible to process variable-length data with a model of fixed size. Adaptivity: the transition functions are neural networks with free weights, hence learned from data.
+
+</Q>
+<Q q="What is unfolding and how does it allow the use of backpropagation?">
+
+The model is unrolled in time along the input sequence: one replica of the network for each step, connected to the next by the recurrent weights. The result is an equivalent feedforward network (the encoding network), different for each sequence, with as many layers as the steps and with the weights shared among the replicas (stationarity). Backpropagation is applied to this network (BPTT; RTRL computes the same gradient in another way). Being very deep, it suffers from the vanishing gradient: long-term dependencies are hard to learn, hence LSTM and GRU.
+
+</Q>
+<Q q="What is an Echo State Network and what is the Echo State Property?">
+
+An ESN has a large reservoir of sparsely and randomly connected recurrent units, never trained, and a linear readout trained with efficient linear methods (ridge regression): it is Reservoir Computing, very efficient. Echo State Property: the state transition function must be contractive (the spectral radius of the reservoir weights is bounded), so that the state depends asymptotically only on the history of the inputs and not on the initial state. A Markovian organization of the states follows: sequences with the same suffix end up close together.
+
+</Q>
+<Q q="How are RNNs extended to trees?">
+
+With recursive neural networks: the transition function is extended to several states, and the state of each vertex depends on its label and on the states of its children. The encoding proceeds bottom-up, from the leaves to the root, unrolling the network along the structure: different trees give different encoding networks, but the units (the weights) are the same for all the vertices and for all the trees. The state of the root encodes the whole tree, and from there the output is produced.
+
+</Q>
+</Exam>

@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented } from '../../components/ui/Controls'
+import { LOCALE, tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { separate } from '../l05/Separability'
 
@@ -76,8 +77,8 @@ function Mini({ pts, lab, line, bad, size = 96 }: { pts: P[]; lab: number[]; lin
 const labelings = (n: number) => Array.from({ length: 2 ** n }, (_, k) => Array.from({ length: n }, (_, i) => (k >> (n - 1 - i)) & 1))
 const signs = (lab: number[]) => lab.map((v) => (v ? '+' : '−')).join('')
 
-const LEG_POS = { label: <>etichetta +1</>, color: 'var(--c-blue)', kind: 'dot' as const }
-const LEG_NEG = { label: <>etichetta −1 (vuoto)</>, color: 'var(--ink-3)', kind: 'dot' as const }
+const LEG_POS = { label: tx(<>etichetta +1</>, <>label +1</>), color: 'var(--c-blue)', kind: 'dot' as const }
+const LEG_NEG = { label: tx(<>etichetta −1 (vuoto)</>, <>label −1 (hollow)</>), color: 'var(--ink-3)', kind: 'dot' as const }
 
 /* ------------------------------------------------------------------ Fig. 12.1 */
 
@@ -108,11 +109,14 @@ export function Dichotomies() {
     <div>
       <div className="wbar">
         <Segmented
-          label={
+          label={tx(
             <>
               numero di punti <Tex>N</Tex>
-            </>
-          }
+            </>,
+            <>
+              number of points <Tex>N</Tex>
+            </>,
+          )}
           value={n}
           onChange={setN}
           options={[1, 2, 3, 4].map((v) => ({ value: v, label: String(v) }))}
@@ -128,12 +132,18 @@ export function Dichotomies() {
         ))}
       </div>
       <div className="readouts">
-        <Readout label="dicotomie possibili" tone="accent" value={<Tex>{`2^{${n}} = ${2 ** n}`}</Tex>} />
+        <Readout label={tx('dicotomie possibili', 'possible dichotomies')} tone="accent" value={<Tex>{`2^{${n}} = ${2 ** n}`}</Tex>} />
       </div>
       <Tasks
         items={[
-          { label: 'Passa a N = 4: ogni punto in più raddoppia le dicotomie.', done: seen.four },
-          { label: 'Torna a N = 1: le dicotomie sono solo due, + e −.', done: seen.one },
+          {
+            label: tx('Passa a N = 4: ogni punto in più raddoppia le dicotomie.', 'Switch to N = 4: each extra point doubles the dichotomies.'),
+            done: seen.four,
+          },
+          {
+            label: tx('Torna a N = 1: le dicotomie sono solo due, + e −.', 'Go back to N = 1: there are only two dichotomies, + and −.'),
+            done: seen.one,
+          },
         ]}
       />
     </div>
@@ -155,7 +165,7 @@ export function ShatterLines() {
   return (
     <div>
       <div className="wbar">
-        <Legend items={[LEG_POS, LEG_NEG, { label: 'retta; la freccia indica il lato +1', color: 'var(--c-red)' }]} />
+        <Legend items={[LEG_POS, LEG_NEG, { label: tx('retta; la freccia indica il lato +1', 'line; the arrow shows the +1 side'), color: 'var(--c-red)' }]} />
       </div>
       <div className="wgrid">
         <div className="vc12__big">
@@ -171,14 +181,14 @@ export function ShatterLines() {
                 x={p.x}
                 y={p.y}
                 r={3.5}
-                label={`punto ${i + 1}`}
+                label={tx(`punto ${i + 1}`, `point ${i + 1}`)}
                 onMove={(q) => setPts(pts.map((o, j) => (j === i ? q : o)))}
               />
             ))}
           </Plot>
         </div>
         <div className="wside">
-          <div className="vc12__grid vc12__grid--side" role="radiogroup" aria-label="Dicotomie dei tre punti">
+          <div className="vc12__grid vc12__grid--side" role="radiogroup" aria-label={tx('Dicotomie dei tre punti', 'Dichotomies of the three points')}>
             {labs.map((lab, k) => (
               <button
                 key={k}
@@ -193,12 +203,18 @@ export function ShatterLines() {
               </button>
             ))}
           </div>
-          <Readout label="dicotomie rappresentate da una retta" value={`${ok} su 8`} />
+          <Readout
+            label={tx('dicotomie rappresentate da una retta', 'dichotomies represented by a line')}
+            value={tx(`${ok} su 8`, `${ok} of 8`)}
+          />
           <div className={`verdict ${ok === 8 ? 'verdict--good' : 'verdict--warn'}`}>
             <span>
               {ok === 8
-                ? 'Le rette frammentano questi 3 punti.'
-                : 'Questa configurazione non è frammentata, ma basta che una configurazione di 3 punti lo sia.'}
+                ? tx('Le rette frammentano questi 3 punti.', 'Lines shatter these 3 points.')
+                : tx(
+                    'Questa configurazione non è frammentata, ma basta che una configurazione di 3 punti lo sia.',
+                    'This configuration is not shattered, but it is enough that one configuration of 3 points is.',
+                  )}
             </span>
           </div>
           <Btn
@@ -210,14 +226,26 @@ export function ShatterLines() {
               ])
             }
           >
-            Allinea i punti
+            {tx('Allinea i punti', 'Align the points')}
           </Btn>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Clicca le dicotomie una per una: per ognuna c’è una retta.', done: seen.sel },
-          { label: 'Allinea i tre punti: la dicotomia con quello centrale diverso non è più separabile.', done: seen.lost },
+          {
+            label: tx(
+              'Clicca le dicotomie una per una: per ognuna c’è una retta.',
+              'Click the dichotomies one by one: for each there is a line.',
+            ),
+            done: seen.sel,
+          },
+          {
+            label: tx(
+              'Allinea i tre punti: la dicotomia con quello centrale diverso non è più separabile.',
+              'Align the three points: the dichotomy with the middle one different is no longer separable.',
+            ),
+            done: seen.lost,
+          },
         ]}
       />
     </div>
@@ -298,7 +326,7 @@ export function FourPoints() {
   return (
     <div>
       <div className="wbar">
-        <Legend items={[LEG_POS, LEG_NEG, { label: 'segmenti che si incrociano', color: 'var(--c-violet)' }]} />
+        <Legend items={[LEG_POS, LEG_NEG, { label: tx('segmenti che si incrociano', 'crossing segments'), color: 'var(--c-violet)' }]} />
       </div>
       <div className="wgrid">
         <div className="vc12__big">
@@ -316,20 +344,33 @@ export function FourPoints() {
                 x={p.x}
                 y={p.y}
                 r={3.5}
-                label={`punto ${i + 1}`}
+                label={tx(`punto ${i + 1}`, `point ${i + 1}`)}
                 onMove={(q) => setPts(pts.map((o, j) => (j === i ? q : o)))}
               />
             ))}
           </Plot>
         </div>
         <div className="wside">
-          <Readout label="etichettature separabili da una retta" value={`${16 - bad.length} su 16`} />
+          <Readout
+            label={tx('etichettature separabili da una retta', 'labelings separable by a line')}
+            value={tx(`${16 - bad.length} su 16`, `${16 - bad.length} of 16`)}
+          />
           <div className="wpanel">
-            <div className="wpanel__title">{convex ? 'Quadrilatero convesso' : 'Un punto dentro il triangolo degli altri'}</div>
+            <div className="wpanel__title">
+              {convex
+                ? tx('Quadrilatero convesso', 'Convex quadrilateral')
+                : tx('Un punto dentro il triangolo degli altri', 'One point inside the triangle of the others')}
+            </div>
             <p className="wnote">
               {convex
-                ? 'Le due diagonali si incrociano: mettendo nella stessa classe gli estremi di ciascuna diagonale si ottiene lo XOR, che nessuna retta separa.'
-                : 'Il punto interno con classe diversa dagli altri tre: ogni retta che lascia da una parte i tre vertici lascia dalla stessa parte anche il triangolo, e quindi il punto interno.'}
+                ? tx(
+                    'Le due diagonali si incrociano: mettendo nella stessa classe gli estremi di ciascuna diagonale si ottiene lo XOR, che nessuna retta separa.',
+                    'The two diagonals cross: putting the endpoints of each diagonal in the same class gives the XOR, which no line separates.',
+                  )
+                : tx(
+                    'Il punto interno con classe diversa dagli altri tre: ogni retta che lascia da una parte i tre vertici lascia dalla stessa parte anche il triangolo, e quindi il punto interno.',
+                    'The inner point with a class different from the other three: every line that leaves the three vertices on one side also leaves the triangle, and hence the inner point, on that same side.',
+                  )}
             </p>
           </div>
           <div className="vc12__grid vc12__grid--side">
@@ -345,12 +386,17 @@ export function FourPoints() {
       <Tasks
         items={[
           {
-            label: 'Trascina un punto dentro il triangolo formato dagli altri tre: cambia il caso, ma resta un’etichettatura impossibile.',
+            label: tx(
+              'Trascina un punto dentro il triangolo formato dagli altri tre: cambia il caso, ma resta un’etichettatura impossibile.',
+              'Drag a point inside the triangle formed by the other three: the case changes, but an impossible labeling remains.',
+            ),
             done: seen.inner,
           },
           {
-            label:
+            label: tx(
               'Riporta i punti a formare un quadrilatero convesso: le etichettature impossibili sono di nuovo lo XOR e il suo complemento.',
+              'Move the points back into a convex quadrilateral: the impossible labelings are again the XOR and its complement.',
+            ),
             done: seen.convex && seen.inner,
           },
         ]}
@@ -380,7 +426,7 @@ function Nested({ sel, onSel }: { sel: number; onSel: (i: number) => void }) {
   const W = 360
   const HH = 120
   return (
-    <svg className="srm12__nest" viewBox={`0 0 ${W} ${HH}`} role="radiogroup" aria-label="Struttura annidata di spazi delle ipotesi">
+    <svg className="srm12__nest" viewBox={`0 0 ${W} ${HH}`} role="radiogroup" aria-label={tx('Struttura annidata di spazi delle ipotesi', 'Nested structure of hypothesis spaces')}>
       {VCS.map((_, j) => {
         const i = VCS.length - 1 - j
         const rx = 30 + i * 22
@@ -420,10 +466,13 @@ export function SrmStructure() {
         <Legend
           items={[
             {
-              label: (
+              label: tx(
                 <>
                   errore empirico <Tex>{'R_{emp}'}</Tex>
-                </>
+                </>,
+                <>
+                  empirical error <Tex>{'R_{emp}'}</Tex>
+                </>,
               ),
               color: 'var(--c-blue)',
             },
@@ -435,7 +484,7 @@ export function SrmStructure() {
               ),
               color: 'var(--c-orange)',
             },
-            { label: <>bound sul rischio vero</>, color: 'var(--c-violet)' },
+            { label: tx(<>bound sul rischio vero</>, <>bound on the true risk</>), color: 'var(--c-violet)' },
           ]}
         />
       </div>
@@ -444,8 +493,8 @@ export function SrmStructure() {
           xTicks={VCS.map(lg)}
           xFormat={(v) => String(Math.round(2 ** v))}
           yTicks={[0, 0.5, 1]}
-          xLabel="VC-dim (scala logaritmica)"
-          yLabel="errore"
+          xLabel={tx('VC-dim (scala logaritmica)', 'VC-dim (logarithmic scale)')}
+          yLabel={tx('errore', 'error')}
         />
         {rows.map((q, i) => (
           <Polyline
@@ -467,22 +516,25 @@ export function SrmStructure() {
         ))}
         <SetLabels />
         <Label x={lg(rows[best].h)} y={rows[best].e + rows[best].c} dy={-14} anchor="middle" className="plot-label--strong">
-          minimo del bound
+          {tx('minimo del bound', 'minimum of the bound')}
         </Label>
       </Plot>
       <div className="wgrid">
         <Nested sel={sel} onSel={setSel} />
         <div className="wside">
           <Segmented
-            label={
+            label={tx(
               <>
                 numero di dati <Tex>l</Tex>
-              </>
-            }
+              </>,
+              <>
+                number of data points <Tex>l</Tex>
+              </>,
+            )}
             size="sm"
             value={li}
             onChange={setLi}
-            options={LS.map((v, i) => ({ value: i, label: v.toLocaleString('it-IT') }))}
+            options={LS.map((v, i) => ({ value: i, label: v.toLocaleString(LOCALE) }))}
           />
           <div className="readouts">
             <Readout label={<>{Hi(sel)}: VC-dim</>} value={String(r.h)} />
@@ -490,17 +542,31 @@ export function SrmStructure() {
             <Readout label={<Tex>{'\\varepsilon'}</Tex>} tone="orange" value={fmt(r.c, 2)} />
             <Readout label="bound" tone="violet" value={fmt(r.e + r.c, 2)} />
           </div>
-          <div className="wnote">La SRM sceglie {Hi(best)}. Clicca un insieme della struttura per leggerne i valori.</div>
+          <div className="wnote">
+            {tx(
+              <>La SRM sceglie {Hi(best)}. Clicca un insieme della struttura per leggerne i valori.</>,
+              <>SRM chooses {Hi(best)}. Click a set of the structure to read its values.</>,
+            )}
+          </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Clicca un insieme più grande: l’errore empirico scende, ma la VC-confidence sale di più.', done: seen.pick },
           {
-            label: (
+            label: tx(
+              'Clicca un insieme più grande: l’errore empirico scende, ma la VC-confidence sale di più.',
+              'Click a larger set: the empirical error goes down, but the VC-confidence goes up more.',
+            ),
+            done: seen.pick,
+          },
+          {
+            label: tx(
               <>
                 Aumenta i dati <Tex>l</Tex>: la VC-confidence si abbassa e la SRM può permettersi uno spazio più ricco.
-              </>
+              </>,
+              <>
+                Increase the data <Tex>l</Tex>: the VC-confidence drops and SRM can afford a richer space.
+              </>,
             ),
             done: seen.more,
           },
@@ -532,18 +598,21 @@ export function SrmTable() {
     <div>
       <div className="wbar">
         <Segmented
-          label={
+          label={tx(
             <>
               numero di dati <Tex>l</Tex>
-            </>
-          }
+            </>,
+            <>
+              number of data points <Tex>l</Tex>
+            </>,
+          )}
           value={li}
           onChange={setLi}
-          options={LS.map((v, i) => ({ value: i, label: v.toLocaleString('it-IT') }))}
+          options={LS.map((v, i) => ({ value: i, label: v.toLocaleString(LOCALE) }))}
         />
         <Legend
           items={[
-            { label: 'errore di training', color: 'var(--c-blue)', kind: 'square' },
+            { label: tx('errore di training', 'training error'), color: 'var(--c-blue)', kind: 'square' },
             { label: 'VC-confidence', color: 'var(--c-orange)', kind: 'square' },
           ]}
         />
@@ -552,11 +621,11 @@ export function SrmTable() {
         <table className="ch11 srm12__table">
           <thead>
             <tr>
-              <th>spazio</th>
+              <th>{tx('spazio', 'space')}</th>
               <th>training</th>
               <th>VC-confidence</th>
-              <th>bound probabile su R</th>
-              <th>scelta</th>
+              <th>{tx('bound probabile su R', 'probable bound on R')}</th>
+              <th>{tx('scelta', 'choice')}</th>
             </tr>
           </thead>
           <tbody>
@@ -576,13 +645,23 @@ export function SrmTable() {
                   </span>
                   <span className="ch11__val">{fmt(r.e + r.c, 2)}</span>
                 </td>
-                <td className="ch11__pick">{i === best ? <span className="ch11__mark">scelto</span> : null}</td>
+                <td className="ch11__pick">{i === best ? <span className="ch11__mark">{tx('scelto', 'chosen')}</span> : null}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <Tasks items={[{ label: 'Aumenta il numero di dati: la scelta si sposta verso uno spazio con VC-dim più alta.', done: seen.more }]} />
+      <Tasks
+        items={[
+          {
+            label: tx(
+              'Aumenta il numero di dati: la scelta si sposta verso uno spazio con VC-dim più alta.',
+              'Increase the number of data points: the choice moves toward a space with a higher VC-dim.',
+            ),
+            done: seen.more,
+          },
+        ]}
+      />
     </div>
   )
 }

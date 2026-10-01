@@ -1,0 +1,413 @@
+import * as F from '../formulas/l01'
+import { DigitsFigure } from '../../widgets/l01/Digits'
+import { CourseMap } from '../../widgets/l01/CourseMap'
+import { DotProduct } from '../../widgets/l01/DotProduct'
+import { TensorFigure } from '../../widgets/l01/TensorFigure'
+import { GradientExplorer } from '../../widgets/l01/GradientExplorer'
+import { GaussianExplorer } from '../../widgets/l01/GaussianExplorer'
+
+<Lead>The first lecture has a twofold purpose: to **motivate** the study of Machine Learning (ML) by placing it within the landscape of computer science and artificial intelligence, and to provide the **practical information** about the course — prerequisites, structure, exam, material. It closes with a review of the basic mathematical concepts that will be needed throughout the course.</Lead>
+
+## What Machine Learning is
+
+### Learning as a universal principle
+
+Learning is a principle shared by living beings, societies and — today — machines. As Poggio and Shelton observe (*AI Magazine*, 1999), *the problem of learning is arguably at the very core of the problem of intelligence, both biological and artificial*. Understanding how learning happens therefore means understanding a fundamental part of what it means to be intelligent.
+
+<Callout type="definition" title="Machine Learning">
+
+**Machine Learning** is a theoretical and applied area of computer science that combines two goals:
+
+- that of artificial intelligence, namely building **computers that are able to learn**;
+- having **powerful adaptive and statistical tools**, with rigorous foundations in the computational sciences.
+
+Operationally, it is the automatic learning, by a system, from **experience** (a set of examples), aimed at solving a computational task.
+
+</Callout>
+
+<Deep title="The three keywords of the definition" kind="intuizione">
+
+The operational definition has three ingredients, which we will meet again in every lesson:
+
+- a **system** that learns (the model);
+- the **experience**, that is, a set of examples (the data);
+- a **computational task** to be solved (the task).
+
+One does not write the solution: one writes a system that is able to derive it from the examples.
+
+</Deep>
+
+### Why make machines learn: luxury or necessity?
+
+ML is not a technological whim but a **necessity**, for two main reasons.
+
+1. **Growing availability of empirical data** and the need to analyze them. Science itself is shifting paradigm toward a *data-driven* approach, in which knowledge is extracted from data; ML plays a central, methodological role in this change.
+2. **It is hard to program adaptivity and intelligence explicitly.** Alan Turing had already sensed this: for many tasks writing the rules by hand is impractical, and learning becomes the only way to endow systems with intelligent behavior.
+
+The combination of **large amounts of data**, **computing power** (HPC, GPUs) and the **flexibility of ML models** has opened a new era of artificial intelligence.
+
+### When ML is needed
+
+ML is the right choice when for a problem there is **little or no prior knowledge** — we do not know how to write the rules of the solution — but it is relatively **easy to obtain experience**, that is, data for which we know the correct result. Classic examples are the classification of emails as spam, and the recognition of characters, faces or speech.
+
+<Callout type="example" title="Handwritten digit recognition">
+
+Each digit is an image of $8 \times 8$ pixels. Writing by hand the rules that tell a “3” from an “8” for every possible handwriting is practically impossible. Instead, one collects many examples of already labeled digits and lets the system **learn a classifier** $f$ that maps each image to the correct class ($0, 1, \dots, 9$).
+
+</Callout>
+
+<Figure n="1.1" title="Handwritten digit recognition">
+  <DigitsFigure />
+  <Caption>Each column collects variants of the same digit, written in different handwritings; the classifier $f$ maps each $8 \times 8$ image to the output class. An image is, for the machine, a table of 64 numbers.</Caption>
+</Figure>
+
+### Application areas
+
+ML is by now pervasive in real systems — from OCR to human-machine interfaces, to search engines — and it is the core of an interdisciplinary area that since the 1980s has included:
+
+- **Pattern Recognition** (face and speech recognition), **Computer Vision**, **Natural Language Processing** (from text classification to speech processing, up to generative AI);
+- **Robotics**, adaptive systems and filters, intelligent sensor networks, personalized components;
+- **Knowledge Discovery and Data Mining**, Information Retrieval, analysis of complex data (medicine, biology, chemistry, web, marketing), financial forecasting.
+
+In some fields — NLP, Pattern Recognition, Computer Vision — the impact has been revolutionary, to the point that people speak of a “new AI”.
+
+### Some recent successes
+
+The professor shows a few emblematic results.
+
+<Timeline>
+  <Event when="2014" title="Face recognition — DeepFace (CVPR)">Combining deep neural networks and other ML techniques, trained on four million images of more than 4,000 people, it determines whether two photos show the same person with an accuracy of **97.25%**, just below the human one (**97.53%**).</Event>
+  <Event when="2016" title="AlphaGo (DeepMind)">In March it defeats the world Go champion.</Event>
+  <Event when="2016–17" title="Machine translation">Google Neural Machine Translation (since 2016) and DeepL (since 2017), entirely based on neural networks.</Event>
+  <Event when="2017" title="Medicine">A deep neural network for the classification of skin cancers, trained on 130,000 cases — more than a doctor sees “in many lifetimes” — reaches the accuracy of board-certified dermatologists (*Nature*). At the CIML in Pisa, the BrAID project applies AI to the diagnosis of Brugada syndrome.</Event>
+  <Event when="2022" title="Large Language Models and generative AI">ChatGPT (OpenAI, November 2022), Bard/LaMDA (Google), open-source models such as Dolly, and systems that generate images (Stable Diffusion), video, music.</Event>
+  <Event when="today" title="Autonomous driving, sensors, IoT">Analysis of sensor data and systems for the Internet of Things.</Event>
+</Timeline>
+
+ML provides the theoretical and methodological basis of the so-called *AI revolution*, with huge industrial investments. It is regarded as a **GPT** (*General-Purpose Technology*): a technology capable of deeply transforming the pre-existing economic and social structures. The “ML scientist” is among the most sought-after profiles on the job market.
+
+<Callout type="note" title="2018 Turing Award">
+
+On March 27, 2019 the ACM gave the Turing Award (the “Nobel Prize of computing”) to **Yoshua Bengio, Geoffrey Hinton and Yann LeCun** “for conceptual and engineering breakthroughs that have made deep neural networks a critical component of computing”.
+
+</Callout>
+
+<Callout type="note" title="2024 Nobel Prizes">
+
+In 2024 ML reached the Nobel Prizes too:
+
+- **Physics**: to **John Hopfield** and **Geoffrey Hinton**, for the foundational discoveries and inventions that enable machine learning with artificial neural networks (the Hopfield network as an associative memory, the Boltzmann machine).
+- **Chemistry**: to **Demis Hassabis** and **John Jumper** (Google DeepMind) for protein structure prediction with **AlphaFold**, and to **David Baker** for computational protein design. Hassabis: *“I’ve always thought that if we could build AI in the right way, it could be the ultimate tool to help scientists explore the universe around us.”*
+
+</Callout>
+
+### The ultimate goal
+
+Anything powerful can be dangerous if misused; but the ultimate goal of AI and ML is to **bring benefits to people** by solving big and small problems, to **accelerate human progress** and to provide intelligence to every other scientific field: to augment our abilities, enhancing our humanity (P. Domingos, *Scientific American*, 2018).
+
+---
+
+## Why study Machine Learning
+
+Within the Master’s degree programme, ML serves to:
+
+- know the **basic principles of learning processes**, from the computational point of view;
+- know **new computing paradigms**, such as **neural networks**: studied as a computational paradigm since the 1940s with a neurobiological inspiration, today they are a set of powerful models for **function approximation** with predictive capabilities, supported by a solid theory (*learning theory*), and they are the basis of **Deep Learning**;
+- be able to **apply these models rigorously**;
+- have the foundations for all the subsequent AI courses.
+
+### Modern ML
+
+ML has gone from being a **collection of heuristic methods** — tricks coming from biology, statistics, neural networks, fuzzy logic… — to the construction of **general conceptual frameworks**. A new understanding has emerged of the principles that govern learning processes, with three important consequences:
+
+- expressing different models in different mathematical or computer science “languages” **does not change the principles**;
+- different application fields **do not change the principles**;
+- new technological advances **do not change the principles**.
+
+<Callout type="tip" title="The common thread of the course">
+
+“Machine Learning” in the proper sense is the **core of principles and methods** for building flexible and powerful computational models from data. Individual models change, the principles remain: this is what is really worth learning.
+
+</Callout>
+
+### Three points of view on ML
+
+<Cards>
+  <Card kicker="1" title="AI methodology">To build **adaptive and intelligent systems**.</Card>
+  <Card kicker="2" title="Statistical learning">Inference of hypotheses according to mathematical principles, to build powerful **predictive systems** for intelligent data analysis.</Card>
+  <Card kicker="3" title="Computer science method for innovative areas">Using the models as **tools** for complex and interdisciplinary problems.</Card>
+</Cards>
+
+The course considers all of them, with a **critical approach**: for the various methods, limits and appropriateness of use are discussed, with attention to the underlying principles. There are two practical goals: learning to **develop new ML models** and learning to **apply state-of-the-art methodologies** to problems from other fields.
+
+---
+
+## Course information
+
+### Prerequisites and objectives
+
+No course is strictly required: we start from scratch. What is needed, however, is the typical background of a scientific Bachelor’s degree: **calculus** (functions, differential calculus), **matrix notation and calculus**, **elements of probability and statistics**, **algorithms**.
+
+The course introduces the principles and the critical analysis of the main paradigms — models and algorithms, with a focus on neural networks — for learning from data. The concepts come progressively, from the simplest approaches up to state-of-the-art models, within the conceptual framework of modern ML: the **learning of functions from examples**. The focus is on:
+
+- critical analysis of the characteristics for the design and use of ML;
+- **rigorous experimental evaluation**: there is a big difference between *using* ML tools and using them *correctly*;
+- computational aspects of learning systems.
+
+### Structure of the course
+
+The course has a strong structure: it starts from simple models and arrives at the state of the art, and the fundamental concepts are introduced through different models. The practical advice is twofold: (1) study the individual methods, (2) look for the **connections and comparisons** among them, so as to abstract the concepts. The common thread is understanding the relationship between **model flexibility** and **complexity control**, a fundamental concept for the capacity of <T id="generalizzazione">generalization</T>.
+
+<Figure n="1.2" title="The course map">
+  <CourseMap />
+  <Caption>The numbers indicate approximately the order of the lectures; the dashed area “Theory” gathers the theoretical parts. The thick arrows are the main path; the dashed ones are the links with the extensions. Click a box to see which lessons it corresponds to.</Caption>
+</Figure>
+
+The map is not just an ordering of the lectures: it describes the path. **“Building blocks”** — intermediate concepts and models — are introduced and then composed to build ML models: for example, neural networks are built from linear models, and a complete ML system is built from validation techniques. This is why the intermediate models should be seen as pieces of a puzzle that comes together at the end.
+
+<Callout type="note" title="Order of the lectures according to the map">
+
+1. Introduction (data, task, model, learning algorithm, validation) — within the framework of **function approximation**.
+2. Concept learning and inductive bias (discrete hypothesis space).
+3. Linear models (LTU, LMS) (continuous hypothesis space).
+4. K-nearest neighbors.
+5. Neural networks.
+6. Validation and Statistical Learning Theory.
+7. Support Vector Machines.
+8. Applications and project.
+9. Bias/Variance.
+10. Deep Learning (and, as extensions, SOM, RNN).
+
+From 11 to 14: SOM, RNN, (Bayesian Networks — removed from the syllabus), advanced topics (structured data).
+
+</Callout>
+
+The density of the course is not uniform: the introduction is slow and “soft”, the core (neural networks, SVM, validation) is dense and consequential, the advanced part is fast but less dense. The (optional) project is announced about halfway through the course.
+
+### Practical organization
+
+- **Lecturer**: Prof. Alessio Micheli (Department of Computer Science), full professor, head of the CIML group (*Computational Intelligence & Machine Learning*) with more than 25 years of research in ML/AI, **president of the European Neural Network Society** (annual conference ICANN), co-founder of the IEEE Task Force on Reservoir Computing, associate editor of IEEE TNNLS and *Neural Networks*. Goal of the course: to introduce students to current ML in 3 months, also retracing its foundations and history.
+- **Lectures** (a.y. 2026/27): Tuesday, Wednesday and Thursday, 4–6 pm, Room E. They start on time, so as to allow for a break.
+- **Q&A** with the lecturer: on Tuesdays after the lecture (optional time, not part of the lecture), plus a few special Q&A lectures. For personal questions, write an email with the tag **[ML-26-Q]** in the subject (mandatory).
+- **Announcements**: via Teams and/or the Moodle news. The **recordings** of the lectures are on Teams (*Shared* tab → *Recordings*); the official lectures are in person only, the streaming is informal and with no guaranteed interaction.
+- **Make-up lectures**: on Monday afternoons (announced when needed) and in the make-up period from December 9 to 18, 2026 (to be taken into account before planning the Christmas holidays). The lectures of September 15–17, 2026 were not held and will be made up.
+
+<Callout type="note" title="For those who join the course late">
+
+All the information is on the course **Moodle** (elearning.di.unipi.it, with self-enrollment through the Unipi account): slides, bibliography and **FAQ** section. It is also worth using Teams (news and recordings) and classmates’ notes. Project and exercise tests are **not mandatory** for the exam. Do not ask the lecturer what is already in the FAQ or in the first lecture.
+
+</Callout>
+
+### Exam
+
+<Callout type="warning" title="Updated rules (a.y. 2026/27)">
+
+The exam procedures have changed with respect to previous years: the **project is no longer mandatory** and the exam is based on a **mandatory written test**, with an oral exam only if necessary.
+
+</Callout>
+
+The exam consists, in chronological order, of four phases.
+
+<Steps>
+<Step title="Exercise tests during the course" tag="optional" tone="optional">
+
+At the end of each cycle of lectures, short and simple exercise tests are offered on Moodle. They are meant for **self-assessment** — like homework, with a score that however **does not count for the exam** — they keep students in step with the lectures and are evidence of active participation. They have a deadline (typically one week), but if some are missed the series can be continued. They prepare for the written test, even though format, content and depth are different. They are announced only in class and with a short message on Teams.
+
+</Step>
+<Step title="Project" tag="optional" tone="optional">
+
+At the end of the course (December) a project can be carried out:
+
+- group work of **2 students**, without exceptions;
+- content: implementation, application and/or analysis of an ML/neural network method or technique with **experimental evaluation** (projects coordinated with the CM course are possible);
+- format: public presentation of a **poster** in class (one of the last lectures), plus the submission of the developed material; there is a prize for the best poster;
+- after the presentation the exam can be taken in any session, but to discuss the project the two members of the group must take the exam **in the same session**.
+
+The advice is not to apply for the project before having studied the course content in depth. The details will be given in a dedicated lecture.
+
+</Step>
+<Step title="Written test" tag="mandatory" tone="required">
+
+It takes place after the course, in the exam sessions (from January and February):
+
+- it is mandatory to **register** for the exam date on esami.unipi.it by the deadline (check it well in advance) and to cancel the registration if one decides not to take part;
+- it takes place **in person only**, in a classroom, on the date, at the time and in the room indicated on esami.unipi.it; not showing up is equivalent to withdrawing from that session;
+- the questions must be answered on **pre-printed sheets** with space for a free answer; a pen or pencil must be brought;
+- the answers require **equations, drawings and/or descriptive parts** (quizzes and open questions);
+- no course or external material may be used, nor any electronic aid (virtual assistants, chatbots…): the use of any device (laptops, smartphones, smart bands, earphones, smart glasses…) is forbidden, on pain of exclusion.
+
+</Step>
+<Step title="Oral exam and grade registration" tag="only if necessary">
+
+A sufficient level in the written test is required to access the oral exam (the list of admitted students is communicated on Moodle). The oral exam is held in the same session as the written test, in person, typically in the lecturer’s office: in the days following the grading the lecturer assigns a slot to each student or group. If needed (depending on the outcome of the written test), the oral exam is a discussion on **the whole syllabus** and may include the discussion of the written test and of the project. Special needs (priority, impossibility of being present…) are assessed case by case on request.
+
+</Step>
+</Steps>
+
+<Callout type="abstract" title="Summary of the rules">
+
+The assessment takes into account: **result of the written test** + active participation (including the tests during the course) + optional extra activities (project, voluntary presentations at the end of the course) + a possible full oral exam, if requested by the lecturer.
+
+- **Sufficient** written test → in a slot a few days later: possible oral exam and **grade proposal** → if accepted, registration of the grade.
+- **Insufficient** written test or grade not accepted → it is repeated in a later session, chosen among the many of the year.
+
+Completing 80% of the online tests and a very good project can give a **small bonus** (if the written test is already sufficient or good), but they are **not necessary** either to take the exam or to obtain the highest grade. The key indicator is the **final knowledge of ML and its depth**.
+
+</Callout>
+
+<Callout type="tip" title="The professor’s advice">
+
+- Follow the lectures using the slides as a guide and study progressively during the course; the Q&A lectures are a discussion forum: it is a class, not a set of recordings.
+- First **study the content** of the course, then turn to the project: this increases both the effectiveness and the efficiency of the work.
+- If something is not clear: don’t panic, ask the lecturer (Q&A), collaborate with classmates, use books and papers (bibliography and personal research) and the course supports. ML is a continuously evolving field: it has to be studied!
+
+</Callout>
+
+### Material and bibliography
+
+The main reference is the course slides (on Moodle, often published in advance; be careful to use the latest version of the `ML-26…-v*` files), which however must be complemented with one’s own notes — the slides alone may not be enough to reconstruct the thread of the lecture — and with the books. The lecturer is willing to share students’ notes on Moodle. The main textbooks are:
+
+- S. Haykin, *Neural Networks and Learning Machines*, Prentice Hall, 3rd ed., 2008;
+- T. M. Mitchell, *Machine Learning*, McGraw-Hill, 1997;
+- I. Goodfellow, Y. Bengio, A. Courville, *Deep Learning*, MIT Press, 2016 (free online).
+
+Other useful references: Russell–Norvig (*AIMA*), Hastie–Tibshirani–Friedman (*The Elements of Statistical Learning*, free copy online), Cherkassky–Mulier, Bishop (*Pattern Recognition and Machine Learning*, now **free** from the publisher’s website; and *Neural Networks for Pattern Recognition*), Duda–Hart–Stork, Shalev-Shwartz–Ben-David (*Understanding Machine Learning*, free online).
+
+For the **software libraries**: F. Chollet, *Deep Learning with Python*; A. Géron, *Hands-on Machine Learning with Scikit-Learn, Keras & TensorFlow*; A. Zhang, Z. Lipton, M. Li, A. Smola, *Dive into Deep Learning* (Cambridge University Press, 2023, free online, with examples in PyTorch, NumPy/MXNet, JAX and TensorFlow). The main libraries will be introduced later on by the course assistant. Warning: there are a great many technical books and blogs, and one must pay attention to scientific quality.
+
+<Callout type="note" title="Course supports">
+
+- A **course assistant** to help with the development of the project (to be confirmed).
+- An experimental **tutor chatbot** (based on ChatGPT) for the ML 2026 course: it is meant to clear up doubts, explore concepts in more depth and get pointers to slides, definitions and exercises, always on the basis of the official course materials. Details and link will be published in the Moodle news.
+
+</Callout>
+
+In parallel, the course **Computational Mathematics for Learning and Data Analysis** (CM) is very useful: it provides the deep mathematical foundations of learning methods (it is not, however, mandatory for following ML).
+
+---
+
+## Mathematical background
+
+A few basic concepts are needed to follow the course: multivariable calculus (partial derivatives, gradient), probability (density, mean, variance, normal distribution, conditional and joint probabilities), matrix calculus (dot product, inverse, norms). Topics such as the linear least squares problem with the SVD and Lagrange multipliers can be studied in more depth in parallel. Recommended references: appendix A of AIMA, chapters 2–4 of the *Deep Learning book*, and *Mathematics for Machine Learning* (2020).
+
+The notation used is: $x$ scalar, $\mathbf{x}$ vector (in bold), $X$ matrix (uppercase).
+
+### Dot product and norms
+
+<Callout type="definition" title="Dot product (inner / dot product)">
+
+<Formula f={F.dot} />
+
+Equivalent notations: $\mathbf{a}\cdot\mathbf{b} = \mathbf{a}^T\mathbf{b} = \mathbf{a}^t\mathbf{b} = \langle \mathbf{a}, \mathbf{b}\rangle$, and also just $\mathbf{ab}$ if the context is clear.
+
+</Callout>
+
+The relation with the cosine gives the geometric intuition: the <T id="prodotto-scalare">dot product</T> measures **how much two vectors point in the same direction**. It is maximal when they are parallel, zero when they are orthogonal, negative when they point in opposite directions. This reading will come back again and again: for example in linear models, where $\mathbf{w}^T\mathbf{x}$ measures the “alignment” of the input with the weights.
+
+<Deep title="Worked example: two vectors in ℝ²" kind="esempio">
+
+With $\mathbf{a} = (3, 1)$ and $\mathbf{b} = (1, 2)$: $\mathbf{a}\cdot\mathbf{b} = 3 \cdot 1 + 1 \cdot 2 = 5$. The lengths are $|\mathbf{a}| = \sqrt{10} \approx 3.16$ and $|\mathbf{b}| = \sqrt{5} \approx 2.24$, hence $\cos\theta = 5 / \sqrt{50} \approx 0.71$: the angle is about $45^\circ$. The product is positive, the vectors point “the same way”.
+
+</Deep>
+
+The <T id="norma">Euclidean norm</T> (modulus, length) of a vector is
+
+<Formula f={F.norm2} />
+
+often written simply $\|\mathbf{x}\|$ or $|\mathbf{x}|$. Other useful norms are the **$L^1$ norm**, $\|\mathbf{x}\|_1 = \sum_i |x_i|$, and the **max norm**, $\|\mathbf{x}\|_\infty = \max_i |x_i|$.
+
+<Figure n="1.3" title="Dot product and norms">
+  <DotProduct />
+  <Caption>Drag the tips of the vectors. On the left, the dot product as alignment (with the projection of $\mathbf{b}$ onto $\mathbf{a}$); in the “Norms” tab, the three measures of length of the same vector.</Caption>
+</Figure>
+
+More generally, an **inner product** $\langle \cdot,\cdot \rangle$ is a symmetric bilinear form that maps a pair of vectors to a scalar:
+
+<Formula f={F.inner} />
+
+The **Cauchy-Schwarz inequality** holds:
+
+<Formula f={F.cauchy} />
+
+<Callout type="note" title="Tensors">
+
+A <T id="tensore">tensor</T>, in the simplified view used in ML, is a multidimensional array of numbers arranged on a regular grid with a variable number of axes (for example $X_{i,j,k}$ has 3 indices). In ML it is used mostly as a notational convenience and to reason about GPU computation; in mathematics tensors have richer properties (related to changes of basis).
+
+</Callout>
+
+<Figure n="1.4" title="How many indices are needed?">
+  <TensorFigure />
+  <Caption>Scalar, vector, matrix and tensor differ in the number of axes, that is, of indices needed to identify a single number. Hover over the cells to read their index.</Caption>
+</Figure>
+
+### Partial derivatives and gradient
+
+The **partial derivative** generalizes the derivative to functions of several variables: it is the derivative with respect to a single variable while keeping all the others fixed. For $f(x_1, x_2, x_3)$ one computes $\frac{\partial f}{\partial x_1}$, $\frac{\partial f}{\partial x_2}$, $\frac{\partial f}{\partial x_3}$.
+
+<Callout type="definition" title="Gradient">
+
+The <T id="gradiente">gradient</T> of $f$ is the vector of its partial derivatives:
+
+<Formula f={F.gradient} />
+
+where the $\mathbf{e}_i$ are the orthogonal unit vectors along the coordinate directions.
+
+</Callout>
+
+<Deep title="Worked example: computing a gradient" kind="esempio">
+
+Let $f(x_1, x_2) = x_1^2 + 3x_1x_2$. Differentiating with respect to $x_1$ (with $x_2$ fixed, as if it were a constant) gives $\frac{\partial f}{\partial x_1} = 2x_1 + 3x_2$; differentiating with respect to $x_2$ (with $x_1$ fixed) gives $\frac{\partial f}{\partial x_2} = 3x_1$. Hence $\nabla f = (2x_1 + 3x_2,\; 3x_1)$ and, for example, at the point $(1, 2)$ we have $\nabla f(1,2) = (8, 3)$.
+
+</Deep>
+
+The geometric meaning is fundamental for the whole course: at a point, the gradient is a vector that **points in the direction of steepest slope**, and its norm tells **how steep** the slope is. The gradient therefore indicates where the function increases most rapidly, while its opposite $-\nabla f$ indicates the direction in which it **decreases** most rapidly. This is exactly the idea behind <T id="discesa-del-gradiente">gradient descent</T>, which we will use to train models by minimizing an error function.
+
+A point where the gradient is zero is called a <T id="punto-stazionario">stationary point</T>. It can be a local minimum, a local maximum or a saddle point: the zero gradient alone is not enough to tell which case it is.
+
+<Figure n="1.5" title="Gradient, level curves and stationary points" size="wide">
+  <GradientExplorer />
+  <Caption>On the left, the surface $z = f(x_1, x_2)$ with the level curves projected onto the plane; on the right, the same plane seen from above. $\nabla f$ (orange) points toward the increase of $f$, $-\nabla f$ (green) toward the decrease; both are perpendicular to the level curves. In the “Bowl”, the lowest point of the paraboloid is a minimum: there the gradient is zero.</Caption>
+</Figure>
+
+### Probability density: the Gaussian
+
+The **normal distribution** with mean $\mu$ and variance $\sigma^2$ has probability density (the “<T id="gaussiana">Gaussian</T> function”)
+
+<Formula f={F.gaussian} />
+
+With $\mu = 0$ and $\sigma^2 = 1$ one obtains the **standard normal**.
+
+<Figure n="1.6" title="The normal density">
+  <GaussianExplorer />
+  <Caption>Drag the threshold on the $x$ axis: the colored area on the left is the probability that the variable falls below the threshold. For the standard normal, the area to the left of $-1.96$ is 2.5%.</Caption>
+</Figure>
+
+---
+
+## Summary and next steps
+
+<Callout type="abstract" title="Summary">
+
+ML is the automatic learning of a task from examples: it is necessary when data abound but explicit rules are missing. The course approaches it as **function approximation from examples**, building the models through successive “building blocks”, with attention to the principles (which do not change as the models vary) and to rigorous evaluation. The key concept that runs through the whole course is the trade-off between **model flexibility** and **complexity control**, on which **generalization** depends.
+
+</Callout>
+
+The following lectures complete the introduction: [lessons 2–3](#/lezione/03) cover the usefulness of ML, learning as function approximation with a running example, and the design components of an ML system (task, hypothesis space, inductive bias, loss function, generalization); [lesson 4](#/lezione/04) goes deeper into generalization and validation.
+
+<Exam>
+<Q q="Why is ML a necessity and not a luxury? Under which conditions is it appropriate to use it?">
+
+For two reasons: the **growing availability of empirical data** to be analyzed (science itself becomes *data-driven*) and the **difficulty of explicitly programming** adaptivity and intelligence — for many tasks we do not know how to write the rules. It is appropriate when there is **little or no prior knowledge** about the solution but it is **easy to obtain examples** with the correct result (spam, recognition of characters, faces, speech).
+
+</Q>
+<Q q="What is the gradient and why does $-\nabla f$ indicate the direction of steepest decrease?">
+
+It is the vector of the partial derivatives, $\nabla f = (\partial f/\partial x_1, \dots, \partial f/\partial x_n)$. At every point it points in the direction of **steepest slope** and its norm tells how steep it is. For a small step $\Delta\mathbf{x}$ the change in $f$ is approximately $\nabla f \cdot \Delta\mathbf{x}$: for a given step length it is largest if $\Delta\mathbf{x}$ is parallel to $\nabla f$ and smallest (the most negative) if it is opposite, that is, along $-\nabla f$. This is the idea of gradient descent.
+
+</Q>
+<Q q="What is a stationary point? Is it always a minimum?">
+
+It is a point where the gradient is zero. It is **not** always a minimum: it can be a local minimum, a local maximum or a saddle point. The zero gradient alone is not enough to distinguish the three cases (this is clearly visible in figure 1.5, comparing “Bowl”, “Dome” and “Saddle”).
+
+</Q>
+</Exam>

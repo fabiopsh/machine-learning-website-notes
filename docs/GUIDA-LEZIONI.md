@@ -4,6 +4,9 @@ Questa guida descrive **esattamente** come sono state costruite le lezioni 01–
 sessione (umana o AI, su qualsiasi computer) produca le lezioni successive con lo stesso stile.
 Leggerla tutta prima di iniziare. Lo stato dei lavori è in [`STATO.md`](STATO.md).
 
+Il sito è **bilingue**: l'italiano è l'originale, l'inglese una traduzione fedele. Chi aggiunge o modifica una
+lezione deve aggiornare anche l'inglese: regole e procedura in [`GUIDA-INGLESE.md`](GUIDA-INGLESE.md).
+
 ---
 
 ## 0. Preparazione
@@ -61,8 +64,9 @@ Fonti di una lezione:
    `website/src/main.tsx` dopo gli altri `lNN.css`.
 8. Verificare (§9): `npm run verify` e screenshot di ogni figura in chiaro,
    scuro, mobile e tema Liquid Glass. Guardare gli screenshot e correggere.
-9. Aggiornare `docs/STATO.md` (riga della lezione, immagini → figure, aggiunte).
-10. Commit e push su `main`: la GitHub Action pubblica il sito (§10).
+9. Tradurre la lezione in inglese (`GUIDA-INGLESE.md` §3) e verificare con `npm run check:en -- NN`.
+10. Aggiornare `docs/STATO.md` (riga della lezione, immagini → figure, aggiunte).
+11. Commit e push su `main`: la GitHub Action pubblica il sito (§10).
 
 ---
 
@@ -213,6 +217,7 @@ In `website/src/content/glossary.ts`, una voce per ogni termine tecnico nuovo de
   fare («Trascina…»). Colori citati nella didascalia = colori realmente usati.
 - **«Prova a…»** (`<Tasks>`): 2–4 esercizi imperativi che guidano l'osservazione e si spuntano da soli.
   Non devono risultare già fatti all'apertura della pagina.
+- Ogni testo visibile (etichette, «Prova a…», `aria-label`) passa da `tx('italiano', 'english')` di `lib/i18n.ts`.
 - Deve funzionare con mouse, touch (maniglie grandi) e tastiera (le `Handle` si muovono con le frecce),
   in tema chiaro, scuro, Liquid Glass e su mobile (360 px).
 - Dati deterministici: usare `rng(seed)` da `lib/math.ts`, mai `Math.random()` (le figure devono essere
@@ -270,7 +275,8 @@ Nell'MDX:
 | Dove | Cosa |
 |---|---|
 | `components/plot/Plot.tsx` | `Plot` (scale, `equal` per assi isometrici, `overlay` per tooltip `.ptip`, eventi puntatore), `Axes`, `FnPath` (y = f(x)), `Polyline`, `Dot`, `Arrow`, `Label`, `Handle` (maniglia trascinabile, `axis`, `bounds`, `color`), `usePlot()` per disegni SVG su misura |
-| `components/plot/scale.ts` | `fmt(v, cifre)` (virgola decimale, meno tipografico), `clamp`, `niceTicks` |
+| `components/plot/scale.ts` | `fmt(v, cifre)` (virgola decimale in italiano, punto in inglese; meno tipografico), `clamp`, `niceTicks` |
+| `lib/i18n.ts` | `tx(it, en)`, `isEn`, `LOCALE`: testi dei widget nelle due lingue |
 | `components/ui/Controls.tsx` | `Slider` (con `marks`), `Segmented`, `Toggle`, `Btn` (`ghost`/`soft`/`solid`, `icon`), `Readout` (`tone` = colore della serie), `Legend`, `Controls` (riga di controlli) |
 | `components/prose/Figure.tsx` | `Figure`, `Caption`, `Tasks`, `Exam`, `Q` |
 | `widgets/common/Surface3D.tsx` | superficie z = f(x,y) su canvas, ruotabile, curve di livello sul pavimento, overlay 3D (`floorGap`, `ramp`) |
@@ -380,6 +386,8 @@ npm run verify                       # typecheck + lint + controllo contenuti (t
 npm run check -- --only NN           # solo la lezione NN (titoli, riquadri, immagini, domande)
 npm run check:math -- NN             # ogni formula degli appunti compare nel sito? (elenca quelle da riguardare)
 npm run check:text -- NN             # ogni frase degli appunti compare nel sito? (elenca quelle da riguardare)
+npm run check:en -- NN               # la traduzione inglese è allineata all'originale?
+npm run figs -- NN [--lang en] [--w 390] [--style glass] [--theme dark]   # tutte le figure della lezione
 npm run dev                          # in un altro terminale, poi:
 # npm run smoke esiste ma NON va usato: l'utente lo ritiene lento e inutile (2026-09-30)
 npm run shot -- lezione/NN fig --sel "#fig-N-k"                 # una figura
@@ -424,6 +432,7 @@ pagina interattiva. **Il link da condividere è quindi `…/lezione/05/`** (senz
 - `website/plugins/site-meta.ts` — indirizzo del sito, titoli e descrizioni (letti da `lessons.ts` e dagli MDX);
 - `website/plugins/seo.ts` — `<head>` della home, pagine statiche, `sitemap.xml`;
 - `website/src/lib/meta.ts` — titolo, descrizione e canonical aggiornati nell'app a ogni cambio di pagina;
+- le stesse pagine esistono in inglese sotto `en/` (`en/lezione/05/`), con `hreflang` reciproco e immagini `public/og/en/`;
 - `npm run og` — rigenera le immagini di anteprima `public/og/*.png` (1200 × 630) e le icone: **va rilanciato e
   committato** quando cambia un titolo o un `summary`, o si aggiunge una lezione;
 - il `summary` di `lessons.ts` è anche la descrizione nell'anteprima: una frase concreta, senza formule.

@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { contourSegments, segsToPath } from '../common/contours'
 import { bayesP1, model, X as HX, Y as HY } from '../l05/htf'
@@ -103,20 +104,23 @@ export function HtfSvm({ kind }: { kind: Kind }) {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'classe 1', color: C1, kind: 'dot' },
-            { label: 'classe 0', color: C0, kind: 'dot' },
-            { label: 'support vector', color: 'var(--ink)', kind: 'dot' },
-            { label: 'confine della SVM', color: 'var(--ink)' },
+            { label: tx('classe 1', 'class 1'), color: C1, kind: 'dot' },
+            { label: tx('classe 0', 'class 0'), color: C0, kind: 'dot' },
+            { label: tx('support vector', 'support vectors'), color: 'var(--ink)', kind: 'dot' },
+            { label: tx('confine della SVM', 'SVM boundary'), color: 'var(--ink)' },
             {
-              label: (
+              label: tx(
                 <>
                   margine (<Tex>{'g = \\pm 1'}</Tex>)
-                </>
+                </>,
+                <>
+                  margin (<Tex>{'g = \\pm 1'}</Tex>)
+                </>,
               ),
               color: 'var(--ink-3)',
               kind: 'dash',
             },
-            { label: 'confine di Bayes', color: 'var(--c-violet)', kind: 'dash' },
+            { label: tx('confine di Bayes', 'Bayes boundary'), color: 'var(--c-violet)', kind: 'dash' },
           ]}
         />
       </div>
@@ -129,11 +133,14 @@ export function HtfSvm({ kind }: { kind: Kind }) {
       <div className="controls">
         {kind === 'poly' ? (
           <Segmented
-            label={
+            label={tx(
               <>
                 grado <Tex>p</Tex> del polinomio
-              </>
-            }
+              </>,
+              <>
+                degree <Tex>p</Tex> of the polynomial
+              </>,
+            )}
             value={par}
             onChange={setPar}
             options={[2, 3, 4, 5, 6].map((v) => ({ value: v, label: String(v) }))}
@@ -147,11 +154,14 @@ export function HtfSvm({ kind }: { kind: Kind }) {
           />
         )}
         <Slider
-          label={
+          label={tx(
             <>
               iperparametro <Tex>C</Tex>
-            </>
-          }
+            </>,
+            <>
+              hyperparameter <Tex>C</Tex>
+            </>,
+          )}
           min={-1}
           max={3}
           step={0.1}
@@ -161,17 +171,45 @@ export function HtfSvm({ kind }: { kind: Kind }) {
         />
       </div>
       <div className="readouts">
-        <Readout label="errore di training" tone="blue" value={pct(fit.trErr)} />
-        <Readout label="errore di test" tone="orange" value={pct(fit.tsErr)} sub="su 4000 punti nuovi" />
-        <Readout label="errore di Bayes" tone="violet" value={pct(HTF.bayesErr)} />
-        <Readout label="support vector" tone="accent" value={pct(nSv / TR_X.length)} sub={`${nSv} su ${TR_X.length}`} />
+        <Readout label={tx('errore di training', 'training error')} tone="blue" value={pct(fit.trErr)} />
+        <Readout
+          label={tx('errore di test', 'test error')}
+          tone="orange"
+          value={pct(fit.tsErr)}
+          sub={tx('su 4000 punti nuovi', 'on 4000 new points')}
+        />
+        <Readout label={tx('errore di Bayes', 'Bayes error')} tone="violet" value={pct(HTF.bayesErr)} />
+        <Readout
+          label={tx('support vector', 'support vectors')}
+          tone="accent"
+          value={pct(nSv / TR_X.length)}
+          sub={tx(`${nSv} su ${TR_X.length}`, `${nSv} of ${TR_X.length}`)}
+        />
       </div>
       <Tasks
         items={[
           kind === 'poly'
-            ? { label: 'Cambia il grado del polinomio: il confine si piega di più o di meno.', done: seen.par }
-            : { label: 'Prova γ = 20 (kernel strettissimi): il confine circonda i singoli punti e l’errore di test sale.', done: seen.par },
-          { label: 'Alza C oltre 100: meno errori di training tollerati, ma il test non migliora.', done: seen.c },
+            ? {
+                label: tx(
+                  'Cambia il grado del polinomio: il confine si piega di più o di meno.',
+                  'Change the degree of the polynomial: the boundary bends more or less.',
+                ),
+                done: seen.par,
+              }
+            : {
+                label: tx(
+                  'Prova γ = 20 (kernel strettissimi): il confine circonda i singoli punti e l’errore di test sale.',
+                  'Try γ = 20 (extremely narrow kernels): the boundary surrounds the individual points and the test error rises.',
+                ),
+                done: seen.par,
+              },
+          {
+            label: tx(
+              'Alza C oltre 100: meno errori di training tollerati, ma il test non migliora.',
+              'Raise C above 100: fewer training errors tolerated, but the test error does not improve.',
+            ),
+            done: seen.c,
+          },
         ]}
       />
     </div>
@@ -231,7 +269,7 @@ function Panel({ gm, row, lc }: { gm: number; row: number[]; lc: number }) {
       <Plot xDomain={[-1.1, 3.6]} yDomain={[0.17, 0.3]} aspect={0.95} minH={150} maxH={220} margin={{ l: 34, r: 8, t: 8, b: 26 }}>
         <Axes
           xTicks={[-1, 1, 3]}
-          xFormat={(v) => (v === -1 ? '0,1' : v === 1 ? '10' : '1000')}
+          xFormat={(v) => (v === -1 ? tx('0,1', '0.1') : v === 1 ? '10' : '1000')}
           yTicks={[0.2, 0.25, 0.3]}
           yFormat={(v) => fmt(v, 2)}
         />
@@ -272,19 +310,22 @@ export function CGamma() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'errore di test', color: 'var(--c-orange)' },
-            { label: 'errore di Bayes', color: 'var(--c-violet)', kind: 'dash' },
+            { label: tx('errore di test', 'test error'), color: 'var(--c-orange)' },
+            { label: tx('errore di Bayes', 'Bayes error'), color: 'var(--c-violet)', kind: 'dash' },
             {
-              label: (
+              label: tx(
                 <>
                   il <Tex>C</Tex> scelto
-                </>
+                </>,
+                <>
+                  the chosen <Tex>C</Tex>
+                </>,
               ),
               color: 'var(--accent)',
             },
           ]}
         />
-        {!snap.done && <span className="wnote">addestramento delle SVM in corso…</span>}
+        {!snap.done && <span className="wnote">{tx('addestramento delle SVM in corso…', 'training the SVMs…')}</span>}
       </div>
       <div className="cg14__grid">
         {GAMMAS.map((gm, i) => (
@@ -293,11 +334,14 @@ export function CGamma() {
       </div>
       <div className="controls">
         <Slider
-          label={
+          label={tx(
             <>
               iperparametro <Tex>C</Tex> (scala logaritmica)
-            </>
-          }
+            </>,
+            <>
+              hyperparameter <Tex>C</Tex> (log scale)
+            </>,
+          )}
           min={-1}
           max={3.5}
           step={0.25}
@@ -306,19 +350,31 @@ export function CGamma() {
           format={(v) => fmt(10 ** v, v < 0 ? 1 : 0)}
         />
         <Readout
-          label={
+          label={tx(
             <>
               con questo <Tex>C</Tex> il miglior <Tex>\gamma</Tex> è
-            </>
-          }
+            </>,
+            <>
+              with this <Tex>C</Tex> the best <Tex>\gamma</Tex> is
+            </>,
+          )}
           tone="accent"
           value={bestG === null ? '…' : fmt(bestG, bestG < 1 ? 1 : 0)}
         />
       </div>
       <Tasks
         items={[
-          { label: 'Porta C verso 0,1: vince il kernel più stretto (γ = 5), con la regolarizzazione massima.', done: seen.low },
-          { label: 'Porta C a 1000: ora conviene un kernel largo (γ piccolo).', done: seen.high },
+          {
+            label: tx(
+              'Porta C verso 0,1: vince il kernel più stretto (γ = 5), con la regolarizzazione massima.',
+              'Move C toward 0.1: the narrowest kernel (γ = 5) wins, with maximum regularization.',
+            ),
+            done: seen.low,
+          },
+          {
+            label: tx('Porta C a 1000: ora conviene un kernel largo (γ piccolo).', 'Move C to 1000: now a wide kernel (small γ) is better.'),
+            done: seen.high,
+          },
         ]}
       />
     </div>
@@ -346,12 +402,12 @@ const OBJS: Obj[] = [
 ]
 const SHAPES: Shape[] = ['oct', 'cross', 'bar', 'trap', 'tri', 'rhomb']
 const SHAPE_NAME: Record<Shape, string> = {
-  oct: 'ottagoni',
-  cross: 'croci',
-  bar: 'barre',
-  trap: 'trapezi',
-  tri: 'triangoli',
-  rhomb: 'rombi',
+  oct: tx('ottagoni', 'octagons'),
+  cross: tx('croci', 'crosses'),
+  bar: tx('barre', 'bars'),
+  trap: tx('trapezi', 'trapezoids'),
+  tri: tx('triangoli', 'triangles'),
+  rhomb: tx('rombi', 'rhombuses'),
 }
 
 function ShapePath({ o }: { o: Obj }) {
@@ -407,22 +463,27 @@ export function KernelObjects() {
     <div>
       <div className="wbar">
         <Segmented
-          label="kernel (misura di similarità)"
+          label={tx('kernel (misura di similarità)', 'kernel (similarity measure)')}
           value={kk}
           onChange={setKk}
           options={[
-            { value: 'shape', label: 'forma' },
-            { value: 'size', label: 'grandezza' },
-            { value: 'same', label: 'tutti uguali' },
+            { value: 'shape', label: tx('forma', 'shape') },
+            { value: 'size', label: tx('grandezza', 'size') },
+            { value: 'same', label: tx('tutti uguali', 'all equal') },
           ]}
         />
       </div>
-      <svg className="ko14" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Oggetti nello spazio originale e nello spazio delle feature">
+      <svg
+        className="ko14"
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label={tx('Oggetti nello spazio originale e nello spazio delle feature', 'Objects in the original space and in the feature space')}
+      >
         <text className="ko14__cap" x={10} y={H - 8}>
-          spazio originale
+          {tx('spazio originale', 'original space')}
         </text>
         <text className="ko14__cap" x={FX + 10} y={H - 8}>
-          spazio delle feature (vettoriale)
+          {tx('spazio delle feature (vettoriale)', 'feature space (a vector space)')}
         </text>
         <g className="ko14__axes">
           <line x1={FX + 40} y1={H - 40} x2={FX + 40} y2={20} />
@@ -454,7 +515,7 @@ export function KernelObjects() {
             onClick={() => setSel(i)}
             role="button"
             tabIndex={0}
-            aria-label={`oggetto ${i + 1}: ${SHAPE_NAME[q.shape]}`}
+            aria-label={tx(`oggetto ${i + 1}: ${SHAPE_NAME[q.shape]}`, `object ${i + 1}: ${SHAPE_NAME[q.shape]}`)}
             onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSel(i)}
           >
             <ShapePath o={q} />
@@ -472,16 +533,37 @@ export function KernelObjects() {
       <div className={`verdict ${kk === 'shape' ? 'verdict--good' : 'verdict--bad'}`}>
         <span>
           {kk === 'shape'
-            ? 'Buon kernel: gli oggetti simili per il task (stessa forma) finiscono vicini, in gruppi compatti.'
+            ? tx(
+                'Buon kernel: gli oggetti simili per il task (stessa forma) finiscono vicini, in gruppi compatti.',
+                'Good kernel: the objects that are similar for the task (same shape) end up close together, in compact groups.',
+              )
             : kk === 'size'
-              ? 'Kernel che non c’entra con il task: avvicina oggetti della stessa grandezza, di forme diverse.'
-              : 'Kernel inutile: tutti gli oggetti risultano ugualmente simili e nello spazio delle feature non si distinguono.'}
+              ? tx(
+                  'Kernel che non c’entra con il task: avvicina oggetti della stessa grandezza, di forme diverse.',
+                  'A kernel unrelated to the task: it brings together objects of the same size, with different shapes.',
+                )
+              : tx(
+                  'Kernel inutile: tutti gli oggetti risultano ugualmente simili e nello spazio delle feature non si distinguono.',
+                  'Useless kernel: all the objects turn out to be equally similar and cannot be told apart in the feature space.',
+                )}
         </span>
       </div>
       <Tasks
         items={[
-          { label: 'Clicca un altro oggetto per seguire la sua immagine φ nello spazio delle feature.', done: seen.sel },
-          { label: 'Cambia kernel: con una similarità che non riguarda il task i gruppi spariscono.', done: seen.bad },
+          {
+            label: tx(
+              'Clicca un altro oggetto per seguire la sua immagine φ nello spazio delle feature.',
+              'Click another object to follow its image φ in the feature space.',
+            ),
+            done: seen.sel,
+          },
+          {
+            label: tx(
+              'Cambia kernel: con una similarità che non riguarda il task i gruppi spariscono.',
+              'Change the kernel: with a similarity that does not concern the task the groups disappear.',
+            ),
+            done: seen.bad,
+          },
         ]}
       />
     </div>

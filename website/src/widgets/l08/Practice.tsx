@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented, Toggle } from '../../components/ui/Controls'
+import { LOCALE, tx } from '../../lib/i18n'
 import { lessonHref } from '../../lib/router'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
@@ -35,7 +36,7 @@ const NODES: MapNode[] = [
     lesson: '06',
     sec: 'il-perceptron',
     done: true,
-    info: 'Il Perceptron di Rosenblatt: l’unità a soglia, una sola unità.',
+    info: tx('Il Perceptron di Rosenblatt: l’unità a soglia, una sola unità.', 'Rosenblatt’s Perceptron: the threshold unit, a single unit.'),
   },
   {
     id: 'adal',
@@ -47,7 +48,7 @@ const NODES: MapNode[] = [
     lesson: '06',
     sec: 'apprendimento-per-una-singola-unità',
     done: true,
-    info: 'Adaline: unità lineare durante il training, addestrata con LMS.',
+    info: tx('Adaline: unità lineare durante il training, addestrata con LMS.', 'Adaline: a linear unit during training, trained with LMS.'),
   },
   {
     id: 'lms',
@@ -59,7 +60,7 @@ const NODES: MapNode[] = [
     lesson: '05',
     sec: 'il-problema-di-apprendimento',
     done: true,
-    info: 'LMS: il modello lineare delle lezioni precedenti.',
+    info: tx('LMS: il modello lineare delle lezioni precedenti.', 'LMS: the linear model of the previous lessons.'),
   },
   {
     id: 'mp',
@@ -67,11 +68,14 @@ const NODES: MapNode[] = [
     y: 136,
     w: 100,
     h: 58,
-    lines: ['MLP:', 'McCulloch', 'e Pitts'],
+    lines: tx(['MLP:', 'McCulloch', 'e Pitts'], ['MLP:', 'McCulloch', 'and Pitts']),
     lesson: '06',
     sec: 'le-reti-di-mcculloch-e-pitts-1943',
     done: true,
-    info: 'Le reti di McCulloch e Pitts: reti di perceptron che rappresentano funzioni booleane.',
+    info: tx(
+      'Le reti di McCulloch e Pitts: reti di perceptron che rappresentano funzioni booleane.',
+      'McCulloch and Pitts networks: networks of perceptrons that represent Boolean functions.',
+    ),
   },
   {
     id: 'plearn',
@@ -79,11 +83,14 @@ const NODES: MapNode[] = [
     y: 136,
     w: 124,
     h: 86,
-    lines: ['Apprendimento:', 'algoritmo del', 'Perceptron e', 'teorema di', 'convergenza'],
+    lines: tx(
+      ['Apprendimento:', 'algoritmo del', 'Perceptron e', 'teorema di', 'convergenza'],
+      ['Learning:', 'Perceptron', 'algorithm and', 'convergence', 'theorem'],
+    ),
     lesson: '06',
     sec: 'lalgoritmo-di-apprendimento-del-perceptron',
     done: true,
-    info: 'L’algoritmo del Perceptron e il teorema di convergenza.',
+    info: tx('L’algoritmo del Perceptron e il teorema di convergenza.', 'The Perceptron algorithm and the convergence theorem.'),
   },
   {
     id: 'nonlin',
@@ -91,11 +98,14 @@ const NODES: MapNode[] = [
     y: 136,
     w: 104,
     h: 44,
-    lines: ['Uscita non', 'lineare (f)'],
+    lines: tx(['Uscita non', 'lineare (f)'], ['Nonlinear', 'output (f)']),
     lesson: '06',
     sec: 'funzioni-di-attivazione-sigmoidali',
     done: true,
-    info: 'Funzioni di attivazione sigmoidali: la soglia diventa differenziabile.',
+    info: tx(
+      'Funzioni di attivazione sigmoidali: la soglia diventa differenziabile.',
+      'Sigmoidal activation functions: the threshold becomes differentiable.',
+    ),
   },
   {
     id: 'mlp',
@@ -103,11 +113,11 @@ const NODES: MapNode[] = [
     y: 200,
     w: 104,
     h: 62,
-    lines: ['MLP:', 'rete', 'feedforward'],
+    lines: tx(['MLP:', 'rete', 'feedforward'], ['MLP:', 'feedforward', 'network']),
     lesson: '06',
     sec: 'le-reti-neurali-il-multi-layer-perceptron',
     done: true,
-    info: 'Il Multi-Layer Perceptron.',
+    info: tx('Il Multi-Layer Perceptron.', 'The Multi-Layer Perceptron.'),
   },
   {
     id: 'bp',
@@ -115,10 +125,10 @@ const NODES: MapNode[] = [
     y: 136,
     w: 130,
     h: 44,
-    lines: ['Apprendimento:', 'backprop'],
+    lines: tx(['Apprendimento:', 'backprop'], ['Learning:', 'backprop']),
     lesson: '07',
     done: true,
-    info: 'La backpropagation: il gradiente per ogni peso della rete.',
+    info: tx('La backpropagation: il gradiente per ogni peso della rete.', 'Backpropagation: the gradient for every weight of the network.'),
   },
   {
     id: 'heur',
@@ -126,10 +136,10 @@ const NODES: MapNode[] = [
     y: 208,
     w: 110,
     h: 44,
-    lines: ['Euristiche', 'per la BP'],
+    lines: tx(['Euristiche', 'per la BP'], ['Heuristics', 'for BP']),
     lesson: '08',
     here: true,
-    info: 'Questa lezione: le questioni pratiche dell’addestramento.',
+    info: tx('Questa lezione: le questioni pratiche dell’addestramento.', 'This lesson: the practical issues of training.'),
   },
   {
     id: 'cc',
@@ -140,7 +150,10 @@ const NODES: MapNode[] = [
     lines: ['CasCor'],
     lesson: '08',
     sec: 'cascade-correlation',
-    info: 'Il Cascade Correlation: un approccio costruttivo, più avanti in questa lezione.',
+    info: tx(
+      'Il Cascade Correlation: un approccio costruttivo, più avanti in questa lezione.',
+      'Cascade Correlation: a constructive approach, later in this lesson.',
+    ),
   },
   {
     id: 'reg',
@@ -148,10 +161,10 @@ const NODES: MapNode[] = [
     y: 262,
     w: 124,
     h: 30,
-    lines: ['Regolarizzazione'],
+    lines: [tx('Regolarizzazione', 'Regularization')],
     lesson: '08',
     sec: 'regolarizzazione-',
-    info: 'La regolarizzazione, più avanti in questa lezione.',
+    info: tx('La regolarizzazione, più avanti in questa lezione.', 'Regularization, later in this lesson.'),
   },
   {
     id: 'cnn',
@@ -159,9 +172,9 @@ const NODES: MapNode[] = [
     y: 306,
     w: 118,
     h: 44,
-    lines: ['Applicazioni:', 'esempio CNN'],
+    lines: tx(['Applicazioni:', 'esempio CNN'], ['Applications:', 'CNN example']),
     lesson: '16',
-    info: 'Le reti convoluzionali (lezione 16).',
+    info: tx('Le reti convoluzionali (lezione 16).', 'Convolutional networks (lesson 16).'),
   },
   {
     id: 'deep',
@@ -169,9 +182,12 @@ const NODES: MapNode[] = [
     y: 296,
     w: 138,
     h: 58,
-    lines: ['Introduzione ai', 'paradigmi recenti', '(deep, random)'],
+    lines: tx(['Introduzione ai', 'paradigmi recenti', '(deep, random)'], ['Introduction to', 'recent paradigms', '(deep, random)']),
     lesson: '17',
-    info: 'Deep learning e reti randomizzate (lezioni 17 e 18), dopo la validazione e le SVM.',
+    info: tx(
+      'Deep learning e reti randomizzate (lezioni 17 e 18), dopo la validazione e le SVM.',
+      'Deep learning and randomized networks (lessons 17 and 18), after validation and SVMs.',
+    ),
   },
 ]
 const EDGES: [string, string][] = [
@@ -204,7 +220,7 @@ export function CourseZoom() {
   return (
     <div>
       <div className="zoom8__scroll">
-        <svg viewBox="0 0 700 370" className="zoom8" role="img" aria-label="Mappa della parte del corso sulle reti neurali">
+        <svg viewBox="0 0 700 370" className="zoom8" role="img" aria-label={tx('Mappa della parte del corso sulle reti neurali', 'Map of the part of the course on neural networks')}>
           <defs>
             <marker
               id="zoom8-arrow"
@@ -221,11 +237,11 @@ export function CourseZoom() {
           </defs>
           <rect x={8} y={14} width={420} height={96} rx={12} className="zoom8__area" />
           <text x={18} y={102} className="zoom8__area-lbl">
-            una unità
+            {tx('una unità', 'one unit')}
           </text>
           <rect x={8} y={118} width={684} height={246} rx={12} className="zoom8__area" />
           <text x={684} y={136} textAnchor="end" className="zoom8__area-lbl">
-            reti neurali
+            {tx('reti neurali', 'neural networks')}
           </text>
           {EDGES.map(([a, b]) => {
             const A = byId.get(a)!
@@ -272,7 +288,7 @@ export function CourseZoom() {
             </g>
           ))}
           <text x={534} y={235} className="zoom8__here">
-            ← siamo qui
+            {tx('← siamo qui', '← we are here')}
           </text>
         </svg>
       </div>
@@ -280,13 +296,19 @@ export function CourseZoom() {
         <span>{node.info}</span>
         {node.lesson && (
           <a className="chip chip--link" href={lessonHref(node.lesson, node.sec)}>
-            vai alla lezione {node.lesson}
+            {tx(`vai alla lezione ${node.lesson}`, `go to lesson ${node.lesson}`)}
           </a>
         )}
       </div>
       <Tasks
         items={[
-          { label: 'Clicca un paio di blocchi: la spunta indica gli argomenti già visti, ognuno porta alla sua sezione.', done: seen.two },
+          {
+            label: tx(
+              'Clicca un paio di blocchi: la spunta indica gli argomenti già visti, ognuno porta alla sua sezione.',
+              'Click a couple of blocks: the check mark indicates the topics already covered, each one leads to its section.',
+            ),
+            done: seen.two,
+          },
         ]}
       />
     </div>
@@ -342,11 +364,11 @@ function Curves({ run, kind, yMax }: { run: Run; kind: 'mse' | 'acc'; yMax: numb
     <Plot xDomain={[0, total]} yDomain={[yMin, yMax]} aspect={0.5} margin={{ l: 46, b: 40 }}>
       <Axes
         xTicks={5}
-        xFormat={(v) => v.toLocaleString('it-IT')}
+        xFormat={(v) => v.toLocaleString(LOCALE)}
         yTicks={kind === 'mse' ? 5 : [0.5, 0.6, 0.7, 0.8, 0.9, 1]}
         yFormat={(v) => (kind === 'mse' ? fmt(v, 2) : fmt(v * 100, 0) + '%')}
-        xLabel="epoche"
-        yLabel={kind === 'mse' ? 'MSE' : 'accuratezza'}
+        xLabel={tx('epoche', 'epochs')}
+        yLabel={kind === 'mse' ? 'MSE' : tx('accuratezza', 'accuracy')}
       />
       <Polyline pts={rows.map((r) => ({ x: r[0], y: Math.min(yMax, r[1]) }))} color="var(--c-blue)" width={2.2} />
       <Polyline pts={rows.map((r) => ({ x: r[0], y: Math.min(yMax, r[2]) }))} color="var(--c-orange)" width={2.2} dash="6 4" />
@@ -356,7 +378,11 @@ function Curves({ run, kind, yMax }: { run: Run; kind: 'mse' | 'acc'; yMax: numb
 
 const last = <T,>(a: T[] | undefined) => (a && a.length ? a[a.length - 1] : undefined)
 function Prog({ run }: { run: Run }) {
-  return run.done < run.total ? <span className="l8__prog">addestramento: epoca {run.done.toLocaleString('it-IT')}</span> : null
+  return run.done < run.total ? (
+    <span className="l8__prog">
+      {tx('addestramento: epoca', 'training: epoch')} {run.done.toLocaleString(LOCALE)}
+    </span>
+  ) : null
 }
 
 export function Monk2Mse() {
@@ -375,8 +401,8 @@ export function Monk2Mse() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'MSE di training', color: 'var(--c-blue)' },
-            { label: 'MSE di test', color: 'var(--c-orange)', kind: 'dash' },
+            { label: tx('MSE di training', 'training MSE'), color: 'var(--c-blue)' },
+            { label: tx('MSE di test', 'test MSE'), color: 'var(--c-orange)', kind: 'dash' },
           ]}
         />
         <Prog run={run} />
@@ -384,7 +410,7 @@ export function Monk2Mse() {
       <Curves run={run} kind="mse" yMax={0.26} />
       <div className="controls">
         <Segmented
-          label="unità nascoste"
+          label={tx('unità nascoste', 'hidden units')}
           size="sm"
           value={H}
           onChange={(v) => {
@@ -394,7 +420,7 @@ export function Monk2Mse() {
           options={[1, 2, 3, 5].map((v) => ({ value: v, label: String(v) }))}
         />
         <Toggle
-          label="codifica one-hot degli input (17 unità)"
+          label={tx('codifica one-hot degli input (17 unità)', 'one-hot encoding of the inputs (17 units)')}
           checked={enc}
           onChange={(v) => {
             setEnc(v)
@@ -408,22 +434,34 @@ export function Monk2Mse() {
             restart({ seed: seed + 1 })
           }}
         >
-          Altra inizializzazione
+          {tx('Altra inizializzazione', 'New initialization')}
         </Btn>
       </div>
       <div className="readouts">
-        <Readout label="accuratezza di training" tone="blue" value={a ? fmt(a[1] * 100, 1) + '%' : '—'} />
-        <Readout label="accuratezza di test" tone="orange" value={a ? fmt(a[2] * 100, 1) + '%' : '—'} />
+        <Readout label={tx('accuratezza di training', 'training accuracy')} tone="blue" value={a ? fmt(a[1] * 100, 1) + '%' : '—'} />
+        <Readout label={tx('accuratezza di test', 'test accuracy')} tone="orange" value={a ? fmt(a[2] * 100, 1) + '%' : '—'} />
         <Readout
-          label="impostazioni"
-          value={<Tex>{'\\eta = 0{,}1,\\ \\alpha = 0{,}5'}</Tex>}
-          sub="batch, gradiente diviso per il numero di pattern"
+          label={tx('impostazioni', 'settings')}
+          value={<Tex>{tx('\\eta = 0{,}1,\\ \\alpha = 0{,}5', '\\eta = 0.1,\\ \\alpha = 0.5')}</Tex>}
+          sub={tx('batch, gradiente diviso per il numero di pattern', 'batch, gradient divided by the number of patterns')}
         />
       </div>
       <Tasks
         items={[
-          { label: 'Togli la codifica one-hot (6 input numerici): la rete non arriva più al 100%.', done: seen.raw },
-          { label: 'Prova un’altra inizializzazione: con così poche unità il percorso cambia.', done: seen.seed },
+          {
+            label: tx(
+              'Togli la codifica one-hot (6 input numerici): la rete non arriva più al 100%.',
+              'Remove the one-hot encoding (6 numerical inputs): the network no longer reaches 100%.',
+            ),
+            done: seen.raw,
+          },
+          {
+            label: tx(
+              'Prova un’altra inizializzazione: con così poche unità il percorso cambia.',
+              'Try another initialization: with so few units the path changes.',
+            ),
+            done: seen.seed,
+          },
         ]}
       />
     </div>
@@ -438,18 +476,23 @@ export function Monk2Acc() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'accuratezza di training', color: 'var(--c-blue)' },
-            { label: 'accuratezza di test', color: 'var(--c-orange)', kind: 'dash' },
+            { label: tx('accuratezza di training', 'training accuracy'), color: 'var(--c-blue)' },
+            { label: tx('accuratezza di test', 'test accuracy'), color: 'var(--c-orange)', kind: 'dash' },
           ]}
         />
         <Prog run={run} />
       </div>
       <Curves run={run} kind="acc" yMax={1.02} />
       <div className="readouts">
-        <Readout label="training" tone="blue" value={a ? fmt(a[1] * 100, 1) + '%' : '—'} />
+        <Readout label="training" tone="blue" value={a ? fmt(a[1] * 100, 1) + '%' : '—'} />{/* uguale nelle due lingue */}
         <Readout label="test" tone="orange" value={a ? fmt(a[2] * 100, 1) + '%' : '—'} />
       </div>
-      <p className="wnote">Stessa rete della figura 8.11: le impostazioni scelte lì valgono anche qui.</p>
+      <p className="wnote">
+        {tx(
+          'Stessa rete della figura 8.11: le impostazioni scelte lì valgono anche qui.',
+          'Same network as in figure 8.11: the settings chosen there apply here too.',
+        )}
+      </p>
     </div>
   )
 }
@@ -468,8 +511,8 @@ export function Monk3() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'MSE di training', color: 'var(--c-blue)' },
-            { label: 'MSE di test', color: 'var(--c-orange)', kind: 'dash' },
+            { label: tx('MSE di training', 'training MSE'), color: 'var(--c-blue)' },
+            { label: tx('MSE di test', 'test MSE'), color: 'var(--c-orange)', kind: 'dash' },
           ]}
         />
         <Prog run={run} />
@@ -477,7 +520,7 @@ export function Monk3() {
       <Curves run={run} kind="mse" yMax={0.16} />
       <div className="controls">
         <Segmented
-          label="λ (weight decay a ogni epoca)"
+          label={tx('λ (weight decay a ogni epoca)', 'λ (weight decay at every epoch)')}
           size="sm"
           value={lam}
           onChange={(v) => {
@@ -488,22 +531,34 @@ export function Monk3() {
         />
       </div>
       <div className="readouts">
-        <Readout label="accuratezza di training" tone="blue" value={a ? fmt(a[1] * 100, 1) + '%' : '—'} />
-        <Readout label="accuratezza di test" tone="orange" value={a ? fmt(a[2] * 100, 1) + '%' : '—'} />
+        <Readout label={tx('accuratezza di training', 'training accuracy')} tone="blue" value={a ? fmt(a[1] * 100, 1) + '%' : '—'} />
+        <Readout label={tx('accuratezza di test', 'test accuracy')} tone="orange" value={a ? fmt(a[2] * 100, 1) + '%' : '—'} />
         <Readout
-          label="minimo del test"
-          value={`epoca ${h[iMin][0].toLocaleString('it-IT')}`}
-          sub={`MSE ${fmt(h[iMin][2], 3)}, alla fine ${fmt(h[h.length - 1][2], 3)}`}
+          label={tx('minimo del test', 'test minimum')}
+          value={`${tx('epoca', 'epoch')} ${h[iMin][0].toLocaleString(LOCALE)}`}
+          sub={tx(
+            `MSE ${fmt(h[iMin][2], 3)}, alla fine ${fmt(h[h.length - 1][2], 3)}`,
+            `MSE ${fmt(h[iMin][2], 3)}, at the end ${fmt(h[h.length - 1][2], 3)}`,
+          )}
         />
       </div>
       <Tasks
         items={[
-          { label: 'Togli la regolarizzazione (λ = 0) e confronta la parte finale delle due curve.', done: seen.zero },
           {
-            label: (
+            label: tx(
+              'Togli la regolarizzazione (λ = 0) e confronta la parte finale delle due curve.',
+              'Remove the regularization (λ = 0) and compare the final part of the two curves.',
+            ),
+            done: seen.zero,
+          },
+          {
+            label: tx(
               <>
                 Prova <Tex>{'\\lambda = 10^{-3}'}</Tex>: la rete non scende più sul training (underfitting).
-              </>
+              </>,
+              <>
+                Try <Tex>{'\\lambda = 10^{-3}'}</Tex>: the network no longer goes down on the training set (underfitting).
+              </>,
             ),
             done: seen.big,
           },

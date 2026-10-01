@@ -1,5 +1,7 @@
 import type { MDXContent } from 'mdx/types'
-import lessonIndex from 'virtual:lesson-index'
+import allIndex from 'virtual:lesson-index'
+import { isEn } from '../lib/i18n'
+import { lessonsEn, partsEn } from './lessons.en'
 
 export type LessonMeta = {
   id: string
@@ -14,16 +16,23 @@ export type LessonMeta = {
 export type LessonPart = { roman: string; title: string; lessons: LessonMeta[] }
 
 const loaders = import.meta.glob<{ default: MDXContent }>('./lessons/*.mdx')
+// le lezioni tradotte: stesso nome di file in `lessons-en/`; una lezione non ancora tradotta resta in italiano
+const loadersEn = import.meta.glob<{ default: MDXContent }>('./lessons-en/*.mdx')
 function loaderFor(id: string) {
+  const en = isEn ? Object.keys(loadersEn).find((k) => k.startsWith(`./lessons-en/${id}-`)) : undefined
+  if (en) return loadersEn[en]
   const key = Object.keys(loaders).find((k) => k.startsWith(`./lessons/${id}-`))
   return key ? loaders[key] : undefined
 }
 
 function L(id: string, title: string, extra: Omit<LessonMeta, 'id' | 'title' | 'load'> = {}): LessonMeta {
-  return { id, title, ...extra, load: loaderFor(id) }
+  const en = isEn ? lessonsEn[id] : undefined
+  // in inglese l'etichetta («Lecture 1») c'è solo dove c'è anche in italiano
+  return { id, title: en?.title ?? title, ...extra, ...(en && { eyebrow: en.eyebrow, summary: en.summary }), load: loaderFor(id) }
 }
 
-export const parts: LessonPart[] = [
+// i titoli e i riassunti qui sotto sono quelli italiani (li legge anche plugins/site-meta.ts): l'inglese è in lessons.en.ts
+const partsIt: LessonPart[] = [
   {
     roman: 'I',
     title: 'Fondamenti',
@@ -122,6 +131,11 @@ export const parts: LessonPart[] = [
     ],
   },
 ]
+
+export const parts: LessonPart[] = isEn ? partsIt.map((p) => ({ ...p, title: partsEn[p.roman] ?? p.title })) : partsIt
+
+/** Indice (titoli, figure, parole) nella lingua corrente; in inglese le lezioni non tradotte restano quelle italiane. */
+const lessonIndex = isEn ? { ...allIndex.it, ...allIndex.en } : allIndex.it
 
 export const lessons: LessonMeta[] = parts.flatMap((p) => p.lessons)
 export const availableLessons = lessons.filter((l) => l.load)

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Axes, Plot, usePlot } from '../../components/plot/Plot'
 import { Tasks } from '../../components/prose/Figure'
 import { Btn, Controls, Legend, Readout, Segmented, Toggle } from '../../components/ui/Controls'
+import { LOCALE, tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { SOM_N, SOM_STEPS, trainSom } from './engine'
 
@@ -40,7 +41,7 @@ export function SomMapping() {
   return (
     <div>
       <div className="pipe16__scroll">
-        <svg className="map19" viewBox="0 0 660 270" style={{ minWidth: 540 }} role="img" aria-label="Punti nello spazio di input 3D mappati su una griglia neurale 2D">
+        <svg className="map19" viewBox="0 0 660 270" style={{ minWidth: 540 }} role="img" aria-label={tx('Punti nello spazio di input 3D mappati su una griglia neurale 2D', 'Points in the 3D input space mapped onto a 2D neural grid')}>
           <g className="map19__axes">
             <line x1={O.x} y1={O.y} x2={O.x} y2={24} />
             <line x1={O.x} y1={O.y} x2={O.x + 200} y2={O.y} />
@@ -59,7 +60,7 @@ export function SomMapping() {
                 r={on ? 6 : 4.5}
                 role="button"
                 tabIndex={0}
-                aria-label={`punto ${i + 1}`}
+                aria-label={tx(`punto ${i + 1}`, `point ${i + 1}`)}
                 onClick={() => {
                   setPt(i)
                   setUnit(null)
@@ -88,7 +89,7 @@ export function SomMapping() {
                 d={`M${a.x},${a.y}L${b.x},${b.y}L${cc.x},${cc.y}L${d.x},${d.y}Z`}
                 role="button"
                 tabIndex={0}
-                aria-label={`unità ${u + 1} della mappa`}
+                aria-label={tx(`unità ${u + 1} della mappa`, `unit ${u + 1} of the map`)}
                 onClick={() => {
                   setUnit(u)
                   setPt(null)
@@ -104,22 +105,40 @@ export function SomMapping() {
             )
           })}
           <text className="map19__t" x={40} y={258}>
-            spazio di input 3D (o multidimensionale, in generale)
+            {tx('spazio di input 3D (o multidimensionale, in generale)', '3D input space (or multidimensional, in general)')}
           </text>
           <text className="map19__t" x={420} y={196}>
-            mappa neurale (griglia 2D)
+            {tx('mappa neurale (griglia 2D)', 'neural map (2D grid)')}
           </text>
         </svg>
       </div>
       <p className="wnote">
         {pt !== null
-          ? 'L’unità evidenziata è la vincitrice per il punto scelto: quella il cui vettore dei pesi è il più vicino all’input.'
-          : 'I punti evidenziati sono quelli per cui l’unità scelta è la vincitrice. Unità vicine sulla mappa rispondono a punti vicini nello spazio di input.'}
+          ? tx(
+              'L’unità evidenziata è la vincitrice per il punto scelto: quella il cui vettore dei pesi è il più vicino all’input.',
+              'The highlighted unit is the winner for the chosen point: the one whose weight vector is closest to the input.',
+            )
+          : tx(
+              'I punti evidenziati sono quelli per cui l’unità scelta è la vincitrice. Unità vicine sulla mappa rispondono a punti vicini nello spazio di input.',
+              'The highlighted points are those for which the chosen unit is the winner. Units that are close on the map respond to points that are close in the input space.',
+            )}
       </p>
       <Tasks
         items={[
-          { label: 'Clicca alcuni punti vicini tra loro: finiscono sulla stessa unità o su unità vicine.', done: seen.p >= 3 },
-          { label: 'Clicca un’unità della mappa: si accendono i punti che rappresenta.', done: seen.u },
+          {
+            label: tx(
+              'Clicca alcuni punti vicini tra loro: finiscono sulla stessa unità o su unità vicine.',
+              'Click a few points close to each other: they end up on the same unit or on nearby units.',
+            ),
+            done: seen.p >= 3,
+          },
+          {
+            label: tx(
+              'Clicca un’unità della mappa: si accendono i punti che rappresenta.',
+              'Click a unit of the map: the points it represents light up.',
+            ),
+            done: seen.u,
+          },
         ]}
       />
     </div>
@@ -130,25 +149,25 @@ export function SomMapping() {
 
 /** parti del corpo nell'ordine in cui compaiono lungo la corteccia; `a` = ampiezza relativa dell'area (illustrativa) */
 const BODY: { name: string; a: number }[] = [
-  { name: 'dita dei piedi', a: 1 },
-  { name: 'ginocchio', a: 0.9 },
-  { name: 'anca', a: 0.9 },
-  { name: 'tronco', a: 1.3 },
-  { name: 'spalla', a: 0.9 },
-  { name: 'braccio', a: 0.9 },
-  { name: 'gomito', a: 0.9 },
-  { name: 'polso', a: 0.9 },
-  { name: 'mano', a: 2.4 },
-  { name: 'dita', a: 2.6 },
-  { name: 'pollice', a: 1.9 },
-  { name: 'collo', a: 0.8 },
-  { name: 'sopracciglio', a: 0.8 },
-  { name: 'occhio', a: 1.2 },
-  { name: 'viso', a: 2.3 },
-  { name: 'labbra', a: 2.7 },
-  { name: 'mascella', a: 1.1 },
-  { name: 'lingua', a: 1.8 },
-  { name: 'deglutizione', a: 1.1 },
+  { name: tx('dita dei piedi', 'toes'), a: 1 },
+  { name: tx('ginocchio', 'knee'), a: 0.9 },
+  { name: tx('anca', 'hip'), a: 0.9 },
+  { name: tx('tronco', 'trunk'), a: 1.3 },
+  { name: tx('spalla', 'shoulder'), a: 0.9 },
+  { name: tx('braccio', 'arm'), a: 0.9 },
+  { name: tx('gomito', 'elbow'), a: 0.9 },
+  { name: tx('polso', 'wrist'), a: 0.9 },
+  { name: tx('mano', 'hand'), a: 2.4 },
+  { name: tx('dita', 'fingers'), a: 2.6 },
+  { name: tx('pollice', 'thumb'), a: 1.9 },
+  { name: tx('collo', 'neck'), a: 0.8 },
+  { name: tx('sopracciglio', 'eyebrow'), a: 0.8 },
+  { name: tx('occhio', 'eye'), a: 1.2 },
+  { name: tx('viso', 'face'), a: 2.3 },
+  { name: tx('labbra', 'lips'), a: 2.7 },
+  { name: tx('mascella', 'jaw'), a: 1.1 },
+  { name: tx('lingua', 'tongue'), a: 1.8 },
+  { name: tx('deglutizione', 'swallowing'), a: 1.1 },
 ]
 const TOT = BODY.reduce((s, b) => s + b.a, 0)
 // dall'angolo 186° (a sinistra) a −6° (a destra), passando in alto
@@ -172,7 +191,7 @@ export function Homunculus() {
   return (
     <div>
       <div className="pipe16__scroll">
-      <svg className="hom19" viewBox="0 0 620 340" style={{ minWidth: 520 }} role="img" aria-label="Homunculus somatosensoriale: le parti del corpo in ordine lungo la corteccia">
+      <svg className="hom19" viewBox="0 0 620 340" style={{ minWidth: 520 }} role="img" aria-label={tx('Homunculus somatosensoriale: le parti del corpo in ordine lungo la corteccia', 'Somatosensory homunculus: the parts of the body in order along the cortex')}>
         {SEGS.map((s, i) => {
           const p1 = pt(R2, s.a0)
           const p2 = pt(R2, s.a1)
@@ -212,29 +231,47 @@ export function Homunculus() {
           )
         })}
         <text className="hom19__c" x={CX} y={CY - 70} textAnchor="middle">
-          corteccia
+          {tx('corteccia', 'somatosensory')}
         </text>
         <text className="hom19__c" x={CX} y={CY - 52} textAnchor="middle">
-          somatosensoriale
+          {tx('somatosensoriale', 'cortex')}
         </text>
       </svg>
       </div>
       <Controls>
         <div className="readouts">
-          <Readout label="parte del corpo" tone="accent" value={BODY[sel].name} />
+          <Readout label={tx('parte del corpo', 'body part')} tone="accent" value={BODY[sel].name} />
           <Readout
-            label="zone adiacenti sulla corteccia"
+            label={tx('zone adiacenti sulla corteccia', 'adjacent zones on the cortex')}
             value={[BODY[sel - 1]?.name, BODY[sel + 1]?.name].filter(Boolean).join(' · ')}
-            sub="parti vicine anche nel corpo"
+            sub={tx('parti vicine anche nel corpo', 'parts also close in the body')}
           />
-          <Readout label="area occupata" value={BODY[sel].a >= 2.2 ? 'ampia' : BODY[sel].a >= 1.2 ? 'media' : 'piccola'} sub={BODY[sel].a === maxA ? 'la più ampia' : undefined} />
+          <Readout
+            label={tx('area occupata', 'area occupied')}
+            value={BODY[sel].a >= 2.2 ? tx('ampia', 'large') : BODY[sel].a >= 1.2 ? tx('media', 'medium') : tx('piccola', 'small')}
+            sub={BODY[sel].a === maxA ? tx('la più ampia', 'the largest') : undefined}
+          />
         </div>
       </Controls>
-      <p className="wnote">Schema della sezione di corteccia: l’ordine delle parti è quello della figura, le ampiezze delle zone sono indicative.</p>
+      <p className="wnote">
+        {tx(
+          'Schema della sezione di corteccia: l’ordine delle parti è quello della figura, le ampiezze delle zone sono indicative.',
+          'Diagram of the section of cortex: the order of the parts is that of the figure, the widths of the zones are indicative.',
+        )}
+      </p>
       <Tasks
         items={[
-          { label: 'Clicca più zone lungo la corteccia: neuroni adiacenti rappresentano parti vicine del corpo.', done: n >= 3 },
-          { label: 'Trova una delle parti più sensibili: occupa un’area più ampia.', done: big },
+          {
+            label: tx(
+              'Clicca più zone lungo la corteccia: neuroni adiacenti rappresentano parti vicine del corpo.',
+              'Click several zones along the cortex: adjacent neurons represent nearby parts of the body.',
+            ),
+            done: n >= 3,
+          },
+          {
+            label: tx('Trova una delle parti più sensibili: occupa un’area più ampia.', 'Find one of the most sensitive parts: it occupies a larger area.'),
+            done: big,
+          },
         ]}
       />
     </div>
@@ -279,15 +316,15 @@ export function SomTraining() {
       <div className="wbar">
         <Segmented
           size="sm"
-          label="iterazione"
+          label={tx('iterazione', 'iteration')}
           value={k}
           onChange={(v) => {
             setK(v)
             setPlay(false)
           }}
-          options={SOM_STEPS.map((s, i) => ({ value: i, label: s.toLocaleString('it-IT') }))}
+          options={SOM_STEPS.map((s, i) => ({ value: i, label: s.toLocaleString(LOCALE) }))}
         />
-        <Toggle label="vicinato di raggio zero" checked={zero} onChange={setZero} />
+        <Toggle label={tx('vicinato di raggio zero', 'neighborhood of radius zero')} checked={zero} onChange={setZero} />
       </div>
       <div className="som19">
         <Plot xDomain={[0, 1]} yDomain={[0, 1]} equal aspect={1} minH={260} maxH={430} margin={{ l: 12, r: 12, t: 12, b: 12 }}>
@@ -307,19 +344,47 @@ export function SomTraining() {
             }
           }}
         >
-          {playing ? 'Ferma' : 'Segui l’addestramento'}
+          {playing ? tx('Ferma', 'Stop') : tx('Segui l’addestramento', 'Follow the training')}
         </Btn>
-        <Legend items={[{ label: `vettori di riferimento (mappa ${SOM_N} × ${SOM_N}), collegati secondo la griglia`, color: 'var(--c-blue)' }]} />
+        <Legend
+          items={[
+            {
+              label: tx(
+                `vettori di riferimento (mappa ${SOM_N} × ${SOM_N}), collegati secondo la griglia`,
+                `reference vectors (${SOM_N} × ${SOM_N} map), connected according to the grid`,
+              ),
+              color: 'var(--c-blue)',
+            },
+          ]}
+        />
       </Controls>
       <p className="wnote">
         {zero
-          ? 'Con vicinato di raggio zero si aggiorna solo il vincitore: è il K-means on-line. I prototipi coprono comunque il quadrato, ma la griglia resta aggrovigliata: non c’è ordine topologico.'
-          : 'Una SOM vera, addestrata su input uniformi nel quadrato: il vicinato sulla griglia, ampio all’inizio e poi sempre più stretto, distende la mappa in modo ordinato.'}
+          ? tx(
+              'Con vicinato di raggio zero si aggiorna solo il vincitore: è il K-means on-line. I prototipi coprono comunque il quadrato, ma la griglia resta aggrovigliata: non c’è ordine topologico.',
+              'With a neighborhood of radius zero only the winner is updated: it is on-line K-means. The prototypes still cover the square, but the grid stays tangled: there is no topological order.',
+            )
+          : tx(
+              'Una SOM vera, addestrata su input uniformi nel quadrato: il vicinato sulla griglia, ampio all’inizio e poi sempre più stretto, distende la mappa in modo ordinato.',
+              'A real SOM, trained on uniform inputs in the square: the neighborhood on the grid, wide at the beginning and then narrower and narrower, unfolds the map in an orderly way.',
+            )}
       </p>
       <Tasks
         items={[
-          { label: 'Segui l’addestramento fino a 100.000 iterazioni: la mappa parte concentrata in un punto e si distende sul quadrato.', done: seen.end },
-          { label: 'Attiva il vicinato di raggio zero e riguarda le iterazioni: senza fase cooperativa l’ordine non emerge.', done: seen.zero },
+          {
+            label: tx(
+              'Segui l’addestramento fino a 100.000 iterazioni: la mappa parte concentrata in un punto e si distende sul quadrato.',
+              'Follow the training up to 100,000 iterations: the map starts concentrated in one point and unfolds over the square.',
+            ),
+            done: seen.end,
+          },
+          {
+            label: tx(
+              'Attiva il vicinato di raggio zero e riguarda le iterazioni: senza fase cooperativa l’ordine non emerge.',
+              'Turn on the neighborhood of radius zero and go through the iterations again: without the cooperative stage the order does not emerge.',
+            ),
+            done: seen.zero,
+          },
         ]}
       />
     </div>
@@ -489,7 +554,7 @@ export function WelfareMap({ mode }: { mode: 'umatrix' | 'colors' }) {
           viewBox={`0 0 ${Math.ceil(12 + (COLS + 0.5) * W)} ${Math.ceil(12 + 2 * S + (ROWS - 1) * 1.5 * S)}`}
           style={{ minWidth: 560 }}
           role="img"
-          aria-label="Mappa SOM 13 per 9 degli indicatori di benessere di 77 paesi"
+          aria-label={tx('Mappa SOM 13 per 9 degli indicatori di benessere di 77 paesi', '13 by 9 SOM map of the welfare indicators of 77 countries')}
         >
           {Array.from({ length: ROWS * COLS }, (_, i) => {
             const r = Math.floor(i / COLS)
@@ -529,24 +594,42 @@ export function WelfareMap({ mode }: { mode: 'umatrix' | 'colors' }) {
       <Controls>
         {sel ? (
           <span className="verdict verdict--info">
-            {COUNTRIES[sel].join(', ')} — nelle unità vicine: {nbCountries.length ? nbCountries.join(', ') : 'nessun paese'}.
+            {COUNTRIES[sel].join(', ')} — {tx('nelle unità vicine', 'in the neighboring units')}:{' '}
+            {nbCountries.length ? nbCountries.join(', ') : tx('nessun paese', 'no country')}.
           </span>
         ) : (
-          <p className="wnote">Clicca un’unità con dei paesi per vedere quali paesi stanno nelle unità adiacenti della mappa.</p>
+          <p className="wnote">
+            {tx(
+              'Clicca un’unità con dei paesi per vedere quali paesi stanno nelle unità adiacenti della mappa.',
+              'Click a unit with countries to see which countries lie in the adjacent units of the map.',
+            )}
+          </p>
         )}
       </Controls>
       <p className="wnote">
         {mode === 'umatrix'
-          ? 'Grigio chiaro = vettori di riferimento vicini (un cluster di paesi simili); grigio scuro = vettori lontani (un confine tra cluster). Le posizioni dei paesi sono lette dalla figura originale; le sfumature sono ricostruite a occhio.'
-          : 'Colori simili indicano paesi con indicatori simili: dal giallo-arancio dei paesi industrializzati al viola-blu dei paesi più poveri. I colori sono ricostruiti a occhio dalla figura originale.'}
+          ? tx(
+              'Grigio chiaro = vettori di riferimento vicini (un cluster di paesi simili); grigio scuro = vettori lontani (un confine tra cluster). Le posizioni dei paesi sono lette dalla figura originale; le sfumature sono ricostruite a occhio.',
+              'Light gray = close reference vectors (a cluster of similar countries); dark gray = distant vectors (a boundary between clusters). The positions of the countries are read from the original figure; the shades are reconstructed by eye.',
+            )
+          : tx(
+              'Colori simili indicano paesi con indicatori simili: dal giallo-arancio dei paesi industrializzati al viola-blu dei paesi più poveri. I colori sono ricostruiti a occhio dalla figura originale.',
+              'Similar colors indicate countries with similar indicators: from the yellow-orange of the industrialized countries to the purple-blue of the poorest countries. The colors are reconstructed by eye from the original figure.',
+            )}
       </p>
       <Tasks
         items={[
           {
             label:
               mode === 'umatrix'
-                ? 'Clicca alcune unità in una zona chiara, poi una vicina a una zona scura: i paesi simili sono raggruppati, le zone scure separano i gruppi.'
-                : 'Clicca alcune unità: i paesi delle unità adiacenti hanno colori simili, cioè indicatori simili.',
+                ? tx(
+                    'Clicca alcune unità in una zona chiara, poi una vicina a una zona scura: i paesi simili sono raggruppati, le zone scure separano i gruppi.',
+                    'Click a few units in a light area, then one near a dark area: similar countries are grouped together, the dark areas separate the groups.',
+                  )
+                : tx(
+                    'Clicca alcune unità: i paesi delle unità adiacenti hanno colori simili, cioè indicatori simili.',
+                    'Click a few units: the countries of adjacent units have similar colors, that is similar indicators.',
+                  ),
             done: n >= 3,
           },
         ]}

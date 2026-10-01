@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { polyval } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { ALL, DATA, THETAS, argmin, avg, cvErrors, fit, foldsOf, pick, remp, shuffled, std } from './cv'
@@ -55,9 +56,9 @@ const Dbar = (k: number | string) => <Tex>{`\\bar D_{${k}}`}</Tex>
 const errFmt = (e: number) => (e > 5 ? '> 5' : fmt(e, 2))
 
 const LEG_TR = { label: 'training', color: 'var(--c-blue)', kind: 'dot' as const }
-const LEG_VL = { label: 'validazione', color: 'var(--c-orange)', kind: 'dot' as const }
+const LEG_VL = { label: tx('validazione', 'validation'), color: 'var(--c-orange)', kind: 'dot' as const }
 const LEG_TS = { label: 'test', color: 'var(--c-green)', kind: 'dot' as const }
-const LEG_H = { label: 'modello', color: 'var(--c-red)' }
+const LEG_H = { label: tx('modello', 'model'), color: 'var(--c-red)' }
 
 function Fit({ w, tr, vl = [], ts = [] }: { w: number[] | null; tr: number[]; vl?: number[]; ts?: number[] }) {
   return (
@@ -115,36 +116,53 @@ export function CvSelection() {
   const seen = useLatch({ oneTheta: s >= K - 1, chosen: s >= CHOOSE, retrained: s === RETRAIN })
 
   let status: ReactNode
-  if (s < 0) status = <>Premi «Passo»: per ogni valore di θ (il grado M del polinomio) si esegue un’intera K-fold CV.</>
+  if (s < 0)
+    status = tx(
+      <>Premi «Passo»: per ogni valore di θ (il grado M del polinomio) si esegue un’intera K-fold CV.</>,
+      <>Press “Step”: for each value of θ (the degree M of the polynomial) a whole K-fold CV is run.</>,
+    )
   else if (cur)
-    status = (
+    status = tx(
       <>
         θ = M {THETAS[cur.m]}, fold {cur.k + 1} di {K}: training su {Dbar(cur.k + 1)} ({tr.length} punti), stima su {D(cur.k + 1)} (
         {vl.length} punti): <Tex>{'R_{emp}'}</Tex> = {errFmt(errs[cur.m][cur.k])}
-      </>
+      </>,
+      <>
+        θ = M {THETAS[cur.m]}, fold {cur.k + 1} of {K}: training on {Dbar(cur.k + 1)} ({tr.length} points), estimate on{' '}
+        {D(cur.k + 1)} ({vl.length} points): <Tex>{'R_{emp}'}</Tex> = {errFmt(errs[cur.m][cur.k])}
+      </>,
     )
   else if (s === CHOOSE)
-    status = (
+    status = tx(
       <>
         Scelta: <Tex>{'\\theta^*'}</Tex> = M {THETAS[best]}, la media più bassa su tutte le CV ({fmt(means[best], 3)}).
-      </>
+      </>,
+      <>
+        Choice: <Tex>{'\\theta^*'}</Tex> = M {THETAS[best]}, the lowest mean over all the CVs ({fmt(means[best], 3)}).
+      </>,
     )
   else
-    status = (
+    status = tx(
       <>
         Riaddestramento su tutti gli {DATA.length} dati con M = {THETAS[best]}: questo è il modello restituito <Tex>{'h^*(D_l)'}</Tex>.
-      </>
+      </>,
+      <>
+        Retraining on all {DATA.length} data points with M = {THETAS[best]}: this is the returned model <Tex>{'h^*(D_l)'}</Tex>.
+      </>,
     )
 
   return (
     <div className="cv10">
       <div className="wbar">
         <Segmented
-          label={
+          label={tx(
             <>
               numero di fold <Tex>K</Tex>
-            </>
-          }
+            </>,
+            <>
+              number of folds <Tex>K</Tex>
+            </>,
+          )}
           value={K}
           onChange={(v) => {
             setK(v)
@@ -157,13 +175,13 @@ export function CvSelection() {
         />
         <div className="cv10__btns">
           <Btn icon="step" variant="soft" onClick={() => setS((v) => Math.min(RETRAIN, v + 1))} disabled={s === RETRAIN}>
-            Passo
+            {tx('Passo', 'Step')}
           </Btn>
           <Btn icon="play" variant="ghost" onClick={() => setS(RETRAIN)} disabled={s === RETRAIN}>
-            Fino alla fine
+            {tx('Fino alla fine', 'Run to the end')}
           </Btn>
           <Btn icon="reset" variant="ghost" onClick={() => setS(-1)} disabled={s < 0}>
-            Ricomincia
+            {tx('Ricomincia', 'Restart')}
           </Btn>
         </div>
       </div>
@@ -183,10 +201,10 @@ export function CvSelection() {
             </div>
           ))}
           <DownArrow>
-            con <Tex>{'\\theta^*'}</Tex>
+            {tx('con', 'with')} <Tex>{'\\theta^*'}</Tex>
           </DownArrow>
           <div className={`cv10__bar${s === RETRAIN ? ' is-cur' : ''}`}>
-            <Seg role="tr">(ri)addestramento su tutti i dati</Seg>
+            <Seg role="tr">{tx('(ri)addestramento su tutti i dati', '(re)training on all the data')}</Seg>
           </div>
         </div>
         <div>
@@ -205,7 +223,7 @@ export function CvSelection() {
               {F.map((_, k) => (
                 <th key={k}>{D(k + 1)}</th>
               ))}
-              <th>media</th>
+              <th>{tx('media', 'mean')}</th>
             </tr>
           </thead>
           <tbody>
@@ -229,9 +247,27 @@ export function CvSelection() {
 
       <Tasks
         items={[
-          { label: 'Completa tutti i fold per un valore di θ: la sua stima è la media dei K errori.', done: seen.oneTheta },
-          { label: 'Arriva alla scelta di θ*: vince la media più bassa, non il singolo fold migliore.', done: seen.chosen },
-          { label: 'Fai l’ultimo passo: il modello restituito è riaddestrato su tutti i dati.', done: seen.retrained },
+          {
+            label: tx(
+              'Completa tutti i fold per un valore di θ: la sua stima è la media dei K errori.',
+              'Complete all the folds for one value of θ: its estimate is the mean of the K errors.',
+            ),
+            done: seen.oneTheta,
+          },
+          {
+            label: tx(
+              'Arriva alla scelta di θ*: vince la media più bassa, non il singolo fold migliore.',
+              'Reach the choice of θ*: the lowest mean wins, not the best single fold.',
+            ),
+            done: seen.chosen,
+          },
+          {
+            label: tx(
+              'Fai l’ultimo passo: il modello restituito è riaddestrato su tutti i dati.',
+              'Take the last step: the returned model is retrained on all the data.',
+            ),
+            done: seen.retrained,
+          },
         ]}
       />
     </div>
@@ -276,7 +312,7 @@ export function CvHoldout() {
       <div className="wbar">
         <Legend items={[LEG_TR, LEG_VL, LEG_TS, LEG_H]} />
         <Btn icon="reset" variant="soft" onClick={() => setShuffle((v) => v + 1)}>
-          Rimescola TR e VL
+          {tx('Rimescola TR e VL', 'Reshuffle TR and VL')}
         </Btn>
       </div>
       <div className="wgrid wgrid--even">
@@ -295,33 +331,56 @@ export function CvHoldout() {
               </span>
             </button>
           ))}
-          <div className="wnote">In ogni riga: M scelto sul VL, poi errore di test su {D('k')} del modello riaddestrato su TR e VL.</div>
+          <div className="wnote">
+            {tx(
+              <>In ogni riga: M scelto sul VL, poi errore di test su {D('k')} del modello riaddestrato su TR e VL.</>,
+              <>In each row: M chosen on the VL, then test error on {D('k')} of the model retrained on TR and VL.</>,
+            )}
+          </div>
         </div>
         <Fit w={r.w} tr={r.tr} vl={r.vl} ts={r.ts} />
       </div>
       <div className="readouts">
         <Readout
-          label="stima del rischio (media ± dev. std. sui fold)"
+          label={tx('stima del rischio (media ± dev. std. sui fold)', 'risk estimate (mean ± std. dev. over the folds)')}
           tone="accent"
           value={`${fmt(avg(tests), 3)} ± ${fmt(std(tests), 3)}`}
         />
         <Readout
-          label="M scelto nelle quattro righe"
+          label={tx('M scelto nelle quattro righe', 'M chosen in the four rows')}
           value={chosen.join(', ')}
-          sub={distinct > 1 ? `${distinct} modelli diversi` : 'stavolta lo stesso M'}
+          sub={distinct > 1 ? tx(`${distinct} modelli diversi`, `${distinct} different models`) : tx('stavolta lo stesso M', 'this time the same M')}
         />
       </div>
       <div className={`verdict ${distinct > 1 ? 'verdict--warn' : 'verdict--info'}`}>
         <span>
           {distinct > 1
-            ? 'Righe diverse scelgono modelli diversi: nessun modello finale, solo una stima del rischio della classe di modelli.'
-            : 'Anche se stavolta ogni riga sceglie lo stesso M, nulla lo garantisce: la procedura stima il rischio della classe di modelli.'}
+            ? tx(
+                'Righe diverse scelgono modelli diversi: nessun modello finale, solo una stima del rischio della classe di modelli.',
+                'Different rows choose different models: no final model, only an estimate of the risk of the class of models.',
+              )
+            : tx(
+                'Anche se stavolta ogni riga sceglie lo stesso M, nulla lo garantisce: la procedura stima il rischio della classe di modelli.',
+                'Even though this time every row chooses the same M, nothing guarantees it: the procedure estimates the risk of the class of models.',
+              )}
         </span>
       </div>
       <Tasks
         items={[
-          { label: 'Clicca un’altra riga: il fold di test (verde) cambia, e con lui TR, VL e il modello.', done: seen.other },
-          { label: 'Rimescola TR e VL: la divisione è arbitraria e il modello scelto in una riga può cambiare.', done: seen.shuffled },
+          {
+            label: tx(
+              'Clicca un’altra riga: il fold di test (verde) cambia, e con lui TR, VL e il modello.',
+              'Click another row: the test fold (green) changes, and with it TR, VL and the model.',
+            ),
+            done: seen.other,
+          },
+          {
+            label: tx(
+              'Rimescola TR e VL: la divisione è arbitraria e il modello scelto in una riga può cambiare.',
+              'Reshuffle TR and VL: the split is arbitrary and the model chosen in a row can change.',
+            ),
+            done: seen.shuffled,
+          },
         ]}
       />
     </div>
@@ -355,11 +414,14 @@ export function DoubleCv() {
     <div className="cv10">
       <div className="wbar">
         <Segmented
-          label={
+          label={tx(
             <>
               fold interni <Tex>{"K'"}</Tex>
-            </>
-          }
+            </>,
+            <>
+              inner folds <Tex>{"K'"}</Tex>
+            </>,
+          )}
           value={Ki}
           onChange={setKi}
           options={[
@@ -370,7 +432,7 @@ export function DoubleCv() {
       </div>
       <div className="wgrid wgrid--even">
         <div className="cv10__rows">
-          <div className="wpanel__title">Ciclo esterno: stima del rischio</div>
+          <div className="wpanel__title">{tx('Ciclo esterno: stima del rischio', 'Outer loop: risk estimation')}</div>
           {outer.map((q, k) => (
             <button
               key={k}
@@ -394,13 +456,24 @@ export function DoubleCv() {
             </button>
           ))}
           <div className="readouts">
-            <Readout label="stima del rischio della classe" tone="accent" value={`${fmt(avg(tests), 3)} ± ${fmt(std(tests), 3)}`} />
-            <Readout label="M scelto per fold" value={chosen.join(', ')} />
+            <Readout
+              label={tx('stima del rischio della classe', 'risk estimate of the class')}
+              tone="accent"
+              value={`${fmt(avg(tests), 3)} ± ${fmt(std(tests), 3)}`}
+            />
+            <Readout label={tx('M scelto per fold', 'M chosen per fold')} value={chosen.join(', ')} />
           </div>
         </div>
         <div className="wpanel cv10__inner">
           <div className="wpanel__title">
-            Ciclo interno sullo split {sel + 1}: K-fold CV su {Dbar(sel + 1)}
+            {tx(
+              <>
+                Ciclo interno sullo split {sel + 1}: K-fold CV su {Dbar(sel + 1)}
+              </>,
+              <>
+                Inner loop on split {sel + 1}: K-fold CV on {Dbar(sel + 1)}
+              </>,
+            )}
           </div>
           <div className="cv10__rows cv10__rows--sm">
             {Array.from({ length: Ki }, (_, row) => (
@@ -423,19 +496,36 @@ export function DoubleCv() {
             ))}
           </div>
           <div className="wnote">
-            Errore medio di validazione della CV interna. Vince M = {THETAS[o.b]}: si riaddestra su {Dbar(sel + 1)} e si testa su{' '}
-            {D(sel + 1)}, errore {fmt(o.test, 3)}.
+            {tx(
+              <>
+                Errore medio di validazione della CV interna. Vince M = {THETAS[o.b]}: si riaddestra su {Dbar(sel + 1)} e si testa su{' '}
+                {D(sel + 1)}, errore {fmt(o.test, 3)}.
+              </>,
+              <>
+                Mean validation error of the inner CV. M = {THETAS[o.b]} wins: the model is retrained on {Dbar(sel + 1)} and tested on{' '}
+                {D(sel + 1)}, error {fmt(o.test, 3)}.
+              </>,
+            )}
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Clicca tutti e quattro gli split esterni: ognuno fa la propria model selection.', done: seen.all },
           {
-            label: (
+            label: tx(
+              'Clicca tutti e quattro gli split esterni: ognuno fa la propria model selection.',
+              'Click all four outer splits: each one performs its own model selection.',
+            ),
+            done: seen.all,
+          },
+          {
+            label: tx(
               <>
                 Cambia <Tex>{"K'"}</Tex>: i fold interni possono essere diversi da quelli esterni.
-              </>
+              </>,
+              <>
+                Change <Tex>{"K'"}</Tex>: the inner folds can differ from the outer ones.
+              </>,
             ),
             done: seen.ki,
           },
@@ -450,10 +540,22 @@ export function DoubleCv() {
 type Info = 'ots' | 'otr' | 'itr' | 'ivl' | null
 
 const INFO: Record<Exclude<Info, null>, string> = {
-  ots: 'Test del resampling esterno: serve solo a stimare le prestazioni, dopo che gli iperparametri sono stati regolati.',
-  otr: 'Training del resampling esterno: al suo interno il resampling interno regola gli iperparametri; con quelli si riaddestra su tutto il blocco.',
-  itr: 'Training del resampling interno: qui si addestra ogni configurazione di iperparametri.',
-  ivl: 'Il «test set» del resampling interno è in realtà un validation set: serve a scegliere gli iperparametri, non a stimare il rischio.',
+  ots: tx(
+    'Test del resampling esterno: serve solo a stimare le prestazioni, dopo che gli iperparametri sono stati regolati.',
+    'Test of the outer resampling: it serves only to estimate the performance, after the hyperparameters have been tuned.',
+  ),
+  otr: tx(
+    'Training del resampling esterno: al suo interno il resampling interno regola gli iperparametri; con quelli si riaddestra su tutto il blocco.',
+    'Training of the outer resampling: inside it the inner resampling tunes the hyperparameters; with those, the model is retrained on the whole block.',
+  ),
+  itr: tx(
+    'Training del resampling interno: qui si addestra ogni configurazione di iperparametri.',
+    'Training of the inner resampling: every hyperparameter configuration is trained here.',
+  ),
+  ivl: tx(
+    'Il «test set» del resampling interno è in realtà un validation set: serve a scegliere gli iperparametri, non a stimare il rischio.',
+    'The “test set” of the inner resampling is actually a validation set: it serves to choose the hyperparameters, not to estimate the risk.',
+  ),
 }
 
 /** Vista alternativa: resampling esterno (stima) e interno (regolazione), 3 split esterni su 6 blocchi. */
@@ -467,14 +569,17 @@ export function NestedResampling() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'training esterno', color: 'var(--split-tr)', kind: 'square' },
-            { label: 'test esterno', color: 'var(--split-ts)', kind: 'square' },
-            { label: 'training interno', color: 'var(--nr10-in)', kind: 'square' },
+            { label: tx('training esterno', 'outer training'), color: 'var(--split-tr)', kind: 'square' },
+            { label: tx('test esterno', 'outer test'), color: 'var(--split-ts)', kind: 'square' },
+            { label: tx('training interno', 'inner training'), color: 'var(--nr10-in)', kind: 'square' },
             {
-              label: (
+              label: tx(
                 <>
                   <s>test interno</s> validation set
-                </>
+                </>,
+                <>
+                  <s>inner test</s> validation set
+                </>,
               ),
               color: 'var(--split-vl)',
               kind: 'square',
@@ -484,10 +589,24 @@ export function NestedResampling() {
       </div>
       <div className="nr10__head">
         <span>
-          <b>Resampling esterno</b> (barre alte): stima le prestazioni
+          {tx(
+            <>
+              <b>Resampling esterno</b> (barre alte): stima le prestazioni
+            </>,
+            <>
+              <b>Outer resampling</b> (tall bars): estimates the performance
+            </>,
+          )}
         </span>
         <span>
-          <b>Resampling interno</b> (barre sottili): regola gli iperparametri
+          {tx(
+            <>
+              <b>Resampling interno</b> (barre sottili): regola gli iperparametri
+            </>,
+            <>
+              <b>Inner resampling</b> (thin bars): tunes the hyperparameters
+            </>,
+          )}
         </span>
       </div>
       <div className="nr10__grid">
@@ -515,7 +634,7 @@ export function NestedResampling() {
                     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                       <path d="M18 6a8 8 0 1 1-9.5-1.5M8.5 4.5l-1 4 4 .5" />
                     </svg>
-                    usa i parametri regolati
+                    {tx('usa i parametri regolati', 'uses the tuned parameters')}
                   </span>
                 </div>
                 {open === k ? (
@@ -539,7 +658,7 @@ export function NestedResampling() {
                   </div>
                 ) : (
                   <button type="button" className="nr10__more" onClick={() => setOpen(k)}>
-                    mostra il resampling interno
+                    {tx('mostra il resampling interno', 'show the inner resampling')}
                   </button>
                 )}
               </div>
@@ -547,11 +666,23 @@ export function NestedResampling() {
           })}
         </div>
       </div>
-      <div className="verdict verdict--info">{info ? INFO[info] : 'Clicca un blocco per vederne il ruolo.'}</div>
+      <div className="verdict verdict--info">{info ? INFO[info] : tx('Clicca un blocco per vederne il ruolo.', 'Click a block to see its role.')}</div>
       <Tasks
         items={[
-          { label: 'Clicca un blocco giallo del resampling interno: che cosa fa davvero?', done: seen.ivl },
-          { label: 'Apri il resampling interno di un altro split esterno: usa solo i suoi dati di training.', done: seen.other },
+          {
+            label: tx(
+              'Clicca un blocco giallo del resampling interno: che cosa fa davvero?',
+              'Click a yellow block of the inner resampling: what does it really do?',
+            ),
+            done: seen.ivl,
+          },
+          {
+            label: tx(
+              'Apri il resampling interno di un altro split esterno: usa solo i suoi dati di training.',
+              'Open the inner resampling of another outer split: it uses only its own training data.',
+            ),
+            done: seen.other,
+          },
         ]}
       />
     </div>
@@ -593,12 +724,12 @@ export function NestedFlow() {
     <div className="nf10">
       <div className="wbar">
         <Segmented
-          label="model selection interna"
+          label={tx('model selection interna', 'inner model selection')}
           value={mode}
           onChange={setMode}
           options={[
             { value: 'ho', label: 'hold-out' },
-            { value: 'cv', label: 'K-fold CV interna' },
+            { value: 'cv', label: tx('K-fold CV interna', 'inner K-fold CV') },
           ]}
         />
       </div>
@@ -666,18 +797,26 @@ export function NestedFlow() {
           </div>
           <div className="nf10__note">
             <span>
-              ripeti <Tex>{'k_{out}'}</Tex> volte
+              {tx(
+                <>
+                  ripeti <Tex>{'k_{out}'}</Tex> volte
+                </>,
+                <>
+                  repeat <Tex>{'k_{out}'}</Tex> times
+                </>,
+              )}
             </span>
             <b>Model assessment</b>
-            <span>media dei risultati di test</span>
+            <span>{tx('media dei risultati di test', 'mean of the test results')}</span>
           </div>
         </div>
         <DownArrow>
-          <b>Model selection</b>: trova i migliori iperparametri
+          <b>Model selection</b>: {tx('trova i migliori iperparametri', 'find the best hyperparameters')}
         </DownArrow>
         <div className="cv10__bar nf10__trout">
           <Seg role="tr">
-            <Tex>{'\\text{Train}_{out}'}</Tex> = dataset della selezione (riga {selRow + 1})
+            <Tex>{'\\text{Train}_{out}'}</Tex> ={' '}
+            {tx(`dataset della selezione (riga ${selRow + 1})`, `selection dataset (row ${selRow + 1})`)}
           </Seg>
         </div>
         <div className="nf10__branches">
@@ -689,11 +828,16 @@ export function NestedFlow() {
               </Seg>
               <Seg role="vl">Valid.</Seg>
             </div>
-            <div className="wnote">sceglie gli iperparametri secondo la prestazione di validazione</div>
+            <div className="wnote">
+              {tx(
+                'sceglie gli iperparametri secondo la prestazione di validazione',
+                'chooses the hyperparameters according to the validation performance',
+              )}
+            </div>
           </div>
-          <div className="nf10__or">oppure</div>
+          <div className="nf10__or">{tx('oppure', 'or')}</div>
           <div className={`nf10__branch${mode === 'cv' ? ' is-on' : ''}`}>
-            <div className="nf10__bname">K-fold CV interna</div>
+            <div className="nf10__bname">{tx('K-fold CV interna', 'inner K-fold CV')}</div>
             <div className="cv10__bar">
               {shownIn.map((i) => (
                 <Seg key={i} role="fold">
@@ -717,27 +861,55 @@ export function NestedFlow() {
               )}
             </div>
             <div className="wnote">
-              ripeti <Tex>{'k_{inn}'}</Tex> volte; sceglie secondo la <b>media</b> di validazione
+              {tx(
+                <>
+                  ripeti <Tex>{'k_{inn}'}</Tex> volte; sceglie secondo la <b>media</b> di validazione
+                </>,
+                <>
+                  repeat <Tex>{'k_{inn}'}</Tex> times; chooses according to the validation <b>mean</b>
+                </>,
+              )}
             </div>
           </div>
         </div>
       </div>
       <div className="readouts">
         <Readout
-          label={`addestramenti per ogni riga esterna (${NCONF} configurazioni)`}
+          label={tx(
+            `addestramenti per ogni riga esterna (${NCONF} configurazioni)`,
+            `training runs for each outer row (${NCONF} configurations)`,
+          )}
           value={String(perSel)}
-          sub={mode === 'ho' ? `${NCONF} + 1 riaddestramento` : `${NCONF} × ${kinn} + 1 riaddestramento`}
+          sub={
+            mode === 'ho'
+              ? tx(`${NCONF} + 1 riaddestramento`, `${NCONF} + 1 retraining`)
+              : tx(`${NCONF} × ${kinn} + 1 riaddestramento`, `${NCONF} × ${kinn} + 1 retraining`)
+          }
         />
-        <Readout label="addestramenti in tutto" tone="accent" value={String(kout * perSel)} sub={`${kout} righe esterne`} />
+        <Readout
+          label={tx('addestramenti in tutto', 'training runs in total')}
+          tone="accent"
+          value={String(kout * perSel)}
+          sub={tx(`${kout} righe esterne`, `${kout} outer rows`)}
+        />
       </div>
       <Tasks
         items={[
-          { label: 'Passa alla selezione interna con hold-out: costa meno, ma dipende da una sola divisione.', done: seen.ho },
           {
-            label: (
+            label: tx(
+              'Passa alla selezione interna con hold-out: costa meno, ma dipende da una sola divisione.',
+              'Switch to the inner selection with hold-out: it costs less, but it depends on a single split.',
+            ),
+            done: seen.ho,
+          },
+          {
+            label: tx(
               <>
                 Clicca un’altra riga esterna: la model selection si ripete con il suo <Tex>{'\\text{Train}_{out}'}</Tex>.
-              </>
+              </>,
+              <>
+                Click another outer row: the model selection is repeated with its own <Tex>{'\\text{Train}_{out}'}</Tex>.
+              </>,
             ),
             done: seen.row,
           },

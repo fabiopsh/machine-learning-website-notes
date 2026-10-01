@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { d2, voronoiCell, winner, type P } from './engine'
@@ -58,32 +59,52 @@ export function VoronoiCells() {
           <Axes hideX hideY grid={false} />
           <CellPaths S={S} hot={w} />
           <Polyline pts={[q, S[w]]} color="var(--accent)" width={1.6} dash="4 3" />
-          <Handle x={q.x} y={q.y} label="vettore x" onMove={setQ} />
+          <Handle x={q.x} y={q.y} label={tx('vettore x', 'vector x')} onMove={setQ} />
         </Plot>
         <div className="wside">
           <div className="readouts">
-            <Readout label="vettori di riferimento" value={String(k)} sub="il codebook" />
+            <Readout label={tx('vettori di riferimento', 'reference vectors')} value={String(k)} sub={tx('il codebook', 'the codebook')} />
             <Readout
               label={
                 <>
-                  distorsione <Tex>{'\\|\\mathbf{x} - \\mathbf{w}_{i^*}\\|^2'}</Tex>
+                  {tx('distorsione', 'distortion')} <Tex>{'\\|\\mathbf{x} - \\mathbf{w}_{i^*}\\|^2'}</Tex>
                 </>
               }
               tone="accent"
               value={fmt(d2(q, S[w]), 2)}
             />
           </div>
-          <Slider label="numero di vettori di riferimento" min={3} max={30} step={1} value={k} onChange={setK} width={230} />
+          <Slider label={tx('numero di vettori di riferimento', 'number of reference vectors')} min={3} max={30} step={1} value={k} onChange={setK} width={230} />
           <p className="wnote">
-            Il vettore <Tex>{'\\mathbf{x}'}</Tex> (trascinabile) è descritto dal vettore di riferimento vincente, quello della cella in cui
-            cade.
+            {tx(
+              <>
+                Il vettore <Tex>{'\\mathbf{x}'}</Tex> (trascinabile) è descritto dal vettore di riferimento vincente, quello della cella in cui
+                cade.
+              </>,
+              <>
+                The vector <Tex>{'\\mathbf{x}'}</Tex> (draggable) is described by the winning reference vector, the one of the cell it falls
+                in.
+              </>,
+            )}
           </p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Trascina x attraverso almeno quattro celle: a ogni confine cambia il vettore vincente.', done: visited.length >= 4 },
-          { label: 'Riduci il codebook a 8 vettori o meno: le celle si allargano e la distorsione tipica cresce.', done: seen.few },
+          {
+            label: tx(
+              'Trascina x attraverso almeno quattro celle: a ogni confine cambia il vettore vincente.',
+              'Drag x across at least four cells: at each boundary the winning vector changes.',
+            ),
+            done: visited.length >= 4,
+          },
+          {
+            label: tx(
+              'Riduci il codebook a 8 vettori o meno: le celle si allargano e la distorsione tipica cresce.',
+              'Reduce the codebook to 8 vectors or fewer: the cells widen and the typical distortion grows.',
+            ),
+            done: seen.few,
+          },
         ]}
       />
     </div>
@@ -135,7 +156,7 @@ export function Quant1D() {
       <Plot xDomain={[-0.02, 1.02]} yDomain={[-1, 1.15]} aspect={0.24} minH={120} maxH={170} margin={{ l: 8, r: 8, t: 4, b: 4 }}>
         <Line1D cuts={cuts} cents={cents} hot={hot} />
         <Label x={(cuts[hot] + cuts[hot + 1]) / 2} y={0.86} anchor="middle" className="plot-label--muted">
-          cella di Voronoi
+          {tx('cella di Voronoi', 'Voronoi cell')}
         </Label>
         <Polyline
           pts={[
@@ -149,7 +170,7 @@ export function Quant1D() {
           x={v}
           y={0}
           axis="x"
-          label="valore continuo"
+          label={tx('valore continuo', 'continuous value')}
           bounds={{ x: [0, 1] }}
           onMove={(p) => {
             setV(p.x)
@@ -158,17 +179,29 @@ export function Quant1D() {
         />
       </Plot>
       <Controls>
-        <Slider label="numero di simboli (centroidi)" min={2} max={16} step={1} value={k} onChange={setK} width={230} />
+        <Slider label={tx('numero di simboli (centroidi)', 'number of symbols (centroids)')} min={2} max={16} step={1} value={k} onChange={setK} width={230} />
         <div className="readouts">
-          <Readout label="valore" tone="accent" value={fmt(v, 3)} />
-          <Readout label="simbolo" value={`n. ${hot + 1}`} sub={`centroide ${fmt(cents[hot], 3)}`} />
-          <Readout label="errore di quantizzazione" tone="green" value={fmt(Math.abs(err), 3)} />
+          <Readout label={tx('valore', 'value')} tone="accent" value={fmt(v, 3)} />
+          <Readout label={tx('simbolo', 'symbol')} value={tx(`n. ${hot + 1}`, `no. ${hot + 1}`)} sub={tx(`centroide ${fmt(cents[hot], 3)}`, `centroid ${fmt(cents[hot], 3)}`)} />
+          <Readout label={tx('errore di quantizzazione', 'quantization error')} tone="green" value={fmt(Math.abs(err), 3)} />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Trascina il valore lungo la retta: dentro una cella il simbolo non cambia, cambia solo l’errore (il tratto verde).', done: moved },
-          { label: 'Porta i simboli a 14 o più: le celle si restringono e l’errore di quantizzazione diminuisce.', done: seen.many },
+          {
+            label: tx(
+              'Trascina il valore lungo la retta: dentro una cella il simbolo non cambia, cambia solo l’errore (il tratto verde).',
+              'Drag the value along the line: inside a cell the symbol does not change, only the error does (the green segment).',
+            ),
+            done: moved,
+          },
+          {
+            label: tx(
+              'Porta i simboli a 14 o più: le celle si restringono e l’errore di quantizzazione diminuisce.',
+              'Bring the symbols to 14 or more: the cells shrink and the quantization error decreases.',
+            ),
+            done: seen.many,
+          },
         ]}
       />
     </div>
@@ -197,9 +230,12 @@ const INIT: P[] = [
 
 type Phase = 'init' | 'assign' | 'update'
 const PHASE_TEXT: Record<Phase, string> = {
-  init: 'Inizializzazione: K = 3 prototipi. I punti non sono ancora assegnati.',
-  assign: 'Assegnazione: ogni punto va al prototipo più vicino (il vincitore).',
-  update: 'Aggiornamento: ogni prototipo si sposta nella media dei punti del suo cluster.',
+  init: tx('Inizializzazione: K = 3 prototipi. I punti non sono ancora assegnati.', 'Initialization: K = 3 prototypes. The points are not assigned yet.'),
+  assign: tx('Assegnazione: ogni punto va al prototipo più vicino (il vincitore).', 'Assignment: each point goes to the nearest prototype (the winner).'),
+  update: tx(
+    'Aggiornamento: ogni prototipo si sposta nella media dei punti del suo cluster.',
+    'Update: each prototype moves to the mean of the points of its cluster.',
+  ),
 }
 
 function Square({ p, color, ghost }: { p: P; color: string; ghost?: boolean }) {
@@ -262,8 +298,8 @@ export function KMeans() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'prototipi', color: 'var(--ink)', kind: 'square' },
-            { label: 'punti (colore = cluster)', color: 'var(--ink-3)', kind: 'dot' },
+            { label: tx('prototipi', 'prototypes'), color: 'var(--ink)', kind: 'square' },
+            { label: tx('punti (colore = cluster)', 'points (color = cluster)'), color: 'var(--ink-3)', kind: 'dot' },
           ]}
         />
       </div>
@@ -284,26 +320,43 @@ export function KMeans() {
         ))}
       </Plot>
       <div className="wpanel">
-        <div className="wpanel__title">{done ? 'Convergenza' : `Passo ${steps}`}</div>
-        {done ? 'I prototipi non si spostano più e nessun punto cambia cluster: l’algoritmo si ferma (in un minimo, in generale locale).' : PHASE_TEXT[phase]}
+        <div className="wpanel__title">{done ? tx('Convergenza', 'Convergence') : tx(`Passo ${steps}`, `Step ${steps}`)}</div>
+        {done
+          ? tx(
+              'I prototipi non si spostano più e nessun punto cambia cluster: l’algoritmo si ferma (in un minimo, in generale locale).',
+              'The prototypes no longer move and no point changes cluster: the algorithm stops (in a minimum, in general a local one).',
+            )
+          : PHASE_TEXT[phase]}
       </div>
       <Controls>
         <Btn icon="step" variant="soft" onClick={next} disabled={done}>
-          {phase === 'assign' ? 'Aggiorna i prototipi' : 'Assegna i punti'}
+          {phase === 'assign' ? tx('Aggiorna i prototipi', 'Update the prototypes') : tx('Assegna i punti', 'Assign the points')}
         </Btn>
         <Btn icon="reset" onClick={() => reset(INIT)}>
-          Ricomincia
+          {tx('Ricomincia', 'Restart')}
         </Btn>
-        <Btn onClick={randomInit}>Inizializzazione casuale</Btn>
+        <Btn onClick={randomInit}>{tx('Inizializzazione casuale', 'Random initialization')}</Btn>
         <div className="readouts">
-          <Readout label="errore di quantizzazione E" tone="accent" value={phase === 'init' ? '—' : fmt(E, 1)} />
+          <Readout label={tx('errore di quantizzazione E', 'quantization error E')} tone="accent" value={phase === 'init' ? '—' : fmt(E, 1)} />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Esegui i passi uno alla volta: assegnazione, aggiornamento, nuova assegnazione… L’errore E non aumenta mai.', done: steps >= 4 },
-          { label: 'Arriva alla convergenza.', done },
-          { label: 'Prova più inizializzazioni casuali: il risultato può cambiare (minimi locali).', done: seed >= 2 },
+          {
+            label: tx(
+              'Esegui i passi uno alla volta: assegnazione, aggiornamento, nuova assegnazione… L’errore E non aumenta mai.',
+              'Run the steps one at a time: assignment, update, new assignment… The error E never increases.',
+            ),
+            done: steps >= 4,
+          },
+          { label: tx('Arriva alla convergenza.', 'Reach convergence.'), done },
+          {
+            label: tx(
+              'Prova più inizializzazioni casuali: il risultato può cambiare (minimi locali).',
+              'Try several random initializations: the result can change (local minima).',
+            ),
+            done: seed >= 2,
+          },
         ]}
       />
     </div>

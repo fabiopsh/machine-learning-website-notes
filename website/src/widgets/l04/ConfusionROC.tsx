@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, normPdf, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -74,8 +75,8 @@ export function ConfusionROC() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'punteggi dei positivi reali', color: 'var(--c-blue)', kind: 'area' },
-            { label: 'punteggi dei negativi reali', color: 'var(--c-orange)', kind: 'area' },
+            { label: tx('punteggi dei positivi reali', 'scores of the actual positives'), color: 'var(--c-blue)', kind: 'area' },
+            { label: tx('punteggi dei negativi reali', 'scores of the actual negatives'), color: 'var(--c-orange)', kind: 'area' },
           ]}
         />
         <Segmented
@@ -83,14 +84,14 @@ export function ConfusionROC() {
           value={bal}
           onChange={setBal}
           options={[
-            { value: 'bal', label: 'classi bilanciate' },
-            { value: 'imb', label: '99% positivi' },
+            { value: 'bal', label: tx('classi bilanciate', 'balanced classes') },
+            { value: 'imb', label: tx('99% positivi', '99% positives') },
           ]}
         />
       </div>
 
       <Plot xDomain={dx} yDomain={[0, 0.45]} aspect={0.3} minH={170} maxH={240} margin={{ l: 14, r: 14, t: 10, b: 30 }}>
-        <Axes xTicks={[-4, -2, 0, 2, 4]} yTicks={[]} hideY xLabel="punteggio del classificatore" />
+        <Axes xTicks={[-4, -2, 0, 2, 4]} yTicks={[]} hideY xLabel={tx('punteggio del classificatore', 'classifier score')} />
         <Area f={(v) => normPdf(v, -sep / 2) * (bal === 'bal' ? 1 : 0.35)} color="var(--c-orange)" from={t} />
         <Area f={(v) => normPdf(v, sep / 2)} color="var(--c-blue)" from={t} />
         <FnPath f={(v) => normPdf(v, -sep / 2) * (bal === 'bal' ? 1 : 0.35)} color="var(--c-orange)" width={2} />
@@ -105,43 +106,50 @@ export function ConfusionROC() {
           dash="4 3"
         />
         <Label x={t} y={0.42} dx={6} className="plot-label--strong">
-          soglia → «positivo»
+          {tx('soglia → «positivo»', 'threshold → “positive”')}
         </Label>
-        <Handle x={Math.max(dx[0], Math.min(dx[1], t))} y={0} axis="x" label="soglia di decisione" onMove={(p) => setT(p.x)} />
+        <Handle x={Math.max(dx[0], Math.min(dx[1], t))} y={0} axis="x" label={tx('soglia di decisione', 'decision threshold')} onMove={(p) => setT(p.x)} />
       </Plot>
-      {bal === 'imb' && <p className="wnote">Con il 99% di positivi i negativi sono pochissimi: la loro curva è disegnata più bassa, in proporzione.</p>}
+      {bal === 'imb' && (
+        <p className="wnote">
+          {tx(
+            'Con il 99% di positivi i negativi sono pochissimi: la loro curva è disegnata più bassa, in proporzione.',
+            'With 99% positives the negatives are very few: their curve is drawn lower, in proportion.',
+          )}
+        </p>
+      )}
 
       <div className="croc__grid">
         <div className="croc__left">
           <table className="cm">
             <thead>
               <tr>
-                <th className="cm__corner">reale \ predetto</th>
-                <th>positivo</th>
-                <th>negativo</th>
+                <th className="cm__corner">{tx('reale \\ predetto', 'actual \\ predicted')}</th>
+                <th>{tx('positivo', 'positive')}</th>
+                <th>{tx('negativo', 'negative')}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th>positivo</th>
+                <th>{tx('positivo', 'positive')}</th>
                 <td className="cm__cell cm__cell--good">
                   <span className="cm__n">{c.TP}</span>
-                  <span className="cm__k">TP · veri positivi</span>
+                  <span className="cm__k">{tx('TP · veri positivi', 'TP · true positives')}</span>
                 </td>
                 <td className="cm__cell cm__cell--bad">
                   <span className="cm__n">{c.FN}</span>
-                  <span className="cm__k">FN · falsi negativi</span>
+                  <span className="cm__k">{tx('FN · falsi negativi', 'FN · false negatives')}</span>
                 </td>
               </tr>
               <tr>
-                <th>negativo</th>
+                <th>{tx('negativo', 'negative')}</th>
                 <td className="cm__cell cm__cell--bad">
                   <span className="cm__n">{c.FP}</span>
-                  <span className="cm__k">FP · falsi positivi (falsi allarmi)</span>
+                  <span className="cm__k">{tx('FP · falsi positivi (falsi allarmi)', 'FP · false positives (false alarms)')}</span>
                 </td>
                 <td className="cm__cell cm__cell--good">
                   <span className="cm__n">{c.TN}</span>
-                  <span className="cm__k">TN · veri negativi</span>
+                  <span className="cm__k">{tx('TN · veri negativi', 'TN · true negatives')}</span>
                 </td>
               </tr>
             </tbody>
@@ -149,25 +157,25 @@ export function ConfusionROC() {
           <ul className="croc__metrics">
             <li>
               <span>
-                accuratezza <Tex>{'\\frac{TP+TN}{\\text{totale}}'}</Tex>
+                {tx('accuratezza', 'accuracy')} <Tex>{tx('\\frac{TP+TN}{\\text{totale}}', '\\frac{TP+TN}{\\text{total}}')}</Tex>
               </span>
               <b>{pctS(acc)}</b>
             </li>
             <li>
               <span>
-                sensibilità <Tex>{'\\frac{TP}{TP+FN}'}</Tex>
+                {tx('sensibilità', 'sensitivity')} <Tex>{'\\frac{TP}{TP+FN}'}</Tex>
               </span>
               <b>{pctS(sens)}</b>
             </li>
             <li>
               <span>
-                specificità <Tex>{'\\frac{TN}{FP+TN}'}</Tex>
+                {tx('specificità', 'specificity')} <Tex>{'\\frac{TN}{FP+TN}'}</Tex>
               </span>
               <b>{pctS(spec)}</b>
             </li>
             <li>
               <span>
-                precisione <Tex>{'\\frac{TP}{TP+FP}'}</Tex>
+                {tx('precisione', 'precision')} <Tex>{'\\frac{TP}{TP+FP}'}</Tex>
               </span>
               <b>{pctS(prec)}</b>
             </li>
@@ -175,7 +183,7 @@ export function ConfusionROC() {
         </div>
         <div className="croc__right">
           <Plot xDomain={[0, 1]} yDomain={[0, 1]} aspect={1} maxH={330} equal margin={{ l: 40, r: 12, t: 10, b: 36 }}>
-            <Axes xTicks={[0, 0.2, 0.4, 0.6, 0.8, 1]} yTicks={[0, 0.2, 0.4, 0.6, 0.8, 1]} xLabel="FP rate (1 − specificità)" yLabel="TP rate" />
+            <Axes xTicks={[0, 0.2, 0.4, 0.6, 0.8, 1]} yTicks={[0, 0.2, 0.4, 0.6, 0.8, 1]} xLabel={tx('FP rate (1 − specificità)', 'FP rate (1 − specificity)')} yLabel="TP rate" />
             <RocFill pts={roc.pts} />
             <Polyline
               pts={[
@@ -187,40 +195,64 @@ export function ConfusionROC() {
               dash="4 4"
             />
             <Label x={0.62} y={0.5} className="plot-label--muted">
-              scelta casuale
+              {tx('scelta casuale', 'random choice')}
             </Label>
             <Polyline pts={roc.pts} color="var(--c-violet)" width={2.4} />
             <Dot x={fpr} y={sens} r={6} color="var(--accent)" />
           </Plot>
           <div className="croc__auc">
             AUC <b>{fmt(roc.auc, 3)}</b>
-            <span>{roc.auc > 0.97 ? 'quasi ideale' : roc.auc < 0.56 ? 'come tirare a caso' : 'meglio del caso'}</span>
+            <span>
+              {roc.auc > 0.97
+                ? tx('quasi ideale', 'almost ideal')
+                : roc.auc < 0.56
+                  ? tx('come tirare a caso', 'like guessing at random')
+                  : tx('meglio del caso', 'better than chance')}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="controls">
         <Slider
-          label="separazione tra le due classi"
+          label={tx('separazione tra le due classi', 'separation between the two classes')}
           min={0}
           max={4}
           step={0.05}
           value={sep}
           onChange={setSep}
-          format={(v) => (v < 0.15 ? 'nessuna' : v > 3.4 ? 'netta' : fmt(v, 1))}
+          format={(v) => (v < 0.15 ? tx('nessuna', 'none') : v > 3.4 ? tx('netta', 'sharp') : fmt(v, 1))}
         />
         <Btn variant="soft" onClick={() => setT(-99)}>
-          Classificatore banale: sempre «positivo»
+          {tx('Classificatore banale: sempre «positivo»', 'Trivial classifier: always “positive”')}
         </Btn>
         <Btn icon="reset" onClick={() => setT(0.3)}>
-          Soglia di partenza
+          {tx('Soglia di partenza', 'Initial threshold')}
         </Btn>
       </div>
       <Tasks
         items={[
-          { label: 'Porta la separazione a zero: la curva ROC si schiaccia sulla diagonale (AUC ≈ 0,5).', done: seen.random },
-          { label: 'Aumenta la separazione al massimo: la curva sale verso l’angolo in alto a sinistra.', done: seen.perfect },
-          { label: 'Con il 99% di positivi, usa il classificatore banale: accuratezza altissima senza aver imparato nulla.', done: seen.trivial },
+          {
+            label: tx(
+              'Porta la separazione a zero: la curva ROC si schiaccia sulla diagonale (AUC ≈ 0,5).',
+              'Bring the separation to zero: the ROC curve flattens onto the diagonal (AUC ≈ 0.5).',
+            ),
+            done: seen.random,
+          },
+          {
+            label: tx(
+              'Aumenta la separazione al massimo: la curva sale verso l’angolo in alto a sinistra.',
+              'Increase the separation to the maximum: the curve rises toward the top-left corner.',
+            ),
+            done: seen.perfect,
+          },
+          {
+            label: tx(
+              'Con il 99% di positivi, usa il classificatore banale: accuratezza altissima senza aver imparato nulla.',
+              'With 99% positives, use the trivial classifier: very high accuracy without having learned anything.',
+            ),
+            done: seen.trivial,
+          },
         ]}
       />
     </div>

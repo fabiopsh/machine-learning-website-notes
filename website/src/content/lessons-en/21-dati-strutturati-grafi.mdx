@@ -1,0 +1,298 @@
+import * as F from '../formulas/l21'
+import { GraphExamples, Scenario, LabeledGraph, GraphTransduction, MessagePassing, CnnVsGraph } from '../../widgets/l21/Graphs'
+import { ContextPlanes, GraphEsn, OpenIssues, Homophily, ConvKernel } from '../../widgets/l21/Dgn'
+
+<Lead>The last lecture of the course is an advanced introduction to **learning in structured domains** (SD, *Structured Domains*) and in particular to **learning on graphs** with **Deep Graph Networks** (DGN). It is also an overview of the research of the CIML group in Pisa, which made pioneering contributions to this field. The guiding questions: can deep learning on graphs be done **efficiently** (without fully end-to-end training)? **Depth** in DGNs is needed, but it causes problems: why? What is the relationship between the depth of the models and the difficulty of training?</Lead>
+
+## Why structured data and graphs
+
+**Because data have relations.** Examples of graphs and networks:
+
+- image abstractions and networks for scene understanding;
+- **social networks**, **knowledge graphs**;
+- syntactic analysis of language (parse trees);
+- transportation networks (for example traffic prediction on Google Maps, by DeepMind);
+- **small molecules** (drug design), biological networks (proteins);
+- logical terms, modeling of brain networks.
+
+<Figure n="21.1" title="Examples of graphs and networks" size="wide">
+  <GraphExamples />
+  <Caption>Examples of graphs and networks in different domains: image abstractions, networks for scene understanding, social networks, transportation networks, molecules, biological networks, parse trees, logical terms, knowledge graphs, brain networks. The drawings are schematic (in the original figure, images of the various domains). Click an example.</Caption>
+</Figure>
+
+### The scenario
+
+<Figure n="21.2" title="The scenario: domain, layering, efficiency" size="wide">
+  <Scenario />
+  <Caption>The scenario, on three rows: the input domain (vectors for feedforward networks, sequences for RNNs, structures such as trees and graphs); the layering (shallow and deep, with “deep and wide” approaches that have a high computational cost); the efficiency (networks trained end-to-end and randomized or incremental networks). The goal, indicated by the “focus” arrow, is to obtain “deep and efficient” approaches for structured data. Choose one box per row.</Caption>
+</Figure>
+
+The course has followed this progression: from **vectors** (feedforward networks) to **sequences** (RNNs) to **structures** (trees, graphs). Deep and “wide” approaches (*deep and wide*) represent the input on several levels of abstraction but have a high computational cost; **randomized** or **incremental** networks offer efficiency.
+
+### A bit of history
+
+Neural networks for structured data have a largely **Italian** history:
+
+- since the late 1990s, <T id="recnn">**recursive neural networks**</T> for trees and directed acyclic graphs (Sperduti, Starita, Frasconi, Gori, Hammer, Micheli, Bianchini, Scarselli, Hagenbuchner…): recursive networks (1997–2000), Cascade Correlation for structures, SOM for structures (2003–2005), bottom-up Hidden Tree Markov Model (2012), Tree ESN and deep reservoir computing for trees (2010–2018);
+- the extension to **general graphs**, pioneered between Pisa and Siena (2005–2009), with two approaches:
+  1. **recursive**: **GNN** (Scarselli et al., 2009) and **GraphESN** (Gallicchio, Micheli, 2010);
+  2. **layered / convolutional**: **NN4G** (Micheli, 2009) in a constructive version, later continued as convolutional networks for graphs (GCN, etc.).
+
+Since 2015 it has been an area in worldwide **explosion**, with dozens of papers at all the main conferences and real applications, under different names: *Graph Representation Learning*, *learning on graphs*, *deep learning for graphs*, *Graph Neural Networks* (GNN), *Graph Convolutional Networks* (GCN), and the framework of <T id="dgn">**Deep Graph Networks**</T> (DGN; Bacciu, Errica, Micheli, Podda, 2020).
+
+---
+
+## Deep Graph Networks
+
+### The graphs considered
+
+We consider <T id="grafo-etichettato">**labeled graphs**</T>: every **node** (vertex) $v$ has a **vector label** $\mathbf{l}(v)$ (e.g. $[1, 0, 1, 0.7]$), every **edge** (link) can have a label (e.g. a position) and can be directed; there can be **cycles**. $A$ is the **adjacency matrix** of the graph.
+
+<Figure n="21.3" title="A labeled graph" size="wide">
+  <LabeledGraph />
+  <Caption>A labeled graph: nodes a, b, c, d with vector labels, edges (also directed, and they too can be labeled) and a cycle. On the right the adjacency matrix $A$. Click a node or an edge.</Caption>
+</Figure>
+
+### The representation problem
+
+There was no **systematic** way (valid for any task) to extract features or relation metrics between structured examples. It is an instance of <T id="representation-learning">**representation learning**</T>, extended to structured domains.
+
+- Representations based on **features** are incomplete or strongly task-dependent (for example topological indices in chemistry).
+- Representations with **adjacency matrices** or other fixed-size representations have problems: over-dimensioning or incompleteness (waste due to padding or loss of information), **alignment** between different graphs (which node of one graph corresponds to which node of the other?), topological order (which makes generalization difficult).
+
+<Callout type="tip" title="Moving the models toward the data">
+
+*“The ability to treat the proper inherent nature of the input data is the key to a successful application of ML methodologies.”* Instead of **bringing the data to the models** (transforming graphs into vectors or trees into sequences, with alignment problems and loss of information), we **bring the models to the data**.
+
+</Callout>
+
+<Callout type="example" title="Molecules and transductions">
+
+In **QSPR/QSAR** the aim is to correlate the chemical structure of molecules with their properties: $\text{Property/Activity} = T(\text{Structure})$, a property value (regression) or “toxic yes/no” (classification). Molecules **are not vectors**: they are more naturally represented by variable-size structures. Can we predict directly from the structures?
+
+</Callout>
+
+### Transductions on graphs
+
+The goal is to learn a <T id="trasduzione">**transduction**</T> $T$ from a structured domain to a discrete or continuous space, starting from examples $(\text{graph}_i, \text{target}_i)$ with variable-size graphs.
+
+<Figure n="21.4" title="Transductions on graphs" size="wide">
+  <GraphTransduction />
+  <Caption>Transductions on graphs: a labeled graph is encoded by $T_{enc}$ into a node embedding $\mathbf{h}_v$ (the latent space); from here $T_{out}$ produces an output for every node (node-level tasks, structure-to-structure) or, through a readout function $R$, a graph embedding $\mathbf{h}_g$ and an output for the whole graph (graph-level tasks). Choose the task.</Caption>
+</Figure>
+
+- **Structure → structure** (input-output isomorphic): **node-level** tasks (e.g. node classification).
+- **Structure → scalar/element**: **graph-level** tasks (graph regression or classification).
+- In general also non-isomorphic; and tasks **on the edges** (e.g. *link prediction*).
+
+### Message passing
+
+How does a DGN work? The abstract concept is <T id="message-passing">**message passing**</T>: the nodes “talk” to each other, exchanging messages to inform one another and become aware of the surrounding structure.
+
+1. Every node computes a **message**, a function of its own label, of its neighbors $\mathcal{N}_v$ and of the edges between them, and sends it to the neighbors.
+2. The nodes **aggregate** the received messages with a **permutation-invariant** function (the order in which they arrive does not matter).
+3. Every node **updates** its own attributes (the **state**) by combining the messages with the free parameters $W$.
+
+<Figure n="21.5" title="Message passing" size="wide">
+  <MessagePassing />
+  <Caption>Message passing: a node $v$ with its neighbors $\mathcal{N}_v$, each with a state vector represented by a colored bar; the messages of the neighbors reach $v$ (phases 1 and 2) and $v$ updates its own state by combining them (phase 3). Run the phases and keep iterating.</Caption>
+</Figure>
+
+The state does not depend only on the local neighborhood: by **iterating** the message passing, information **spreads** from every node to all the others. Finally, an output can be emitted **for every node**, or **for the whole graph** through a permutation-invariant aggregation of the node representations, called <T id="global-pooling">**global pooling**</T> (for example sum or mean).
+
+### The link with CNNs
+
+Both <T id="cnn">CNNs</T> and convolutional networks for graphs visit every node of the data, but:
+
+- in the **CNN** the convolutional kernel is applied on a 2D **regular grid**: a weighted average of the pixels in the window is computed, and the neighbors of a pixel are **ordered** and **fixed in number**;
+- on **graphs** the CNN does not apply directly: the neighbors of a vertex are **unordered** and **variable in number**. The receptive field is restricted to the **neighbors**, **weight sharing** is used in a permutation-invariant way (abstracting from any ordering of the nodes), and the local neighborhood is extended through **layering**.
+
+<Figure n="21.6" title="Convolution on a grid and on a graph" size="wide">
+  <CnnVsGraph />
+  <Caption>Convolution on a grid (CNN) and on a graph: on the left a regular grid in which a pixel has ordered neighbors, fixed in number; on the right a graph in which a node has unordered neighbors, variable in number. Click a pixel and a node.</Caption>
+</Figure>
+
+### The general formula
+
+Message passing is iterated over the layers (or iterations) $l$:
+
+<Formula f={F.agg} />
+
+where $AGG$ aggregates (propagates) the messages from the neighbors $u$ with a **permutation-invariant** operator on the set of neighbors (e.g. a sum) and combinations of the activations of the units, $W$ are the free parameters, $\mathbf{L}_v$ the label of the node, and $\mathcal{N}$ is given by the adjacency matrix $A$. Applying this computation to every node corresponds to a **parallel and unordered visit** of the graph at every iteration.
+
+There are many variants:
+
+- <T id="gcn">**GCN**</T> (Kipf, Welling, 2017): $\mathbf{h}^{(l)} = \text{ReLU}\big(\hat{A}\,\mathbf{h}^{(l-1)}W^{(l)}\big)$, with $\hat A$ the degree-normalized adjacency matrix;
+- **GraphConv** (Morris et al., 2019): $\mathbf{h}^{(l)} = f\big(W_1^{(l)}\mathbf{h}^{(l-1)} + W_2^{(l)}A\,\mathbf{h}^{(l-1)}\big)$;
+- **GAT** (Veličković et al., 2018): aggregation based on **attention**.
+
+(Many are available in *PyTorch Geometric*.)
+
+<Callout type="tip" title="Why it is relevant for deep learning">
+
+DGNs are **intrinsically deep**: the process is not local. Iterating over the layers, the latent representations of the nodes progressively include the **contextual** information of more and more distant nodes (diffusion).
+
+</Callout>
+
+<Figure n="21.7" title="Evolution of the context through the iterations" size="wide">
+  <ContextPlanes variant="context" />
+  <Caption>Evolution of the (compositional) context through the iterations, on three stacked planes with the same graph: at the first iteration the state of a node depends only on the node itself, at the second the context widens to the neighbors, at the third the context of the node has radius 2 and includes more distant nodes. Click a node.</Caption>
+</Figure>
+
+### NN4G and GCN: iterations as layers
+
+<Figure n="21.8" title="Every iteration of message passing is a new layer" size="wide">
+  <ContextPlanes variant="layers" />
+  <Caption>GCN and NN4G: every iteration of message passing is a new layer. Three stacked layers of the same graph: the state $h_v^{(1)}$ of the node at the first layer depends only on its label, $h_v^{(2)}$ on the first-layer states of the neighbors, $h_v^{(3)}$ on those of the previous layers, with a context that grows from layer to layer. Choose the state to compute and the model.</Caption>
+</Figure>
+
+In convolutional networks for graphs (GCN, NN4G), **every iteration of message passing is a new layer**, and for every node the context is **composed** through the layers:
+
+- the **receptive field** extends incrementally as the layers increase;
+- **depth is functional to the growth of the context**;
+- by training the model one learns **how to represent the graph**: end-to-end for general GCNs, **layer by layer** (incrementally) for NN4G, with an automatic number of layers and without vanishing gradient problems.
+
+<T id="nn4g">**NN4G**</T> (Micheli, 2009) computes a state variable for every layer and every vertex:
+
+$$
+h_v^{(1)} = f\left(\sum_{j=0}^{|L_v|}\bar w_{1j}\,L_j(v)\right),
+$$
+
+<Formula f={F.nn4g} />
+
+It is not recursive: every layer uses the states of the **previous** layers. The units are added one at a time (in the style of <T id="cascade-correlation">Cascade Correlation</T>), and the outputs of the various layers are combined to produce the result on the graph.
+
+### GNN and GraphESN: recursive approach
+
+In the **recursive** approaches (GNN, GraphESN) the diffusion process is similar, but $l$ is the number of **iterations on the same layer** (or layers with shared weights). It is a **dynamical system**: typically **convergence to a fixed point** is required, which is used as the embedding of the graph, and for this reason the dynamics of message passing is constrained to be **contractive**.
+
+- **GNN** (Scarselli et al., 2009): with training of the embedding.
+- <T id="graphesn">**GraphESN**</T> (Gallicchio, Micheli, 2010): it extends the <T id="esn">Echo State Networks</T>: the message passing function is **not trained** (it is a random reservoir), but the parameters of the dynamical system are controlled directly.
+
+<Formula f={F.graphEsn} />
+
+iterated until convergence; the output for a graph is obtained with a global pooling $X$ and a **linear readout** trained with the pseudoinverse or ridge regression: $y(g) = W_{out}\,X(\mathbf{h}(g))$.
+
+<Figure n="21.9" title="GraphESN: from the iterated states to the fixed-point embedding" size="wide">
+  <GraphEsn />
+  <Caption>GraphESN: given an input graph, the iterative computation of the node states (repeated message passing) converges to a fixed-point embedding, which is passed to a trained readout. Iterate, change the initial state and the recurrent weight.</Caption>
+</Figure>
+
+---
+
+## Open problems and some proposals
+
+<Figure n="21.10" title="Open problems in models for learning on graphs" size="wide">
+  <OpenIssues />
+  <Caption>Open problems in models for learning on graphs: efficiency (scaling training to very large graphs, beyond 100K nodes), under-reaching (deep models may fail to exploit long-range interactions between nodes), expressiveness (models may fail to learn meaningful node representations). Below, the receptive field of a node as the layers vary.</Caption>
+</Figure>
+
+### Efficiency: beyond end-to-end backpropagation
+
+- **GraphESN for node classification**: on very large graphs (e.g. Twitch-gamers, 168,000 nodes) it reaches an accuracy equal to or higher than most models trained end-to-end, with a speedup of up to 10 times, and training scales easily beyond 100,000 nodes.
+- **NN4G+** (automatic design of the architecture): the network is built **incrementally**, with a synergistic double expansion. **One unit at a time** is trained (no end-to-end backpropagation through the layers); a layer is expanded as long as the validation accuracy improves, and new layers are added as long as it improves. The resulting architectures are tailored to the task, consistently deeper and leaner than those of an explicit architecture search, and are built in minutes instead of hours (more than 10 times faster, with no loss of accuracy).
+
+### The problems of depth: the “over-*”
+
+Depth is needed, but message passing has biases and problems:
+
+- <T id="over-smoothing">**Over-smoothing**</T> (Li et al., 2018): accuracy typically drops beyond 4–5 layers; the node representations **collapse** in the deep layers. Message passing acts as a **diffusion**, and the high-level representations of the nodes all become similar.
+- <T id="over-squashing">**Over-squashing**</T> (Alon, Yahav, 2021): it is a **bottleneck**. The receptive field grows **exponentially** with depth, but all this information has to be compressed into a fixed-size embedding per node. The **sensitivity** of the representation of a node to the input features of distant nodes, measured by the Jacobian $\partial\mathbf{h}_v^{(L)}/\partial\mathbf{x}_u$, decreases exponentially with the number of layers.
+- For end-to-end training, the **difficulty of backpropagating the gradient** through many message passing layers.
+
+The interaction between these phenomena is an open research problem. The effects:
+
+1. **Under-reaching**: the over-* prevent having the receptive field needed to learn interactions between distant nodes.
+2. <T id="eterofilia">**Heterophily**</T> in node classification. In **homophilic** graphs the nodes of the same neighborhood mostly share the same class; in **heterophilic** graphs the nodes of the same class are generally far apart, and predictions based mainly on the immediate neighbors can be misleading. These are potentially difficult tasks for standard message passing, because of the over-* and of the bias toward “homogeneous” graphs.
+
+<Figure n="21.11" title="Graphs with high and low homophily" size="wide">
+  <Homophily />
+  <Caption>Graphs with high and low homophily: in the first, neighboring nodes have the same color (class), in the second mostly different colors. The latter are difficult for standard message passing. Choose the graph and change the class of the nodes.</Caption>
+</Figure>
+
+#### Tools for the analysis
+
+- **Models that separate the bias of message passing from the problems of end-to-end training**: NN4G (incremental, without propagating the gradient through the layers) and GraphESN (no training of the embedding, direct control of the spectral norm $\|W\|$, that is, of the Lipschitz constant of the recursive message passing function). Since
+
+  <Formula f={F.sensitivity} />
+
+  imposing $\|W\| > 1$ prevents the sensitivity with respect to the input from vanishing exponentially (over-squashing).
+
+- **Spectral analysis** of the layers. The “frequency” on a graph is the variability of the signal (labels, embeddings) between neighboring nodes. The <T id="energia-di-dirichlet">**Dirichlet energy**</T> $E(\mathbf{h}) = \sum_{v}\sum_{u \in \mathcal{N}_v}\|\mathbf{h}_v - \mathbf{h}_u\|^2$ measures how much the signal varies over the graph (spatial view) and, through the graph Fourier transform (obtained from the decomposition of the Laplacian $L = D - A$), how the “mass” of the signal is distributed over the frequency spectrum: a low-frequency (smooth) signal has low energy. Heterophilic graphs have **high-frequency** signals, and heterophilic tasks require **preserving the high frequencies**.
+
+<Formula f={F.dirichlet} />
+
+On the **Chameleon** dataset (a network of Wikipedia pages, 2277 nodes, 31,400 edges, homophily 0.23), a “stress test” for heterophily, NN4G and GraphESN **preserve the energy better** through the layers, and while the accuracy of the other models drops as message passing increases, theirs does not. In an experiment with 12 layers: GraphESN 73.7%, NN4G 68.3%, GCN 57.8%, GAT 55.0%, GraphConv 33.8%.
+
+### Ongoing extensions
+
+- **Dynamic/temporal graphs**: relations or node values that evolve over time (spread of infections, content on social networks, signals on the nodes). **Dynamic Graph Echo State Networks** implement a spatio-temporal convolution with a multilayer reservoir, as effective as fully trained temporal networks for graphs, but with a 100-fold speedup in training and a 10-fold one in inference.
+- **Graph generation**: learning the distribution $p(G)$ of a set of graphs in order to sample new ones (e.g. fragment-based generation of molecules), useful for fairness, robustness, privacy.
+- **Explainability** (XAI) for networks on graphs: for example identifying the benzene rings that determine a classification, or the known structural fragments (such as the Michael acceptor) that influence the activation of the P53 pathway in the Tox21 data.
+- **Network quantification**: predicting the **prevalence** of the classes among the unlabeled nodes instead of classifying them individually (voting, market research, epidemiology).
+- **Bioinformatics**: predicting dynamic properties (robustness, sensitivity) of biochemical pathways and protein-protein interaction networks represented as graphs.
+
+---
+
+## Other approaches: kernels for structures
+
+<T id="metodi-kernel">**Kernel methods**</T> extend easily to graphs of different types (sequences, trees, directed or undirected graphs, cyclic or acyclic), because it is enough to define a dot product $k(x, x') = \langle\phi(x), \phi(x')\rangle$, that is, a **similarity** between data of any type, with an implicit embedding in a Euclidean space.
+
+- **Marginalized kernels**: the similarity between two graphs is based on the common label paths obtained with random walks; the kernel is the dot product of the count vectors, averaged over all possible paths. The cost typically scales quadratically with the size of the graph.
+- <T id="kernel-di-convoluzione">**Convolution kernels**</T>: the objects are decomposed into **substructures** and the kernel is defined by combining kernels between the substructures.
+
+<Figure n="21.12" title="Convolution kernel" size="wide">
+  <ConvKernel />
+  <Caption>Convolution kernel: two objects (a bicycle and a car) are decomposed into their sets of substructures (wheels, gears…); the kernel between the two objects is defined through a kernel $K^S$ between the substructures. The similarity between objects is computed from the similarity between their substructures. Click a substructure.</Caption>
+</Figure>
+
+<Callout type="warning" title="Limits of kernels for structures">
+
+- **Efficiency**: the cost is critical, because of the decomposition into substructures.
+- **Adaptivity**: they are knowledge-driven methods, with a similarity measure **fixed before learning**: the encoding in the feature space is not learned. The advantage is being able to exploit prior knowledge for a specific problem.
+- For structured domains **universality is not known**: the choice of the kernel is critical, and computing a **complete** kernel for graphs is at least as hard as the **graph isomorphism** problem. (Adaptive kernels are being studied.)
+
+</Callout>
+
+---
+
+<Callout type="abstract" title="Conclusions">
+
+- Deep learning on complex data can be done **efficiently**, without fully end-to-end training: models such as GraphESN and NN4G build accurate DGNs efficiently and make it possible to study the bias of message passing.
+- **Depth** in DGNs is necessary (it makes the context grow), but it can cause problems (over-smoothing, over-squashing, training difficulties); going beyond end-to-end can help both for efficiency and for the over-*.
+- ML for structured data and graphs is a concrete reality, still under development, which offers new solutions where **relations** matter. If the data have relations (serial, hierarchical, networks), **it is not advisable to use a flat representation**. It is also a great opportunity to treat different types of data in a uniform way.
+
+</Callout>
+
+<Exam>
+<Q q="Why treat structured data directly, instead of transforming them into vectors?">
+
+Because data have relations, and flat representations lose or distort them: hand-extracted features are incomplete or task-dependent (topological indices in chemistry); adjacency matrices and the other fixed-size representations have problems of over-dimensioning or incompleteness (padding or loss of information), of alignment between different graphs and of topological order. It is better to bring the models to the data than the data to the models: molecules, for example, are not vectors but variable-size structures, and we want to predict directly from the structure.
+
+</Q>
+<Q q="Which types of transduction can be defined on graphs?">
+
+Structure → structure (input-output isomorphic): node-level tasks, such as node classification, in which an output for every node is obtained from the embedding $\mathbf{h}_v$. Structure → scalar/element: graph-level tasks (graph regression or classification), in which a readout aggregates the node embeddings into a graph embedding $\mathbf{h}_g$. In general also non-isomorphic transductions, and tasks on the edges (link prediction).
+
+</Q>
+<Q q="Describe message passing and the general formula of DGNs.">
+
+Every node computes a message (a function of its own label, of the neighbors and of the edges) and sends it to the neighbors; the nodes aggregate the received messages with a permutation-invariant function; every node updates its own state by combining the messages with the free parameters. As a formula: $\mathbf{h}_v^{(l)} = AGG_{W^{(l)}}\big(\mathbf{L}_v, \mathbf{h}_v^{(l-1)}, \{\mathbf{h}_u^{(l-1)} : u \in \mathcal{N}(v)\}\big)$ for $l = 1, \dots, L$. By iterating, information spreads from every node to all the others (the context grows); the output is per node, or per graph through a global pooling (sum or mean). Variants: GCN, GraphConv, GAT.
+
+</Q>
+<Q q="Difference between layered (GCN, NN4G) and recursive (GNN, GraphESN) approaches.">
+
+Layered: every iteration of message passing is a new layer with its own weights, and depth makes the context grow; GCNs are trained end-to-end, NN4G incrementally, layer by layer, without recursion (every layer uses the states of the previous ones) and without vanishing gradient. Recursive: $l$ counts the iterations on the same layer (shared weights); it is a dynamical system that is made to converge to a fixed point, used as the embedding, by constraining the dynamics to be contractive. GNNs train the embedding; in the GraphESN the message passing function is an untrained random reservoir, and only the linear readout is trained.
+
+</Q>
+<Q q="What are over-smoothing and over-squashing? What is heterophily?">
+
+Over-smoothing: message passing acts as a diffusion, and in the deep layers the node representations collapse, all becoming similar (accuracy drops beyond 4–5 layers). Over-squashing: a bottleneck; the receptive field grows exponentially with depth but has to be compressed into a fixed-size embedding, and the sensitivity of a node to the features of distant nodes (the Jacobian) decreases exponentially with the layers. Under-reaching follows. Heterophily: in heterophilic graphs the nodes of the same class are far apart and the immediate neighbors mostly have different classes (high-frequency signal, high Dirichlet energy): predictions based on the neighbors are misleading, and standard message passing struggles.
+
+</Q>
+<Q q="Pros and cons of kernels for structures.">
+
+Pros: they extend easily to sequences, trees and graphs, because it is enough to define a similarity $k(x, x')$ between the objects (marginalized kernels on the paths, convolution kernels on the substructures), and they make it possible to exploit prior knowledge on a specific problem. Cons: the cost is critical (decomposition into substructures; quadratic in the size of the graph for the marginalized ones); the similarity is fixed before learning, so the encoding is not learned; universality is not known, the choice of the kernel is critical, and a complete kernel for graphs is at least as hard as graph isomorphism.
+
+</Q>
+</Exam>

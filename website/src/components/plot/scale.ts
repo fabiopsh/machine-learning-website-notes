@@ -1,3 +1,5 @@
+import { isEn } from '../../lib/i18n'
+
 export type Scale = ((v: number) => number) & {
   invert: (p: number) => number
   domain: [number, number]
@@ -34,16 +36,19 @@ export function niceTicks(a: number, b: number, n = 5): number[] {
   return out
 }
 
-/** Formattazione italiana (virgola decimale) con cifre significative contenute. */
+/** Separatore decimale della lingua corrente: virgola in italiano, punto in inglese. */
+const decimal = (s: string) => (isEn ? s : s.replace('.', ','))
+
+/** Formattazione nella lingua corrente (virgola decimale in italiano) con cifre significative contenute. */
 export function fmt(v: number, digits = 2) {
   if (!Number.isFinite(v)) return '—'
   const s = Math.abs(v) >= 1e5 ? v.toExponential(2) : v.toFixed(digits)
-  return s.replace('-', '−').replace('.', ',')
+  return decimal(s.replace('-', '−'))
 }
 
 export function fmtTick(v: number) {
   const s = Number.isInteger(v) ? String(v) : String(+v.toPrecision(6))
-  return s.replace('-', '−').replace('.', ',')
+  return decimal(s.replace('-', '−'))
 }
 
 export const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))

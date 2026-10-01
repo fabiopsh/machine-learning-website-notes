@@ -1,17 +1,29 @@
+import { isEn } from '../lib/i18n'
+
 /**
  * Glossario: definizioni brevi, tratte dagli appunti.
  * `section` è il titolo della sezione in cui il termine è spiegato (serve per il link).
+ *
+ * Le voci qui sotto sono quelle italiane; la traduzione inglese di ogni voce sta in `glossary-en/lNN.ts`
+ * (un file per lezione, stessa chiave `id`) e la sostituisce quando il sito è in inglese.
  */
 export type GlossaryEntry = {
   id: string
   term: string
+  /** sinonimo o traduzione mostrati accanto al termine */
   en?: string
   def: string
   lesson: string
+  /** titolo italiano della sezione: da qui si ricava il link (gli slug sono gli stessi nelle due lingue) */
   section: string
+  /** titolo della sezione da mostrare, se diverso da `section` (in inglese) */
+  sectionTitle?: string
 }
 
-export const glossary: GlossaryEntry[] = [
+/** Traduzione di una voce: `alt` è il sinonimo o la sigla da mostrare accanto (facoltativo). */
+export type GlossaryEn = { term: string; alt?: string; def: string; section: string }
+
+const glossaryIt: GlossaryEntry[] = [
   // ------------------------------------------------------------------ 01
   {
     id: 'machine-learning',
@@ -1614,5 +1626,15 @@ export const glossary: GlossaryEntry[] = [
     section: 'Altri approcci: i kernel per strutture',
   },
 ]
+
+const enFiles = import.meta.glob<{ default: Record<string, GlossaryEn> }>('./glossary-en/l*.ts', { eager: true })
+const en: Record<string, GlossaryEn> = Object.assign({}, ...Object.values(enFiles).map((m) => m.default))
+
+export const glossary: GlossaryEntry[] = isEn
+  ? glossaryIt.map((g) => {
+      const e = en[g.id]
+      return e ? { ...g, term: e.term, en: e.alt, def: e.def, sectionTitle: e.section } : g
+    })
+  : glossaryIt
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

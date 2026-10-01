@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Readout, Segmented } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 
 type P = { x: number; y: number }
 const D: [number, number] = [-4, 4]
@@ -48,8 +49,8 @@ export function DotProduct() {
             if (m === 'norm') setSeen((s) => ({ ...s, norms: true }))
           }}
           options={[
-            { value: 'dot', label: 'Prodotto scalare' },
-            { value: 'norm', label: 'Norme' },
+            { value: 'dot', label: tx('Prodotto scalare', 'Dot product') },
+            { value: 'norm', label: tx('Norme', 'Norms') },
           ]}
         />
         {mode === 'norm' && (
@@ -80,8 +81,8 @@ export function DotProduct() {
               <Label x={b.x} y={b.y} dx={12} dy={-10} className="plot-label--math plot-label--strong">
                 b
               </Label>
-              <Handle x={b.x} y={b.y} color="var(--c-orange)" label="punta del vettore b" onMove={onB} />
-              <Handle x={a.x} y={a.y} color="var(--c-blue)" label="punta del vettore a" onMove={onA} />
+              <Handle x={b.x} y={b.y} color="var(--c-orange)" label={tx('punta del vettore b', 'tip of vector b')} onMove={onB} />
+              <Handle x={a.x} y={a.y} color="var(--c-blue)" label={tx('punta del vettore a', 'tip of vector a')} onMove={onA} />
             </>
           ) : (
             <>
@@ -100,7 +101,7 @@ export function DotProduct() {
               <Label x={a.x} y={a.y} dx={12} dy={-10} className="plot-label--math plot-label--strong">
                 x
               </Label>
-              <Handle x={a.x} y={a.y} color="var(--c-blue)" label="punta del vettore x" onMove={(p) => setA(p)} />
+              <Handle x={a.x} y={a.y} color="var(--c-blue)" label={tx('punta del vettore x', 'tip of vector x')} onMove={(p) => setA(p)} />
             </>
           )}
         </Plot>
@@ -108,29 +109,37 @@ export function DotProduct() {
           {mode === 'dot' ? (
             <>
               <div className="wpanel">
-                <div className="wpanel__title">Per componenti</div>
+                <div className="wpanel__title">{tx('Per componenti', 'By components')}</div>
                 <div className="wmath">
                   <Tex>{`\\mathbf{a}\\cdot\\mathbf{b} = (${f(a.x)})(${f(b.x)}) + (${f(a.y)})(${f(b.y)}) = ${f(dot)}`}</Tex>
                 </div>
               </div>
               <div className="wpanel">
-                <div className="wpanel__title">Con l’angolo</div>
+                <div className="wpanel__title">{tx('Con l’angolo', 'With the angle')}</div>
                 <div className="wmath">
                   <Tex>{`|\\mathbf{a}|\\,|\\mathbf{b}|\\cos\\theta = ${f(na)} \\cdot ${f(nb)} \\cdot \\cos(${theta.toFixed(0)}^\\circ) = ${f(na * nb * cos)}`}</Tex>
                 </div>
               </div>
               <span className={`verdict ${state === 'neg' ? 'verdict--bad' : state === 'ortho' ? 'verdict--info' : 'verdict--good'}`}>
                 {state === 'ortho'
-                  ? 'Ortogonali: il prodotto scalare è nullo'
+                  ? tx('Ortogonali: il prodotto scalare è nullo', 'Orthogonal: the dot product is zero')
                   : state === 'par'
-                    ? 'Paralleli: il prodotto scalare è massimo'
+                    ? tx('Paralleli: il prodotto scalare è massimo', 'Parallel: the dot product is maximal')
                     : state === 'pos'
-                      ? 'Puntano nella stessa direzione: prodotto positivo'
-                      : 'Versi opposti: prodotto negativo'}
+                      ? tx('Puntano nella stessa direzione: prodotto positivo', 'Pointing the same way: positive product')
+                      : tx('Versi opposti: prodotto negativo', 'Opposite directions: negative product')}
               </span>
               <p className="wnote">
-                La parte colorata lungo <Tex>{'\\mathbf{a}'}</Tex> è la proiezione di <Tex>{'\\mathbf{b}'}</Tex>: il prodotto
-                scalare vale la sua lunghezza (con segno) per <Tex>{'|\\mathbf{a}|'}</Tex>.
+                {tx(
+                  <>
+                    La parte colorata lungo <Tex>{'\\mathbf{a}'}</Tex> è la proiezione di <Tex>{'\\mathbf{b}'}</Tex>: il prodotto
+                    scalare vale la sua lunghezza (con segno) per <Tex>{'|\\mathbf{a}|'}</Tex>.
+                  </>,
+                  <>
+                    The colored part along <Tex>{'\\mathbf{a}'}</Tex> is the projection of <Tex>{'\\mathbf{b}'}</Tex>: the dot
+                    product equals its (signed) length times <Tex>{'|\\mathbf{a}|'}</Tex>.
+                  </>,
+                )}
               </p>
             </>
           ) : (
@@ -147,9 +156,18 @@ export function DotProduct() {
                 tone={norm === 'inf' ? 'accent' : undefined}
               />
               <p className="wnote">
-                La forma tratteggiata è l’insieme dei punti che hanno la <em>stessa</em> norma di <Tex>{'\\mathbf{x}'}</Tex>: un
-                cerchio per <Tex>{'L^2'}</Tex>, un rombo per <Tex>{'L^1'}</Tex>, un quadrato per <Tex>{'L^\\infty'}</Tex>. Per
-                ogni vettore vale <Tex>{'\\|\\mathbf{x}\\|_\\infty \\le \\|\\mathbf{x}\\|_2 \\le \\|\\mathbf{x}\\|_1'}</Tex>.
+                {tx(
+                  <>
+                    La forma tratteggiata è l’insieme dei punti che hanno la <em>stessa</em> norma di <Tex>{'\\mathbf{x}'}</Tex>: un
+                    cerchio per <Tex>{'L^2'}</Tex>, un rombo per <Tex>{'L^1'}</Tex>, un quadrato per <Tex>{'L^\\infty'}</Tex>. Per
+                    ogni vettore vale <Tex>{'\\|\\mathbf{x}\\|_\\infty \\le \\|\\mathbf{x}\\|_2 \\le \\|\\mathbf{x}\\|_1'}</Tex>.
+                  </>,
+                  <>
+                    The dashed shape is the set of points that have the <em>same</em> norm as <Tex>{'\\mathbf{x}'}</Tex>: a
+                    circle for <Tex>{'L^2'}</Tex>, a diamond for <Tex>{'L^1'}</Tex>, a square for <Tex>{'L^\\infty'}</Tex>. For
+                    every vector, <Tex>{'\\|\\mathbf{x}\\|_\\infty \\le \\|\\mathbf{x}\\|_2 \\le \\|\\mathbf{x}\\|_1'}</Tex>.
+                  </>,
+                )}
               </p>
             </>
           )}
@@ -157,10 +175,25 @@ export function DotProduct() {
       </div>
       <Tasks
         items={[
-          { label: 'Rendi i due vettori ortogonali: il prodotto scalare si annulla.', done: seen.ortho },
-          { label: 'Porta b dalla parte opposta di a: il prodotto diventa negativo.', done: seen.neg },
-          { label: 'Allinea b con a: per lunghezze fissate il prodotto è massimo.', done: seen.par },
-          { label: 'Passa alla scheda “Norme” e confronta le tre misure di lunghezza.', done: seen.norms },
+          {
+            label: tx('Rendi i due vettori ortogonali: il prodotto scalare si annulla.', 'Make the two vectors orthogonal: the dot product vanishes.'),
+            done: seen.ortho,
+          },
+          {
+            label: tx('Porta b dalla parte opposta di a: il prodotto diventa negativo.', 'Move b to the opposite side of a: the product becomes negative.'),
+            done: seen.neg,
+          },
+          {
+            label: tx('Allinea b con a: per lunghezze fissate il prodotto è massimo.', 'Align b with a: for fixed lengths the product is maximal.'),
+            done: seen.par,
+          },
+          {
+            label: tx(
+              'Passa alla scheda “Norme” e confronta le tre misure di lunghezza.',
+              'Switch to the “Norms” tab and compare the three measures of length.',
+            ),
+            done: seen.norms,
+          },
         ]}
       />
     </div>

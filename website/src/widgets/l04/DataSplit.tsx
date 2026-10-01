@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Tasks } from '../../components/prose/Figure'
 import { Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 
 /**
  * Fig. 4.7: hold-out. La barra divide il dataset in TR / VL / TS (trascina i divisori);
@@ -10,10 +11,22 @@ import { Toggle } from '../../components/ui/Controls'
 type Part = 'tr' | 'vl' | 'ts' | 'new' | null
 
 const INFO: Record<Exclude<Part, null>, string> = {
-  tr: 'Training set: usato per eseguire l’algoritmo di apprendimento (model training).',
-  vl: 'Validation set: usato per scegliere il modello migliore, ad esempio regolando gli iperparametri (model selection).',
-  ts: 'Test set: usato solo alla fine, sul modello scelto, per stimarne l’errore (model assessment). Mai per scegliere.',
-  new: 'Nuovi dati, lato cliente: il modello rilasciato li usa per fare inferenza (predizioni).',
+  tr: tx(
+    'Training set: usato per eseguire l’algoritmo di apprendimento (model training).',
+    'Training set: used to run the learning algorithm (model training).',
+  ),
+  vl: tx(
+    'Validation set: usato per scegliere il modello migliore, ad esempio regolando gli iperparametri (model selection).',
+    'Validation set: used to choose the best model, for example by tuning the hyperparameters (model selection).',
+  ),
+  ts: tx(
+    'Test set: usato solo alla fine, sul modello scelto, per stimarne l’errore (model assessment). Mai per scegliere.',
+    'Test set: used only at the end, on the chosen model, to estimate its error (model assessment). Never to choose.',
+  ),
+  new: tx(
+    'Nuovi dati, lato cliente: il modello rilasciato li usa per fare inferenza (predizioni).',
+    'New data, client side: the deployed model uses them to do inference (predictions).',
+  ),
 }
 
 export function DataSplit() {
@@ -64,20 +77,20 @@ export function DataSplit() {
           <div className={`split__seg split__seg--ts${cls('ts')}`} style={{ width: pct(1 - b) }} onMouseEnter={() => setHot('ts')} onMouseLeave={() => setHot(null)}>
             <b>TS</b> {pct(1 - b)}
           </div>
-          <button className="split__knob" style={{ left: pct(a) }} onPointerDown={drag('a')} onKeyDown={key('a')} aria-label="Confine tra training e validation" />
-          <button className="split__knob" style={{ left: pct(b) }} onPointerDown={drag('b')} onKeyDown={key('b')} aria-label="Confine tra validation e test" />
+          <button className="split__knob" style={{ left: pct(a) }} onPointerDown={drag('a')} onKeyDown={key('a')} aria-label={tx('Confine tra training e validation', 'Boundary between training and validation')} />
+          <button className="split__knob" style={{ left: pct(b) }} onPointerDown={drag('b')} onKeyDown={key('b')} aria-label={tx('Confine tra validation e test', 'Boundary between validation and test')} />
         </div>
         <div className="split__legend">
           <span>
             development / design set (TR + VL): <b>{pct(b)}</b>
           </span>
           <span>
-            tenuto da parte: <b>{pct(1 - b)}</b>
+            {tx('tenuto da parte', 'set aside')}: <b>{pct(1 - b)}</b>
           </span>
         </div>
       </div>
 
-      <svg viewBox="0 0 720 330" className="split__svg" role="img" aria-label="Ruolo di training, validation e test set">
+      <svg viewBox="0 0 720 330" className="split__svg" role="img" aria-label={tx('Ruolo di training, validation e test set', 'Role of training, validation and test set')}>
         <defs>
           <marker id="sp-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
             <path d="M0,0L10,5L0,10z" className="split__head" />
@@ -88,25 +101,25 @@ export function DataSplit() {
         </defs>
         <rect x={130} y={10} width={580} height={236} rx={22} className="split__dev" />
         <text x={690} y={36} textAnchor="end" className="split__zone">
-          lato sviluppatore
+          {tx('lato sviluppatore', 'developer side')}
         </text>
         <text x={16} y={296} className="split__zone">
-          lato cliente
+          {tx('lato cliente', 'client side')}
         </text>
 
         <Cyl x={20} y={104} label="Dataset" kind="all" />
         <Cyl x={170} y={34} label="TR" kind="tr" cls={cls('tr')} onHover={setHot} />
         <Cyl x={170} y={116} label="VL" kind="vl" cls={cls('vl')} onHover={setHot} />
         <Cyl x={170} y={196} label="TS" kind="ts" cls={cls('ts')} onHover={setHot} />
-        <Cyl x={170} y={270} label="Nuovi dati" kind="new" cls={cls('new')} onHover={setHot} wide />
+        <Cyl x={170} y={270} label={tx('Nuovi dati', 'New data')} kind="new" cls={cls('new')} onHover={setHot} wide />
 
         <path d="M96,128 L166,58" className="split__data" markerEnd="url(#sp-arr)" />
         <path d="M96,134 L166,140" className="split__data" markerEnd="url(#sp-arr)" />
         <path d="M96,140 L166,218" className="split__data" markerEnd="url(#sp-arr)" />
 
-        <Box x={330} y={30} label="Addestramento" sub="model training" />
-        <Box x={330} y={112} label="Scelta del modello" sub="model selection" />
-        <Box x={330} y={192} label="Modello rilasciato" sub="deployed model" />
+        <Box x={330} y={30} label={tx('Addestramento', 'Training')} sub="model training" />
+        <Box x={330} y={112} label={tx('Scelta del modello', 'Choosing the model')} sub="model selection" />
+        <Box x={330} y={192} label={tx('Modello rilasciato', 'Released model')} sub="deployed model" />
 
         <path d="M240,58 L326,58" className={`split__data${cls('tr')}`} markerEnd="url(#sp-arr)" />
         <path d="M240,140 L326,140" className={`split__data${cls('vl')}`} markerEnd="url(#sp-arr)" />
@@ -119,21 +132,21 @@ export function DataSplit() {
 
         <path d="M494,212 L560,190" className={`split__data split__data--ts${cls('ts')}`} markerEnd="url(#sp-arr)" />
         <text x={566} y={186} className="split__out">
-          stima dell’errore
+          {tx('stima dell’errore', 'error estimate')}
         </text>
         <text x={566} y={202} className="split__out split__out--sub">
           (model assessment)
         </text>
         <path d="M494,232 L560,268" className={`split__data split__data--new${cls('new')}`} markerEnd="url(#sp-arr)" />
         <text x={566} y={276} className="split__out split__out--new">
-          predizioni
+          {tx('predizioni', 'predictions')}
         </text>
 
         {cheat && (
           <g className="split__cheat">
             <path d="M240,212 C 290,190 290,160 326,150" markerEnd="url(#sp-arr-bad)" />
             <text x={250} y={176}>
-              ✗ TS usato per scegliere
+              {tx('✗ TS usato per scegliere', '✗ TS used to choose')}
             </text>
           </g>
         )}
@@ -142,17 +155,23 @@ export function DataSplit() {
       <div className="split__info" aria-live="polite">
         {cheat ? (
           <span className="verdict verdict--bad">
-            Se il test set serve a scegliere il modello, la stima finale non è più affidabile: è ottimistica.
+            {tx(
+              'Se il test set serve a scegliere il modello, la stima finale non è più affidabile: è ottimistica.',
+              'If the test set is used to choose the model, the final estimate is no longer reliable: it is optimistic.',
+            )}
           </span>
         ) : hot ? (
           INFO[hot]
         ) : (
-          'Passa sui cilindri per vedere chi usa cosa. Trascina i divisori della barra per cambiare le proporzioni.'
+          tx(
+            'Passa sui cilindri per vedere chi usa cosa. Trascina i divisori della barra per cambiare le proporzioni.',
+            'Hover over the cylinders to see who uses what. Drag the dividers of the bar to change the proportions.',
+          )
         )}
       </div>
       <div className="controls">
         <Toggle
-          label="errore da evitare: usare il TS anche per la model selection"
+          label={tx('errore da evitare: usare il TS anche per la model selection', 'mistake to avoid: using the TS for model selection too')}
           checked={cheat}
           onChange={(v) => {
             setCheat(v)
@@ -162,8 +181,20 @@ export function DataSplit() {
       </div>
       <Tasks
         items={[
-          { label: 'Trascina i divisori: ad esempio, tieni da parte il 25–30% dei dati come test set.', done: seen.drag },
-          { label: 'Attiva l’errore da evitare e leggi perché infrange la regola d’oro.', done: seen.cheat },
+          {
+            label: tx(
+              'Trascina i divisori: ad esempio, tieni da parte il 25–30% dei dati come test set.',
+              'Drag the dividers: for example, set aside 25–30% of the data as the test set.',
+            ),
+            done: seen.drag,
+          },
+          {
+            label: tx(
+              'Attiva l’errore da evitare e leggi perché infrange la regola d’oro.',
+              'Turn on the mistake to avoid and read why it breaks the golden rule.',
+            ),
+            done: seen.cheat,
+          },
         ]}
       />
     </div>

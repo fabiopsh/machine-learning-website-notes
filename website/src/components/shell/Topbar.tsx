@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getLesson, partOf } from '../../content/lessons'
+import { lang, setLang, tx, type Lang } from '../../lib/i18n'
 import { clearProgress, useProgress } from '../../lib/progress'
 import { useLook, useTheme } from '../../lib/theme'
-import type { Route } from '../../lib/router'
+import { lessonHref, type Route } from '../../lib/router'
 import { Icon } from '../ui/Icon'
 
 function useScrollState(active: boolean) {
@@ -28,6 +29,26 @@ function useScrollState(active: boolean) {
   return s
 }
 
+/**
+ * Route da riaprire dopo il cambio di lingua: in una lezione, la sezione che si sta leggendo
+ * (gli id dei titoli sono gli stessi nelle due lingue).
+ */
+function currentHash(route: Route): string | undefined {
+  if (route.name !== 'lesson') return undefined
+  const line = window.innerHeight * 0.28
+  let section: string | undefined
+  for (const h of document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]')) {
+    if (h.getBoundingClientRect().top - line > 0) break
+    section = h.id
+  }
+  return lessonHref(route.id, section)
+}
+
+const LANGS: { value: Lang; label: string; name: string }[] = [
+  { value: 'it', label: 'IT', name: 'Italiano' },
+  { value: 'en', label: 'EN', name: 'English' },
+]
+
 type Props = {
   route: Route
   onMenu: () => void
@@ -47,7 +68,7 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
 
   return (
     <header className={`topbar${scrolled ? ' is-scrolled' : ''}`}>
-      <button className="icon-btn topbar__menu" onClick={onMenu} aria-label="Apri il menu delle lezioni">
+      <button className="icon-btn topbar__menu" onClick={onMenu} aria-label={tx('Apri il menu delle lezioni', 'Open the lessons menu')}>
         <Icon name="menu" size={20} />
       </button>
       <div className="topbar__crumbs">
@@ -62,30 +83,45 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
             </span>
           </>
         ) : route.name === 'glossary' ? (
-          <span className="topbar__lesson">Glossario</span>
+          <span className="topbar__lesson">{tx('Glossario', 'Glossary')}</span>
         ) : (
-          <span className="topbar__lesson">Indice del corso</span>
+          <span className="topbar__lesson">{tx('Indice del corso', 'Course index')}</span>
         )}
       </div>
       <div className="topbar__actions">
-        <button className="search-btn" onClick={onSearch} aria-label="Cerca">
+        <button className="search-btn" onClick={onSearch} aria-label={tx('Cerca', 'Search')}>
           <Icon name="search" size={16} />
-          <span className="search-btn__text">Cerca nel corso…</span>
+          <span className="search-btn__text">{tx('Cerca nel corso…', 'Search the course…')}</span>
           <kbd>{isMac ? '⌘' : 'Ctrl'} K</kbd>
         </button>
         {onToc && (
-          <button className="icon-btn topbar__toc" onClick={onToc} aria-label="Indice della lezione">
+          <button className="icon-btn topbar__toc" onClick={onToc} aria-label={tx('Indice della lezione', 'Lesson contents')}>
             <Icon name="list" size={19} />
           </button>
         )}
+        <div className="lang-switch" role="group" aria-label={tx('Lingua', 'Language')}>
+          {LANGS.map((l) => (
+            <button
+              key={l.value}
+              type="button"
+              lang={l.value}
+              className={l.value === lang ? 'is-on' : undefined}
+              aria-pressed={l.value === lang}
+              title={l.name}
+              onClick={() => setLang(l.value, currentHash(route))}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
         <button
           className="icon-btn progress-btn"
           onClick={() => {
-            if (window.confirm('Azzerare l’avanzamento di lettura di tutte le lezioni?')) clearProgress()
+            if (window.confirm(tx('Azzerare l’avanzamento di lettura di tutte le lezioni?', 'Reset the reading progress of all lessons?'))) clearProgress()
           }}
           disabled={!hasProgress}
-          aria-label="Azzera l’avanzamento di lettura"
-          title="Azzera l’avanzamento di lettura"
+          aria-label={tx('Azzera l’avanzamento di lettura', 'Reset reading progress')}
+          title={tx('Azzera l’avanzamento di lettura', 'Reset reading progress')}
         >
           <Icon name="reset" size={18} />
         </button>
@@ -93,16 +129,16 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
           className={`icon-btn look-btn${look === 'glass' ? ' is-on' : ''}`}
           onClick={toggleLook}
           aria-pressed={look === 'glass'}
-          aria-label={look === 'glass' ? 'Passa allo stile classico' : 'Passa allo stile Liquid Glass'}
-          title={look === 'glass' ? 'Stile classico' : 'Stile Liquid Glass'}
+          aria-label={look === 'glass' ? tx('Passa allo stile classico', 'Switch to the classic style') : tx('Passa allo stile Liquid Glass', 'Switch to the Liquid Glass style')}
+          title={look === 'glass' ? tx('Stile classico', 'Classic style') : tx('Stile Liquid Glass', 'Liquid Glass style')}
         >
           <Icon name={look === 'glass' ? 'paper' : 'glass'} size={18} />
         </button>
         <button
           className="icon-btn theme-btn"
           onClick={toggle}
-          aria-label={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}
-          title={theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'}
+          aria-label={theme === 'dark' ? tx('Passa al tema chiaro', 'Switch to the light theme') : tx('Passa al tema scuro', 'Switch to the dark theme')}
+          title={theme === 'dark' ? tx('Tema chiaro', 'Light theme') : tx('Tema scuro', 'Dark theme')}
         >
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
         </button>
