@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Segmented } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { Surface3D, type Overlay } from '../common/Surface3D'
 import { useLatch } from '../../lib/useLatch'
 
@@ -80,12 +81,12 @@ export function LinearSeparator() {
             if (v === '3d') setSeen((s) => ({ ...s, three: true }))
           }}
           options={[
-            { value: '2d', label: 'Piano degli input' },
-            { value: '3d', label: 'Vista 3D di h(x)' },
+            { value: '2d', label: tx('Piano degli input', 'Input plane') },
+            { value: '3d', label: tx('Vista 3D di h(x)', '3D view of h(x)') },
           ]}
         />
         <Btn icon="reset" onClick={flip}>
-          Inverti le classi
+          {tx('Inverti le classi', 'Invert classes')}
         </Btn>
       </div>
       <div className="wgrid">
@@ -110,8 +111,8 @@ export function LinearSeparator() {
             <LineThrough P={P} Q={Q} />
             <Arrow from={mid} to={{ x: mid.x + (w1 / wn) * 0.7, y: mid.y + (w2 / wn) * 0.7 }} color="var(--ink-2)" width={1.8} />
             <PointLabels wrong={new Set(wrong)} />
-            <Handle x={P.x} y={P.y} label="primo punto della retta" onMove={setP} />
-            <Handle x={Q.x} y={Q.y} label="secondo punto della retta" onMove={setQ} />
+            <Handle x={P.x} y={P.y} label={tx('primo punto della retta', 'first line point')} onMove={setP} />
+            <Handle x={Q.x} y={Q.y} label={tx('secondo punto della retta', 'second line point')} onMove={setQ} />
           </Plot>
         ) : (
           <Surface3D
@@ -125,37 +126,45 @@ export function LinearSeparator() {
             overlays={overlays}
             initial={{ yaw: -0.5, pitch: 0.75 }}
             aspect={0.78}
-            ariaLabel="La funzione di classificazione 0/1 vista in 3D"
+            ariaLabel={tx('La funzione di classificazione 0/1 vista in 3D', '0/1 classification function seen in 3D')}
           />
         )}
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">L’iperpiano (qui una retta)</div>
+            <div className="wpanel__title">{tx('L’iperpiano (qui una retta)', 'The hyperplane (here a line)')}</div>
             <div className="wmath">
               <Tex>{`${f(w1)}\\,x_1 ${sg(w2)} ${f(Math.abs(w2))}\\,x_2 ${sg(w0)} ${f(Math.abs(w0))} = 0`}</Tex>
             </div>
           </div>
           <div className="wpanel">
-            <div className="wpanel__title">Il classificatore</div>
+            <div className="wpanel__title">{tx('Il classificatore', 'The classifier')}</div>
             <div className="wmath">
-              <Tex>{'h(\\mathbf{x}) = \\begin{cases} 1 & \\text{se } \\mathbf{w}^T\\mathbf{x}+w_0 \\ge 0 \\\\ 0 & \\text{altrimenti}\\end{cases}'}</Tex>
+              <Tex>{`h(\\mathbf{x}) = \\begin{cases} 1 & \\text{${tx('se', 'if')} } \\mathbf{w}^T\\mathbf{x}+w_0 \\ge 0 \\\\ 0 & \\text{${tx('altrimenti', 'otherwise')}}\\end{cases}`}</Tex>
             </div>
           </div>
           <div className="readouts">
-            <Readout label="errori (loss 0/1)" value={`${wrong.length} su ${DATA.length}`} tone={wrong.length ? undefined : 'accent'} />
-            <Readout label="errore medio" value={`${fmt(err * 100, 0)}%`} sub={`accuratezza ${fmt((1 - err) * 100, 0)}%`} />
+            <Readout label={tx('errori (loss 0/1)', 'errors (0/1 loss)')} value={tx(`${wrong.length} su ${DATA.length}`, `${wrong.length} of ${DATA.length}`)} tone={wrong.length ? undefined : 'accent'} />
+            <Readout label={tx('errore medio', 'average error')} value={`${fmt(err * 100, 0)}%`} sub={tx(`accuratezza ${fmt((1 - err) * 100, 0)}%`, `accuracy ${fmt((1 - err) * 100, 0)}%`)} />
           </div>
           <p className="wnote">
-            La freccia è <Tex>{'\\mathbf{w} = (w_1, w_2)'}</Tex>: è perpendicolare alla retta e punta verso la regione dove{' '}
-            <Tex>{'h = 1'}</Tex>.
+            {tx(
+              <>
+                La freccia è <Tex>{'\\mathbf{w} = (w_1, w_2)'}</Tex>: è perpendicolare alla retta e punta verso la regione dove{' '}
+                <Tex>{'h = 1'}</Tex>.
+              </>,
+              <>
+                The arrow is <Tex>{'\\mathbf{w} = (w_1, w_2)'}</Tex>: it is perpendicular to the line and points towards the region where{' '}
+                <Tex>{'h = 1'}</Tex>.
+              </>,
+            )}
           </p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Trascina le due maniglie finché tutti i punti sono classificati bene (0 errori).', done: reached.perfect },
-          { label: 'Passa alla vista 3D: h(x) è una funzione «a gradino», che vale 1 da una parte e 0 dall’altra.', done: seen.three },
-          { label: 'Premi «Inverti le classi»: stessa retta, w cambia verso e le regioni si scambiano.', done: seen.flip },
+          { label: tx('Trascina le due maniglie finché tutti i punti sono classificati bene (0 errori).', 'Drag the two handles until all points are correctly classified (0 errors).'), done: reached.perfect },
+          { label: tx('Passa alla vista 3D: h(x) è una funzione «a gradino», che vale 1 da una parte e 0 dall’altra.', 'Switch to 3D view: h(x) is a step function, equal to 1 on one side and 0 on the other.'), done: seen.three },
+          { label: tx('Premi «Inverti le classi»: stessa retta, w cambia verso e le regioni si scambiano.', 'Click "Invert classes": same line, w reverses direction and the regions swap.'), done: seen.flip },
         ]}
       />
     </div>

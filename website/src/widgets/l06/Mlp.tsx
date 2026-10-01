@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { fullEdges, NetSvg, sigmoid, type NetEdge, type NetNode, type NodeId } from './NetSvg'
 
@@ -51,7 +52,7 @@ export function TwoViews() {
     <div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">A · una rete di unità</div>
+          <div className="htf__title">{tx('A · una rete di unità', 'A · a network of units')}</div>
           <NetSvg
             W={420}
             H={290}
@@ -59,22 +60,22 @@ export function TwoViews() {
             edges={edges}
             r={22}
             hot={hotSet}
-            ariaLabel="Rete con due input, tre unità nascoste e un’uscita"
+            ariaLabel={tx('Rete con due input, tre unità nascoste e un’uscita', 'Network with two inputs, three hidden units, and one output')}
             onNodeEnter={(id) => enter(id && id.startsWith('1:') ? Number(id.slice(2)) : null)}
           >
             <text x={416} y={254} className="net__side" textAnchor="end">
-              input i
+              {tx('input i', 'input i')}
             </text>
             <text x={416} y={149} className="net__side" textAnchor="end">
-              nascoste j
+              {tx('nascoste j', 'hidden j')}
             </text>
             <text x={230} y={44} className="net__side">
-              uscita k
+              {tx('uscita k', 'output k')}
             </text>
           </NetSvg>
         </div>
         <div>
-          <div className="htf__title">B · una funzione flessibile</div>
+          <div className="htf__title">{tx('B · una funzione flessibile', 'B · a flexible function')}</div>
           <div className="wmath two6__formula">
             <Tex>{'h(\\mathbf{x}) = f_k\\Big(\\sum_j w_{kj}\\, f_j\\big(\\sum_i w_{ji}\\, x_i\\big)\\Big)'}</Tex>
           </div>
@@ -137,12 +138,17 @@ export function TwoViews() {
           {
             label: (
               <>
-                Passa su un’unità nascosta (o su una riga della tabella): è un termine <Tex>{'f_j(\\cdot)'}</Tex> della funzione.
+                {tx(
+                  'Passa su un’unità nascosta (o su una riga della tabella): è un termine ',
+                  'Hover over a hidden unit (or a table row): it is a term ',
+                )}
+                <Tex>{'f_j(\\cdot)'}</Tex>
+                {tx(' della funzione.', ' of the function.')}
               </>
             ),
             done: seen.hover,
           },
-          { label: 'Cambia l’input: i valori scorrono dalla rete alla formula, strato dopo strato.', done: seen.moved },
+          { label: tx('Cambia l’input: i valori scorrono dalla rete alla formula, strato dopo strato.', 'Change the input: values flow from the network to the formula, layer by layer.'), done: seen.moved },
         ]}
       />
     </div>
@@ -153,11 +159,11 @@ export function TwoViews() {
 
 type Arch = 'two' | 'three'
 const STEPS = [
-  'Si carica il pattern x nello strato di input.',
-  'Si calcolano le uscite del primo strato nascosto.',
-  'Poi del secondo strato nascosto, e così via.',
-  'Si calcolano le uscite dello strato di uscita: h(x).',
-  'Ora si può calcolare l’errore (delta) in uscita.',
+  tx('Si carica il pattern x nello strato di input.', 'Load pattern x into the input layer.'),
+  tx('Si calcolano le uscite del primo strato nascosto.', 'Compute outputs of the first hidden layer.'),
+  tx('Poi del secondo strato nascosto, e così via.', 'Then the second hidden layer, and so on.'),
+  tx('Si calcolano le uscite dello strato di uscita: h(x).', 'Compute outputs of the output layer: h(x).'),
+  tx('Ora si può calcolare l’errore (delta) in uscita.', 'Now the output error (delta) can be computed.'),
 ]
 
 export function Architectures() {
@@ -208,13 +214,13 @@ export function Architectures() {
             setPhase(-1)
           }}
           options={[
-            { value: 'two', label: 'Due strati, completamente connessa' },
-            { value: 'three', label: 'Tre strati, con altre connessioni' },
+            { value: 'two', label: tx('Due strati, completamente connessa', 'Two layers, fully connected') },
+            { value: 'three', label: tx('Tre strati, con altre connessioni', 'Three layers, with skip connections') },
           ]}
         />
       </div>
       <div className="wgrid wgrid--even">
-        <NetSvg W={W} H={H} nodes={nodes} edges={edges} r={18} hot={hot} dimOthers={phase >= 0} ariaLabel="Architettura di un MLP" />
+        <NetSvg W={W} H={H} nodes={nodes} edges={edges} r={18} hot={hot} dimOthers={phase >= 0} ariaLabel={tx('Architettura di un MLP', 'MLP architecture')} />
         <div className="wside">
           <ol className="arch6__steps">
             {STEPS.map((s, i) => (
@@ -225,15 +231,15 @@ export function Architectures() {
           </ol>
           <div className="delta__btns">
             <Btn icon="step" variant="soft" onClick={next}>
-              {phase < 0 ? 'Carica un pattern' : phase >= 4 ? 'Ricomincia' : 'Passo successivo'}
+              {phase < 0 ? tx('Carica un pattern', 'Load a pattern') : phase >= 4 ? tx('Ricomincia', 'Restart') : tx('Passo successivo', 'Next step')}
             </Btn>
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Segui l’elaborazione feedforward passo passo fino al calcolo del delta in uscita.', done: seen.out },
-          { label: 'Nella rete a tre strati, arriva al secondo strato nascosto.', done: seen.three },
+          { label: tx('Segui l’elaborazione feedforward passo passo fino al calcolo del delta in uscita.', 'Follow the feedforward processing step-by-step up to the output delta calculation.'), done: seen.out },
+          { label: tx('Nella rete a tre strati, arriva al secondo strato nascosto.', 'In the three-layer network, reach the second hidden layer.'), done: seen.three },
         ]}
       />
     </div>
@@ -277,11 +283,11 @@ export function MultiOutput() {
   return (
     <div>
       <div className="wgrid wgrid--even">
-        <NetSvg W={380} H={290} nodes={nodes} edges={edges} r={20} hot={new Set([`2:${best}`])} ariaLabel="Rete con tre unità di uscita">
+        <NetSvg W={380} H={290} nodes={nodes} edges={edges} r={20} hot={new Set([`2:${best}`])} ariaLabel={tx('Rete con tre unità di uscita', 'Network with three output units')}>
           {o.map((_, k) => (
             <g key={k} transform={`translate(${90 + k * 100} 12)`}>
               <text textAnchor="middle" y={14} className={`multi6__val${k === best ? ' is-best' : ''}`}>
-                classe {k + 1}
+                {tx('classe ', 'class ')}{k + 1}
               </text>
             </g>
           ))}
@@ -290,7 +296,7 @@ export function MultiOutput() {
           <ul className="multi6__bars">
             {o.map((v, k) => (
               <li key={k} className={k === best ? 'is-best' : undefined}>
-                <span>classe {k + 1}</span>
+                <span>{tx('classe ', 'class ')}{k + 1}</span>
                 <span className="multi6__bar">
                   <span style={{ width: `${v * 100}%` }} />
                 </span>
@@ -316,13 +322,13 @@ export function MultiOutput() {
             onChange={(v) => setX([x[0], v])}
             format={(v) => fmt(v)}
           />
-          <p className="wnote">La classe predetta è quella con l’uscita più alta (evidenziata).</p>
+          <p className="wnote">{tx('La classe predetta è quella con l’uscita più alta (evidenziata).', 'The predicted class is the one with the highest output (highlighted).')}</p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Cambia l’input finché vince la classe 1.', done: seen.c1 },
-          { label: 'Poi fai vincere la classe 3.', done: seen.c3 },
+          { label: tx('Cambia l’input finché vince la classe 1.', 'Change the input until class 1 wins.'), done: seen.c1 },
+          { label: tx('Poi fai vincere la classe 3.', 'Then make class 3 win.'), done: seen.c3 },
         ]}
       />
     </div>
@@ -334,7 +340,7 @@ export function MultiOutput() {
 type Target = 'sin' | 'bump'
 const TARGETS: Record<Target, { f: (x: number) => number; name: string }> = {
   sin: { f: (x) => Math.sin(2 * Math.PI * x), name: 'sin(2πx)' },
-  bump: { f: (x) => Math.exp(-((x - 0.5) ** 2) / 0.02) - 0.5 * x, name: 'una gobba' },
+  bump: { f: (x) => Math.exp(-((x - 0.5) ** 2) / 0.02) - 0.5 * x, name: tx('una gobba', 'a bump') },
 }
 
 /** costruzione «a gradini»: ogni unità nascosta è un gradino morbido, l'uscita lineare ne somma i salti */
@@ -362,9 +368,9 @@ export function UniversalApprox() {
       <div className="wbar">
         <Legend
           items={[
-            { label: `funzione da approssimare: ${TARGETS[target].name}`, color: 'var(--c-green)' },
-            { label: `rete con ${N} unità nascoste`, color: 'var(--c-red)' },
-            ...(showUnits ? [{ label: 'contributo di ogni unità', color: 'var(--ink-4)' }] : []),
+            { label: `${tx('funzione da approssimare: ', 'function to approximate: ')}${TARGETS[target].name}`, color: 'var(--c-green)' },
+            { label: tx(`rete con ${N} unità nascoste`, `network with ${N} hidden units`), color: 'var(--c-red)' },
+            ...(showUnits ? [{ label: tx('contributo di ogni unità', 'contribution of each unit'), color: 'var(--ink-4)' }] : []),
           ]}
         />
         <Segmented
@@ -372,8 +378,8 @@ export function UniversalApprox() {
           value={target}
           onChange={setTarget}
           options={[
-            { value: 'sin', label: 'seno' },
-            { value: 'bump', label: 'gobba' },
+            { value: 'sin', label: tx('seno', 'sine') },
+            { value: 'bump', label: tx('gobba', 'bump') },
           ]}
         />
       </div>
@@ -384,11 +390,11 @@ export function UniversalApprox() {
         <FnPath f={h} color="var(--c-red)" width={2.2} samples={600} />
       </Plot>
       <div className="controls">
-        <Slider label="unità nascoste" min={1} max={40} step={1} value={N} onChange={setN} width={240} />
+        <Slider label={tx('unità nascoste', 'hidden units')} min={1} max={40} step={1} value={N} onChange={setN} width={240} />
         <Slider
           label={
             <>
-              pendenza delle sigmoidi <Tex>a</Tex>
+              {tx('pendenza delle sigmoidi ', 'sigmoid slope ')}<Tex>a</Tex>
             </>
           }
           min={3}
@@ -399,17 +405,17 @@ export function UniversalApprox() {
           format={() => fmt(a, 0)}
           width={240}
         />
-        <Toggle label="mostra le singole unità" checked={showUnits} onChange={setShowUnits} />
+        <Toggle label={tx('mostra le singole unità', 'show individual units')} checked={showUnits} onChange={setShowUnits} />
       </div>
       <div className="readouts">
-        <Readout label="errore massimo |f − h|" tone="red" value={fmt(err, 3)} />
-        <Readout label="bias dell’uscita" value={fmt(w0, 2)} sub={<Tex>{'h(x) = w_0 + \\sum_j w_j\\, \\sigma(a(x - c_j))'}</Tex>} />
+        <Readout label={tx('errore massimo |f − h|', 'maximum error |f − h|')} tone="red" value={fmt(err, 3)} />
+        <Readout label={tx('bias dell’uscita', 'output bias')} value={fmt(w0, 2)} sub={<Tex>{'h(x) = w_0 + \\sum_j w_j\\, \\sigma(a(x - c_j))'}</Tex>} />
       </div>
       <Tasks
         items={[
-          { label: 'Aumenta le unità nascoste fino a un errore massimo sotto 0,15.', done: seen.many },
-          { label: 'Mostra le singole unità: ognuna è un gradino morbido, la rete ne somma i salti.', done: seen.units },
-          { label: 'Prova la gobba con almeno 15 unità: funziona per qualunque funzione continua.', done: seen.bump },
+          { label: tx('Aumenta le unità nascoste fino a un errore massimo sotto 0,15.', 'Increase the hidden units until maximum error is below 0.15.'), done: seen.many },
+          { label: tx('Mostra le singole unità: ognuna è un gradino morbido, la rete ne somma i salti.', 'Show individual units: each is a soft step, the network sums their transitions.'), done: seen.units },
+          { label: tx('Prova la gobba con almeno 15 unità: funziona per qualunque funzione continua.', 'Try the bump with at least 15 units: it works for any continuous function.'), done: seen.bump },
         ]}
       />
     </div>

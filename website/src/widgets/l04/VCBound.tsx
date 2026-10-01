@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Legend, Readout, Slider, Toggle } from '../../components/ui/Controls'
+import { tx, LOCALE } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 
 /* ------------------------------------------------------------------ Fig. 4.5: curva di apprendimento */
@@ -21,14 +22,14 @@ export function ComplexityCurve() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'errore sul training set', color: 'var(--c-blue)' },
-            { label: 'errore sul test set', color: 'var(--c-orange)' },
+            { label: tx('errore sul training set', 'training set error'), color: 'var(--c-blue)' },
+            { label: tx('errore sul test set', 'test set error'), color: 'var(--c-orange)' },
           ]}
         />
       </div>
       <Plot xDomain={[0, 1]} yDomain={[0, 0.8]} aspect={0.5}>
         <Zones />
-        <Axes xTicks={[]} yTicks={[]} xLabel="complessità del modello" yLabel="errore" />
+        <Axes xTicks={[]} yTicks={[]} xLabel={tx('complessità del modello', 'model complexity')} yLabel={tx('errore', 'error')} />
         <FnPath f={trainC} color="var(--c-blue)" width={2.4} />
         <FnPath f={testC} color="var(--c-orange)" width={2.4} />
         <Polyline
@@ -42,22 +43,26 @@ export function ComplexityCurve() {
         />
         <Dot x={c} y={trainC(c)} r={4.5} color="var(--c-blue)" />
         <Dot x={c} y={testC(c)} r={4.5} color="var(--c-orange)" />
-        <Handle x={c} y={0} axis="x" label="complessità" onMove={(p) => setC(Math.max(0.02, Math.min(0.98, p.x)))} />
+        <Handle x={c} y={0} axis="x" label={tx('complessità', 'complexity')} onMove={(p) => setC(Math.max(0.02, Math.min(0.98, p.x)))} />
       </Plot>
       <div className="controls">
         <div className="readouts">
-          <Readout label="training" tone="blue" value={fmt(trainC(c), 2)} />
-          <Readout label="test" tone="orange" value={fmt(testC(c), 2)} />
-          <Readout label="divario test − training" value={fmt(testC(c) - trainC(c), 2)} />
+          <Readout label={tx('training', 'training')} tone="blue" value={fmt(trainC(c), 2)} />
+          <Readout label={tx('test', 'test')} tone="orange" value={fmt(testC(c), 2)} />
+          <Readout label={tx('divario test − training', 'test − training gap')} value={fmt(testC(c) - trainC(c), 2)} />
         </div>
         <span className={`verdict ${zone === 'ok' ? 'verdict--good' : zone === 'under' ? 'verdict--warn' : 'verdict--bad'}`}>
-          {zone === 'under' ? 'Underfitting: entrambi gli errori sono alti' : zone === 'over' ? 'Overfitting: il training scende, il test risale' : 'Zona di miglior generalizzazione'}
+          {zone === 'under'
+            ? tx('Underfitting: entrambi gli errori sono alti', 'Underfitting: both errors are high')
+            : zone === 'over'
+              ? tx('Overfitting: il training scende, il test risale', 'Overfitting: training drops, test goes back up')
+              : tx('Zona di miglior generalizzazione', 'Best generalization region')}
         </span>
       </div>
       <Tasks
         items={[
-          { label: 'Porta il cursore a sinistra: entrambi gli errori sono alti.', done: seen.under },
-          { label: 'Portalo a destra: l’errore di training continua a scendere, quello di test no.', done: seen.over },
+          { label: tx('Porta il cursore a sinistra: entrambi gli errori sono alti.', 'Drag the slider to the left: both errors are high.'), done: seen.under },
+          { label: tx('Portalo a destra: l’errore di training continua a scendere, quello di test no.', 'Drag it to the right: training error keeps decreasing, test error does not.'), done: seen.over },
         ]}
       />
     </div>
@@ -116,14 +121,14 @@ export function VCBound() {
       <div className="wbar">
         <Legend
           items={[
-            { label: <>errore di training <Tex>{'R_{emp}'}</Tex></>, color: 'var(--c-blue)' },
-            { label: <>VC-confidence <Tex>{'\\varepsilon'}</Tex></>, color: 'var(--c-orange)' },
-            { label: <>bound su <Tex>R</Tex> = somma</>, color: 'var(--c-violet)' },
+            { label: <>{tx('errore di training', 'training error')} <Tex>{'R_{emp}'}</Tex></>, color: 'var(--c-blue)' },
+            { label: <>{tx('VC-confidence', 'VC-confidence')} <Tex>{'\\varepsilon'}</Tex></>, color: 'var(--c-orange)' },
+            { label: <>{tx('bound su', 'bound on')} <Tex>R</Tex>{tx(' = somma', ' = sum')}</>, color: 'var(--c-violet)' },
           ]}
         />
       </div>
       <Plot xDomain={[0, 150]} yDomain={[0, 1.3]} aspect={0.52}>
-        <Axes xTicks={[0, 25, 50, 75, 100, 125, 150]} yTicks={[0, 0.5, 1]} xLabel="VC-dim" yLabel="errore" />
+        <Axes xTicks={[0, 25, 50, 75, 100, 125, 150]} yTicks={[0, 0.5, 1]} xLabel="VC-dim" yLabel={tx('errore', 'error')} />
         <FnPath f={remp} color="var(--c-blue)" width={2.2} from={1} />
         <FnPath f={(v) => eps(v, l, delta)} color="var(--c-orange)" width={2.2} from={1} />
         <FnPath f={bound} color="var(--c-violet)" width={2.8} from={1} />
@@ -138,7 +143,7 @@ export function VCBound() {
         />
         <Dot x={best.h} y={best.v} r={5} color="var(--c-violet)" />
         <Label x={best.h} y={best.v} dy={-12} dx={8} className="plot-label--strong">
-          miglior compromesso
+          {tx('miglior compromesso', 'best trade-off')}
         </Label>
         {marks && (
           <>
@@ -166,19 +171,19 @@ export function VCBound() {
         <div className="readouts">
           <Readout label={<Tex>{'R_{emp}'}</Tex>} tone="blue" value={fmt(remp(h), 3)} />
           <Readout label={<Tex>{'\\varepsilon'}</Tex>} tone="orange" value={fmt(eps(h, l, delta), 3)} />
-          <Readout label={<>bound su <Tex>R</Tex></>} tone="violet" value={fmt(bound(h), 3)} />
+          <Readout label={<>{tx('bound su', 'bound on')} <Tex>R</Tex></>} tone="violet" value={fmt(bound(h), 3)} />
         </div>
         <span className={`verdict ${zone === 'ok' ? 'verdict--good' : zone === 'under' ? 'verdict--warn' : 'verdict--bad'}`}>
           {zone === 'under' ? (
             <>
-              VC-dim bassa: <Tex>{'\\varepsilon'}</Tex> piccolo ma <Tex>{'R_{emp}'}</Tex> alto (underfitting)
+              {tx('VC-dim bassa:', 'Low VC-dim:')} <Tex>{'\\varepsilon'}</Tex> {tx('piccolo ma', 'small but')} <Tex>{'R_{emp}'}</Tex> {tx('alto (underfitting)', 'high (underfitting)')}
             </>
           ) : zone === 'over' ? (
             <>
-              VC-dim alta: <Tex>{'R_{emp}'}</Tex> basso ma <Tex>{'\\varepsilon'}</Tex> cresce (overfitting)
+              {tx('VC-dim alta:', 'High VC-dim:')} <Tex>{'R_{emp}'}</Tex> {tx('basso ma', 'low but')} <Tex>{'\\varepsilon'}</Tex> {tx('cresce (overfitting)', 'grows (overfitting)')}
             </>
           ) : (
-            'Vicino al minimo del bound'
+            tx('Vicino al minimo del bound', 'Near the minimum of the bound')
           )}
         </span>
       </div>
@@ -186,7 +191,7 @@ export function VCBound() {
         <Slider
           label={
             <>
-              numero di dati <Tex>l</Tex>
+              {tx('numero di dati', 'sample size')} <Tex>l</Tex>
             </>
           }
           min={2}
@@ -194,12 +199,12 @@ export function VCBound() {
           step={0.01}
           value={lExp}
           onChange={setLExp}
-          format={() => l.toLocaleString('it-IT')}
+          format={() => l.toLocaleString(LOCALE)}
         />
         <Slider
           label={
             <>
-              confidenza <Tex>\delta</Tex>
+              {tx('confidenza', 'confidence')} <Tex>\delta</Tex>
             </>
           }
           min={0.01}
@@ -207,12 +212,12 @@ export function VCBound() {
           step={0.01}
           value={delta}
           onChange={setDelta}
-          format={(v) => `${fmt(v)} (prob. ${Math.round((1 - v) * 100)}%)`}
+          format={(v) => `${fmt(v)} (${tx('prob.', 'prob.')} ${Math.round((1 - v) * 100)}%)`}
         />
         <Toggle
           label={
             <>
-              mostra <Tex>h</Tex> e <Tex>h'</Tex> (esercizio)
+              {tx('mostra', 'show')} <Tex>h</Tex> {tx('e', 'and')} <Tex>h'</Tex> {tx('(esercizio)', '(exercise)')}
             </>
           }
           checked={marks}
@@ -224,9 +229,9 @@ export function VCBound() {
       </div>
       <Tasks
         items={[
-          { label: 'Trascina la VC-dim fino al minimo della curva viola.', done: seen.min },
-          { label: 'Aumenta i dati l: la VC-confidence si abbassa e il minimo si sposta verso modelli più complessi.', done: seen.more },
-          { label: 'Mostra h e h′ per l’esercizio sulla definizione di overfitting.', done: marksSeen },
+          { label: tx('Trascina la VC-dim fino al minimo della curva viola.', 'Drag the VC-dim to the minimum of the purple curve.'), done: seen.min },
+          { label: tx('Aumenta i dati l: la VC-confidence si abbassa e il minimo si sposta verso modelli più complessi.', 'Increase sample size l: the VC-confidence drops and the minimum shifts toward more complex models.'), done: seen.more },
+          { label: tx('Mostra h e h′ per l’esercizio sulla definizione di overfitting.', 'Show h and h′ for the exercise on the definition of overfitting.'), done: marksSeen },
         ]}
       />
     </div>

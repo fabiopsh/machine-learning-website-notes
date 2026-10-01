@@ -3,6 +3,7 @@ import { Axes, Dot, FnPath, Plot, Polyline } from '../../components/plot/Plot'
 import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Btn, Legend, Readout } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { lstsq, rng } from '../../lib/math'
 import { svgScript } from '../../components/plot/svgText'
 import { useLatch } from '../../lib/useLatch'
@@ -95,16 +96,16 @@ export function CascadeCorrelation() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'funzione da approssimare', color: 'var(--c-green)' },
-            { label: 'uscita della rete', color: 'var(--c-red)' },
-            { label: 'errore residuo', color: 'var(--c-orange)', kind: 'dash' },
+            { label: tx('funzione da approssimare', 'function to approximate'), color: 'var(--c-green)' },
+            { label: tx('uscita della rete', 'network output'), color: 'var(--c-red)' },
+            { label: tx('errore residuo', 'residual error'), color: 'var(--c-orange)', kind: 'dash' },
           ]}
         />
       </div>
       <div className="wgrid wgrid--even">
         <div>
           <CascadeDiagram n={n} />
-          <p className="wnote">* = pesi congelati dopo l’addestramento della candidata (in blu).</p>
+          <p className="wnote">{tx('* = pesi congelati dopo l’addestramento della candidata (in blu).', '* = weights frozen after training the candidate (in blue).')}</p>
         </div>
         <div>
           <Plot xDomain={[0, 1]} yDomain={[-1.6, 1.8]} aspect={0.75} minH={200} maxH={300} margin={{ l: 30, r: 8, t: 8, b: 24 }}>
@@ -121,7 +122,7 @@ export function CascadeCorrelation() {
             maxH={150}
             margin={{ l: 44, r: 8, t: 8, b: 26 }}
           >
-            <Axes xTicks={[0, 1, 2, 3, 4, 5, 6]} yTicks={3} yFormat={(v) => fmt(v, 2)} xLabel="unità nascoste" />
+            <Axes xTicks={[0, 1, 2, 3, 4, 5, 6]} yTicks={3} yFormat={(v) => fmt(v, 2)} xLabel={tx('unità nascoste', 'hidden units')} />
             <Polyline pts={st.history.map((v, i) => ({ x: i, y: v }))} color="var(--c-red)" width={2} />
             {st.history.map((v, i) => (
               <Dot key={i} x={i} y={v} r={3.5} color="var(--c-red)" />
@@ -131,11 +132,11 @@ export function CascadeCorrelation() {
       </div>
       <ol className="arch6__steps cc8__steps">
         {[
-          'Rete N₀ senza unità nascoste, addestrata (qui: uscita ai minimi quadrati).',
-          'Nuova unità: pool di candidate addestrate a massimizzare la correlazione S con l’errore residuo.',
-          'Si tiene la candidata migliore, se ne congelano i pesi in ingresso, si riaddestra l’uscita.',
-          'La prossima unità riceverà gli input e le uscite di tutte le unità precedenti (cascata).',
-          'Si continua finché l’errore residuo soddisfa il criterio di arresto.',
+          tx('Rete N₀ senza unità nascoste, addestrata (qui: uscita ai minimi quadrati).', 'Network N₀ with no hidden units, trained (here: least squares output).'),
+          tx('Nuova unità: pool di candidate addestrate a massimizzare la correlazione S con l’errore residuo.', 'New unit: pool of candidate units trained to maximize correlation S with residual error.'),
+          tx('Si tiene la candidata migliore, se ne congelano i pesi in ingresso, si riaddestra l’uscita.', 'The best candidate is retained, its input weights frozen, output retrained.'),
+          tx('La prossima unità riceverà gli input e le uscite di tutte le unità precedenti (cascata).', 'The next unit will receive inputs and outputs of all previous units (cascade).'),
+          tx('Si continua finché l’errore residuo soddisfa il criterio di arresto.', 'Training continues until residual error satisfies stopping criterion.'),
         ].map((s, i) => (
           <li key={i} className={i === (n === 0 ? 0 : phase) ? 'is-on' : undefined}>
             {s}
@@ -144,7 +145,7 @@ export function CascadeCorrelation() {
       </ol>
       <div className="controls">
         <Btn icon="step" variant="soft" onClick={add} disabled={n >= MAXU}>
-          Aggiungi un’unità
+          {tx('Aggiungi un’unità', 'Add a unit')}
         </Btn>
         <Btn
           icon="reset"
@@ -152,19 +153,19 @@ export function CascadeCorrelation() {
             setSt(initState())
             setPhase(0)
           }}
-          title="Ricomincia da N₀"
+          title={tx('Ricomincia da N₀', 'Restart from N₀')}
         />
         <div className="readouts">
-          <Readout label="unità nascoste" value={String(n)} />
-          <Readout label="MSE di training" tone="red" value={fmt(cur, 4)} />
-          <Readout label="S dell’ultima unità" value={n ? fmt(st.units[n - 1].S, 2) : '—'} sub={`scelta tra ${POOL} candidate`} />
+          <Readout label={tx('unità nascoste', 'hidden units')} value={String(n)} />
+          <Readout label={tx('MSE di training', 'training MSE')} tone="red" value={fmt(cur, 4)} />
+          <Readout label={tx('S dell’ultima unità', 'S of last unit')} value={n ? fmt(st.units[n - 1].S, 2) : '—'} sub={tx(`scelta tra ${POOL} candidate`, `chosen among ${POOL} candidates`)} />
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Aggiungi la prima unità: l’errore residuo (arancione) si riduce.', done: seen.one },
-          { label: 'Arriva a tre unità: ogni nuova unità riceve anche le uscite delle precedenti.', done: seen.three },
-          { label: 'Continua fino a sei unità e guarda la curva dell’errore scendere.', done: seen.all },
+          { label: tx('Aggiungi la prima unità: l’errore residuo (arancione) si riduce.', 'Add the first unit: residual error (orange) decreases.'), done: seen.one },
+          { label: tx('Arriva a tre unità: ogni nuova unità riceve anche le uscite delle precedenti.', 'Reach three units: each new unit also receives outputs of previous ones.'), done: seen.three },
+          { label: tx('Continua fino a sei unità e guarda la curva dell’errore scendere.', 'Continue up to six units and watch the error curve drop.'), done: seen.all },
         ]}
       />
     </div>
@@ -194,7 +195,7 @@ function CascadeDiagram({ n }: { n: number }) {
     )
   }
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="cc8" role="img" aria-label={`Rete Cascade Correlation con ${n} unità nascoste`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="cc8" role="img" aria-label={tx(`Rete Cascade Correlation con ${n} unità nascoste`, `Cascade Correlation network with ${n} hidden units`)}>
       <defs>
         <marker
           id="cc8-arrow"

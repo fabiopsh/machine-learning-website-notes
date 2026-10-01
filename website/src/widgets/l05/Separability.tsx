@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Axes, Handle, Plot, Polyline, usePlot } from '../../components/plot/Plot'
+import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 
 type P = { x: number; y: number }
@@ -42,7 +44,7 @@ function Pt({ p, c, bad, label, onClick }: { p: P; c: number; bad?: boolean; lab
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      aria-label={onClick ? `punto ${label}: etichetta ${c}, clic per cambiarla` : undefined}
+      aria-label={onClick ? tx(`punto ${label}: etichetta ${c}, clic per cambiarla`, `point ${label}: label ${c}, click to toggle`) : undefined}
       onKeyDown={onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && onClick() : undefined}
     >
       {bad && <circle r={16} className="lsep__ring" />}
@@ -97,10 +99,10 @@ export function AndSeparable() {
           items={[
             { label: 'AND = 1', color: C1, kind: 'dot' },
             { label: 'AND = 0', color: C0, kind: 'dot' },
-            { label: 'retta di separazione', color: 'var(--c-red)' },
+            { label: tx('retta di separazione', 'separating line'), color: 'var(--c-red)' },
           ]}
         />
-        <Btn onClick={setNotes}>Soluzione degli appunti: x₁ + x₂ ≥ 1,5</Btn>
+        <Btn onClick={setNotes}>{tx('Soluzione degli appunti: x₁ + x₂ ≥ 1,5', `Notes solution: x₁ + x₂ ≥ ${fmt(1.5)}`)}</Btn>
       </div>
       <div className="wgrid">
         <Plot xDomain={BX} yDomain={BX} equal aspect={0.9} maxH={360}>
@@ -109,8 +111,8 @@ export function AndSeparable() {
           {BOOL.map((p, i) => (
             <Pt key={i} p={p} c={AND[i]} bad={h(p) !== AND[i]} />
           ))}
-          <Handle x={A.x} y={A.y} label="primo punto della retta" onMove={setA} />
-          <Handle x={B.x} y={B.y} label="secondo punto della retta" onMove={setB} />
+          <Handle x={A.x} y={A.y} label={tx('primo punto della retta', 'first point of line')} onMove={setA} />
+          <Handle x={B.x} y={B.y} label={tx('secondo punto della retta', 'second point of line')} onMove={setB} />
         </Plot>
         <div className="wside">
           <table className="hyp__table">
@@ -120,7 +122,7 @@ export function AndSeparable() {
                   <Tex>{'x_1 x_2'}</Tex>
                 </th>
                 <th>AND</th>
-                <th>retta</th>
+                <th>{tx('retta', 'line')}</th>
               </tr>
             </thead>
             <tbody>
@@ -137,14 +139,14 @@ export function AndSeparable() {
             </tbody>
           </table>
           <Readout
-            label="errori"
-            value={`${wrong} su 4`}
+            label={tx('errori', 'errors')}
+            value={`${wrong} ${tx('su', 'of')} 4`}
             tone={wrong ? undefined : 'accent'}
-            sub={solved && wrong === 0 ? 'la retta x₁ + x₂ = 1,5' : undefined}
+            sub={solved && wrong === 0 ? tx('la retta x₁ + x₂ = 1,5', `the line x₁ + x₂ = ${fmt(1.5)}`) : undefined}
           />
           <div className="wpanel">
             <div className="wpanel__title">
-              La congiunzione <Tex>{'x_1 \\wedge x_2 \\wedge x_4'}</Tex>
+              {tx('La congiunzione', 'The conjunction')} <Tex>{'x_1 \\wedge x_2 \\wedge x_4'}</Tex>
             </div>
             <div className="sep__bits">
               {bits.map((b, i) => (
@@ -162,15 +164,15 @@ export function AndSeparable() {
               <Tex>{`1\\cdot ${bits[0]} + 1\\cdot ${bits[1]} + 0\\cdot ${bits[2]} + 1\\cdot ${bits[3]} = ${conj} ${conj >= 2.5 ? '\\ge' : '<'} 2{,}5`}</Tex>
             </div>
             <p className="wnote">
-              Uscita {conj >= 2.5 ? 1 : 0}: vale 1 solo se <Tex>{'x_1, x_2, x_4'}</Tex> sono tutti 1 (<Tex>{'x_3'}</Tex> ha peso 0).
+              {tx(`Uscita ${conj >= 2.5 ? 1 : 0}: vale 1 solo se `, `Output ${conj >= 2.5 ? 1 : 0}: equals 1 only if `)}<Tex>{'x_1, x_2, x_4'}</Tex>{tx(' sono tutti 1 (', ' are all 1 (')}<Tex>{'x_3'}</Tex>{tx(' ha peso 0).', ' has weight 0).')}
             </p>
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Trascina la retta finché separa (1, 1) dagli altri tre punti.', done: seen.sep },
-          { label: 'Nel riquadro della congiunzione cambia un bit: basta uno 0 tra x₁, x₂, x₄ per avere uscita 0.', done: seen.conj },
+          { label: tx('Trascina la retta finché separa (1, 1) dagli altri tre punti.', 'Drag the line until it separates (1, 1) from the other three points.'), done: seen.sep },
+          { label: tx('Nel riquadro della congiunzione cambia un bit: basta uno 0 tra x₁, x₂, x₄ per avere uscita 0.', 'In the conjunction box change a bit: a single 0 among x₁, x₂, x₄ yields output 0.'), done: seen.conj },
         ]}
       />
     </div>
@@ -216,15 +218,15 @@ export function Shattering() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'etichetta 1', color: C1, kind: 'dot' },
-            { label: 'etichetta 0', color: C0, kind: 'dot' },
-            { label: 'retta che separa', color: 'var(--c-red)' },
+            { label: tx('etichetta 1', 'label 1'), color: C1, kind: 'dot' },
+            { label: tx('etichetta 0', 'label 0'), color: C0, kind: 'dot' },
+            { label: tx('retta che separa', 'separating line'), color: 'var(--c-red)' },
           ]}
         />
       </div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Tre punti: tutte le 2³ etichettature</div>
+          <div className="htf__title">{tx('Tre punti: tutte le 2³ etichettature', 'Three points: all 2³ labelings')}</div>
           <Plot xDomain={TX} yDomain={TY} equal aspect={0.72} minH={200} maxH={300} margin={{ l: 14, r: 10, t: 10, b: 14 }}>
             <Axes hideX hideY grid={false} />
             {cur.line && <Polyline pts={lineIn(cur.line.w1, cur.line.w2, cur.line.w0, TX, TY)} color="var(--c-red)" width={2.4} />}
@@ -237,12 +239,12 @@ export function Shattering() {
                 x={p.x}
                 y={p.y}
                 r={5}
-                label={`punto ${i + 1}`}
+                label={`${tx('punto', 'point')} ${i + 1}`}
                 onMove={(q) => setPts(pts.map((o, j) => (j === i ? q : o)))}
               />
             ))}
           </Plot>
-          <div className="sep__thumbs" role="radiogroup" aria-label="Etichettature dei tre punti">
+          <div className="sep__thumbs" role="radiogroup" aria-label={tx("Etichettature dei tre punti", "Labelings of the three points")}>
             {LABELINGS.map((lab, k) => (
               <button
                 key={k}
@@ -258,12 +260,12 @@ export function Shattering() {
             ))}
           </div>
           <div className="sep__row">
-            <Readout label="etichettature separabili" value={`${nOk} su 8`} tone={nOk === 8 ? 'accent' : 'red'} />
-            <Btn onClick={align}>Allinea i tre punti</Btn>
+            <Readout label={tx('etichettature separabili', 'separable labelings')} value={`${nOk} ${tx('su', 'of')} 8`} tone={nOk === 8 ? 'accent' : 'red'} />
+            <Btn onClick={align}>{tx('Allinea i tre punti', 'Align the three points')}</Btn>
           </div>
         </div>
         <div>
-          <div className="htf__title">Quattro punti: lo XOR</div>
+          <div className="htf__title">{tx('Quattro punti: lo XOR', 'Four points: XOR')}</div>
           <Plot xDomain={BX} yDomain={BX} equal aspect={0.9} minH={200} maxH={300} margin={{ l: 26, r: 10, t: 10, b: 24 }}>
             <Axes xTicks={[0, 1]} yTicks={[0, 1]} />
             {res4.line && <Polyline pts={lineIn(res4.line.w1, res4.line.w2, res4.line.w0, BX, BX)} color="var(--c-red)" width={2.4} />}
@@ -272,23 +274,25 @@ export function Shattering() {
             ))}
           </Plot>
           <p className={`verdict ${res4.ok ? 'verdict--good' : 'verdict--bad'}`}>
-            {res4.ok ? 'separabile con una retta' : 'nessuna retta separa questa etichettatura'}
+            {res4.ok ? tx('separabile con una retta', 'linearly separable') : tx('nessuna retta separa questa etichettatura', 'no line separates this labeling')}
           </p>
           <p className="wnote">
-            Clicca i punti per cambiarne l’etichetta. Delle 16 etichettature dei quattro punti, {all4} sono separabili: fanno eccezione lo
-            XOR e il suo complemento.
+            {tx(
+              `Clicca i punti per cambiarne l’etichetta. Delle 16 etichettature dei quattro punti, ${all4} sono separabili: fanno eccezione lo XOR e il suo complemento.`,
+              `Click points to toggle their label. Of the 16 labelings of the four points, ${all4} are linearly separable: XOR and its complement are the exceptions.`,
+            )}
           </p>
-          <Btn onClick={() => setXor([0, 1, 1, 0])}>Rimetti lo XOR</Btn>
+          <Btn onClick={() => setXor([0, 1, 1, 0])}>{tx('Rimetti lo XOR', 'Reset to XOR')}</Btn>
         </div>
       </div>
       <Tasks
         items={[
           {
-            label: 'Allinea i tre punti (anche a mano): l’etichettatura 1-0-1, con lo 0 in mezzo, non è più separabile.',
+            label: tx('Allinea i tre punti (anche a mano): l’etichettatura 1-0-1, con lo 0 in mezzo, non è più separabile.', 'Align the three points (even manually): labeling 1-0-1, with 0 in the middle, is no longer separable.'),
             done: seen.aligned || aligned,
           },
-          { label: 'Cambia un’etichetta dello XOR: l’etichettatura diventa separabile.', done: seen.other },
-          { label: 'Trova l’altra etichettatura dei quattro punti che nessuna retta separa (1-0-0-1).', done: seen.xnor },
+          { label: tx('Cambia un’etichetta dello XOR: l’etichettatura diventa separabile.', 'Toggle a label of XOR: the labeling becomes separable.'), done: seen.other },
+          { label: tx('Trova l’altra etichettatura dei quattro punti che nessuna retta separa (1-0-0-1).', 'Find the other labeling of the four points that no line separates (1-0-0-1).'), done: seen.xnor },
         ]}
       />
     </div>

@@ -5,6 +5,7 @@ import { svgScript, subDigits } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -29,7 +30,7 @@ function Mark({ p, bad, sel, name, onClick }: { p: LP; bad: boolean; sel?: boole
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      aria-label={onClick ? `pattern ${name ?? ''} con target ${p.d > 0 ? '+1' : '−1'}` : undefined}
+      aria-label={onClick ? `${tx('pattern', 'pattern')} ${name ?? ''} ${tx('con target', 'with target')} ${p.d > 0 ? '+1' : '−1'}` : undefined}
       onKeyDown={onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && onClick() : undefined}
     >
       {bad && <circle r={13} className="lsep__ring" />}
@@ -108,9 +109,9 @@ export function PerceptronStep() {
           items={[
             { label: 'd = +1', color: C1, kind: 'dot' },
             { label: 'd = −1', color: C0, kind: 'dot' },
-            { label: 'w e il suo confine', color: 'var(--ink)' },
+            { label: tx('w e il suo confine', 'w and its boundary'), color: 'var(--ink)' },
             { label: 'η d x', color: 'var(--c-green)' },
-            { label: 'w nuovo', color: 'var(--c-violet)' },
+            { label: tx('w nuovo', 'new w'), color: 'var(--c-violet)' },
           ]}
         />
       </div>
@@ -154,27 +155,27 @@ export function PerceptronStep() {
           <Handle
             x={(w.x / wn) * Math.min(2.6, wn)}
             y={(w.y / wn) * Math.min(2.6, wn)}
-            label="punta del vettore dei pesi"
+            label={tx('punta del vettore dei pesi', 'tip of weight vector')}
             onMove={(p) => setW(p)}
           />
         </Plot>
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">Aggiornamento</div>
+            <div className="wpanel__title">{tx('Aggiornamento', 'Update')}</div>
             {cand ? (
               <div className="wmath">
                 <Tex>{`\\mathbf{w}_{new} = \\mathbf{w} + \\eta\\, d\\, \\mathbf{x} = (${n(w.x)};\\ ${n(w.y)}) ${cand.d > 0 ? '+' : '-'} ${n(eta)}\\,(${n(cand.x)};\\ ${n(cand.y)})`}</Tex>
               </div>
             ) : (
-              <p className="wnote">Clicca un pattern cerchiato in rosso (classificato male) per vedere la correzione.</p>
+              <p className="wnote">{tx('Clicca un pattern cerchiato in rosso (classificato male) per vedere la correzione.', 'Click a pattern circled in red (misclassified) to see the correction.')}</p>
             )}
           </div>
           <Slider label={<Tex>{'\\eta'}</Tex>} min={0.1} max={1} step={0.05} value={eta} onChange={setEta} format={(v) => fmt(v)} />
           <div className="delta__btns">
             <Btn icon="step" variant="soft" onClick={apply} disabled={!wNew}>
-              Applica
+              {tx('Applica', 'Apply')}
             </Btn>
-            <Btn onClick={epoch}>Un’epoca</Btn>
+            <Btn onClick={epoch}>{tx('Un’epoca', 'One epoch')}</Btn>
             <Btn
               icon="reset"
               onClick={() => {
@@ -182,20 +183,20 @@ export function PerceptronStep() {
                 setUpdates(0)
                 setSel(0)
               }}
-              title="Ricomincia"
+              title={tx('Ricomincia', 'Restart')}
             />
           </div>
           <div className="readouts">
-            <Readout label="classificati male" value={`${nWrong} su ${GDATA.length}`} tone={nWrong ? 'red' : 'accent'} />
-            <Readout label="aggiornamenti" value={String(updates)} />
+            <Readout label={tx('classificati male', 'misclassified')} value={tx(`${nWrong} su ${GDATA.length}`, `${nWrong} of ${GDATA.length}`)} tone={nWrong ? 'red' : 'accent'} />
+            <Readout label={tx('aggiornamenti', 'updates')} value={String(updates)} />
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Applica la correzione su p₁ (d = +1): w viene spostato verso p₁.', done: seen.p1 },
-          { label: 'Esercizio: scegli p₂ (d = −1) e applica: w viene allontanato da p₂.', done: seen.p2 },
-          { label: 'Continua (anche con «Un’epoca») fino a zero errori.', done: seen.zero },
+          { label: tx('Applica la correzione su p₁ (d = +1): w viene spostato verso p₁.', 'Apply the update on p₁ (d = +1): w is shifted towards p₁.'), done: seen.p1 },
+          { label: tx('Esercizio: scegli p₂ (d = −1) e applica: w viene allontanato da p₂.', 'Exercise: select p₂ (d = −1) and apply: w is pushed away from p₂.'), done: seen.p2 },
+          { label: tx('Continua (anche con «Un’epoca») fino a zero errori.', 'Continue (also using "One epoch") until zero errors are reached.'), done: seen.zero },
         ]}
       />
     </div>
@@ -249,15 +250,15 @@ export function ConvergenceBound() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'limite inferiore (qα)²/‖w*‖²', color: 'var(--c-blue)' },
-            { label: 'limite superiore qβ', color: 'var(--c-orange)' },
-            { label: '‖w(q)‖² di una esecuzione', color: 'var(--c-red)', kind: 'dot' },
+            { label: tx('limite inferiore (qα)²/‖w*‖²', 'lower bound (qα)²/‖w*‖²'), color: 'var(--c-blue)' },
+            { label: tx('limite superiore qβ', 'upper bound qβ'), color: 'var(--c-orange)' },
+            { label: tx('‖w(q)‖² di una esecuzione', '‖w(q)‖² of a run'), color: 'var(--c-red)', kind: 'dot' },
           ]}
         />
       </div>
       <div className="wgrid">
         <Plot xDomain={[0, qm * 1.08]} yDomain={[0, D.beta * qm * 1.08]} aspect={0.62} margin={{ l: 56, b: 40 }}>
-          <Axes xTicks={4} yTicks={4} xLabel="numero di errori q" yLabel="‖w(q)‖²" yFormat={(v) => fmt(v, 0)} xFormat={(v) => fmt(v, 0)} />
+          <Axes xTicks={4} yTicks={4} xLabel={tx('numero di errori q', 'number of errors q')} yLabel="‖w(q)‖²" yFormat={(v) => fmt(v, 0)} xFormat={(v) => fmt(v, 0)} />
           <FnPath f={(x) => (x * D.alpha) ** 2} color="var(--c-blue)" width={2.2} />
           <FnPath f={(x) => x * D.beta} color="var(--c-orange)" width={2.2} />
           <Polyline
@@ -288,7 +289,7 @@ export function ConvergenceBound() {
             ))}
           </Plot>
           <Slider
-            label="separazione tra le classi"
+            label={tx('separazione tra le classi', 'separation between classes')}
             min={0.05}
             max={0.7}
             step={0.05}
@@ -297,9 +298,9 @@ export function ConvergenceBound() {
             format={(v) => fmt(v)}
           />
           <div className="readouts">
-            <Readout label="α (margine di w*)" value={fmt(D.alpha, 2)} />
+            <Readout label={tx('α (margine di w*)', 'α (margin of w*)')} value={fmt(D.alpha, 2)} />
             <Readout label="β = max ‖x‖²" value={fmt(D.beta, 1)} />
-            <Readout label="q ≤ β‖w*‖²/α²" tone="accent" value={fmt(qm, 0)} sub={`errori effettivi: ${q}`} />
+            <Readout label="q ≤ β‖w*‖²/α²" tone="accent" value={fmt(qm, 0)} sub={tx(`errori effettivi: ${q}`, `actual errors: ${q}`)} />
           </div>
         </div>
       </div>
@@ -308,12 +309,17 @@ export function ConvergenceBound() {
           {
             label: (
               <>
-                Avvicina le classi (separazione piccola): α cala e il limite <Tex>{'q_{max}'}</Tex> esplode.
+                {tx(
+                  'Avvicina le classi (separazione piccola): α cala e il limite ',
+                  'Bring the classes closer (small separation): α drops and the bound ',
+                )}
+                <Tex>{'q_{max}'}</Tex>
+                {tx(' esplode.', ' explodes.')}
               </>
             ),
             done: seen.small,
           },
-          { label: 'Allontanale al massimo: bastano pochi errori per convergere.', done: seen.big },
+          { label: tx('Allontanale al massimo: bastano pochi errori per convergere.', 'Push them as far apart as possible: only a few errors are needed to converge.'), done: seen.big },
         ]}
       />
     </div>
@@ -403,10 +409,10 @@ export function LmsVsPerceptron() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'classe +1', color: C1, kind: 'dot' },
-            { label: 'classe −1', color: C0, kind: 'dot' },
-            { label: 'soluzione LMS', color: 'var(--c-violet)' },
-            { label: 'Perceptron (due inizializzazioni)', color: 'var(--c-red)' },
+            { label: tx('classe +1', 'class +1'), color: C1, kind: 'dot' },
+            { label: tx('classe −1', 'class −1'), color: C0, kind: 'dot' },
+            { label: tx('soluzione LMS', 'LMS solution'), color: 'var(--c-violet)' },
+            { label: tx('Perceptron (due inizializzazioni)', 'Perceptron (two initializations)'), color: 'var(--c-red)' },
           ]}
         />
       </div>
@@ -422,7 +428,7 @@ export function LmsVsPerceptron() {
           <Handle
             x={far.x}
             y={far.y}
-            label="punto lontano ma corretto"
+            label={tx('punto lontano ma corretto', 'distant point, correctly classified')}
             onMove={setFar}
             bounds={{ x: [0, 7.8], y: [0, 7.8] }}
             color="var(--accent)"
@@ -430,19 +436,21 @@ export function LmsVsPerceptron() {
         </Plot>
         <div className="wside">
           <div className="readouts">
-            <Readout label="errori LMS" tone="violet" value={String(lmsWrong.length)} sub="sul training, problema separabile" />
-            <Readout label="errori Perceptron" tone="red" value="0" sub="converge a un classificatore perfetto" />
+            <Readout label={tx('errori LMS', 'LMS errors')} tone="violet" value={String(lmsWrong.length)} sub={tx('sul training, problema separabile', 'on training, linearly separable problem')} />
+            <Readout label={tx('errori Perceptron', 'Perceptron errors')} tone="red" value="0" sub={tx('converge a un classificatore perfetto', 'converges to a perfect classifier')} />
           </div>
           <p className="wnote">
-            La maniglia è un pattern della classe +1 lontano dal confine: già classificato bene, ma il suo errore quadratico è grande e
-            «tira» la retta LMS.
+            {tx(
+              'La maniglia è un pattern della classe +1 lontano dal confine: già classificato bene, ma il suo errore quadratico è grande e «tira» la retta LMS.',
+              'The handle is a class +1 pattern far from the boundary: already correctly classified, but its squared error is large and pulls the LMS line.',
+            )}
           </p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Avvicina il punto lontano al suo gruppo: la retta LMS torna a separare tutto.', done: seen.fixed },
-          { label: 'Poi riportalo lontano: la retta LMS torna a sbagliare, il Perceptron no.', done: seen.back },
+          { label: tx('Avvicina il punto lontano al suo gruppo: la retta LMS torna a separare tutto.', 'Move the distant point closer to its cluster: the LMS line separates everything again.'), done: seen.fixed },
+          { label: tx('Poi riportalo lontano: la retta LMS torna a sbagliare, il Perceptron no.', 'Then move it far away again: the LMS line makes mistakes, while Perceptron does not.'), done: seen.back },
         ]}
       />
     </div>

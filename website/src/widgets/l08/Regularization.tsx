@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Btn, Legend, Readout, Segmented } from '../../components/ui/Controls'
 import { Tex } from '../../components/prose/Tex'
+import { tx, LOCALE } from '../../lib/i18n'
 import { gauss, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { GX, GY, gridX, gridY, model, X as HX, Y as HY } from '../l05/htf'
@@ -44,7 +45,7 @@ const decayed = trainer(regCfg(0.01), EPOCHS, -0.02)
 const outAt = (net: NetW, x: number) => forward(net, [(2 * x - 1) * SC], 'lin').o[0]
 
 function Progress({ run }: { run: Run }) {
-  return run.done < run.total ? <span className="l8__prog">addestramento: epoca {run.done.toLocaleString('it-IT')}</span> : null
+  return run.done < run.total ? <span className="l8__prog">{tx('addestramento: epoca ', 'training: epoch ')}{run.done.toLocaleString(LOCALE)}</span> : null
 }
 
 /* ------------------------------------------------------------------ Fig. 8.6 */
@@ -69,8 +70,8 @@ export function EarlyStopping() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'errore sul training set', color: 'var(--c-blue)' },
-            { label: 'errore sul validation set', color: 'var(--c-orange)' },
+            { label: tx('errore sul training set', 'training error'), color: 'var(--c-blue)' },
+            { label: tx('errore sul validation set', 'validation error'), color: 'var(--c-orange)' },
           ]}
         />
         <Progress run={run} />
@@ -82,7 +83,7 @@ export function EarlyStopping() {
             xFormat={(v) => String(10 ** v).replace(/(\d)(?=(\d{3})+$)/g, '$1.')}
             yTicks={[0, 0.1, 0.2, 0.3]}
             yFormat={(v) => fmt(v, 1)}
-            xLabel="epoche (scala log)"
+            xLabel={tx('epoche (scala log)', 'epochs (log scale)')}
             yLabel="MSE"
           />
           <Zone x={lx(h[iBest][0])} />
@@ -104,7 +105,7 @@ export function EarlyStopping() {
             x={stop}
             y={0}
             axis="x"
-            label="epoca in cui fermarsi"
+            label={tx('epoca in cui fermarsi', 'stopping epoch')}
             onMove={(p) => setStop(Math.max(0, Math.min(LOGMAX, p.x)))}
             bounds={{ x: [0, LOGMAX] }}
           />
@@ -119,17 +120,17 @@ export function EarlyStopping() {
             ))}
           </Plot>
           <div className="readouts">
-            <Readout label="epoca" value={h[iStop][0].toLocaleString('it-IT')} />
-            <Readout label="training" tone="blue" value={fmt(h[iStop][1], 3)} />
-            <Readout label="validazione" tone="orange" value={fmt(h[iStop][2], 3)} />
+            <Readout label={tx('epoca', 'epoch')} value={h[iStop][0].toLocaleString(LOCALE)} />
+            <Readout label={tx('training', 'training')} tone="blue" value={fmt(h[iStop][1], 3)} />
+            <Readout label={tx('validazione', 'validation')} tone="orange" value={fmt(h[iStop][2], 3)} />
           </div>
-          <p className="wnote">A sinistra le curve; qui l’uscita della rete (rosso) all’epoca scelta, con la funzione vera (verde).</p>
+          <p className="wnote">{tx('A sinistra le curve; qui l’uscita della rete (rosso) all’epoca scelta, con la funzione vera (verde).', 'Curves on the left; here the network output (red) at the chosen epoch, along with the true function (green).')}</p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Porta il cursore nella zona in cui l’errore di validazione è minimo: è il punto in cui fermarsi.', done: seen.good },
-          { label: 'Portalo alla fine: training quasi zero, validazione alta, la curva insegue il rumore (overtrained).', done: seen.over },
+          { label: tx('Porta il cursore nella zona in cui l’errore di validazione è minimo: è il punto in cui fermarsi.', 'Move the slider to the region where validation error is minimal: this is the stopping point.'), done: seen.good },
+          { label: tx('Portalo alla fine: training quasi zero, validazione alta, la curva insegue il rumore (overtrained).', 'Move it to the end: near-zero training error, high validation error, the curve fits the noise (overtrained).'), done: seen.over },
         ]}
       />
     </div>
@@ -142,7 +143,7 @@ function Zone({ x: xv }: { x: number }) {
     <g>
       <ellipse cx={x(xv)} cy={y(0.1)} rx={42} ry={24} fill="none" stroke="var(--c-blue)" strokeWidth={1.2} strokeDasharray="4 4" />
       <text x={x(xv)} y={y(0.1) + 42} textAnchor="middle" className="plot-label">
-        zona buona per fermarsi
+        {tx('zona buona per fermarsi', 'good stopping region')}
       </text>
     </g>
   )
@@ -165,8 +166,8 @@ function FitPanel({ run, title }: { run: Run; title: ReactNode }) {
         ))}
       </Plot>
       <div className="readouts">
-        <Readout label="training" tone="blue" value={fmt(run.hist[run.hist.length - 1][1], 3)} />
-        <Readout label="validazione" tone="orange" value={fmt(run.hist[run.hist.length - 1][2], 3)} />
+        <Readout label={tx('training', 'training')} tone="blue" value={fmt(run.hist[run.hist.length - 1][1], 3)} />
+        <Readout label={tx('validazione', 'validation')} tone="orange" value={fmt(run.hist[run.hist.length - 1][2], 3)} />
       </div>
       <Progress run={run} />
     </div>
@@ -187,9 +188,9 @@ export function RegRegression() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'dati di training', color: 'var(--c-blue)', kind: 'dot' },
-            { label: 'funzione vera', color: 'var(--c-green)', kind: 'dash' },
-            { label: 'uscita della rete', color: 'var(--c-red)' },
+            { label: tx('dati di training', 'training data'), color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('funzione vera', 'true function'), color: 'var(--c-green)', kind: 'dash' },
+            { label: tx('uscita della rete', 'network output'), color: 'var(--c-red)' },
           ]}
         />
       </div>
@@ -198,7 +199,8 @@ export function RegRegression() {
           run={r0}
           title={
             <>
-              Senza regolarizzazione (<Tex>{'\\lambda = 0'}</Tex>)
+              {tx('Senza regolarizzazione (', 'Without regularization (')}
+              <Tex>{'\\lambda = 0'}</Tex>)
             </>
           }
         />
@@ -206,14 +208,15 @@ export function RegRegression() {
           run={r1}
           title={
             <>
-              Regolarizzata (<Tex>{`\\lambda = ${fmt(lam, 3).replace(',', '{,}')}`}</Tex>)
+              {tx('Regolarizzata (', 'Regularized (')}
+              <Tex>{`\\lambda = ${fmt(lam, 3).replace(',', '{,}')}`}</Tex>)
             </>
           }
         />
       </div>
       <div className="controls">
         <Segmented
-          label="λ della rete a destra"
+          label={tx('λ della rete a destra', 'λ of the right-hand network')}
           value={lam}
           onChange={choose}
           options={LAMS.map((v) => ({ value: v, label: fmt(v, 3) }))}
@@ -221,8 +224,8 @@ export function RegRegression() {
       </div>
       <Tasks
         items={[
-          { label: 'Prova λ = 0,03: la curva diventa troppo piatta (underfitting).', done: seen.big },
-          { label: 'Prova λ = 0,001: la penalità è troppo debole e riaffiorano le oscillazioni.', done: seen.small },
+          { label: tx('Prova λ = 0,03: la curva diventa troppo piatta (underfitting).', 'Try λ = 0.03: the curve becomes overly flat (underfitting).'), done: seen.big },
+          { label: tx('Prova λ = 0,001: la penalità è troppo debole e riaffiorano le oscillazioni.', 'Try λ = 0.001: the penalty is too weak and oscillations reappear.'), done: seen.small },
         ]}
       />
     </div>
@@ -248,7 +251,7 @@ function WeightNet({ net, max, title }: { net: NetW; max?: number; title: ReactN
   return (
     <div className="htf__panel">
       <div className="htf__title">{title}</div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w8__net" role="img" aria-label="Pesi della rete colorati per segno e intensità">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w8__net" role="img" aria-label={tx('Pesi della rete colorati per segno e intensità', 'Network weights colored by sign and magnitude')}>
         {net.W1.map((w, j) => (
           <line key={`a${j}`} x1={W / 2} y1={H - 22} x2={hx(j)} y2={H / 2} stroke={col(w[1])} strokeWidth={1.4} opacity={op(w[1])} />
         ))}
@@ -261,15 +264,15 @@ function WeightNet({ net, max, title }: { net: NetW; max?: number; title: ReactN
         <circle cx={W / 2} cy={H - 22} r={9} className="w8__io" />
         <circle cx={W / 2} cy={22} r={9} className="w8__io" />
         <text x={W / 2 + 16} y={H - 18} className="net__side">
-          input
+          {tx('input', 'input')}
         </text>
         <text x={W / 2 + 16} y={26} className="net__side">
-          uscita
+          {tx('uscita', 'output')}
         </text>
       </svg>
       <div className="readouts">
-        <Readout label="peso massimo |w|" value={fmt(mx, 2)} />
-        <Readout label="pesi con |w| < 0,1" value={`${fmt(small * 100, 0)}%`} />
+        <Readout label={tx('peso massimo |w|', 'maximum weight |w|')} value={fmt(mx, 2)} />
+        <Readout label={tx('pesi con |w| < 0,1', 'weights with |w| < 0.1')} value={`${fmt(small * 100, 0)}%`} />
       </div>
     </div>
   )
@@ -286,8 +289,8 @@ export function WeightsViz() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'peso positivo', color: 'var(--c-blue)' },
-            { label: 'peso negativo', color: 'var(--c-orange)' },
+            { label: tx('peso positivo', 'positive weight'), color: 'var(--c-blue)' },
+            { label: tx('peso negativo', 'negative weight'), color: 'var(--c-orange)' },
           ]}
         />
         <Segmented
@@ -295,8 +298,8 @@ export function WeightsViz() {
           value={scale}
           onChange={setScale}
           options={[
-            { value: 'own', label: 'intensità relativa' },
-            { value: 'same', label: 'stessa scala' },
+            { value: 'own', label: tx('intensità relativa', 'relative intensity') },
+            { value: 'same', label: tx('stessa scala', 'same scale') },
           ]}
         />
       </div>
@@ -306,16 +309,16 @@ export function WeightsViz() {
           max={scale === 'same' ? m0 : undefined}
           title={
             <>
-              Rete addestrata con <Tex>{'\\lambda = 0'}</Tex>
+              {tx('Rete addestrata con ', 'Network trained with ')}<Tex>{'\\lambda = 0'}</Tex>
             </>
           }
         />
-        <WeightNet net={r1.net} max={scale === 'same' ? m0 : undefined} title="Rete regolarizzata" />
+        <WeightNet net={r1.net} max={scale === 'same' ? m0 : undefined} title={tx('Rete regolarizzata', 'Regularized network')} />
       </div>
       <Tasks
         items={[
           {
-            label: 'Passa a «stessa scala»: con la regolarizzazione quasi tutti i pesi sbiadiscono, cioè sono vicini a zero.',
+            label: tx('Passa a «stessa scala»: con la regolarizzazione quasi tutti i pesi sbiadiscono, cioè sono vicini a zero.', 'Switch to "same scale": with regularization almost all weights fade, i.e., they are close to zero.'),
             done: seen.same,
           },
         ]}
@@ -350,7 +353,7 @@ const clsCfg = (lambda: number) => ({
 const cls0 = trainer(clsCfg(0), 6000, 60, true)
 const cls1 = trainer(clsCfg(0.002), 6000, 60, true)
 
-function ClsPanel({ run, title }: { run: Run; title: string }) {
+function ClsPanel({ run, title }: { run: Run; title: ReactNode }) {
   const net = run.net
   const vals = useMemo(() => {
     const v = new Float64Array(GX * GY)
@@ -370,9 +373,9 @@ function ClsPanel({ run, title }: { run: Run; title: string }) {
         ))}
       </Plot>
       <div className="readouts">
-        <Readout label="errore di training" value={last ? fmt((1 - last[1]) * 100, 1) + '%' : '—'} />
+        <Readout label={tx('errore di training', 'training error')} value={last ? fmt((1 - last[1]) * 100, 1) + '%' : '—'} />
         <Readout
-          label="errore di test"
+          label={tx('errore di test', 'test error')}
           tone="orange"
           value={last ? fmt((1 - last[2]) * 100, 1) + '%' : '—'}
           sub={`Bayes: ${fmt(HTF.bayesErr * 100, 1)}%`}
@@ -427,9 +430,9 @@ export function WeightDecayClassifier() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'classe 1', color: 'var(--c-blue)', kind: 'dot' },
-            { label: 'classe 0', color: 'var(--c-orange)', kind: 'dot' },
-            { label: 'confine della rete', color: 'var(--ink)' },
+            { label: tx('classe 1', 'class 1'), color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('classe 0', 'class 0'), color: 'var(--c-orange)', kind: 'dot' },
+            { label: tx('confine della rete', 'network boundary'), color: 'var(--ink)' },
           ]}
         />
         <Btn
@@ -440,14 +443,14 @@ export function WeightDecayClassifier() {
             setAgain(true)
           }}
         >
-          Riaddestra dall’inizio
+          {tx('Riaddestra dall’inizio', 'Retrain from scratch')}
         </Btn>
       </div>
       <div className="wgrid wgrid--even">
-        <ClsPanel run={r0} title="Rete da 10 unità, senza weight decay" />
-        <ClsPanel run={r1} title="Rete da 10 unità, con weight decay" />
+        <ClsPanel run={r0} title={tx('Rete da 10 unità, senza weight decay', '10-unit network, without weight decay')} />
+        <ClsPanel run={r1} title={tx('Rete da 10 unità, con weight decay', '10-unit network, with weight decay')} />
       </div>
-      <Tasks items={[{ label: 'Riaddestra e guarda i confini formarsi: senza weight decay diventano frastagliati.', done: seen.again }]} />
+      <Tasks items={[{ label: tx('Riaddestra e guarda i confini formarsi: senza weight decay diventano frastagliati.', 'Retrain and watch the boundaries form: without weight decay they become jagged.'), done: seen.again }]} />
     </div>
   )
 }

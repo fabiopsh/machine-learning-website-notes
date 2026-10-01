@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Arrow, Axes, Plot, Polyline, usePlot } from '../../components/plot/Plot'
 import { fmt } from '../../components/plot/scale'
+import { tx } from '../../lib/i18n'
 import { lerp } from '../../lib/math'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
@@ -113,7 +114,7 @@ export function BoolPerceptron() {
       </div>
       <div className="bool6">
         <div className="bool6__left">
-          <NetSvg W={250} H={210} nodes={nodes} edges={edges} r={18} ariaLabel="Perceptron con i suoi pesi" className="bool6__net">
+          <NetSvg W={250} H={210} nodes={nodes} edges={edges} r={18} ariaLabel={tx('Perceptron con i suoi pesi', 'Perceptron with its weights')} className="bool6__net">
             <line x1={210} y1={105} x2={244} y2={105} className="net__out" markerEnd="url(#net-arrow)" />
           </NetSvg>
           <table className="hyp__table bool6__table">
@@ -191,15 +192,15 @@ export function BoolPerceptron() {
         />
         {fn !== 'not' && (
           <Btn icon="reset" onClick={() => setW(PRESET[fn])}>
-            Pesi degli appunti
+            {tx('Pesi degli appunti', 'Lecture weights')}
           </Btn>
         )}
       </div>
       <Tasks
         items={[
-          { label: 'Con l’AND, trova altri pesi che funzionano (cambia almeno w₀).', done: seen.and },
-          { label: 'Passa all’OR: con w₁ = w₂ = 1 basta alzare il bias a −0,5.', done: seen.or },
-          { label: 'Esercizio: trova i pesi del NOT (una sola variabile).', done: seen.not },
+          { label: tx('Con l’AND, trova altri pesi che funzionano (cambia almeno w₀).', 'With AND, find other weights that work (change at least w₀).'), done: seen.and },
+          { label: tx('Passa all’OR: con w₁ = w₂ = 1 basta alzare il bias a −0,5.', 'Switch to OR: with w₁ = w₂ = 1, simply raising the bias to −0.5 suffices.'), done: seen.or },
+          { label: tx('Esercizio: trova i pesi del NOT (una sola variabile).', 'Exercise: find the weights for NOT (single variable).'), done: seen.not },
         ]}
       />
     </div>
@@ -253,20 +254,20 @@ export function XorNetwork() {
           items={[
             { label: 'XOR = 1', color: C1, kind: 'dot' },
             { label: 'XOR = 0', color: C0, kind: 'dot' },
-            { label: t < 0.5 ? 'rette di h₁ (AND) e h₂ (OR)' : 'retta dell’uscita', color: 'var(--c-red)' },
+            { label: t < 0.5 ? tx('rette di h₁ (AND) e h₂ (OR)', 'lines for h₁ (AND) and h₂ (OR)') : tx('retta dell’uscita', 'output line'), color: 'var(--c-red)' },
           ]}
         />
       </div>
       <div className="wgrid wgrid--even">
-        <NetSvg W={440} H={290} nodes={nodes} edges={edges} r={22} ariaLabel="Rete a due strati per lo XOR" className="xor6__net">
+        <NetSvg W={440} H={290} nodes={nodes} edges={edges} r={22} ariaLabel={tx('Rete a due strati per lo XOR', 'Two-layer network for XOR')} className="xor6__net">
           <text x={110} y={150} textAnchor="end" className="net__side">
-            AND · w₀ = −1,5
+            AND · w₀ = {tx('−1,5', '−1.5')}
           </text>
           <text x={330} y={150} textAnchor="start" className="net__side">
-            OR · w₀ = −0,5
+            OR · w₀ = {tx('−0,5', '−0.5')}
           </text>
           <text x={250} y={34} textAnchor="start" className="net__side">
-            w₀ = −0,5
+            w₀ = {tx('−0,5', '−0.5')}
           </text>
         </NetSvg>
         <div>
@@ -288,24 +289,27 @@ export function XorNetwork() {
             ))}
           </Plot>
           <Slider
-            label="spazio degli input → spazio nascosto"
+            label={tx('spazio degli input → spazio nascosto', 'input space → hidden space')}
             min={0}
             max={1}
             step={0.01}
             value={t}
             onChange={setT}
-            format={(v) => (v < 0.5 ? 'input' : 'nascosto')}
+            format={(v) => (v < 0.5 ? tx('input', 'input') : tx('nascosto', 'hidden'))}
           />
         </div>
       </div>
       <p className="wnote">
-        Input ({p.x}, {p.y}) → h₁ = {h.x}, h₂ = {h.y} → uscita {o}. Clicca un punto per sceglierlo.
+        {tx(
+          `Input (${p.x}, ${p.y}) → h₁ = ${h.x}, h₂ = ${h.y} → uscita ${o}. Clicca un punto per sceglierlo.`,
+          `Input (${p.x}, ${p.y}) → h₁ = ${h.x}, h₂ = ${h.y} → output ${o}. Click a point to select it.`,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Con il punto (1, 0) porta il cursore allo spazio nascosto: diventa h₁ = 0, h₂ = 1.', done: seen.ten },
-          { label: 'Scegli (0, 1): finisce nello stesso punto (0, 1) dello spazio nascosto.', done: seen.both },
-          { label: 'Nello spazio (h₁, h₂) una sola retta separa i positivi dai negativi.', done: seen.sep },
+          { label: tx('Con il punto (1, 0) porta il cursore allo spazio nascosto: diventa h₁ = 0, h₂ = 1.', 'With the point (1, 0), move the slider to hidden space: it becomes h₁ = 0, h₂ = 1.'), done: seen.ten },
+          { label: tx('Scegli (0, 1): finisce nello stesso punto (0, 1) dello spazio nascosto.', 'Select (0, 1): it ends up at the same point (0, 1) in hidden space.'), done: seen.both },
+          { label: tx('Nello spazio (h₁, h₂) una sola retta separa i positivi dai negativi.', 'In (h₁, h₂) space, a single line separates positives from negatives.'), done: seen.sep },
         ]}
       />
     </div>

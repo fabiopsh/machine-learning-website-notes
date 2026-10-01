@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Readout, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, mean, normPdf, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -47,7 +48,7 @@ export function DensityML() {
       <Controls>
         <Slider label={<Tex>{'\\mu'}</Tex>} min={-2.5} max={3} step={0.01} value={mu} onChange={setMu} format={(v) => fmt(v)} />
         <Slider label={<Tex>{'\\sigma'}</Tex>} min={0.3} max={2.5} step={0.01} value={s} onChange={setS} format={(v) => fmt(v)} />
-        <Readout label="loss totale (−ln)" tone="accent" value={fmt(L, 2)} sub={`minimo: ${fmt(Lml, 2)}`} />
+        <Readout label={tx('loss totale (−ln)', 'total loss (−ln)')} tone="accent" value={fmt(L, 2)} sub={tx(`minimo: ${fmt(Lml, 2)}`, `minimum: ${fmt(Lml, 2)}`)} />
         <Btn
           icon="sparkle"
           variant="soft"
@@ -56,13 +57,13 @@ export function DensityML() {
             setS(+sML.toFixed(3))
           }}
         >
-          Massima verosimiglianza
+          {tx('Massima verosimiglianza', 'Maximum likelihood')}
         </Btn>
       </Controls>
       <Tasks
         items={[
-          { label: 'Sposta μ e σ finché la loss totale è minima: la campana si centra sui dati.', done: seen.ml },
-          { label: 'Stringi molto σ: alcuni punti finiscono dove h(x) ≈ 0 e il loro −ln esplode.', done: seen.narrow },
+          { label: tx('Sposta μ e σ finché la loss totale è minima: la campana si centra sui dati.', 'Adjust μ and σ until total loss is minimal: the bell curve centers on the data.'), done: seen.ml },
+          { label: tx('Stringi molto σ: alcuni punti finiscono dove h(x) ≈ 0 e il loro −ln esplode.', 'Make σ very small: some points fall where h(x) ≈ 0 and their −ln explodes.'), done: seen.narrow },
         ]}
       />
     </div>

@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Legend, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { Surface3D, type Overlay, type V3 } from '../common/Surface3D'
@@ -63,9 +64,9 @@ export function Hyperplane3D() {
         <Legend
           items={[
             { label: <Tex>{'z = \\mathbf{w}^T\\mathbf{x} + w_0'}</Tex>, color: 'var(--c-blue)', kind: 'area' },
-            { label: 'confine di decisione', color: 'var(--c-red)' },
-            { label: 'esempi con y = 1', color: 'var(--c-blue)', kind: 'dot' },
-            { label: 'con y = 0', color: 'var(--c-orange)', kind: 'dot' },
+            { label: tx('confine di decisione', 'decision boundary'), color: 'var(--c-red)' },
+            { label: tx('esempi con y = 1', 'examples with y = 1'), color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('con y = 0', 'with y = 0'), color: 'var(--c-orange)', kind: 'dot' },
           ]}
         />
       </div>
@@ -83,11 +84,11 @@ export function Hyperplane3D() {
           aspect={0.82}
           initial={{ yaw: -0.75, pitch: 0.5 }}
           axisLabels={['x₁', 'x₂', 'z']}
-          ariaLabel="Il piano w^T x attraversa il piano degli input lungo il confine di decisione"
+          ariaLabel={tx("Il piano w^T x attraversa il piano degli input lungo il confine di decisione", "The plane w^T x crosses the input plane along the decision boundary")}
         />
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">Il confine di decisione</div>
+            <div className="wpanel__title">{tx('Il confine di decisione', 'The decision boundary')}</div>
             <div className="wmath">
               <Tex>{`${f2(w0)} ${sg(w1)} ${f2(Math.abs(w1))}\\,x_1 ${sg(w2)} ${f2(Math.abs(w2))}\\,x_2 = 0`}</Tex>
             </div>
@@ -95,7 +96,7 @@ export function Hyperplane3D() {
           <table className="hyp__table">
             <thead>
               <tr>
-                <th>esempio</th>
+                <th>{tx('esempio', 'example')}</th>
                 <th>
                   <Tex>{'\\mathbf{w}^T\\mathbf{x}+w_0'}</Tex>
                 </th>
@@ -147,9 +148,9 @@ export function Hyperplane3D() {
       </div>
       <Tasks
         items={[
-          { label: 'Muovi i pesi: il piano si inclina e la retta rossa (dove il piano taglia z = 0) si sposta.', done: seen.moved },
-          { label: 'Fai sbagliare almeno un esempio: il suo punto finisce dal lato «sbagliato» del piano.', done: seen.wrong },
-          { label: 'Ritrova pesi che classificano bene tutti e tre gli esempi.', done: seen.back },
+          { label: tx('Muovi i pesi: il piano si inclina e la retta rossa (dove il piano taglia z = 0) si sposta.', 'Adjust the weights: the plane tilts and the red line (where the plane cuts z = 0) moves.'), done: seen.moved },
+          { label: tx('Fai sbagliare almeno un esempio: il suo punto finisce dal lato «sbagliato» del piano.', 'Make at least one example misclassified: its point ends up on the “wrong” side of the plane.'), done: seen.wrong },
+          { label: tx('Ritrova pesi che classificano bene tutti e tre gli esempi.', 'Find weights that correctly classify all three examples again.'), done: seen.back },
         ]}
       />
     </div>
@@ -244,8 +245,8 @@ export function Seismic() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'terremoti', color: 'var(--c-orange)', kind: 'dot' },
-            { label: 'esplosioni nucleari', color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('terremoti', 'earthquakes'), color: 'var(--c-orange)', kind: 'dot' },
+            { label: tx('esplosioni nucleari', 'nuclear explosions'), color: 'var(--c-blue)', kind: 'dot' },
             { label: '−4,9 + 1,7x₁ − x₂ = 0', color: 'var(--ink-2)', kind: 'dash' },
           ]}
         />
@@ -271,11 +272,11 @@ export function Seismic() {
             dash="4 4"
           />
           <Star p={q} />
-          <Handle x={q.x} y={q.y} label="nuovo evento sismico" onMove={setQ} />
+          <Handle x={q.x} y={q.y} label={tx('nuovo evento sismico', 'new seismic event')} onMove={setQ} />
         </Plot>
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">Nuovo evento</div>
+            <div className="wpanel__title">{tx('Nuovo evento', 'New event')}</div>
             <div className="wmath">
               <Tex>{`h(${f2(q.x)};\\,${f2(q.y)}) = \\operatorname{sign}(-4{,}9 + 1{,}7 \\cdot ${f2(q.x)} - ${f2(q.y)})`}</Tex>
             </div>
@@ -283,14 +284,14 @@ export function Seismic() {
               <Tex>{`= \\operatorname{sign}(${f2(v)}) = ${cls > 0 ? '+1' : '-1'}`}</Tex>
             </div>
           </div>
-          <span className={`verdict ${cls > 0 ? 'verdict--info' : 'verdict--warn'}`}>{cls > 0 ? 'esplosione nucleare' : 'terremoto'}</span>
-          <p className="wnote">La stella parte dall’evento (6, 3) dell’esempio degli appunti.</p>
+          <span className={`verdict ${cls > 0 ? 'verdict--info' : 'verdict--warn'}`}>{cls > 0 ? tx('esplosione nucleare', 'nuclear explosion') : tx('terremoto', 'earthquake')}</span>
+          <p className="wnote">{tx('La stella parte dall’evento (6, 3) dell’esempio degli appunti.', 'The star starts at the event (6, 3) from the notes example.')}</p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Trascina la stella nella nuvola dei terremoti: il segno diventa −1.', done: seen.quake },
-          { label: 'Portala proprio sul confine tratteggiato: la combinazione pesata vale circa 0.', done: seen.near },
+          { label: tx('Trascina la stella nella nuvola dei terremoti: il segno diventa −1.', 'Drag the star into the earthquake cluster: the sign becomes −1.'), done: seen.quake },
+          { label: tx('Portala proprio sul confine tratteggiato: la combinazione pesata vale circa 0.', 'Place it right on the dashed boundary: the weighted sum is approximately 0.'), done: seen.near },
         ]}
       />
     </div>
@@ -380,10 +381,10 @@ export function SeparatorProps() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'classe 1', color: 'var(--c-blue)', kind: 'dot' },
-            { label: 'classe 0', color: 'var(--c-orange)', kind: 'dot' },
-            { label: 'la tua retta', color: 'var(--c-red)' },
-            ...(others ? [{ label: 'altre soluzioni', color: 'var(--ink-3)', kind: 'dash' as const }] : []),
+            { label: tx('classe 1', 'class 1'), color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('classe 0', 'class 0'), color: 'var(--c-orange)', kind: 'dot' },
+            { label: tx('la tua retta', 'your line'), color: 'var(--c-red)' },
+            ...(others ? [{ label: tx('altre soluzioni', 'other solutions'), color: 'var(--ink-3)', kind: 'dash' as const }] : []),
           ]}
         />
       </div>
@@ -415,13 +416,13 @@ export function SeparatorProps() {
           {ONES.map((p, i) => (
             <Digit key={`o${i}`} p={p} d={1} bad={h(p) === 0} />
           ))}
-          <Handle x={A.x} y={A.y} label="primo punto della retta" onMove={setA} />
-          <Handle x={B.x} y={B.y} label="secondo punto della retta" onMove={setB} />
+          <Handle x={A.x} y={A.y} label={tx('primo punto della retta', 'first point of line')} onMove={setA} />
+          <Handle x={B.x} y={B.y} label={tx('secondo punto della retta', 'second point of line')} onMove={setB} />
         </Plot>
         <div className="wside">
           <div className="wpanel">
             <div className="wpanel__title">
-              La retta con i pesi moltiplicati per <Tex>K</Tex>
+              {tx('La retta con i pesi moltiplicati per', 'The line with weights multiplied by')} <Tex>K</Tex>
             </div>
             <div className="wmath">
               <Tex>{`${f2(K * w1)}\\,x_1 ${sg(w2)} ${f2(Math.abs(K * w2))}\\,x_2 ${sg(w0)} ${f2(Math.abs(K * w0))} = 0`}</Tex>
@@ -433,7 +434,7 @@ export function SeparatorProps() {
           <Slider
             label={
               <>
-                scala <Tex>K</Tex>
+                {tx('scala', 'scale')} <Tex>K</Tex>
               </>
             }
             min={0.3}
@@ -444,22 +445,22 @@ export function SeparatorProps() {
             format={(v) => fmt(v)}
           />
           <div className="readouts">
-            <Readout label="errori" value={`${wrong} su ${ONES.length + ZEROS.length}`} tone={wrong ? undefined : 'accent'} />
+            <Readout label={tx('errori', 'errors')} value={`${wrong} ${tx('su', 'of')} ${ONES.length + ZEROS.length}`} tone={wrong ? undefined : 'accent'} />
             <Readout
               label={<Tex>{'w_0'}</Tex>}
               value={fmt(K * w0)}
-              sub={Math.abs(w0) < 0.05 ? 'la retta passa per l’origine' : undefined}
+              sub={Math.abs(w0) < 0.05 ? tx('la retta passa per l’origine', 'line passes through the origin') : undefined}
             />
           </div>
-          <Toggle label="mostra altre rette separatrici" checked={others} onChange={setOthers} />
+          <Toggle label={tx('mostra altre rette separatrici', 'show other separating lines')} checked={others} onChange={setOthers} />
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Trascina la retta finché separa tutti i punti: la freccia w resta perpendicolare.', done: seen.sep },
-          { label: 'Cambia la scala K: i pesi cambiano, la retta no.', done: seen.scale },
-          { label: 'Mostra le altre soluzioni: se ne esiste una, ne esistono molte.', done: seen.others },
-          { label: 'Fai passare la retta per l’origine: w₀ diventa 0.', done: seen.origin },
+          { label: tx('Trascina la retta finché separa tutti i punti: la freccia w resta perpendicolare.', 'Drag the line until it separates all points: the weight arrow w remains perpendicular.'), done: seen.sep },
+          { label: tx('Cambia la scala K: i pesi cambiano, la retta no.', 'Change scale K: weights change, but the line does not.'), done: seen.scale },
+          { label: tx('Mostra le altre soluzioni: se ne esiste una, ne esistono molte.', 'Show other solutions: if one exists, infinitely many exist.'), done: seen.others },
+          { label: tx('Fai passare la retta per l’origine: w₀ diventa 0.', 'Make the line pass through the origin: w₀ becomes 0.'), done: seen.origin },
         ]}
       />
     </div>
@@ -494,8 +495,8 @@ export function LossSmooth() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'loss 0/1', color: 'var(--c-violet)' },
-            { label: 'loss quadratica (y − wᵀx)²', color: 'var(--c-red)' },
+            { label: tx('loss 0/1', '0/1 loss'), color: 'var(--c-violet)' },
+            { label: tx('loss quadratica (y − wᵀx)²', 'squared loss (y − wᵀx)²'), color: 'var(--c-red)' },
           ]}
         />
         <Segmented
@@ -510,7 +511,7 @@ export function LossSmooth() {
         />
       </div>
       <Plot xDomain={[-2, 2]} yDomain={[0, 9]} aspect={0.5}>
-        <Axes xTicks={[-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]} yTicks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} xLabel="wᵀx" yLabel="loss" />
+        <Axes xTicks={[-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]} yTicks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} xLabel="wᵀx" yLabel={tx('loss', 'loss')} />
         <ZeroOne y={y} />
         <FnPath f={lsq} color="var(--c-red)" width={2.4} />
         <Polyline
@@ -527,18 +528,18 @@ export function LossSmooth() {
         )}
         <Dot x={o} y={lsq(o)} r={4.5} color="var(--c-red)" />
         <Dot x={o} y={l01(o)} r={4.5} color="var(--c-violet)" />
-        <Handle x={o} y={0} axis="x" label="valore di w^T x" onMove={(p) => setO(Math.round(p.x * 100) / 100)} bounds={{ x: [-2, 2] }} />
+        <Handle x={o} y={0} axis="x" label={tx('valore di w^T x', 'value of w^T x')} onMove={(p) => setO(Math.round(p.x * 100) / 100)} bounds={{ x: [-2, 2] }} />
       </Plot>
       <div className="readouts">
-        <Readout label="wᵀx" value={fmt(o)} sub={`classe predetta ${o >= 0 ? '+1' : '−1'}`} />
-        <Readout label="loss 0/1" tone="violet" value={String(l01(o))} sub="pendenza sempre 0" />
-        <Readout label="loss quadratica" tone="red" value={fmt(lsq(o))} sub={`pendenza ${fmt(slope)}`} />
+        <Readout label="wᵀx" value={fmt(o)} sub={`${tx('classe predetta', 'predicted class')} ${o >= 0 ? '+1' : '−1'}`} />
+        <Readout label={tx('loss 0/1', '0/1 loss')} tone="violet" value={String(l01(o))} sub={tx('pendenza sempre 0', 'slope always 0')} />
+        <Readout label={tx('loss quadratica', 'squared loss')} tone="red" value={fmt(lsq(o))} sub={`${tx('pendenza', 'slope')} ${fmt(slope)}`} />
       </div>
       <Tasks
         items={[
-          { label: 'Porta wᵀx dal lato giusto: la loss 0/1 va a zero, ma la sua pendenza non aiuta mai (è piatta).', done: seen.right },
-          { label: 'Trova il minimo della loss quadratica: sta proprio in wᵀx = y.', done: seen.min },
-          { label: 'Passa a y = −1: la parabola si sposta e il minimo è di nuovo dal lato giusto.', done: seen.neg },
+          { label: tx('Porta wᵀx dal lato giusto: la loss 0/1 va a zero, ma la sua pendenza non aiuta mai (è piatta).', 'Bring wᵀx to the correct side: 0/1 loss drops to zero, but its gradient never helps (it is flat).'), done: seen.right },
+          { label: tx('Trova il minimo della loss quadratica: sta proprio in wᵀx = y.', 'Find the minimum of the squared loss: it lies exactly at wᵀx = y.'), done: seen.min },
+          { label: tx('Passa a y = −1: la parabola si sposta e il minimo è di nuovo dal lato giusto.', 'Switch to y = −1: the parabola shifts and the minimum is once again on the correct side.'), done: seen.neg },
         ]}
       />
     </div>

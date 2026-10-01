@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Btn, Readout } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -108,20 +109,20 @@ export function Rosenblatt() {
     <div>
       <div className="ros">
         <div className="ros__col">
-          <div className="htf__title">Retina (fotocellule)</div>
+          <div className="htf__title">{tx('Retina (fotocellule)', 'Retina (photocells)')}</div>
           <div
             className="ros__retina"
             onPointerUp={() => (paint.current = null)}
             onPointerLeave={() => (paint.current = null)}
             role="group"
-            aria-label="Retina 8 per 8: clicca o trascina per accendere le fotocellule"
+            aria-label={tx('Retina 8 per 8: clicca o trascina per accendere le fotocellule', '8-by-8 retina: click or drag to turn photocells on')}
           >
             {im.map((p, k) => (
               <button
                 key={k}
                 type="button"
                 className={`ros__cell${p ? ' is-on' : ''}`}
-                aria-label={`fotocellula ${Math.floor(k / N) + 1}, ${(k % N) + 1}: ${p ? 'accesa' : 'spenta'}`}
+                aria-label={tx(`fotocellula ${Math.floor(k / N) + 1}, ${(k % N) + 1}: ${p ? 'accesa' : 'spenta'}`, `photocell ${Math.floor(k / N) + 1}, ${(k % N) + 1}: ${p ? 'on' : 'off'}`)}
                 onPointerDown={(e) => {
                   e.preventDefault()
                   paint.current = 1 - p
@@ -137,44 +138,47 @@ export function Rosenblatt() {
           →
         </div>
         <div className="ros__col">
-          <div className="htf__title">Unità associative φ</div>
+          <div className="htf__title">{tx('Unità associative φ', 'Associative units φ')}</div>
           <div className="ros__phi">
             {phi.map((v, i) => (
               <span
                 key={i}
                 className={`ros__unit${v ? ' is-on' : ''}${TRAINED.w[i + 1] >= 0 ? ' is-pos' : ' is-neg'}`}
-                title={`φ${i + 1} = ${v}, peso ${fmt(TRAINED.w[i + 1], 0)}`}
+                title={`φ${i + 1} = ${v}, ${tx('peso', 'weight')} ${fmt(TRAINED.w[i + 1], 0)}`}
               >
                 {fmt(TRAINED.w[i + 1], 0)}
               </span>
             ))}
           </div>
-          <p className="wnote">Il numero è il peso appreso verso Ψ (blu positivo, arancione negativo).</p>
+          <p className="wnote">{tx('Il numero è il peso appreso verso Ψ (blu positivo, arancione negativo).', 'The number is the learned weight towards Ψ (blue positive, orange negative).')}</p>
         </div>
         <div className="ros__arrow" aria-hidden="true">
           →
         </div>
         <div className="ros__col ros__col--out">
-          <div className="htf__title">Risposta Ψ</div>
+          <div className="htf__title">{tx('Risposta Ψ', 'Response Ψ')}</div>
           <div className={`ros__out ros__out--${cls}`}>{cls}</div>
           <Readout label="Σ w φ + w₀" value={fmt(net, 0)} sub={net > 0 ? '> 0: X' : '≤ 0: O'} />
         </div>
       </div>
       <div className="controls">
-        <Btn onClick={() => preset('X')}>Lettera X</Btn>
-        <Btn onClick={() => preset('O')}>Lettera O</Btn>
-        <Btn onClick={() => preset(nseed % 2 ? 'X' : 'O', true)}>Lettera spostata e rumorosa</Btn>
+        <Btn onClick={() => preset('X')}>{tx('Lettera X', 'Letter X')}</Btn>
+        <Btn onClick={() => preset('O')}>{tx('Lettera O', 'Letter O')}</Btn>
+        <Btn onClick={() => preset(nseed % 2 ? 'X' : 'O', true)}>{tx('Lettera spostata e rumorosa', 'Shifted and noisy letter')}</Btn>
         <Btn icon="reset" onClick={() => setIm(new Array(64).fill(0))}>
-          Cancella
+          {tx('Cancella', 'Clear')}
         </Btn>
       </div>
       <p className="wnote">
-        Pesi di Ψ appresi con l’algoritmo del Perceptron su {TRAINED.n} lettere X e O spostate e rumorose ({TRAINED.epochs} epoche).
+        {tx(
+          `Pesi di Ψ appresi con l’algoritmo del Perceptron su ${TRAINED.n} lettere X e O spostate e rumorose (${TRAINED.epochs} epoche).`,
+          `Weights of Ψ learned with the Perceptron algorithm on ${TRAINED.n} shifted and noisy X and O letters (${TRAINED.epochs} epochs).`,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Carica la lettera O: le unità accese cambiano e la risposta diventa O.', done: seen.o },
-          { label: 'Disegna una lettera tua sulla retina (clicca o trascina) e guarda cosa risponde.', done: seen.drawn },
+          { label: tx('Carica la lettera O: le unità accese cambiano e la risposta diventa O.', 'Load the letter O: the active units change and the response becomes O.'), done: seen.o },
+          { label: tx('Disegna una lettera tua sulla retina (clicca o trascina) e guarda cosa risponde.', 'Draw your own letter on the retina (click or drag) and see what it responds.'), done: seen.drawn },
         ]}
       />
     </div>

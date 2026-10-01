@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Controls, Legend, Readout, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -81,9 +82,9 @@ export function DoubleDescent() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'errore di test', color: 'var(--c-orange)' },
-            { label: 'errore di training', color: 'var(--c-blue)', kind: 'dash' },
-            { label: 'regime critico', color: 'var(--c-yellow)', kind: 'area' },
+            { label: tx('errore di test', 'test error'), color: 'var(--c-orange)' },
+            { label: tx('errore di training', 'training error'), color: 'var(--c-blue)', kind: 'dash' },
+            { label: tx('regime critico', 'critical regime'), color: 'var(--c-yellow)', kind: 'area' },
           ]}
         />
       </div>
@@ -92,8 +93,8 @@ export function DoubleDescent() {
           xTicks={[1, 10, 20, 30, 40, 50, 60]}
           yTicks={[0, 0.1, 0.2, 0.3, 0.4, 0.5]}
           yFormat={(v) => fmt(v, 1)}
-          xLabel="larghezza del modello (ResNet18)"
-          yLabel="errore"
+          xLabel={tx('larghezza del modello (ResNet18)', 'model width (ResNet18)')}
+          yLabel={tx('errore', 'error')}
         />
         <Band from={5} to={19} />
         <Polyline
@@ -108,10 +109,10 @@ export function DoubleDescent() {
         <Polyline pts={DD_TRAIN.map(([x, y]) => ({ x, y }))} color="var(--c-blue)" width={2} dash="6 4" />
         <Polyline pts={DD_TEST.map(([x, y]) => ({ x, y }))} color="var(--c-orange)" width={2.4} />
         <Label x={THRESH + 1} y={0.2} className="plot-label--muted">
-          soglia di interpolazione
+          {tx('soglia di interpolazione', 'interpolation threshold')}
         </Label>
         <Label x={36} y={0.52} className="plot-label--muted">
-          regime moderno: più grande è meglio →
+          {tx('regime moderno: più grande è meglio →', 'modern regime: larger is better →')}
         </Label>
         <Polyline
           pts={[
@@ -128,7 +129,7 @@ export function DoubleDescent() {
           x={w}
           y={0}
           axis="x"
-          label="larghezza del modello"
+          label={tx('larghezza del modello', 'model width')}
           onMove={(p) => {
             setW(Math.max(1, Math.min(64, Math.round(p.x))))
             setMoved(true)
@@ -137,22 +138,22 @@ export function DoubleDescent() {
       </Plot>
       <div className="controls">
         <div className="readouts">
-          <Readout label="larghezza" tone="accent" value={String(w)} />
-          <Readout label="errore di test" tone="orange" value={fmt(interp(DD_TEST, w), 2)} />
-          <Readout label="errore di training" tone="blue" value={fmt(interp(DD_TRAIN, w), 2)} />
+          <Readout label={tx('larghezza', 'width')} tone="accent" value={String(w)} />
+          <Readout label={tx('errore di test', 'test error')} tone="orange" value={fmt(interp(DD_TEST, w), 2)} />
+          <Readout label={tx('errore di training', 'training error')} tone="blue" value={fmt(interp(DD_TRAIN, w), 2)} />
         </div>
         <span className={'verdict ' + (regime === 'classic' ? 'verdict--info' : regime === 'critical' ? 'verdict--warn' : 'verdict--good')}>
           {regime === 'classic'
-            ? 'Regime classico: il compromesso bias-varianza, la solita curva a U.'
+            ? tx('Regime classico: il compromesso bias-varianza, la solita curva a U.', 'Classical regime: bias-variance trade-off, the usual U-shaped curve.')
             : regime === 'critical'
-              ? 'Regime critico: attorno alla soglia di interpolazione (errore di training quasi nullo) l’errore di test ha un picco.'
-              : 'Regime moderno: sovra-parametrizzazione, l’errore di test scende di nuovo.'}
+              ? tx('Regime critico: attorno alla soglia di interpolazione (errore di training quasi nullo) l’errore di test ha un picco.', 'Critical regime: around the interpolation threshold (near-zero training error) the test error peaks.')
+              : tx('Regime moderno: sovra-parametrizzazione, l’errore di test scende di nuovo.', 'Modern regime: over-parametrization, test error drops again.')}
         </span>
       </div>
       <Tasks
         items={[
-          { label: 'Porta la larghezza attorno a 11, la soglia di interpolazione: l’errore di training è quasi zero e quello di test è al picco.', done: seen.peak },
-          { label: 'Vai oltre 40: l’errore di test è più basso del minimo della prima discesa.', done: seen.modern },
+          { label: tx('Porta la larghezza attorno a 11, la soglia di interpolazione: l’errore di training è quasi zero e quello di test è al picco.', 'Bring the width around 11, the interpolation threshold: training error is near zero and test error peaks.'), done: seen.peak },
+          { label: tx('Vai oltre 40: l’errore di test è più basso del minimo della prima discesa.', 'Go past 40: test error is lower than the minimum of the first descent.'), done: seen.modern },
         ]}
       />
     </div>
@@ -203,8 +204,8 @@ export function PolyDescent() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'errore di training', color: 'var(--c-blue)' },
-            { label: 'errore di test', color: 'var(--c-orange)' },
+            { label: tx('errore di training', 'training error'), color: 'var(--c-blue)' },
+            { label: tx('errore di test', 'test error'), color: 'var(--c-orange)' },
           ]}
         />
       </div>
@@ -213,8 +214,8 @@ export function PolyDescent() {
           xTicks={[0, 2, 4, 6, 8, 10, 12, 14, 16]}
           yTicks={[-5, -4, -3, -2, -1, 0]}
           yFormat={(v) => fmt(10 ** v, Math.max(0, -v))}
-          xLabel="grado del polinomio"
-          yLabel="MSE (scala logaritmica)"
+          xLabel={tx('grado del polinomio', 'polynomial degree')}
+          yLabel={tx('MSE (scala logaritmica)', 'MSE (log scale)')}
         />
         <Polyline
           pts={[
@@ -232,7 +233,7 @@ export function PolyDescent() {
           x={d}
           y={-5}
           axis="x"
-          label="grado del polinomio"
+          label={tx('grado del polinomio', 'polynomial degree')}
           onMove={(p) => {
             setD(Math.max(0, Math.min(16, Math.round(p.x))))
             setMoved(true)
@@ -241,22 +242,22 @@ export function PolyDescent() {
       </Plot>
       <div className="controls">
         <div className="readouts">
-          <Readout label="grado" tone="accent" value={String(d)} />
-          <Readout label="errore di test" tone="orange" value={fmt(test, test < 0.01 ? 4 : 3)} />
-          <Readout label="errore di training" tone="blue" value={d <= 5 ? fmt(train, 5) : 'sotto 0,00001'} />
+          <Readout label={tx('grado', 'degree')} tone="accent" value={String(d)} />
+          <Readout label={tx('errore di test', 'test error')} tone="orange" value={fmt(test, test < 0.01 ? 4 : 3)} />
+          <Readout label={tx('errore di training', 'training error')} tone="blue" value={d <= 5 ? fmt(train, 5) : tx('sotto 0,00001', 'below 0.00001')} />
         </div>
         <span className={'verdict ' + (d < 6 ? 'verdict--info' : d <= 8 ? 'verdict--warn' : 'verdict--good')}>
           {d < 6
-            ? 'Prima discesa e risalita: la classica U.'
+            ? tx('Prima discesa e risalita: la classica U.', 'First descent and rise: the classic U-shape.')
             : d <= 8
-              ? 'Il picco, al grado in cui l’errore di training si azzera.'
-              : 'Seconda discesa: il fit è guidato solo dal termine di penalità.'}
+              ? tx('Il picco, al grado in cui l’errore di training si azzera.', 'The peak, at the degree where training error vanishes.')
+              : tx('Seconda discesa: il fit è guidato solo dal termine di penalità.', 'Second descent: the fit is driven solely by the penalty term.')}
         </span>
       </div>
       <Tasks
         items={[
-          { label: 'Porta il grado a 7: l’errore di training si è azzerato e quello di test è al massimo.', done: seen.peak },
-          { label: 'Sali oltre il grado 14: l’errore di test torna ai livelli del minimo della prima discesa.', done: seen.far },
+          { label: tx('Porta il grado a 7: l’errore di training si è azzerato e quello di test è al massimo.', 'Bring the degree to 7: training error has reached zero and test error is at its peak.'), done: seen.peak },
+          { label: tx('Sali oltre il grado 14: l’errore di test torna ai livelli del minimo della prima discesa.', 'Go above degree 14: test error returns to the levels of the first descent minimum.'), done: seen.far },
         ]}
       />
     </div>
@@ -318,31 +319,31 @@ export function Clipping() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'funzione di costo', color: 'var(--c-violet)' },
-            { label: 'passi della discesa', color: 'var(--ink)', kind: 'dot' },
+            { label: tx('funzione di costo', 'cost function'), color: 'var(--c-violet)' },
+            { label: tx('passi della discesa', 'descent steps'), color: 'var(--ink)', kind: 'dot' },
           ]}
         />
         <Toggle label="gradient clipping" checked={on} onChange={setOn} />
       </div>
       <Plot xDomain={[0, 9.5]} yDomain={[0, 2.1]} aspect={0.5} margin={{ b: 40 }}>
-        <Axes xTicks={[0, 2, 4, 6, 8]} yTicks={[0, 0.5, 1, 1.5, 2]} yFormat={(y) => fmt(y, 1)} xLabel="peso w" yLabel="costo J(w)" />
+        <Axes xTicks={[0, 2, 4, 6, 8]} yTicks={[0, 0.5, 1, 1.5, 2]} yFormat={(y) => fmt(y, 1)} xLabel={tx('peso w', 'weight w')} yLabel={tx('costo J(w)', 'cost J(w)')} />
         <FnPath f={cost} color="var(--c-violet)" width={2.4} samples={600} />
         <Hops ws={ws} />
         {ws.map((w, i) => (
           <Dot key={i} x={w} y={cost(w)} color={i === 0 ? 'var(--c-green)' : 'var(--ink)'} r={i === ws.length - 1 ? 5 : 3.6} />
         ))}
         <Label x={START} y={cost(START) + 0.14} anchor="middle" className="plot-label--muted">
-          partenza
+          {tx('partenza', 'start')}
         </Label>
         <Label x={0.3} y={1.9} className="plot-label--muted">
-          scogliera
+          {tx('scogliera', 'cliff')}
         </Label>
       </Plot>
       <Controls>
         <Slider
           label={
             <>
-              soglia <Tex>{'v'}</Tex> sulla norma
+              {tx('soglia', 'threshold')} <Tex>{'v'}</Tex> {tx('sulla norma', 'on norm')}
             </>
           }
           min={0.06}
@@ -353,16 +354,16 @@ export function Clipping() {
           format={(x) => fmt(x, 2)}
           width={200}
         />
-        <Slider label="passi eseguiti" min={1} max={NSTEPS} step={1} value={n} onChange={setN} width={180} />
+        <Slider label={tx('passi eseguiti', 'steps taken')} min={1} max={NSTEPS} step={1} value={n} onChange={setN} width={180} />
         <div className="readouts">
-          <Readout label="gradiente più grande incontrato" value={fmt(gmax, 2)} sub={on ? `tagliato a ${fmt(Math.min(v, gmax), 2)}` : 'usato così com’è'} />
-          <Readout label="punto più lontano raggiunto" tone="accent" value={<Tex>{`w = ${fmt(far, 1)}`}</Tex>} />
+          <Readout label={tx('gradiente più grande incontrato', 'largest gradient encountered')} value={fmt(gmax, 2)} sub={on ? tx(`tagliato a ${fmt(Math.min(v, gmax), 2)}`, `clipped to ${fmt(Math.min(v, gmax), 2)}`) : tx('usato così com’è', 'used as-is')} />
+          <Readout label={tx('punto più lontano raggiunto', 'furthest point reached')} tone="accent" value={<Tex>{`w = ${fmt(far, 1)}`}</Tex>} />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Senza clipping segui i passi: quando un passo finisce sulla parete della scogliera, il gradiente enorme catapulta il peso lontanissimo.', done: n < NSTEPS || seen.on },
-          { label: 'Attiva il clipping: la direzione è la stessa, ma il passo è limitato e la reazione alla scogliera è moderata.', done: seen.on },
+          { label: tx('Senza clipping segui i passi: quando un passo finisce sulla parete della scogliera, il gradiente enorme catapulta il peso lontanissimo.', 'Without clipping follow the steps: when a step lands on the cliff wall, the huge gradient catapults the weight far away.'), done: n < NSTEPS || seen.on },
+          { label: tx('Attiva il clipping: la direzione è la stessa, ma il passo è limitato e la reazione alla scogliera è moderata.', 'Enable clipping: the direction is unchanged, but the step is bounded and the reaction to the cliff is moderate.'), done: seen.on },
         ]}
       />
     </div>
@@ -398,7 +399,7 @@ function SubNet({ m, big, onToggle }: { m: Mask; big?: boolean; onToggle?: (i: n
             onClick={onToggle ? () => onToggle(i) : undefined}
             role={onToggle ? 'button' : undefined}
             tabIndex={onToggle ? 0 : undefined}
-            aria-label={onToggle ? `unità ${nm}: ${m[i] ? 'presente' : 'rimossa'}` : undefined}
+            aria-label={onToggle ? tx(`unità ${nm}: ${m[i] ? 'presente' : 'rimossa'}`, `unit ${nm}: ${m[i] ? 'present' : 'dropped'}`) : undefined}
             onKeyDown={onToggle ? (e) => (e.key === 'Enter' || e.key === ' ') && onToggle(i) : undefined}
           >
             <circle cx={POS[nm][0]} cy={POS[nm][1]} r={r} />
@@ -436,14 +437,16 @@ export function Dropout() {
     <div>
       <div className="dr17">
         <div className="dr17__base">
-          <div className="htf__title">Rete base (clicca un’unità per rimuoverla)</div>
+          <div className="htf__title">{tx('Rete base (clicca un’unità per rimuoverla)', 'Base network (click a unit to drop it)')}</div>
           <SubNet m={m} big onToggle={(i) => set(m.map((v, j) => (j === i ? !v : v)) as Mask)} />
           <span className={'verdict ' + (works(m) ? 'verdict--good' : 'verdict--bad')}>
-            {works(m) ? 'C’è un percorso dall’input all’uscita.' : 'Nessun percorso dall’input all’uscita: questa sotto-rete non funziona.'}
+            {works(m)
+              ? tx('C’è un percorso dall’input all’uscita.', 'There is a path from input to output.')
+              : tx('Nessun percorso dall’input all’uscita: questa sotto-rete non funziona.', 'No path from input to output: this sub-network is disconnected.')}
           </span>
         </div>
         <div>
-          <div className="htf__title">Le 16 sotto-reti</div>
+          <div className="htf__title">{tx('Le 16 sotto-reti', 'The 16 sub-networks')}</div>
           <div className="dr17__grid">
             {Array.from({ length: 16 }, (_, k) => {
               const mk = maskOf(k)
@@ -452,7 +455,7 @@ export function Dropout() {
                   key={k}
                   type="button"
                   className={'dr17__cell' + (k === key ? ' is-on' : '') + (works(mk) ? '' : ' is-bad')}
-                  aria-label={`sotto-rete ${k + 1}${works(mk) ? '' : ', non funziona'}`}
+                  aria-label={tx(`sotto-rete ${k + 1}${works(mk) ? '' : ', non funziona'}`, `sub-network ${k + 1}${works(mk) ? '' : ', disconnected'}`)}
                   aria-pressed={k === key}
                   onClick={() => set(mk)}
                 >
@@ -465,17 +468,19 @@ export function Dropout() {
       </div>
       <Controls>
         <Btn icon="play" variant="soft" onClick={sample}>
-          Campiona una maschera
+          {tx('Campiona una maschera', 'Sample a mask')}
         </Btn>
         <p className="wnote">
-          Probabilità di includere un’unità: 0,8 per gli input, 0,5 per le unità nascoste. Le sotto-reti segnate in rosso (7 su 16) non
-          collegano più l’input all’uscita.
+          {tx(
+            'Probabilità di includere un’unità: 0,8 per gli input, 0,5 per le unità nascoste. Le sotto-reti segnate in rosso (7 su 16) non collegano più l’input all’uscita.',
+            'Probability of retaining a unit: 0.8 for inputs, 0.5 for hidden units. The sub-networks in red (7 out of 16) no longer connect input to output.',
+          )}
         </p>
       </Controls>
       <Tasks
         items={[
-          { label: 'Campiona qualche maschera: a ogni esempio si addestra una sotto-rete diversa.', done: draws >= 3 },
-          { label: 'Trova una sotto-rete che non funziona (nessun percorso dall’input all’uscita).', done: broken },
+          { label: tx('Campiona qualche maschera: a ogni esempio si addestra una sotto-rete diversa.', 'Sample a few masks: on each example a different sub-network is trained.'), done: draws >= 3 },
+          { label: tx('Trova una sotto-rete che non funziona (nessun percorso dall’input all’uscita).', 'Find a broken sub-network (no path from input to output).'), done: broken },
         ]}
       />
     </div>
@@ -507,7 +512,7 @@ function NormPanel({ kind, theta }: { kind: 'l1' | 'l2'; theta: number }) {
   return (
     <div>
       <div className="htf__title">
-        Norma <Tex>{kind === 'l1' ? 'L^1' : 'L^2'}</Tex>
+        {tx('Norma', 'Norm')} <Tex>{kind === 'l1' ? 'L^1' : 'L^2'}</Tex>
       </div>
       <Plot xDomain={[-2.4, 2.9]} yDomain={[-2.4, 2.9]} equal aspect={1} minH={220} maxH={330} margin={{ l: 14, r: 14, t: 12, b: 14 }}>
         <Axes origin xTicks={[]} yTicks={[]} grid={false} />
@@ -534,7 +539,7 @@ function NormPanel({ kind, theta }: { kind: 'l1' | 'l2'; theta: number }) {
         <Readout label={<Tex>{'w_2'}</Tex>} value={fmt(sol[1], 2)} />
       </div>
       <span className={'verdict ' + (sparse ? 'verdict--good' : 'verdict--info')}>
-        {sparse ? 'Un peso è esattamente zero: soluzione sparsa.' : 'Entrambi i pesi sono diversi da zero.'}
+        {sparse ? tx('Un peso è esattamente zero: soluzione sparsa.', 'One weight is exactly zero: sparse solution.') : tx('Entrambi i pesi sono diversi da zero.', 'Both weights are non-zero.')}
       </span>
     </div>
   )
@@ -549,9 +554,9 @@ export function L1L2() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'vincoli dei dati', color: 'var(--c-red)' },
-            { label: 'curve di livello della norma', color: 'var(--c-blue)' },
-            { label: 'la soluzione', color: 'var(--c-red)', kind: 'dot' },
+            { label: tx('vincoli dei dati', 'data constraints'), color: 'var(--c-red)' },
+            { label: tx('curve di livello della norma', 'norm level contours'), color: 'var(--c-blue)' },
+            { label: tx('la soluzione', 'the solution'), color: 'var(--c-red)', kind: 'dot' },
           ]}
         />
       </div>
@@ -560,12 +565,12 @@ export function L1L2() {
         <NormPanel kind="l2" theta={theta} />
       </div>
       <Controls>
-        <Slider label="inclinazione della retta dei vincoli" min={8} max={82} step={1} value={deg} onChange={setDeg} format={(v) => `${v}°`} width={300} />
+        <Slider label={tx('inclinazione della retta dei vincoli', 'constraint line slope')} min={8} max={82} step={1} value={deg} onChange={setDeg} format={(v) => `${v}°`} width={300} />
       </Controls>
       <Tasks
         items={[
-          { label: 'Cambia l’inclinazione della retta: con la norma L² la soluzione scorre lungo il cerchio, con la L¹ resta su un vertice del rombo.', done: seen.moved },
-          { label: 'Scendi sotto 40°: la soluzione L¹ salta sull’altro vertice, dove è l’altro peso a essere zero.', done: seen.low },
+          { label: tx('Cambia l’inclinazione della retta: con la norma L² la soluzione scorre lungo il cerchio, con la L¹ resta su un vertice del rombo.', 'Change the line slope: with the L² norm the solution slides along the circle, with L¹ it sticks to a rhombus vertex.'), done: seen.moved },
+          { label: tx('Scendi sotto 40°: la soluzione L¹ salta sull’altro vertice, dove è l’altro peso a essere zero.', 'Drop below 40°: the L¹ solution jumps to the other vertex, where the other weight becomes zero.'), done: seen.low },
         ]}
       />
     </div>

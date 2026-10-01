@@ -4,6 +4,7 @@ import { svgScript, subDigits } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 
 /**
  * Fig. 5.10 — la delta rule su una LTU con tre input (w₀ = 0).
@@ -54,24 +55,24 @@ export function DeltaRule() {
   return (
     <div className="delta">
       <div className="delta__scroll">
-        <svg viewBox="-28 0 688 262" className="delta__svg" role="img" aria-label="Unità a soglia con tre input, i pesi e l’uscita">
+        <svg viewBox="-28 0 688 262" className="delta__svg" role="img" aria-label={tx("Unità a soglia con tre input, i pesi e l’uscita", "Threshold unit with three inputs, weights, and output")}>
           <text x={46} y={22} className="delta__head" textAnchor="middle">
-            input
+            {tx('input', 'inputs')}
           </text>
           <text x={WX} y={22} className="delta__head" textAnchor="middle">
-            pesi (w₀ = 0)
+            {tx('pesi (w₀ = 0)', 'weights (w₀ = 0)')}
           </text>
           {Y_IN.map((yy, j) => {
             const changed = prev && Math.abs(prev[j] - w[j]) > 1e-9
             return (
-              <g key={j}>
+               <g key={j}>
                 <line x1={78} y1={yy} x2={330} y2={130} className={`delta__edge${x[j] ? ' is-on' : ''}`} />
                 <g
                   className="delta__in"
                   onClick={() => toggle(j)}
                   role="button"
                   tabIndex={0}
-                  aria-label={`input x${j + 1} = ${x[j]}, clic per cambiarlo`}
+                  aria-label={tx(`input x${j + 1} = ${x[j]}, clic per cambiarlo`, `input x${j + 1} = ${x[j]}, click to toggle`)}
                   onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && toggle(j)}
                 >
                   <rect x={20} y={yy - 22} width={52} height={44} rx={10} className={x[j] ? 'is-on' : undefined} />
@@ -90,7 +91,7 @@ export function DeltaRule() {
                   </text>
                   {changed && prev && (
                     <text y={-22} textAnchor="middle" className="delta__old">
-                      era {fmtW(prev[j])}
+                      {tx('era', 'was')} {fmtW(prev[j])}
                     </text>
                   )}
                 </g>
@@ -110,28 +111,28 @@ export function DeltaRule() {
             {out > 0 ? '+1' : '−1'}
           </text>
           <text x={612} y={166} textAnchor="middle" className="delta__sub">
-            target {y > 0 ? '+1' : '−1'}
+            {tx('target', 'target')} {y > 0 ? '+1' : '−1'}
           </text>
           <text x={612} y={186} textAnchor="middle" className={`delta__verdict${ok ? ' is-ok' : ' is-bad'}`}>
-            {ok ? 'corretto' : 'sbagliato'}
+            {ok ? tx('corretto', 'correct') : tx('sbagliato', 'wrong')}
           </text>
         </svg>
       </div>
 
       <div className="wgrid">
         <div className="wpanel">
-          <div className="wpanel__title">Un passo della delta rule</div>
+          <div className="wpanel__title">{tx('Un passo della delta rule', 'A step of the delta rule')}</div>
           <div className="wmath">
             <Tex>{`\\delta = y - \\mathbf{w}^T\\mathbf{x} = ${n(y)} - (${n(net)}) = ${n(delta)}`}</Tex>
           </div>
           <div className="wmath">
             <Tex>{`\\Delta w_j = \\eta\\,\\delta\\,x_j:\\quad ${x.map((xj) => n(eta * delta * xj)).join(';\\ ')}`}</Tex>
           </div>
-          <p className="wnote">Gli input a 0 non cambiano il loro peso; con un errore positivo i pesi degli input attivi crescono.</p>
+          <p className="wnote">{tx('Gli input a 0 non cambiano il loro peso; con un errore positivo i pesi degli input attivi crescono.', 'Inputs at 0 do not change their weight; with a positive error, weights of active inputs increase.')}</p>
         </div>
         <div className="wside">
           <Segmented
-            label="target y"
+            label={tx('target y', 'target y')}
             size="sm"
             value={y}
             onChange={(v) => {
@@ -147,23 +148,23 @@ export function DeltaRule() {
           <Slider label={<Tex>{'\\eta'}</Tex>} min={0.05} max={0.5} step={0.001} value={eta} onChange={setEta} format={(v) => fmt(v, 3)} />
           <div className="delta__btns">
             <Btn icon="step" variant="soft" onClick={step}>
-              Applica la delta rule
+              {tx('Applica la delta rule', 'Apply delta rule')}
             </Btn>
-            <Btn icon="reset" onClick={reset} title="Valori della figura" />
+            <Btn icon="reset" onClick={reset} title={tx('Valori della figura', 'Figure values')} />
           </div>
           <Readout
-            label="uscita"
+            label={tx('uscita', 'output')}
             tone={ok ? 'green' : 'red'}
             value={out > 0 ? '+1' : '−1'}
-            sub={ok ? 'classificato bene' : 'errore di classificazione'}
+            sub={ok ? tx('classificato bene', 'correctly classified') : tx('errore di classificazione', 'misclassified')}
           />
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Applica la delta rule una volta: w₁ e w₃ diventano +0,1 e l’uscita diventa +1.', done: log.steps > 0 },
-          { label: 'Clicca un input per metterlo a 0 o a 1: solo i pesi degli input attivi vengono corretti.', done: log.toggled },
-          { label: 'Cambia il target in −1 e correggi di nuovo: ora i pesi scendono.', done: log.target && log.steps > 1 },
+          { label: tx('Applica la delta rule una volta: w₁ e w₃ diventano +0,1 e l’uscita diventa +1.', 'Apply the delta rule once: w₁ and w₃ become +0.1 and the output becomes +1.'), done: log.steps > 0 },
+          { label: tx('Clicca un input per metterlo a 0 o a 1: solo i pesi degli input attivi vengono corretti.', 'Click an input to toggle it to 0 or 1: only weights of active inputs are updated.'), done: log.toggled },
+          { label: tx('Cambia il target in −1 e correggi di nuovo: ora i pesi scendono.', 'Change the target to −1 and update again: now the weights decrease.'), done: log.target && log.steps > 1 },
         ]}
       />
     </div>

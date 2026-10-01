@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx, LOCALE } from '../../lib/i18n'
 import { polyval } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { fit, reseed, resetOriginal, rms, setL, setM, target, testSet, trainingSet, usePoly } from './polyStore'
@@ -22,7 +23,7 @@ function Samples({ xs, ts, r = 4.5 }: { xs: number[]; ts: number[]; r?: number }
 
 const legend = [
   { label: <Tex>{'\\sin(2\\pi x)'}</Tex>, color: 'var(--c-green)' },
-  { label: 'dati di training (con rumore)', color: 'var(--c-blue)', kind: 'dot' as const },
+  { label: tx('dati di training (con rumore)', 'training data (noisy)'), color: 'var(--c-blue)', kind: 'dot' as const },
 ]
 
 /* ------------------------------------------------------------------ Fig. 4.1 */
@@ -36,11 +37,11 @@ export function SineTarget() {
         <Legend items={legend} />
         <span className="poly__btns">
           <Btn icon="reset" onClick={reseed}>
-            Nuovo rumore
+            {tx('Nuovo rumore', 'New noise')}
           </Btn>
           {seed !== 0 && (
             <Btn onClick={resetOriginal} variant="soft">
-              Dati della figura originale
+              {tx('Dati della figura originale', 'Original figure data')}
             </Btn>
           )}
         </span>
@@ -52,8 +53,10 @@ export function SineTarget() {
         <Samples xs={d.xs} ts={d.ts} />
       </Plot>
       <p className="wnote">
-        I segmenti grigi sono il rumore: la distanza di ogni campione dalla curva vera. Premi «Nuovo rumore» per estrarre un altro
-        training set dalla stessa funzione (le altre figure di questa sezione si aggiornano).
+        {tx(
+          'I segmenti grigi sono il rumore: la distanza di ogni campione dalla curva vera. Premi «Nuovo rumore» per estrarre un altro training set dalla stessa funzione (le altre figure di questa sezione si aggiornano).',
+          'The gray segments are the noise: the distance of each sample from the true curve. Click “New noise” to draw another training set from the same function (the other figures in this section update).',
+        )}
       </p>
     </div>
   )
@@ -80,9 +83,9 @@ function Residuals({ xs, ts }: { xs: number[]; ts: number[] }) {
 /* ------------------------------------------------------------------ Fig. 4.2 */
 
 function verdictOf(tr: number, te: number) {
-  if (tr > 0.3) return { cls: 'verdict--warn', text: 'Underfitting: il modello è troppo semplice' }
-  if (te > 2 * tr + 0.15) return { cls: 'verdict--bad', text: 'Overfitting: impara anche il rumore' }
-  return { cls: 'verdict--good', text: 'Buon compromesso' }
+  if (tr > 0.3) return { cls: 'verdict--warn', text: tx('Underfitting: il modello è troppo semplice', 'Underfitting: the model is too simple') }
+  if (te > 2 * tr + 0.15) return { cls: 'verdict--bad', text: tx('Overfitting: impara anche il rumore', 'Overfitting: fits the noise as well') }
+  return { cls: 'verdict--good', text: tx('Buon compromesso', 'Good balance') }
 }
 
 export function PolyFit() {
@@ -101,14 +104,14 @@ export function PolyFit() {
   return (
     <div>
       <div className="wbar">
-        <Legend items={[...legend, { label: 'polinomio di grado M', color: 'var(--c-red)' }]} />
+        <Legend items={[...legend, { label: tx('polinomio di grado M', 'degree-M polynomial'), color: 'var(--c-red)' }]} />
         <Segmented
           size="sm"
           value={grid ? 'grid' : 'one'}
           onChange={(k) => setGrid(k === 'grid')}
           options={[
-            { value: 'one', label: 'Un grado' },
-            { value: 'grid', label: 'Confronta 0 · 1 · 3 · 9' },
+            { value: 'one', label: tx('Un grado', 'Single degree') },
+            { value: 'grid', label: tx('Confronta 0 · 1 · 3 · 9', 'Compare 0 · 1 · 3 · 9') },
           ]}
         />
       </div>
@@ -144,8 +147,8 @@ export function PolyFit() {
           </Plot>
           <div className="wside">
             <div className="readouts">
-              <Readout label="errore RMS di training" tone="blue" value={fmt(tr, 3)} />
-              <Readout label="errore RMS di test" tone="orange" value={fmt(te, 3)} />
+              <Readout label={tx('errore RMS di training', 'training RMS error')} tone="blue" value={fmt(tr, 3)} />
+              <Readout label={tx('errore RMS di test', 'test RMS error')} tone="orange" value={fmt(te, 3)} />
             </div>
             <span className={`verdict ${v.cls}`}>{v.text}</span>
             <CoefBars w={w} />
@@ -156,7 +159,7 @@ export function PolyFit() {
         <Slider
           label={
             <>
-              grado del polinomio <Tex>M</Tex>
+              {tx('grado del polinomio', 'polynomial degree')} <Tex>M</Tex>
             </>
           }
           min={0}
@@ -170,10 +173,10 @@ export function PolyFit() {
       </div>
       <Tasks
         items={[
-          { label: 'Con M = 0 o M = 1 il modello non riesce a seguire il seno: underfitting.', done: seen.under },
-          { label: 'Con M = 3 la curva approssima bene la funzione vera.', done: seen.good },
-          { label: 'Con M = 9 l’errore di training è zero… e guarda i coefficienti.', done: seen.over },
-          { label: 'Confronta i quattro gradi affiancati, come nella figura originale.', done: seen.grid },
+          { label: tx('Con M = 0 o M = 1 il modello non riesce a seguire il seno: underfitting.', 'With M = 0 or M = 1 the model cannot follow the sine: underfitting.'), done: seen.under },
+          { label: tx('Con M = 3 la curva approssima bene la funzione vera.', 'With M = 3 the curve approximates the true function well.'), done: seen.good },
+          { label: tx('Con M = 9 l’errore di training è zero… e guarda i coefficienti.', 'With M = 9 the training error is zero… and look at the coefficients.'), done: seen.over },
+          { label: tx('Confronta i quattro gradi affiancati, come nella figura originale.', 'Compare the four degrees side by side, as in the original figure.'), done: seen.grid },
         ]}
       />
     </div>
@@ -186,7 +189,7 @@ function CoefBars({ w }: { w: number[] }) {
   return (
     <div className="wpanel coef">
       <div className="wpanel__title">
-        Coefficienti ottimi <Tex>{'\\mathbf{w}^*'}</Tex>
+        {tx('Coefficienti ottimi', 'Optimal coefficients')} <Tex>{'\\mathbf{w}^*'}</Tex>
       </div>
       <ul className="coef__list">
         {w.map((v, j) => {
@@ -210,7 +213,7 @@ function CoefBars({ w }: { w: number[] }) {
 
 function fmtBig(v: number) {
   const a = Math.abs(v)
-  const s = a >= 1000 ? Math.round(v).toLocaleString('it-IT') : v.toFixed(2).replace('.', ',')
+  const s = a >= 1000 ? Math.round(v).toLocaleString(LOCALE) : fmt(v, 2)
   return s.replace('-', '−')
 }
 
@@ -237,12 +240,19 @@ export function RmsCurve() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'training', color: 'var(--c-blue)' },
-            { label: 'test', color: 'var(--c-orange)' },
+            { label: tx('training', 'training'), color: 'var(--c-blue)' },
+            { label: tx('test', 'test'), color: 'var(--c-orange)' },
           ]}
         />
         <span className="wnote">
-          Clicca su un grado per selezionarlo: <strong>M = {M}</strong>
+          {tx(
+            <>
+              Clicca su un grado per selezionarlo: <strong>M = {M}</strong>
+            </>,
+            <>
+              Click a degree to select it: <strong>M = {M}</strong>
+            </>,
+          )}
         </span>
       </div>
       <Plot
@@ -259,7 +269,7 @@ export function RmsCurve() {
         )}
       >
         <Band m={M} />
-        <Axes xTicks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} yTicks={[0, 0.5, 1]} xLabel="M" yLabel="errore RMS" />
+        <Axes xTicks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} yTicks={[0, 0.5, 1]} xLabel="M" yLabel={tx('errore RMS', 'RMS error')} />
         <Polyline pts={rows.map((q) => ({ x: q.m, y: Math.min(cap * 1.02, q.tr) }))} color="var(--c-blue)" width={2} />
         <Polyline pts={rows.map((q) => ({ x: q.m, y: Math.min(cap * 1.02, q.te) }))} color="var(--c-orange)" width={2} />
         {rows.map((q) => (
@@ -312,7 +322,7 @@ export function MoreData() {
           }}
           options={[10, 15, 100].map((v) => ({ value: v, label: `l = ${v}` }))}
         />
-        <Legend items={[...legend, { label: 'polinomio di grado 9', color: 'var(--c-red)' }]} />
+        <Legend items={[...legend, { label: tx('polinomio di grado 9', 'degree-9 polynomial'), color: 'var(--c-red)' }]} />
       </div>
       <Plot xDomain={[0, 1]} yDomain={Y} aspect={0.5}>
         <Axes xTicks={[0, 0.2, 0.4, 0.6, 0.8, 1]} yTicks={[-1, 0, 1]} xLabel="x" yLabel="t" />
@@ -325,11 +335,11 @@ export function MoreData() {
       </Plot>
       <div className="controls">
         <div className="readouts">
-          <Readout label="errore RMS di training" tone="blue" value={fmt(tr, 3)} />
-          <Readout label="errore RMS di test" tone="orange" value={fmt(te, 3)} />
+          <Readout label={tx('errore RMS di training', 'training RMS error')} tone="blue" value={fmt(tr, 3)} />
+          <Readout label={tx('errore RMS di test', 'test RMS error')} tone="orange" value={fmt(te, 3)} />
         </div>
       </div>
-      <Tasks items={[{ label: 'Passa da l = 10 a l = 100: lo stesso polinomio di grado 9 smette di oscillare.', done: seen.l100 }]} />
+      <Tasks items={[{ label: tx('Passa da l = 10 a l = 100: lo stesso polinomio di grado 9 smette di oscillare.', 'Switch from l = 10 to l = 100: the same degree-9 polynomial stops oscillating.'), done: seen.l100 }]} />
     </div>
   )
 }

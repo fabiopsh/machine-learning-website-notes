@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 
 const PTS = [
@@ -56,7 +57,7 @@ export function MSEFigure() {
             x={XA}
             y={ya}
             axis="y"
-            label="estremo sinistro della retta"
+            label={tx('estremo sinistro della retta', 'left line endpoint')}
             onMove={(p) => {
               setYa(p.y)
               setSeen((s) => ({ ...s, drag: true }))
@@ -66,7 +67,7 @@ export function MSEFigure() {
             x={XB}
             y={yb}
             axis="y"
-            label="estremo destro della retta"
+            label={tx('estremo destro della retta', 'right line endpoint')}
             onMove={(p) => {
               setYb(p.y)
               setSeen((s) => ({ ...s, drag: true }))
@@ -75,20 +76,20 @@ export function MSEFigure() {
         </Plot>
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">La retta</div>
+            <div className="wpanel__title">{tx('La retta', 'The line')}</div>
             <div className="wmath">
               <Tex>{`h_{\\mathbf{w}}(x) = ${fmt(w1).replace(',', '{,}')}\\,x ${w0 >= 0 ? '+' : '-'} ${fmt(Math.abs(w0)).replace(',', '{,}')}`}</Tex>
             </div>
           </div>
           <div className="wpanel">
-            <div className="wpanel__title">Il calcolo</div>
+            <div className="wpanel__title">{tx('Il calcolo', 'The calculation')}</div>
             <div className="wmath mse__calc">
               <Tex>{`E(\\mathbf{w}) = \\tfrac{1}{4}\\big(${res.map((r) => `${r < 0 ? '(' : ''}${fmt(r).replace(',', '{,}').replace('−', '-')}${r < 0 ? ')' : ''}^2`).join(' + ')}\\big)`}</Tex>
             </div>
           </div>
-          <Readout label="MSE" tone="accent" value={fmt(E, 3)} sub={`il minimo possibile è ${fmt(Emin, 3)}`} />
+          <Readout label="MSE" tone="accent" value={fmt(E, 3)} sub={tx(`il minimo possibile è ${fmt(Emin, 3)}`, `the minimum possible is ${fmt(Emin, 3)}`)} />
           <Toggle
-            label="disegna i quadrati degli errori"
+            label={tx('disegna i quadrati degli errori', 'draw error squares')}
             checked={squares}
             onChange={(v) => {
               setSquares(v)
@@ -103,15 +104,15 @@ export function MSEFigure() {
               setYb(OPT.w1 * XB + OPT.w0)
             }}
           >
-            Retta a errore minimo
+            {tx('Retta a errore minimo', 'Minimal error line')}
           </Btn>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Trascina gli estremi della retta e guarda come cambiano i segmenti verdi.', done: seen.drag },
-          { label: 'Accendi i quadrati: l’MSE è la media delle loro aree.', done: seen.sq },
-          { label: 'Porta l’MSE al minimo (a mano o con il pulsante).', done: reached.min },
+          { label: tx('Trascina gli estremi della retta e guarda come cambiano i segmenti verdi.', 'Drag line endpoints and watch how green segments change.'), done: seen.drag },
+          { label: tx('Accendi i quadrati: l’MSE è la media delle loro aree.', 'Turn on squares: MSE is the average of their areas.'), done: seen.sq },
+          { label: tx('Porta l’MSE al minimo (a mano o con il pulsante).', 'Bring MSE to minimum (manually or using the button).'), done: reached.min },
         ]}
       />
     </div>

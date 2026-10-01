@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { contourSegments, segsToPath } from '../common/contours'
@@ -87,7 +88,7 @@ export function Descent1D() {
           x={w0}
           y={0}
           axis="x"
-          label="peso iniziale"
+          label={tx('peso iniziale', 'initial weight')}
           onMove={(p) => {
             setW0(p.x)
             reset()
@@ -99,7 +100,7 @@ export function Descent1D() {
         <Slider
           label={
             <>
-              learning rate <Tex>{'\\eta'}</Tex>
+              {tx('learning rate', 'learning rate')} <Tex>{'\\eta'}</Tex>
             </>
           }
           min={0.002}
@@ -114,28 +115,28 @@ export function Descent1D() {
           width={260}
         />
         <Btn icon="step" variant="soft" onClick={() => setSteps((s) => Math.min(40, s + 1))}>
-          Un passo
+          {tx('Un passo', 'One step')}
         </Btn>
         <Btn icon="play" onClick={() => setSteps((s) => Math.min(40, s + 10))}>
-          Dieci passi
+          {tx('Dieci passi', 'Ten steps')}
         </Btn>
-        <Btn icon="reset" onClick={reset} title="Ricomincia" />
+        <Btn icon="reset" onClick={reset} title={tx('Ricomincia', 'Reset')} />
       </div>
       <div className="readouts">
-        <Readout label="passi" value={String(steps)} />
-        <Readout label={<Tex>{'w_t'}</Tex>} value={inView(cur) ? fmt(cur, 3) : 'fuori scala'} />
+        <Readout label={tx('passi', 'steps')} value={String(steps)} />
+        <Readout label={<Tex>{'w_t'}</Tex>} value={inView(cur) ? fmt(cur, 3) : tx('fuori scala', 'out of bounds')} />
         <Readout label={<Tex>{'E(w_t)'}</Tex>} tone="red" value={inView(cur) ? fmt(E1(cur), 3) : '—'} />
         <Readout
           label={<Tex>{'\\partial E/\\partial w'}</Tex>}
           value={inView(cur) ? fmt(G1(cur), 2) : '—'}
-          sub={`minimo in w = ${fmt(W_MIN, 3)}`}
+          sub={`${tx('minimo in', 'minimum at')} w = ${fmt(W_MIN, 3)}`}
         />
       </div>
       <Tasks
         items={[
-          { label: 'Fai almeno quattro passi con η piccolo: i passi si accorciano man mano che la pendenza cala.', done: seen.four },
-          { label: 'Alza η finché il peso scavalca il minimo e oscilla da una parte all’altra.', done: seen.over },
-          { label: 'Con η troppo grande la discesa diverge: l’errore cresce a ogni passo.', done: seen.div },
+          { label: tx('Fai almeno quattro passi con η piccolo: i passi si accorciano man mano che la pendenza cala.', 'Take at least four steps with small η: steps get shorter as the slope decreases.'), done: seen.four },
+          { label: tx('Alza η finché il peso scavalca il minimo e oscilla da una parte all’altra.', 'Increase η until the weight overshoots the minimum and oscillates back and forth.'), done: seen.over },
+          { label: tx('Con η troppo grande la discesa diverge: l’errore cresce a ogni passo.', 'With η too large, descent diverges: error increases at every step.'), done: seen.div },
         ]}
       />
     </div>
@@ -207,8 +208,8 @@ export function ErrorSurface() {
         <Legend
           items={[
             { label: <Tex>{'-\\nabla E(\\mathbf{w})'}</Tex>, color: 'var(--c-green)' },
-            { label: 'retta h(x) = w₁x + w₀', color: 'var(--c-red)' },
-            { label: 'dati dell’esercizio', color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('retta h(x) = w₁x + w₀', 'line h(x) = w₁x + w₀'), color: 'var(--c-red)' },
+            { label: tx('dati dell’esercizio', 'exercise data'), color: 'var(--c-blue)', kind: 'dot' },
           ]}
         />
       </div>
@@ -226,13 +227,13 @@ export function ErrorSurface() {
           aspect={0.9}
           initial={{ yaw: -0.9, pitch: 0.55 }}
           axisLabels={['w₀', 'w₁', 'E']}
-          ariaLabel="Superficie d’errore E(w0, w1): un paraboloide"
+          ariaLabel={tx("Superficie d’errore E(w0, w1): un paraboloide", "Error surface E(w0, w1): a paraboloid")}
         />
         <div className="wside">
           <Plot xDomain={[0, 6]} yDomain={[0, 13]} aspect={0.7} minH={180} maxH={260} margin={{ l: 32, r: 10, t: 10, b: 28 }}>
             <Axes xTicks={[0, 1, 2, 3, 4, 5, 6]} yTicks={[0, 4, 8, 12]} xLabel="x" yLabel="y" />
             {XS.map((x, i) => (
-              <Polyline
+               <Polyline
                 key={i}
                 pts={[
                   { x, y: YS[i] },
@@ -248,7 +249,7 @@ export function ErrorSurface() {
             ))}
           </Plot>
           <div className="readouts">
-            <Readout label={<Tex>{'E(\\mathbf{w})'}</Tex>} tone="accent" value={fmt(E, 3)} sub="media dei quadrati dei residui" />
+            <Readout label={<Tex>{'E(\\mathbf{w})'}</Tex>} tone="accent" value={fmt(E, 3)} sub={tx('media dei quadrati dei residui', 'mean squared residuals')} />
             <Readout label={<Tex>{'-\\nabla E'}</Tex>} tone="green" value={`(${fmt(-g0, 1)}; ${fmt(-g1, 1)})`} />
           </div>
         </div>
@@ -275,15 +276,15 @@ export function ErrorSurface() {
           width={200}
         />
         <Btn icon="step" variant="soft" onClick={step}>
-          Passo lungo −∇E
+          {tx('Passo lungo −∇E', 'Step along −∇E')}
         </Btn>
-        <Btn onClick={() => setW([W0_OPT, W1_OPT])}>Minimo: 1,99x + 0,09</Btn>
+        <Btn onClick={() => setW([W0_OPT, W1_OPT])}>{tx('Minimo: 1,99x + 0,09', `Minimum: ${fmt(1.99)}x + ${fmt(0.09)}`)}</Btn>
       </div>
       <Tasks
         items={[
-          { label: 'Muovi w₀ e w₁: ogni punto del piano è una retta diversa, con il suo errore.', done: seen.moved },
-          { label: 'Premi «Passo lungo −∇E»: la freccia verde è la bussola che porta verso il fondo.', done: seen.step },
-          { label: 'Raggiungi il fondo del paraboloide: è la retta dell’esercizio svolto.', done: seen.min },
+          { label: tx('Muovi w₀ e w₁: ogni punto del piano è una retta diversa, con il suo errore.', 'Move w₀ and w₁: every point in the plane is a different line, with its own error.'), done: seen.moved },
+          { label: tx('Premi «Passo lungo −∇E»: la freccia verde è la bussola che porta verso il fondo.', 'Press “Step along −∇E”: the green arrow points downhill toward the bottom.'), done: seen.step },
+          { label: tx('Raggiungi il fondo del paraboloide: è la retta dell’esercizio svolto.', 'Reach the bottom of the paraboloid: that is the fitted line from the worked exercise.'), done: seen.min },
         ]}
       />
     </div>
@@ -340,8 +341,8 @@ export function BatchOnline() {
         <Legend
           items={[
             { label: 'batch', color: 'var(--c-blue)' },
-            { label: 'on-line (un ordine dei pattern)', color: 'var(--c-violet)' },
-            { label: 'on-line (un altro ordine)', color: 'var(--c-orange)' },
+            { label: tx('on-line (un ordine dei pattern)', 'online (one pattern order)'), color: 'var(--c-violet)' },
+            { label: tx('on-line (un altro ordine)', 'online (another order)'), color: 'var(--c-orange)' },
           ]}
         />
       </div>
@@ -359,7 +360,7 @@ export function BatchOnline() {
         ))}
         <Polyline pts={run.batch.filter(inBox).map(([a, b]) => ({ x: a, y: b }))} color="var(--c-blue)" width={2.4} />
         <Dot x={W0_OPT} y={W1_OPT} r={4} color="var(--ink)" />
-        <Handle x={start[0]} y={start[1]} label="pesi iniziali" onMove={(p) => setStart([p.x, p.y])} />
+        <Handle x={start[0]} y={start[1]} label={tx('pesi iniziali', 'initial weights')} onMove={(p) => setStart([p.x, p.y])} />
       </Plot>
       <div className="controls">
         <Slider
@@ -372,7 +373,7 @@ export function BatchOnline() {
           format={(v) => fmt(v, 3)}
           width={200}
         />
-        <Slider label="epoche" min={1} max={200} step={1} value={epochs} onChange={setEpochs} width={200} />
+        <Slider label={tx('epoche', 'epochs')} min={1} max={200} step={1} value={epochs} onChange={setEpochs} width={200} />
         <Btn
           icon="reset"
           onClick={() => {
@@ -380,23 +381,23 @@ export function BatchOnline() {
             setShuffled(true)
           }}
         >
-          Nuovo ordine dei pattern
+          {tx('Nuovo ordine dei pattern', 'Shuffle pattern order')}
         </Btn>
       </div>
       <div className="readouts">
-        <Readout label="aggiornamenti batch" tone="blue" value={String(epochs)} sub={`E finale ${fmt(eB, 3)}`} />
+        <Readout label={tx('aggiornamenti batch', 'batch updates')} tone="blue" value={String(epochs)} sub={`${tx('E finale', 'final E')} ${fmt(eB, 3)}`} />
         <Readout
-          label="aggiornamenti on-line"
+          label={tx('aggiornamenti on-line', 'online updates')}
           tone="violet"
           value={String(epochs * l)}
-          sub={Number.isFinite(eO) ? `E finale ${fmt(eO, 3)}` : 'diverge'}
+          sub={Number.isFinite(eO) ? `${tx('E finale', 'final E')} ${fmt(eO, 3)}` : tx('diverge', 'diverges')}
         />
       </div>
       <Tasks
         items={[
-          { label: 'Aumenta le epoche: il batch scende regolare lungo la valle, l’on-line a zig-zag ma più in fretta.', done: seen.many },
-          { label: 'Cambia l’ordine dei pattern: il percorso on-line cambia, quello batch no.', done: seen.shuffle },
-          { label: 'Alza η: l’on-line diventa instabile prima del batch (serve un η più piccolo).', done: seen.big },
+          { label: tx('Aumenta le epoche: il batch scende regolare lungo la valle, l’on-line a zig-zag ma più in fretta.', 'Increase epochs: batch descends smoothly along the valley, online zigzags but faster.'), done: seen.many },
+          { label: tx('Cambia l’ordine dei pattern: il percorso on-line cambia, quello batch no.', 'Change pattern order: the online path changes, while the batch path does not.'), done: seen.shuffle },
+          { label: tx('Alza η: l’on-line diventa instabile prima del batch (serve un η più piccolo).', 'Increase η: online becomes unstable sooner than batch (it requires a smaller η).'), done: seen.big },
         ]}
       />
     </div>
@@ -433,9 +434,9 @@ function curve(eta: number, epochs = 60): number[] {
 }
 
 const REF = [
-  { eta: 0.0006, color: 'var(--c-green)', name: 'verde' },
-  { eta: 0.036, color: 'var(--c-blue)', name: 'blu' },
-  { eta: 0.004, color: 'var(--c-red)', name: 'rossa' },
+  { eta: 0.0006, color: 'var(--c-green)', name: 'verde', enName: 'green' },
+  { eta: 0.036, color: 'var(--c-blue)', name: 'blu', enName: 'blue' },
+  { eta: 0.004, color: 'var(--c-red)', name: 'rossa', enName: 'red' },
 ]
 
 export function LearningCurves() {
@@ -450,13 +451,13 @@ export function LearningCurves() {
       <div className="wbar">
         <Legend
           items={[
-            ...REF.map((r) => ({ label: `curva ${r.name}`, color: r.color })),
-            { label: 'il tuo η', color: 'var(--c-violet)', kind: 'dash' as const },
+            ...REF.map((r) => ({ label: tx(`curva ${r.name}`, `${r.enName} curve`), color: r.color })),
+            { label: tx('il tuo η', 'your η'), color: 'var(--c-violet)', kind: 'dash' as const },
           ]}
         />
       </div>
       <Plot xDomain={[0, 60]} yDomain={[0, 3.5]} aspect={0.48} margin={{ b: 40 }}>
-        <Axes xTicks={[0, 10, 20, 30, 40, 50, 60]} yTicks={[0, 1, 2, 3]} xLabel="epoche" yLabel="errore" />
+        <Axes xTicks={[0, 10, 20, 30, 40, 50, 60]} yTicks={[0, 1, 2, 3]} xLabel={tx('epoche', 'epochs')} yLabel={tx('errore', 'error')} />
         {refs.map((c, i) => (
           <Polyline key={i} pts={pts(c)} color={REF[i].color} width={2.2} />
         ))}
@@ -466,7 +467,7 @@ export function LearningCurves() {
         <Slider
           label={
             <>
-              il tuo learning rate <Tex>{'\\eta'}</Tex>
+              {tx('il tuo learning rate', 'your learning rate')} <Tex>{'\\eta'}</Tex>
             </>
           }
           min={0.0002}
@@ -479,14 +480,16 @@ export function LearningCurves() {
         />
       </div>
       <p className="wnote">
-        Stesso problema (la retta dell’esercizio), stessa partenza, discesa on-line: cambia solo η. Le tre curve hanno η ={' '}
-        {fmt(REF[0].eta, 4)} (verde), {fmt(REF[2].eta, 3)} (rossa) e {fmt(REF[1].eta, 3)} (blu).
+        {tx(
+          `Stesso problema (la retta dell’esercizio), stessa partenza, discesa on-line: cambia solo η. Le tre curve hanno η = ${fmt(REF[0].eta, 4)} (verde), ${fmt(REF[2].eta, 3)} (rossa) e ${fmt(REF[1].eta, 3)} (blu).`,
+          `Same problem (the exercise line), same starting point, online descent: only η varies. The three curves have η = ${fmt(REF[0].eta, 4)} (green), ${fmt(REF[2].eta, 3)} (red), and ${fmt(REF[1].eta, 3)} (blue).`,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Scegli un η minuscolo: la tua curva scende piano come quella verde.', done: seen.slow },
-          { label: 'Trova un η che scende in fretta e si stabilizza, come la rossa.', done: seen.good },
-          { label: 'Alza η fin quasi al massimo: compaiono picchi e oscillazioni, come nella blu.', done: seen.bad },
+          { label: tx('Scegli un η minuscolo: la tua curva scende piano come quella verde.', 'Choose a tiny η: your curve descends slowly like the green one.'), done: seen.slow },
+          { label: tx('Trova un η che scende in fretta e si stabilizza, come la rossa.', 'Find an η that descends quickly and stabilizes, like the red one.'), done: seen.good },
+          { label: tx('Alza η fin quasi al massimo: compaiono picchi e oscillazioni, come nella blu.', 'Raise η close to maximum: spikes and oscillations appear, like the blue curve.'), done: seen.bad },
         ]}
       />
     </div>

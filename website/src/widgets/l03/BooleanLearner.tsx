@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Segmented } from '../../components/ui/Controls'
+import { tx, LOCALE } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 
 /**
@@ -89,36 +90,36 @@ export function BooleanLearner() {
           value={mode}
           onChange={setMode}
           options={[
-            { value: 'all', label: 'Nessun bias: tutte le funzioni' },
-            { value: 'conj', label: 'Language bias: solo congiunzioni' },
+            { value: 'all', label: tx('Nessun bias: tutte le funzioni', 'No bias: all functions') },
+            { value: 'conj', label: tx('Language bias: solo congiunzioni', 'Language bias: conjunctions only') },
           ]}
         />
         <Btn icon="reset" onClick={() => setTr(initialTR())}>
-          Esempi della tabella
+          {tx('Esempi della tabella', 'Table examples')}
         </Btn>
       </div>
 
       <div className="bool__stats readouts">
         <Readout
           label={mode === 'all' ? <Tex>{'|H| = 2^{2^n}'}</Tex> : <Tex>{'|H| = 3^n + 1'}</Tex>}
-          value={mode === 'all' ? '65 536' : '82'}
-          sub={mode === 'all' ? 'con n = 4: 2^16 funzioni' : 'con n = 4: 81 + «false»'}
+          value={mode === 'all' ? (65536).toLocaleString(LOCALE) : '82'}
+          sub={mode === 'all' ? tx('con n = 4: 2^16 funzioni', 'with n = 4: 2^16 functions') : tx('con n = 4: 81 + «false»', 'with n = 4: 81 + "false"')}
         />
-        <Readout label="esempi di training" value={String(tr.size)} sub={`${unseen} istanze non viste`} />
+        <Readout label={tx('esempi di training', 'training examples')} value={String(tr.size)} sub={tx(`${unseen} istanze non viste`, `${unseen} unseen instances`)} />
         <Readout
           label="version space |VS|"
           tone="accent"
-          value={mode === 'all' ? (vsAllLog2 > 16 ? '—' : (2 ** vsAllLog2).toLocaleString('it-IT')) : String(vs.length)}
-          sub={mode === 'all' ? `= 2^${unseen}: ogni istanza non vista può valere 0 o 1` : 'ipotesi consistenti con tutti gli esempi'}
+          value={mode === 'all' ? (vsAllLog2 > 16 ? '—' : (2 ** vsAllLog2).toLocaleString(LOCALE)) : String(vs.length)}
+          sub={mode === 'all' ? tx(`= 2^${unseen}: ogni istanza non vista può valere 0 o 1`, `= 2^${unseen}: each unseen instance can be 0 or 1`) : tx('ipotesi consistenti con tutti gli esempi', 'hypotheses consistent with all examples')}
         />
-        <Readout label="non viste classificate con certezza" value={`${certain} su ${unseen}`} />
+        <Readout label={tx('non viste classificate con certezza', 'unseen classified with certainty')} value={tx(`${certain} su ${unseen}`, `${certain} of ${unseen}`)} />
       </div>
 
       <div className="bool__table-wrap">
         <table className="bool__table">
           <thead>
             <tr>
-              <th>es.</th>
+              <th>{tx('es.', 'ex.')}</th>
               <th>
                 <Tex>x_1</Tex>
               </th>
@@ -131,7 +132,7 @@ export function BooleanLearner() {
               <th>
                 <Tex>x_4</Tex>
               </th>
-              <th>y (training) o voto del version space</th>
+              <th>{tx('y (training) o voto del version space', 'y (training) or version space vote')}</th>
               <th />
             </tr>
           </thead>
@@ -151,26 +152,26 @@ export function BooleanLearner() {
                   ))}
                   <td>
                     {isTr ? (
-                      <button className={`bool__y bool__y--${y}`} onClick={() => flip(i)} title="Cambia l’etichetta">
+                      <button className={`bool__y bool__y--${y}`} onClick={() => flip(i)} title={tx('Cambia l’etichetta', 'Change label')}>
                         y = {y}
                       </button>
                     ) : Number.isNaN(pr.p1) ? (
-                      <span className="bool__none">VS vuoto: nessuna risposta</span>
+                      <span className="bool__none">{tx('VS vuoto: nessuna risposta', 'Empty VS: no response')}</span>
                     ) : (
                       <Vote p1={pr.p1} />
                     )}
                   </td>
                   <td className="bool__act">
                     {isTr ? (
-                      <button className="bool__mini" onClick={() => remove(i)} title="Togli dal training set">
-                        togli
+                      <button className="bool__mini" onClick={() => remove(i)} title={tx('Togli dal training set', 'Remove from training set')}>
+                        {tx('togli', 'remove')}
                       </button>
                     ) : (
                       <>
-                        <button className="bool__mini" onClick={() => add(i, 0)} title="Aggiungi come esempio con y = 0">
+                        <button className="bool__mini" onClick={() => add(i, 0)} title={tx('Aggiungi come esempio con y = 0', 'Add as example with y = 0')}>
                           +0
                         </button>
-                        <button className="bool__mini" onClick={() => add(i, 1)} title="Aggiungi come esempio con y = 1">
+                        <button className="bool__mini" onClick={() => add(i, 1)} title={tx('Aggiungi come esempio con y = 1', 'Add as example with y = 1')}>
                           +1
                         </button>
                       </>
@@ -185,7 +186,7 @@ export function BooleanLearner() {
 
       {mode === 'conj' && (
         <div className="wpanel bool__vs">
-          <div className="wpanel__title">Il version space ({vs.length})</div>
+          <div className="wpanel__title">{tx(`Il version space (${vs.length})`, `Version space (${vs.length})`)}</div>
           {vs.length ? (
             <div className="bool__hyps">
               {vs.slice(0, 12).map((h, k) => (
@@ -193,12 +194,14 @@ export function BooleanLearner() {
                   <Tex>{conjTex(h)}</Tex>
                 </span>
               ))}
-              {vs.length > 12 && <span className="wnote">… e altre {vs.length - 12}</span>}
+              {vs.length > 12 && <span className="wnote">{tx(`… e altre ${vs.length - 12}`, `… and ${vs.length - 12} more`)}</span>}
             </div>
           ) : (
             <p className="wnote">
-              Nessuna congiunzione è consistente con questi esempi: il concetto target non è esprimibile in H. È il prezzo del
-              language bias.
+              {tx(
+                'Nessuna congiunzione è consistente con questi esempi: il concetto target non è esprimibile in H. È il prezzo del language bias.',
+                'No conjunction is consistent with these examples: the target concept cannot be expressed in H. This is the price of language bias.',
+              )}
             </p>
           )}
         </div>
@@ -206,9 +209,9 @@ export function BooleanLearner() {
 
       <Tasks
         items={[
-          { label: 'Senza bias, aggiungi un esempio (+0 o +1): il version space si dimezza, ma le istanze non viste restano al 50%.', done: done.halve },
-          { label: 'Passa a «solo congiunzioni»: con gli stessi 7 esempi ogni istanza non vista riceve una risposta.', done: seen.conj },
-          { label: 'Con le congiunzioni, cambia le etichette fino a svuotare il version space.', done: seen.empty },
+          { label: tx('Senza bias, aggiungi un esempio (+0 o +1): il version space si dimezza, ma le istanze non viste restano al 50%.', 'Without bias, add an example (+0 or +1): version space halves, but unseen instances remain at 50%.'), done: done.halve },
+          { label: tx('Passa a «solo congiunzioni»: con gli stessi 7 esempi ogni istanza non vista riceve una risposta.', 'Switch to "conjunctions only": with the same 7 examples, every unseen instance receives an answer.'), done: seen.conj },
+          { label: tx('Con le congiunzioni, cambia le etichette fino a svuotare il version space.', 'With conjunctions, change labels until version space is emptied.'), done: seen.empty },
         ]}
       />
     </div>
@@ -222,7 +225,7 @@ function Vote({ p1 }: { p1: number }) {
       <span className="vote__bar">
         <span className="vote__one" style={{ width: `${p1 * 100}%` }} />
       </span>
-      <span className="vote__txt">{certain ? `h = ${p1}` : p1 === 0.5 ? '50% dice 1 · 50% dice 0' : `${Math.round(p1 * 100)}% dice 1`}</span>
+      <span className="vote__txt">{certain ? `h = ${p1}` : p1 === 0.5 ? tx('50% dice 1 · 50% dice 0', '50% says 1 · 50% says 0') : tx(`${Math.round(p1 * 100)}% dice 1`, `${Math.round(p1 * 100)}% says 1`)}</span>
     </span>
   )
 }

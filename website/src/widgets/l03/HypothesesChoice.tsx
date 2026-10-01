@@ -3,6 +3,7 @@ import { Axes, FnPath, Label, Plot, Polyline, usePlot } from '../../components/p
 import { fmt } from '../../components/plot/scale'
 import { Tex } from '../../components/prose/Tex'
 import { Legend, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { polyfit, polyval } from '../../lib/math'
 
 /** Fig. 3.6: tra le infinite funzioni compatibili con i dati, quale scegliere? */
@@ -34,9 +35,9 @@ const green = (x: number) => {
 }
 
 const H = [
-  { key: 'red', name: 'ipotesi lineare', f: red, color: 'var(--c-red)' },
-  { key: 'green', name: 'spezzata', f: green, color: 'var(--c-green)' },
-  { key: 'blue', name: 'polinomio che passa per tutti i punti', f: blue, color: 'var(--c-blue)' },
+  { key: 'red', name: tx('ipotesi lineare', 'linear hypothesis'), f: red, color: 'var(--c-red)' },
+  { key: 'green', name: tx('spezzata', 'piecewise linear'), f: green, color: 'var(--c-green)' },
+  { key: 'blue', name: tx('polinomio che passa per tutti i punti', 'polynomial passing through all points'), f: blue, color: 'var(--c-blue)' },
 ] as const
 
 const mse = (f: (x: number) => number) => PTS.reduce((s, p) => s + (p.y - f(p.x)) ** 2, 0) / PTS.length
@@ -87,7 +88,7 @@ export function HypothesesChoice() {
         {show.blue && <FnPath f={blue} color="var(--c-blue)" width={2.4} from={1.8} to={10.3} />}
         <Crosses />
         <Label x={10} y={2.3} dx={-10} dy={-12} anchor="end" className="plot-label--muted">
-          punto in cui conosciamo f(x)
+          {tx('punto in cui conosciamo f(x)', 'point where f(x) is known')}
         </Label>
       </Plot>
       <div className="hchoice__rows">
@@ -95,14 +96,22 @@ export function HypothesesChoice() {
           <div key={h.key} className="hchoice__row">
             <Toggle label={h.name} checked={show[h.key]} onChange={(v) => setShow((s) => ({ ...s, [h.key]: v }))} />
             <span className="hchoice__err">
-              errore sui dati <b>{fmt(mse(h.f), 3)}</b>
+              {tx('errore sui dati ', 'error on data ')}<b>{fmt(mse(h.f), 3)}</b>
             </span>
           </div>
         ))}
       </div>
       <p className="wnote">
-        La curva blu ha errore <strong>zero</strong> sui dati noti, ma tra un punto e l’altro fa quello che vuole. Quale delle tre
-        daresti in mano a qualcuno che deve predire <Tex>{'f(x)'}</Tex> in un punto nuovo?
+        {tx(
+          <>
+            La curva blu ha errore <strong>zero</strong> sui dati noti, ma tra un punto e l’altro fa quello che vuole. Quale delle tre
+            daresti in mano a qualcuno che deve predire <Tex>{'f(x)'}</Tex> in un punto nuovo?
+          </>,
+          <>
+            The blue curve has <strong>zero</strong> error on known data, but swings wildly between points. Which of the three
+            would you give someone who needs to predict <Tex>{'f(x)'}</Tex> at a new point?
+          </>,
+        )}
       </p>
     </div>
   )

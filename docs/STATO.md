@@ -130,6 +130,10 @@ Decisioni di stile confermate dall'utente:
   all'originale: struttura, formule, glossario, italiano rimasto) e `npm run figs -- NN --lang en` (tutte le figure
   di una lezione in una passata); `npm run shot` accetta `--lang`. Regole e procedura in `docs/GUIDA-INGLESE.md`.
   Le 21 lezioni sono state tradotte in parallelo (un agente per lezione, lezione 02 come modello).
+- 2026-10-01 — **Completamento traduzione inglese**: traduzione di tutti i widget interattivi rifinita e completata
+  al 100% (lezioni 03, 04, 05, 06, 08, 17 con etichette, compiti, grafici e descrizioni accessibili in inglese accademico naturale).
+  Tutti i controlli `npm run check:en` e `npm run verify` (`tsc -b && eslint . && node scripts/check-content.mjs`) passano
+  con successo su tutte le 21 lezioni.
 
 ## Immagini degli appunti → figure del sito
 

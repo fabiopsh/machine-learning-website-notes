@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { Tasks } from '../../components/prose/Figure'
 import { Btn, Toggle } from '../../components/ui/Controls'
 import { fmt } from '../../components/plot/scale'
+import { tx } from '../../lib/i18n'
 import { contourSegments, segsToPath } from '../common/contours'
 
 /**
@@ -99,7 +100,7 @@ export function HypothesisSearch() {
     const x = ((e.clientX - r.left) / r.width) * W
     const y = ((e.clientY - r.top) / r.height) * Hh
     if (!inside(x, y)) {
-      setMsg('Fuori da H: questa funzione il modello non la può esprimere, quindi l’algoritmo non la può raggiungere.')
+      setMsg(tx('Fuori da H: questa funzione il modello non la può esprimere, quindi l’algoritmo non la può raggiungere.', 'Outside H: this function cannot be expressed by the model, so the algorithm cannot reach it.'))
       return
     }
     setMsg(null)
@@ -113,7 +114,7 @@ export function HypothesisSearch() {
 
   return (
     <div>
-      <svg ref={svg} viewBox={`0 0 ${W} ${Hh}`} className="hsearch__svg" onClick={onClick} role="img" aria-label="Spazio delle ipotesi e percorso di ricerca">
+      <svg ref={svg} viewBox={`0 0 ${W} ${Hh}`} className="hsearch__svg" onClick={onClick} role="img" aria-label={tx('Spazio delle ipotesi e percorso di ricerca', 'Hypothesis space and search path')}>
         <defs>
           <clipPath id="hs-clip">
             <path d={BLOB} />
@@ -128,13 +129,13 @@ export function HypothesisSearch() {
         </g>
         <OkRegion />
         <text x={692} y={30} textAnchor="end" className="hsearch__lbl">
-          spazio delle ipotesi H
+          {tx('spazio delle ipotesi H', 'hypothesis space H')}
         </text>
         <text x={692} y={48} textAnchor="end" className="hsearch__lbl hsearch__lbl--sub">
-          scelto a priori: ogni punto è una funzione
+          {tx('scelto a priori: ogni punto è una funzione', 'chosen a priori: each point is a function')}
         </text>
         <text x={OPT.x + 70} y={OPT.y + 92} className="hsearch__lbl hsearch__lbl--ok">
-          compatibili con il training set
+          {tx('compatibili con il training set', 'consistent with training set')}
         </text>
 
         {path.slice(0, shown).map((p, i) => {
@@ -162,7 +163,7 @@ export function HypothesisSearch() {
         <circle cx={OPT.x} cy={OPT.y} r={arrived ? 10 : 7} className={`hsearch__opt${arrived ? ' is-reached' : ''}`} />
         {/* sotto il punto: la ricerca di partenza arriva dall'alto a destra */}
         <text x={OPT.x} y={OPT.y + 30} textAnchor="middle" className="hsearch__lbl hsearch__lbl--strong">
-          soluzione ottima (errore minimo)
+          {tx('soluzione ottima (errore minimo)', 'optimal solution (minimal error)')}
         </text>
       </svg>
       <div className="controls">
@@ -171,12 +172,12 @@ export function HypothesisSearch() {
             <span className="verdict verdict--warn">{msg}</span>
           ) : (
             <>
-              passo <b>{Math.min(shown, path.length) - 1}</b> · errore <b>{fmt(E(cur.x, cur.y), 2)}</b>
-              {arrived && <span className="verdict verdict--good">trovata l’ipotesi a errore minimo</span>}
+              {tx('passo ', 'step ')}<b>{Math.min(shown, path.length) - 1}</b> · {tx('errore ', 'error ')}<b>{fmt(E(cur.x, cur.y), 2)}</b>
+              {arrived && <span className="verdict verdict--good">{tx('trovata l’ipotesi a errore minimo', 'minimal error hypothesis found')}</span>}
             </>
           )}
         </div>
-        <Toggle label="mostra le curve di livello dell’errore" checked={heat} onChange={setHeat} />
+        <Toggle label={tx('mostra le curve di livello dell’errore', 'show error contour lines')} checked={heat} onChange={setHeat} />
         <Btn
           icon="reset"
           onClick={() => {
@@ -184,14 +185,14 @@ export function HypothesisSearch() {
             setStart({ ...start })
           }}
         >
-          Ripeti
+          {tx('Ripeti', 'Repeat')}
         </Btn>
       </div>
       <Tasks
         items={[
-          { label: 'Clicca in un punto di H: da lì parte una nuova ricerca locale.', done: runs >= 1 },
-          { label: 'Prova a cliccare fuori da H.', done: msg !== null },
-          { label: 'Mostra le curve di livello: ogni passo scende verso errori più bassi.', done: heat },
+          { label: tx('Clicca in un punto di H: da lì parte una nuova ricerca locale.', 'Click on a point in H: a new local search starts from there.'), done: runs >= 1 },
+          { label: tx('Prova a cliccare fuori da H.', 'Try clicking outside H.'), done: msg !== null },
+          { label: tx('Mostra le curve di livello: ogni passo scende verso errori più bassi.', 'Show contour lines: each step moves towards lower errors.'), done: heat },
         ]}
       />
     </div>

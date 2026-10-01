@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Readout, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, rng } from '../../lib/math'
 
 type P = { x: number; y: number }
@@ -68,7 +69,7 @@ export function Clustering({ showLoss = false }: { showLoss?: boolean }) {
             y={q.y}
             r={8}
             color={COLORS[k]}
-            label={`centroide ${k + 1}`}
+            label={`${tx('centroide', 'centroid')} ${k + 1}`}
             onMove={(p) => {
               setC((cur) => cur.map((qq, j) => (j === k ? p : qq)))
               setMoved(true)
@@ -81,25 +82,25 @@ export function Clustering({ showLoss = false }: { showLoss?: boolean }) {
           <Readout
             label={
               <>
-                distorsione totale <Tex>{'\\sum_p \\|\\mathbf{x}_p - h(\\mathbf{x}_p)\\|^2'}</Tex>
+                {tx('distorsione totale ', 'total distortion ')}<Tex>{'\\sum_p \\|\\mathbf{x}_p - h(\\mathbf{x}_p)\\|^2'}</Tex>
               </>
             }
             tone="accent"
             value={fmt(J, 2)}
           />
         ) : (
-          <Readout label="punti per cluster" value={`${assign.filter((a) => a === 0).length} · ${assign.filter((a) => a === 1).length}`} />
+          <Readout label={tx('punti per cluster', 'points per cluster')} value={`${assign.filter((a) => a === 0).length} · ${assign.filter((a) => a === 1).length}`} />
         )}
-        <Toggle label="collega i punti al loro centroide" checked={links} onChange={setLinks} />
+        <Toggle label={tx('collega i punti al loro centroide', 'connect points to their centroid')} checked={links} onChange={setLinks} />
         <Btn icon="step" variant="soft" onClick={recenter}>
-          Sposta i centroidi al centro del gruppo
+          {tx('Sposta i centroidi al centro del gruppo', 'Move centroids to cluster centers')}
         </Btn>
       </div>
       {showLoss && (
         <Tasks
           items={[
-            { label: 'Trascina un centroide lontano dai suoi punti: la distorsione cresce.', done: moved },
-            { label: 'Premi più volte il pulsante: la distorsione scende finché i centroidi non si fermano.', done: steps >= 2 },
+            { label: tx('Trascina un centroide lontano dai suoi punti: la distorsione cresce.', 'Drag a centroid away from its points: distortion increases.'), done: moved },
+            { label: tx('Premi più volte il pulsante: la distorsione scende finché i centroidi non si fermano.', 'Press the button multiple times: distortion decreases until centroids stop moving.'), done: steps >= 2 },
           ]}
         />
       )}

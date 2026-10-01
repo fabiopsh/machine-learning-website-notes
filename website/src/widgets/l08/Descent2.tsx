@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { gauss, rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { contourSegments, segsToPath } from '../common/contours'
@@ -124,27 +125,27 @@ export function SgdBatch() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'percorso', color: 'var(--c-red)' },
-            { label: 'curve di livello dell’errore', color: 'var(--c-violet)' },
-            { label: 'minimo', color: 'var(--ink)', kind: 'dot' },
+            { label: tx('percorso', 'path'), color: 'var(--c-red)' },
+            { label: tx('curve di livello dell’errore', 'error level contours'), color: 'var(--c-violet)' },
+            { label: tx('minimo', 'minimum'), color: 'var(--ink)', kind: 'dot' },
           ]}
         />
       </div>
       <div className="wgrid wgrid--even">
         <div className="htf__panel">
-          <div className="htf__title">Discesa batch ({epochs * 5} epoche)</div>
+          <div className="htf__title">{tx(`Discesa batch (${epochs * 5} epoche)`, `Batch descent (${epochs * 5} epochs)`)}</div>
           <ContourPlot small>
             <Polyline pts={toPts(b)} color="var(--c-red)" width={2} />
             {toPts(b).map((p, i) => (i % 5 === 0 ? <Dot key={i} x={p.x} y={p.y} r={2.4} color="var(--c-red)" /> : null))}
           </ContourPlot>
-          <Readout label="errore finale" value={Number.isFinite(eB) ? fmt(eB, 3) : 'diverge'} sub={`${b.length - 1} aggiornamenti`} />
+          <Readout label={tx('errore finale', 'final error')} value={Number.isFinite(eB) ? fmt(eB, 3) : tx('diverge', 'diverges')} sub={tx(`${b.length - 1} aggiornamenti`, `${b.length - 1} updates`)} />
         </div>
         <div className="htf__panel">
-          <div className="htf__title">Discesa stocastica ({epochs} epoche)</div>
+          <div className="htf__title">{tx(`Discesa stocastica (${epochs} epoche)`, `Stochastic descent (${epochs} epochs)`)}</div>
           <ContourPlot small>
             <Polyline pts={toPts(s)} color="var(--c-red)" width={1.2} />
           </ContourPlot>
-          <Readout label="errore finale" value={Number.isFinite(eS) ? fmt(eS, 3) : 'diverge'} sub={`${s.length - 1} aggiornamenti`} />
+          <Readout label={tx('errore finale', 'final error')} value={Number.isFinite(eS) ? fmt(eS, 3) : tx('diverge', 'diverges')} sub={tx(`${s.length - 1} aggiornamenti`, `${s.length - 1} updates`)} />
         </div>
       </div>
       <div className="controls">
@@ -158,20 +159,23 @@ export function SgdBatch() {
           format={(v) => fmt(v, 3)}
           width={200}
         />
-        <Slider label="epoche della stocastica" min={1} max={30} step={1} value={epochs} onChange={setEpochs} width={200} />
+        <Slider label={tx('epoche della stocastica', 'stochastic epochs')} min={1} max={30} step={1} value={epochs} onChange={setEpochs} width={200} />
         <Btn icon="reset" onClick={() => setSeed((v) => v + 1)}>
-          Altro ordine casuale
+          {tx('Altro ordine casuale', 'Different random order')}
         </Btn>
-        <Toggle label="mescola a ogni epoca (shuffling)" checked={shuf} onChange={setShuf} />
+        <Toggle label={tx('mescola a ogni epoca (shuffling)', 'shuffle each epoch')} checked={shuf} onChange={setShuf} />
       </div>
       <p className="wnote">
-        Stessa partenza e stesso η; la discesa batch fa un aggiornamento per epoca, quella stocastica uno per esempio (40 per epoca).
+        {tx(
+          'Stessa partenza e stesso η; la discesa batch fa un aggiornamento per epoca, quella stocastica uno per esempio (40 per epoca).',
+          'Same start and same η; batch descent performs one update per epoch, stochastic one per sample (40 per epoch).',
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Alza η: la discesa stocastica diventa un zig-zag ampio attorno al minimo.', done: seen.hi },
-          { label: 'Cambia l’ordine casuale: il percorso stocastico cambia, quello batch no.', done: seen.seed },
-          { label: 'Spegni lo shuffling: l’ordine fisso dei pattern si ripete a ogni epoca.', done: seen.noshuf },
+          { label: tx('Alza η: la discesa stocastica diventa un zig-zag ampio attorno al minimo.', 'Increase η: stochastic descent turns into a wide zig-zag around the minimum.'), done: seen.hi },
+          { label: tx('Cambia l’ordine casuale: il percorso stocastico cambia, quello batch no.', 'Change the random order: the stochastic path changes, the batch path does not.'), done: seen.seed },
+          { label: tx('Spegni lo shuffling: l’ordine fisso dei pattern si ripete a ogni epoca.', 'Turn off shuffling: the fixed pattern order repeats every epoch.'), done: seen.noshuf },
         ]}
       />
     </div>
@@ -192,14 +196,14 @@ export function MiniBatch() {
   const seen = useLatch({ one: mb === 1, all: mb === L, epoch: k >= perEpoch && mb > 1 && mb < L })
   return (
     <div>
-      <div className="mb8__bar" role="img" aria-label={`Un’epoca di ${L} esempi divisa in ${perEpoch} mini-batch`}>
+      <div className="mb8__bar" role="img" aria-label={tx(`Un’epoca di ${L} esempi divisa in ${perEpoch} mini-batch`, `An epoch of ${L} samples divided into ${perEpoch} mini-batches`)}>
         {Array.from({ length: perEpoch }, (_, b) => (
           <div key={b} className={`mb8__chunk${b === cur && k > 0 ? ' is-on' : ''}${b < cur ? ' is-done' : ''}`} style={{ flex: mb }}>
             {perEpoch <= 10 ? `mb${b + 1}` : ''}
           </div>
         ))}
       </div>
-      <div className="mb8__brace">Epoca di l = {L} esempi</div>
+      <div className="mb8__brace">{tx(`Epoca di l = ${L} esempi`, `Epoch of l = ${L} samples`)}</div>
       <div className="wgrid">
         <ContourPlot>
           <Polyline pts={toPts(shown)} color="var(--c-red)" width={1.8} />
@@ -207,7 +211,7 @@ export function MiniBatch() {
         </ContourPlot>
         <div className="wside">
           <Segmented
-            label="dimensione del mini-batch mb"
+            label={tx('dimensione del mini-batch mb', 'mini-batch size mb')}
             value={mb}
             onChange={(v) => {
               setMb(v)
@@ -217,27 +221,27 @@ export function MiniBatch() {
           />
           <div className="readouts">
             <Readout
-              label="aggiornamenti per epoca"
+              label={tx('aggiornamenti per epoca', 'updates per epoch')}
               tone="accent"
               value={String(perEpoch)}
               sub={mb === 1 ? 'on-line' : mb === L ? 'batch' : 'mini-batch'}
             />
-            <Readout label="aggiornamenti fatti" value={String(k)} sub={`epoca ${Math.floor(k / perEpoch) + 1}`} />
+            <Readout label={tx('aggiornamenti fatti', 'updates done')} value={String(k)} sub={tx(`epoca ${Math.floor(k / perEpoch) + 1}`, `epoch ${Math.floor(k / perEpoch) + 1}`)} />
           </div>
           <div className="delta__btns">
             <Btn icon="step" variant="soft" onClick={() => setK((v) => Math.min(pts.length - 1, v + 1))}>
-              Un aggiornamento
+              {tx('Un aggiornamento', 'One update')}
             </Btn>
-            <Btn onClick={() => setK((v) => Math.min(pts.length - 1, v + perEpoch))}>Un’epoca</Btn>
-            <Btn icon="reset" onClick={() => setK(0)} title="Ricomincia" />
+            <Btn onClick={() => setK((v) => Math.min(pts.length - 1, v + perEpoch))}>{tx('Un’epoca', 'One epoch')}</Btn>
+            <Btn icon="reset" onClick={() => setK(0)} title={tx('Ricomincia', 'Restart')} />
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Con mb = 1 ogni esempio è un mini-batch: è la versione on-line.', done: seen.one },
-          { label: 'Con mb = l c’è un solo aggiornamento per epoca: è la versione batch.', done: seen.all },
-          { label: 'Con un mini-batch intermedio completa un’epoca intera.', done: seen.epoch },
+          { label: tx('Con mb = 1 ogni esempio è un mini-batch: è la versione on-line.', 'With mb = 1 each sample is a mini-batch: it is the on-line version.'), done: seen.one },
+          { label: tx('Con mb = l c’è un solo aggiornamento per epoca: è la versione batch.', 'With mb = l there is only one update per epoch: it is the batch version.'), done: seen.all },
+          { label: tx('Con un mini-batch intermedio completa un’epoca intera.', 'With an intermediate mini-batch complete a full epoch.'), done: seen.epoch },
         ]}
       />
     </div>
@@ -247,11 +251,11 @@ export function MiniBatch() {
 /* ------------------------------------------------------------------ Fig. 8.4 */
 
 const REF = [
-  { eta: 0.3, name: 'molto alto', color: 'var(--c-yellow)' },
-  { eta: 0.0004, name: 'molto basso', color: 'var(--ink-3)' },
-  { eta: 0.004, name: 'basso', color: 'var(--c-blue)' },
-  { eta: 0.1, name: 'alto', color: 'var(--c-green)' },
-  { eta: 0.02, name: 'buono', color: 'var(--c-red)' },
+  { eta: 0.3, name: tx('molto alto', 'very high'), color: 'var(--c-yellow)' },
+  { eta: 0.0004, name: tx('molto basso', 'very low'), color: 'var(--ink-3)' },
+  { eta: 0.004, name: tx('basso', 'low'), color: 'var(--c-blue)' },
+  { eta: 0.1, name: tx('alto', 'high'), color: 'var(--c-green)' },
+  { eta: 0.02, name: tx('buono', 'good'), color: 'var(--c-red)' },
 ]
 const EP = 120
 function curve(eta: number, mb: number, seed = 1) {
@@ -286,9 +290,9 @@ export function EtaCurves() {
             view === 'epochs'
               ? [
                   ...REF.map((r) => ({ label: r.name, color: r.color })),
-                  { label: 'il tuo η', color: 'var(--c-violet)', kind: 'dash' as const },
+                  { label: tx('il tuo η', 'your η'), color: 'var(--c-violet)', kind: 'dash' as const },
                 ]
-              : [{ label: 'errore dopo ogni aggiornamento', color: 'var(--c-green)' }]
+              : [{ label: tx('errore dopo ogni aggiornamento', 'error after each update'), color: 'var(--c-green)' }]
           }
         />
         <Segmented
@@ -296,8 +300,8 @@ export function EtaCurves() {
           value={view}
           onChange={setView}
           options={[
-            { value: 'epochs', label: 'curve per epoca' },
-            { value: 'noisy', label: 'una curva irregolare' },
+            { value: 'epochs', label: tx('curve per epoca', 'curves by epoch') },
+            { value: 'noisy', label: tx('una curva irregolare', 'a noisy curve') },
           ]}
         />
       </div>
@@ -307,7 +311,7 @@ export function EtaCurves() {
             xTicks={[0, 20, 40, 60, 80, 100, 120]}
             yTicks={[-3, -2, -1, 0, 1, 2]}
             yFormat={(v) => fmt(10 ** v, Math.max(0, -v))}
-            xLabel="epoche"
+            xLabel={tx('epoche', 'epochs')}
             yLabel={<>E − {svgScript('E', 'min')}</>}
           />
           {refs.map((c, i) => (
@@ -317,7 +321,7 @@ export function EtaCurves() {
         </Plot>
       ) : (
         <Plot xDomain={[0, noisy.length]} yDomain={[0, 3]} aspect={0.5} margin={{ l: 40, b: 40 }}>
-          <Axes xTicks={5} yTicks={[0, 1, 2, 3]} xLabel="aggiornamenti (mini-batch di 2, η alto)" yLabel="errore" />
+          <Axes xTicks={5} yTicks={[0, 1, 2, 3]} xLabel={tx('aggiornamenti (mini-batch di 2, η alto)', 'updates (mini-batch size 2, high η)')} yLabel={tx('errore', 'error')} />
           <Polyline pts={noisy.map((p) => ({ x: p.x, y: Math.min(3, p.y) }))} color="var(--c-green)" width={1.2} />
         </Plot>
       )}
@@ -325,7 +329,7 @@ export function EtaCurves() {
         <Slider
           label={
             <>
-              il tuo learning rate <Tex>{'\\eta'}</Tex>
+              {tx('il tuo learning rate ', 'your learning rate ')}<Tex>{'\\eta'}</Tex>
             </>
           }
           min={0.0002}
@@ -338,13 +342,15 @@ export function EtaCurves() {
         />
       </div>
       <p className="wnote">
-        Mini-batch di 10 esempi sul problema delle figure 8.2 e 8.3; sull’asse verticale l’errore di training oltre il minimo, in scala
-        logaritmica. Valori di η: {REF.map((r) => `${r.name} ${fmt(r.eta, 4)}`).join(', ')}.
+        {tx(
+          `Mini-batch di 10 esempi sul problema delle figure 8.2 e 8.3; sull’asse verticale l’errore di training oltre il minimo, in scala logaritmica. Valori di η: ${REF.map((r) => `${r.name} ${fmt(r.eta, 4)}`).join(', ')}.`,
+          `10-example mini-batch on the problem of figures 8.2 and 8.3; training error above the minimum on the vertical axis, on a logarithmic scale. Values of η: ${REF.map((r) => `${r.name} ${fmt(r.eta, 4)}`).join(', ')}.`,
+        )}
       </p>
       <Tasks
         items={[
-          { label: 'Trova un η che scende in fretta e arriva più in basso degli altri (la curva buona).', done: seen.good },
-          { label: 'Guarda la curva irregolare: batch piccoli ed η alto, da evitare.', done: seen.noisy },
+          { label: tx('Trova un η che scende in fretta e arriva più in basso degli altri (la curva buona).', 'Find an η that descends quickly and reaches lower than the others (the good curve).'), done: seen.good },
+          { label: tx('Guarda la curva irregolare: batch piccoli ed η alto, da evitare.', 'Look at the noisy curve: small batches and high η, to be avoided.'), done: seen.noisy },
         ]}
       />
     </div>
@@ -406,8 +412,8 @@ export function MomentumCanyon() {
       <div className="wbar">
         <Legend
           items={[
-            { label: `con momentum (α = ${fmt(alpha, 2)})`, color: 'var(--c-red)' },
-            { label: 'gradiente puro', color: 'var(--ink)' },
+            { label: tx(`con momentum (α = ${fmt(alpha, 2)})`, `with momentum (α = ${fmt(alpha, 2)})`), color: 'var(--c-red)' },
+            { label: tx('gradiente puro', 'pure gradient'), color: 'var(--ink)' },
           ]}
         />
       </div>
@@ -434,7 +440,7 @@ export function MomentumCanyon() {
           {momP.map((p, i) => (
             <Dot key={i} x={p[0]} y={p[1]} r={2.8} color="var(--c-red)" />
           ))}
-          <Handle x={start[0]} y={start[1]} label="pesi iniziali" onMove={(p) => setStart([p.x, p.y])} />
+          <Handle x={start[0]} y={start[1]} label={tx('pesi iniziali', 'initial weights')} onMove={(p) => setStart([p.x, p.y])} />
         </Plot>
         <div className="wside">
           <div className="wpanel">
@@ -452,19 +458,19 @@ export function MomentumCanyon() {
             onChange={setAlpha}
             format={(v) => fmt(v, 2)}
           />
-          <Slider label="passi mostrati" min={5} max={120} step={1} value={steps} onChange={setSteps} />
+          <Slider label={tx('passi mostrati', 'steps shown')} min={5} max={120} step={1} value={steps} onChange={setSteps} />
           <Toggle label="Nesterov momentum" checked={nest} onChange={setNest} />
           <div className="readouts">
-            <Readout label="passi per arrivare al fondo" tone="red" value={sm === null ? '> 2000' : String(sm)} sub="con momentum" />
-            <Readout label="senza momentum" value={sp === null ? '> 2000' : String(sp)} />
+            <Readout label={tx('passi per arrivare al fondo', 'steps to reach the bottom')} tone="red" value={sm === null ? '> 2000' : String(sm)} sub={tx('con momentum', 'with momentum')} />
+            <Readout label={tx('senza momentum', 'without momentum')} value={sp === null ? '> 2000' : String(sp)} />
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Con i valori iniziali il momentum arriva al fondo in molti meno passi del gradiente puro.', done: seen.fast },
-          { label: 'Porta α a 0: il percorso rosso coincide con quello nero, a zig-zag tra le pareti.', done: seen.zero },
-          { label: 'Attiva il Nesterov momentum e confronta i passi necessari.', done: seen.nest },
+          { label: tx('Con i valori iniziali il momentum arriva al fondo in molti meno passi del gradiente puro.', 'With the initial values, momentum reaches the bottom in far fewer steps than pure gradient descent.'), done: seen.fast },
+          { label: tx('Porta α a 0: il percorso rosso coincide con quello nero, a zig-zag tra le pareti.', 'Set α to 0: the red path matches the black one, zig-zagging between the canyon walls.'), done: seen.zero },
+          { label: tx('Attiva il Nesterov momentum e confronta i passi necessari.', 'Enable Nesterov momentum and compare the steps required.'), done: seen.nest },
         ]}
       />
     </div>

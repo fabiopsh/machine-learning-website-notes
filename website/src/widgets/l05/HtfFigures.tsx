@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Legend, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { contourSegments, segsToPath } from '../common/contours'
 import { marchCell } from '../common/Surface3D'
@@ -30,9 +31,9 @@ import {
 const C1 = 'var(--c-blue)'
 const C0 = 'var(--c-orange)'
 
-const classLegend = [
-  { label: 'classe 1', color: C1, kind: 'dot' as const },
-  { label: 'classe 0', color: C0, kind: 'dot' as const },
+const getClassLegend = () => [
+  { label: tx('classe 1', 'class 1'), color: C1, kind: 'dot' as const },
+  { label: tx('classe 0', 'class 0'), color: C0, kind: 'dot' as const },
 ]
 
 function ScenarioSwitch({ value }: { value: Scenario }) {
@@ -42,8 +43,8 @@ function ScenarioSwitch({ value }: { value: Scenario }) {
       value={value}
       onChange={setScenario}
       options={[
-        { value: 'mix', label: 'Scenario 2: miscele di 10 gaussiane' },
-        { value: 'gauss', label: 'Scenario 1: una gaussiana per classe' },
+        { value: 'mix', label: tx('Scenario 2: miscele di 10 gaussiane', 'Scenario 2: mixtures of 10 Gaussians') },
+        { value: 'gauss', label: tx('Scenario 1: una gaussiana per classe', 'Scenario 1: one Gaussian per class') },
       ]}
     />
   )
@@ -146,7 +147,7 @@ export function HtfData() {
   return (
     <div>
       <div className="wbar">
-        <Legend items={classLegend} />
+        <Legend items={getClassLegend()} />
         <ScenarioSwitch value={scenario} />
       </div>
       <MapPlot>
@@ -154,12 +155,12 @@ export function HtfData() {
         {centers && scenario === 'mix' && <Centers />}
       </MapPlot>
       <div className="controls">
-        <Toggle label="mostra i centri delle gaussiane (scenario 2)" checked={centers} onChange={setCenters} />
+        <Toggle label={tx('mostra i centri delle gaussiane (scenario 2)', 'show Gaussian centers (scenario 2)')} checked={centers} onChange={setCenters} />
       </div>
       <Tasks
         items={[
-          { label: 'Nello scenario 2 accendi i centri: ogni classe è fatta di 10 piccoli gruppi.', done: seen.mix },
-          { label: 'Passa allo scenario 1: due nuvole gaussiane che si sovrappongono.', done: seen.gauss },
+          { label: tx('Nello scenario 2 accendi i centri: ogni classe è fatta di 10 piccoli gruppi.', 'In scenario 2 toggle centers on: each class consists of 10 small clusters.'), done: seen.mix },
+          { label: tx('Passa allo scenario 1: due nuvole gaussiane che si sovrappongono.', 'Switch to scenario 1: two overlapping Gaussian clouds.'), done: seen.gauss },
         ]}
       />
     </div>
@@ -202,9 +203,9 @@ export function HtfLinear() {
       <div className="wbar">
         <Legend
           items={[
-            ...classLegend,
-            { label: 'confine lineare', color: 'var(--ink)' },
-            ...(bayes ? [{ label: 'confine di Bayes', color: 'var(--c-violet)', kind: 'dash' as const }] : []),
+            ...getClassLegend(),
+            { label: tx('confine lineare', 'linear boundary'), color: 'var(--ink)' },
+            ...(bayes ? [{ label: tx('confine di Bayes', 'Bayes boundary'), color: 'var(--c-violet)', kind: 'dash' as const }] : []),
           ]}
         />
         <ScenarioSwitch value={scenario} />
@@ -218,28 +219,28 @@ export function HtfLinear() {
         </MapPlot>
         <div className="wside">
           <div className="wpanel">
-            <div className="wpanel__title">Regressione sui target 0/1</div>
+            <div className="wpanel__title">{tx('Regressione sui target 0/1', 'Regression on 0/1 targets')}</div>
             <div className="wmath">
               <Tex>{`\\hat y = ${f(w0)} ${sg(w1)} ${f(Math.abs(w1))}\\,x_1 ${sg(w2)} ${f(Math.abs(w2))}\\,x_2`}</Tex>
             </div>
             <p className="wnote">
-              Classe 1 se <Tex>{'\\mathbf{x}^T\\mathbf{w} > 0{,}5'}</Tex>, classe 0 altrimenti.
+              {tx('Classe 1 se ', 'Class 1 if ')}<Tex>{'\\mathbf{x}^T\\mathbf{w} > 0{,}5'}</Tex>{tx(', classe 0 altrimenti.', ', class 0 otherwise.')}
             </p>
           </div>
           <div className="readouts">
-            <Readout label="errore di training" value={pct(m.lin.errTrain)} />
-            <Readout label="errore di test" value={pct(m.lin.errTest)} sub={`su ${m.test.length} punti nuovi`} />
+            <Readout label={tx('errore di training', 'training error')} value={pct(m.lin.errTrain)} />
+            <Readout label={tx('errore di test', 'test error')} value={pct(m.lin.errTest)} sub={`${tx('su', 'on')} ${m.test.length} ${tx('punti nuovi', 'new points')}`} />
           </div>
-          <Toggle label="confronta con il confine ottimo (Bayes)" checked={bayes} onChange={setBayes} />
+          <Toggle label={tx('confronta con il confine ottimo (Bayes)', 'compare with optimal boundary (Bayes)')} checked={bayes} onChange={setBayes} />
           <p className="wnote">
-            Errore di Bayes (il minimo possibile): <b>{pct(m.bayesErr)}</b>.
+            {tx('Errore di Bayes (il minimo possibile):', 'Bayes error (theoretical minimum):')} <b>{pct(m.bayesErr)}</b>.
           </p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Passa allo scenario 1: la sovrapposizione delle classi è inevitabile e la retta è quasi ottima.', done: seen.gauss },
-          { label: 'Accendi il confine di Bayes e confrontalo con la retta nei due scenari.', done: seen.bayes },
+          { label: tx('Passa allo scenario 1: la sovrapposizione delle classi è inevitabile e la retta è quasi ottima.', 'Switch to scenario 1: class overlap is inevitable and the linear boundary is nearly optimal.'), done: seen.gauss },
+          { label: tx('Accendi il confine di Bayes e confrontalo con la retta nei due scenari.', 'Turn on the Bayes boundary and compare it with the line across both scenarios.'), done: seen.bayes },
         ]}
       />
     </div>
@@ -284,8 +285,8 @@ function KnnPanel({ k, sc, title }: { k: number; sc: Scenario; title: string }) 
         <Points pts={m.train} r={3} />
       </MapPlot>
       <div className="readouts">
-        <Readout label="errore di training" value={pct(m.errTrain[k])} />
-        <Readout label="errore di test" value={pct(m.errTest[k])} />
+        <Readout label={tx('errore di training', 'training error')} value={pct(m.errTrain[k])} />
+        <Readout label={tx('errore di test', 'test error')} value={pct(m.errTest[k])} />
       </div>
     </div>
   )
@@ -298,7 +299,7 @@ export function KnnRegions() {
   return (
     <div>
       <div className="wbar">
-        <Legend items={[...classLegend, { label: 'confine di decisione', color: 'var(--ink)' }]} />
+        <Legend items={[...getClassLegend(), { label: tx('confine di decisione', 'decision boundary'), color: 'var(--ink)' }]} />
         <ScenarioSwitch value={scenario} />
       </div>
       <div className="wgrid wgrid--even">
@@ -310,9 +311,9 @@ export function KnnRegions() {
       </div>
       <Tasks
         items={[
-          { label: 'Nel pannello di sinistra (k = 1) l’errore di training è zero: ogni punto è il vicino di sé stesso.', done: seen.small },
-          { label: 'Porta k verso l: il confine si appiattisce fino a una sola classe per tutto il piano.', done: seen.big },
-          { label: 'Torna a k = 15: confine più regolare, qualche errore sul training.', done: seen.back },
+          { label: tx('Nel pannello di sinistra (k = 1) l’errore di training è zero: ogni punto è il vicino di sé stesso.', 'In the left panel (k = 1), training error is zero: every point is its own nearest neighbor.'), done: seen.small },
+          { label: tx('Porta k verso l: il confine si appiattisce fino a una sola classe per tutto il piano.', 'Increase k toward l: the boundary flattens out until a single class covers the entire plane.'), done: seen.big },
+          { label: tx('Torna a k = 15: confine più regolare, qualche errore sul training.', 'Return to k = 15: smoother boundary, some training errors.'), done: seen.back },
         ]}
       />
     </div>
@@ -344,12 +345,12 @@ export function KnnCurves({ variant }: { variant: 'u' | 'htf' }) {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'errore di training', color: 'var(--c-blue)' },
-            { label: 'errore di test', color: 'var(--c-orange)' },
+            { label: tx('errore di training', 'training error'), color: 'var(--c-blue)' },
+            { label: tx('errore di test', 'test error'), color: 'var(--c-orange)' },
             ...(variant === 'htf'
               ? [
-                  { label: 'modello lineare', color: 'var(--ink-3)', kind: 'square' as const },
-                  { label: 'errore di Bayes', color: 'var(--c-violet)' },
+                  { label: tx('modello lineare', 'linear model'), color: 'var(--ink-3)', kind: 'square' as const },
+                  { label: tx('errore di Bayes', 'Bayes error'), color: 'var(--c-violet)' },
                 ]
               : []),
           ]}
@@ -362,8 +363,8 @@ export function KnnCurves({ variant }: { variant: 'u' | 'htf' }) {
           xFormat={(v) => String(Math.round(variant === 'u' ? L / 10 ** v : 10 ** v))}
           yTicks={variant === 'u' ? [0, 0.1, 0.2, 0.3, 0.4, 0.5] : [0, 0.1, 0.2, 0.3, 0.4]}
           yFormat={(v) => fmt(v, 2)}
-          xLabel={variant === 'u' ? `k (da k = l = ${L} a k = 1)` : 'gradi di libertà l/k'}
-          yLabel="errore"
+          xLabel={variant === 'u' ? tx(`k (da k = l = ${L} a k = 1)`, `k (from k = l = ${L} to k = 1)`) : tx('gradi di libertà l/k', 'degrees of freedom l/k')}
+          yLabel={tx('errore', 'error')}
         />
         {variant === 'htf' && <TopKTicks />}
         {variant === 'htf' && (
@@ -382,10 +383,10 @@ export function KnnCurves({ variant }: { variant: 'u' | 'htf' }) {
         {variant === 'u' && (
           <>
             <Label x={0.1} y={yMax * 0.9} className="plot-label--muted">
-              underfitting (rigido)
+              {tx('underfitting (rigido)', 'underfitting (rigid)')}
             </Label>
             <Label x={LOGL - 0.05} y={yMax * 0.9} anchor="end" className="plot-label--muted">
-              overfitting (flessibile)
+              {tx('overfitting (flessibile)', 'overfitting (flexible)')}
             </Label>
             <BestRing x={pos(best)} y={m.errTest[best]} />
           </>
@@ -399,23 +400,23 @@ export function KnnCurves({ variant }: { variant: 'u' | 'htf' }) {
           width={1}
           dash="3 4"
         />
-        <Handle x={pos(k)} y={m.errTest[k]} axis="x" label="valore di k" onMove={(p) => setK(nearestK(p.x))} bounds={{ x: [0, LOGL] }} />
+        <Handle x={pos(k)} y={m.errTest[k]} axis="x" label={tx('valore di k', 'value of k')} onMove={(p) => setK(nearestK(p.x))} bounds={{ x: [0, LOGL] }} />
       </Plot>
       <div className="readouts">
-        <Readout label="k" value={String(k)} sub={`l/k ≈ ${fmt(L / k, 1)} parametri effettivi`} />
-        <Readout label="errore di training" tone="blue" value={pct(m.errTrain[k])} />
-        <Readout label="errore di test" tone="orange" value={pct(m.errTest[k])} />
+        <Readout label="k" value={String(k)} sub={tx(`l/k ≈ ${fmt(L / k, 1)} parametri effettivi`, `l/k ≈ ${fmt(L / k, 1)} effective parameters`)} />
+        <Readout label={tx('errore di training', 'training error')} tone="blue" value={pct(m.errTrain[k])} />
+        <Readout label={tx('errore di test', 'test error')} tone="orange" value={pct(m.errTest[k])} />
         {variant === 'htf' ? (
-          <Readout label="modello lineare (test)" value={pct(m.lin.errTest)} sub={`Bayes: ${pct(m.bayesErr)}`} />
+          <Readout label={tx('modello lineare (test)', 'linear model (test)')} value={pct(m.lin.errTest)} sub={`Bayes: ${pct(m.bayesErr)}`} />
         ) : (
-          <Readout label="minimo dell’errore di test" value={`k = ${best}`} />
+          <Readout label={tx('minimo dell’errore di test', 'minimum test error')} value={`k = ${best}`} />
         )}
       </div>
       <Tasks
         items={[
-          { label: 'Trascina il cursore fino a k = 1: training a zero, test in risalita (overfitting).', done: seen.one },
-          { label: 'Porta k fino a l: il modello risponde sempre con la stessa classe (underfitting).', done: seen.all },
-          { label: `Cerca il k con l’errore di test più basso (qui k = ${best}).`, done: seen.best },
+          { label: tx('Trascina il cursore fino a k = 1: training a zero, test in risalita (overfitting).', 'Drag the slider to k = 1: zero training error, increasing test error (overfitting).'), done: seen.one },
+          { label: tx('Porta k fino a l: il modello risponde sempre con la stessa classe (underfitting).', 'Increase k up to l: model always predicts the majority class (underfitting).'), done: seen.all },
+          { label: tx(`Cerca il k con l’errore di test più basso (qui k = ${best}).`, `Find the k with the lowest test error (here k = ${best}).`), done: seen.best },
         ]}
       />
     </div>
@@ -444,7 +445,7 @@ function LinearMarks({ m }: { m: ReturnType<typeof model> }) {
       <rect x={px - 5} y={y(m.lin.errTrain) - 5} width={10} height={10} fill="var(--c-blue)" stroke="var(--plot-bg)" strokeWidth={1.5} />
       <rect x={px - 5} y={y(m.lin.errTest) - 5} width={10} height={10} fill="var(--c-orange)" stroke="var(--plot-bg)" strokeWidth={1.5} />
       <text x={px + 10} y={Math.min(y(m.lin.errTrain), y(m.lin.errTest)) - 6} className="plot-label">
-        lineare (3 parametri)
+        {tx('lineare (3 parametri)', 'linear (3 parameters)')}
       </text>
     </g>
   )
@@ -470,23 +471,23 @@ export function BayesVsKnn() {
   return (
     <div>
       <div className="wbar">
-        <Legend items={[...classLegend, { label: 'confine di Bayes', color: 'var(--c-violet)', kind: 'dash' }]} />
+        <Legend items={[...getClassLegend(), { label: tx('confine di Bayes', 'Bayes boundary'), color: 'var(--c-violet)', kind: 'dash' }]} />
         <ScenarioSwitch value={scenario} />
       </div>
       <div className="wgrid wgrid--even">
         <div className="htf__panel">
-          <div className="htf__title">Classificatore ottimo di Bayes</div>
+          <div className="htf__title">{tx('Classificatore ottimo di Bayes', 'Optimal Bayes classifier')}</div>
           <MapPlot small>
             <RegionDots cls={(i, j) => (bayesGrid[j * GX + i] > 0.5 ? 1 : 0)} />
             <BayesBoundary sc={scenario} />
             <Points pts={m.train} r={3} />
           </MapPlot>
           <div className="readouts">
-            <Readout label="errore di Bayes (test)" tone="violet" value={pct(m.bayesErr)} />
+            <Readout label={tx('errore di Bayes (test)', 'Bayes error (test)')} tone="violet" value={pct(m.bayesErr)} />
           </div>
         </div>
         <div className="htf__panel">
-          <div className="htf__title">{k}-nearest neighbors</div>
+          <div className="htf__title">{`${k}-nearest neighbors`}</div>
           <MapPlot small>
             <RegionDots cls={(i, j) => (gridAvg(m, i, j, k) > 0.5 ? 1 : 0)} />
             <GridBoundary val={(i, j) => gridAvg(m, i, j, k) - 0.5 - 1e-9} />
@@ -494,18 +495,18 @@ export function BayesVsKnn() {
             <Points pts={m.train} r={3} />
           </MapPlot>
           <div className="readouts">
-            <Readout label="errore di test" tone="orange" value={pct(m.errTest[k])} />
+            <Readout label={tx('errore di test', 'test error')} tone="orange" value={pct(m.errTest[k])} />
           </div>
         </div>
       </div>
       <div className="controls">
         <KSlider k={k} />
-        <Toggle label="sovrapponi il confine di Bayes al K-NN" checked={overlay} onChange={setOverlay} />
+        <Toggle label={tx('sovrapponi il confine di Bayes al K-NN', 'overlay Bayes boundary on K-NN')} checked={overlay} onChange={setOverlay} />
       </div>
       <Tasks
         items={[
-          { label: 'Sovrapponi il confine di Bayes: con k = 15 il K-NN lo segue da vicino.', done: seen.overlay },
-          { label: 'Passa allo scenario 1: qui il confine ottimo è quasi una retta.', done: seen.gauss },
+          { label: tx('Sovrapponi il confine di Bayes: con k = 15 il K-NN lo segue da vicino.', 'Overlay Bayes boundary: with k = 15, K-NN follows it closely.'), done: seen.overlay },
+          { label: tx('Passa allo scenario 1: qui il confine ottimo è quasi una retta.', 'Switch to scenario 1: here the optimal boundary is nearly a line.'), done: seen.gauss },
         ]}
       />
     </div>

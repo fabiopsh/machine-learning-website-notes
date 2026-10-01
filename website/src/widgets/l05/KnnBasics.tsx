@@ -3,6 +3,7 @@ import { Axes, Handle, Label, Plot, Polyline, usePlot } from '../../components/p
 import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Btn, Legend, Readout, Segmented, Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { rng } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 
@@ -46,8 +47,8 @@ export function KnnQuery() {
       <div className="wbar">
         <Legend
           items={[
-            { label: '+ (classe 1)', color: C1, kind: 'dot' },
-            { label: '− (classe 0)', color: C0, kind: 'dot' },
+            { label: tx('+ (classe 1)', '+ (class 1)'), color: C1, kind: 'dot' },
+            { label: tx('− (classe 0)', '− (class 0)'), color: C0, kind: 'dot' },
           ]}
         />
         <Segmented size="sm" label="k" value={k} onChange={setK} options={[1, 3, 5, 7, 9].map((v) => ({ value: v, label: String(v) }))} />
@@ -65,28 +66,28 @@ export function KnnQuery() {
           <Label x={q.x} y={q.y} dx={12} dy={20} className="plot-label--math plot-label--strong">
             xq
           </Label>
-          <Handle x={q.x} y={q.y} label="punto di interrogazione x_q" onMove={setQ} />
+          <Handle x={q.x} y={q.y} label={tx('punto di interrogazione x_q', 'query point x_q')} onMove={setQ} />
         </Plot>
         <div className="wside">
           <div className="readouts">
-            <Readout label="vicini «+»" tone="blue" value={String(plus)} />
-            <Readout label="vicini «−»" tone="orange" value={String(k - plus)} />
+            <Readout label={tx('vicini «+»', '“+” neighbors')} tone="blue" value={String(plus)} />
+            <Readout label={tx('vicini «−»', '“−” neighbors')} tone="orange" value={String(k - plus)} />
           </div>
           <span className={`verdict ${res ? 'verdict--info' : 'verdict--warn'}`}>
-            {k}-NN risponde {res ? '«+»' : '«−»'}
+            {k}-NN {tx('risponde', 'predicts')} {res ? '«+»' : '«−»'}
           </span>
           <p className="wnote">
-            Il cerchio passa per il {k}° vicino: dentro ci sono i {k} esempi più vicini a x<sub>q</sub>, che votano a maggioranza.
+            {tx(`Il cerchio passa per il ${k}° vicino: dentro ci sono i ${k} esempi più vicini a x`, `The circle passes through the ${k}-th neighbor: inside are the ${k} closest examples to x`)}<sub>q</sub>{tx(', che votano a maggioranza.', ', voting by majority.')}
           </p>
         </div>
       </div>
       <Tasks
         items={[
           {
-            label: 'Con k = 1 risponde «+» (il vicino più prossimo); passa a k = 5 senza muovere il punto: risponde «−».',
+            label: tx('Con k = 1 risponde «+» (il vicino più prossimo); passa a k = 5 senza muovere il punto: risponde «−».', 'With k = 1 it predicts “+” (the nearest neighbor); switch to k = 5 without moving the point: it predicts “−”.'),
             done: seen.five,
           },
-          { label: 'Sposta il punto di interrogazione dove anche con k ≥ 3 la risposta è «+».', done: seen.agree },
+          { label: tx('Sposta il punto di interrogazione dove anche con k ≥ 3 la risposta è «+».', 'Move the query point to where even with k ≥ 3 the prediction is “+”.'), done: seen.agree },
         ]}
       />
     </div>
@@ -181,9 +182,9 @@ export function Voronoi() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'celle dei punti di classe 1', color: C1, kind: 'area' },
-            { label: 'di classe 0', color: C0, kind: 'area' },
-            ...(border ? [{ label: 'confine del 1-NN', color: 'var(--ink)' }] : []),
+            { label: tx('celle dei punti di classe 1', 'cells of class 1 points'), color: C1, kind: 'area' },
+            { label: tx('di classe 0', 'of class 0'), color: C0, kind: 'area' },
+            ...(border ? [{ label: tx('confine del 1-NN', '1-NN boundary'), color: 'var(--ink)' }] : []),
           ]}
         />
       </div>
@@ -192,25 +193,24 @@ export function Voronoi() {
           <Axes hideX hideY grid={false} />
           <Cells S={S} cells={cells} hot={nearest} border={border} />
           <Polyline pts={[q, S[nearest]]} color="var(--ink-2)" width={1.4} dash="4 3" />
-          <Handle x={q.x} y={q.y} label="punto da classificare" onMove={setQ} />
+          <Handle x={q.x} y={q.y} label={tx('punto da classificare', 'point to classify')} onMove={setQ} />
         </Plot>
         <div className="wside">
-          <span className={`verdict ${S[nearest].c ? 'verdict--info' : 'verdict--warn'}`}>il 1-NN risponde classe {S[nearest].c}</span>
+          <span className={`verdict ${S[nearest].c ? 'verdict--info' : 'verdict--warn'}`}>{tx('il 1-NN risponde classe', '1-NN predicts class')} {S[nearest].c}</span>
           <p className="wnote">
-            Ogni cella contiene i punti del piano più vicini al suo pattern che a qualsiasi altro; i lati delle celle sono equidistanti da
-            due pattern.
+            {tx('Ogni cella contiene i punti del piano più vicini al suo pattern che a qualsiasi altro; i lati delle celle sono equidistanti da due pattern.', 'Each cell contains the points closest to its prototype than to any other; cell edges are equidistant from two prototypes.')}
           </p>
-          <Toggle label="evidenzia il confine del 1-NN" checked={border} onChange={setBorder} />
+          <Toggle label={tx('evidenzia il confine del 1-NN', 'highlight 1-NN boundary')} checked={border} onChange={setBorder} />
           <Btn icon="reset" onClick={() => setSeed((s) => s + 1)}>
-            Altri punti
+            {tx('Altri punti', 'New points')}
           </Btn>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Trascina il punto attraverso almeno quattro celle: la risposta è l’etichetta della cella.', done: seen.walk },
-          { label: 'Evidenzia il confine del 1-NN: segue i lati tra celle di classi diverse.', done: seen.border },
-          { label: 'Genera altri punti: le celle cambiano, la regola no.', done: seen.other },
+          { label: tx('Trascina il punto attraverso almeno quattro celle: la risposta è l’etichetta della cella.', 'Drag the point across at least four cells: the output is the cell label.'), done: seen.walk },
+          { label: tx('Evidenzia il confine del 1-NN: segue i lati tra celle di classi diverse.', 'Highlight the 1-NN boundary: it follows the edges between cells of different classes.'), done: seen.border },
+          { label: tx('Genera altri punti: le celle cambiano, la regola no.', 'Generate new points: the cells change, but the rule does not.'), done: seen.other },
         ]}
       />
     </div>
@@ -271,9 +271,9 @@ export function ScaleNN() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'punto in alto (classe 1)', color: C1, kind: 'dot' },
-            { label: 'punto a destra (classe 0)', color: C0, kind: 'dot' },
-            { label: 'vicino più prossimo', color: 'var(--ink)' },
+            { label: tx('punto in alto (classe 1)', 'top point (class 1)'), color: C1, kind: 'dot' },
+            { label: tx('punto a destra (classe 0)', 'right point (class 0)'), color: C0, kind: 'dot' },
+            { label: tx('vicino più prossimo', 'nearest neighbor'), color: 'var(--ink)' },
           ]}
         />
       </div>
@@ -295,21 +295,21 @@ export function ScaleNN() {
           </Label>
         </Plot>
         <div className="wside">
-          <Slider label={<>scala di x₁ (α)</>} min={0.2} max={1.6} step={0.01} value={alpha} onChange={setAlpha} format={(v) => fmt(v)} />
+          <Slider label={<>{tx('scala di x₁ (α)', 'x₁ scale (α)')}</>} min={0.2} max={1.6} step={0.01} value={alpha} onChange={setAlpha} format={(v) => fmt(v)} />
           <div className="readouts">
-            <Readout label="distanza dal punto in alto" tone="blue" value={fmt(da)} />
-            <Readout label="distanza dal punto a destra" tone="orange" value={fmt(db)} />
+            <Readout label={tx('distanza dal punto in alto', 'distance to top point')} tone="blue" value={fmt(da)} />
+            <Readout label={tx('distanza dal punto a destra', 'distance to right point')} tone="orange" value={fmt(db)} />
           </div>
           <span className={`verdict ${nearA ? 'verdict--info' : 'verdict--warn'}`}>
-            vicino più prossimo: {nearA ? 'il punto in alto' : 'il punto a destra'}
+            {tx('vicino più prossimo:', 'nearest neighbor:')} {nearA ? tx('il punto in alto', 'top point') : tx('il punto a destra', 'right point')}
           </span>
-          <p className="wnote">Riscalare una variabile equivale a cambiare la metrica: gli stessi dati hanno un vicino diverso.</p>
+          <p className="wnote">{tx('Riscalare una variabile equivale a cambiare la metrica: gli stessi dati hanno un vicino diverso.', 'Rescaling a variable is equivalent to changing the metric: the same data has a different nearest neighbor.')}</p>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Comprimi l’asse x₁ (α piccolo): il vicino più prossimo diventa il punto a destra.', done: seen.flip },
-          { label: 'Allarga l’asse x₁ (α grande): il punto a destra si allontana ancora di più.', done: seen.big },
+          { label: tx('Comprimi l’asse x₁ (α piccolo): il vicino più prossimo diventa il punto a destra.', 'Compress the x₁ axis (small α): the nearest neighbor becomes the right point.'), done: seen.flip },
+          { label: tx('Allarga l’asse x₁ (α grande): il punto a destra si allontana ancora di più.', 'Stretch the x₁ axis (large α): the right point moves even further away.'), done: seen.big },
         ]}
       />
     </div>

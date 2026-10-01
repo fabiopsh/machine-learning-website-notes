@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Controls, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 
 /* ------------------------------------------------------------------ Fig. 17.7: autoencoder */
@@ -23,7 +24,7 @@ export function Autoencoder() {
   const kind = k < NIN ? 'under' : k > NIN ? 'over' : 'eq'
   return (
     <div>
-      <svg className="ae17" viewBox={`0 0 ${W} 230`} role="img" aria-label="Autoencoder: input, strato nascosto, ricostruzione">
+      <svg className="ae17" viewBox={`0 0 ${W} 230`} role="img" aria-label={tx('Autoencoder: input, strato nascosto, ricostruzione', 'Autoencoder: input, hidden layer, reconstruction')}>
         <g className={'ae17__edges' + (hot === 'enc' ? ' is-hot' : '')}>
           {xin.map((a, i) => xh.map((b, j) => <line key={`${i}-${j}`} x1={a} y1={170} x2={b} y2={66} />))}
         </g>
@@ -40,13 +41,13 @@ export function Autoencoder() {
           <circle key={i} className="ae17__u ae17__u--h" cx={x} cy={52} r={11} />
         ))}
         <text className="ae17__t" x={150} y={218} textAnchor="middle">
-          input x
+          {tx('input x', 'input x')}
         </text>
         <text className="ae17__t" x={370} y={218} textAnchor="middle">
-          ricostruzione r
+          {tx('ricostruzione r', 'reconstruction r')}
         </text>
         <text className="ae17__t" x={260} y={24} textAnchor="middle">
-          codice h
+          {tx('codice h', 'code h')}
         </text>
         <g
           className={'ae17__w' + (hot === 'enc' ? ' is-hot' : '')}
@@ -58,7 +59,7 @@ export function Autoencoder() {
         >
           <rect x={52} y={104} width={98} height={26} rx={8} />
           <text x={101} y={121.5} textAnchor="middle">
-            encoder {svgScript('W', '1')}
+            {tx('encoder', 'encoder')} {svgScript('W', '1')}
           </text>
         </g>
         <g
@@ -71,34 +72,40 @@ export function Autoencoder() {
         >
           <rect x={372} y={104} width={102} height={26} rx={8} />
           <text x={423} y={121.5} textAnchor="middle">
-            decoder {svgScript('W', '1')}′
+            {tx('decoder', 'decoder')} {svgScript('W', '1')}′
           </text>
         </g>
       </svg>
       <div className="wpanel">
         <div className="wpanel__title">
-          {kind === 'under' ? 'Undercomplete' : kind === 'over' ? 'Overcomplete' : 'Strato nascosto grande quanto l’input'}
+          {kind === 'under' ? tx('Undercomplete', 'Undercomplete') : kind === 'over' ? tx('Overcomplete', 'Overcomplete') : tx('Strato nascosto grande quanto l’input', 'Hidden layer the same size as input')}
         </div>
         {kind === 'under' &&
-          'Lo strato nascosto è più piccolo dell’input: il vincolo architetturale forza la rete a catturare le feature più salienti.'}
+          tx(
+            'Lo strato nascosto è più piccolo dell’input: il vincolo architetturale forza la rete a catturare le feature più salienti.',
+            'The hidden layer is smaller than the input: the architectural constraint forces the network to capture the most salient features.',
+          )}
         {kind === 'over' &&
-          'Lo strato nascosto è più grande dell’input: serve una regolarizzazione che imponga sparsità, robustezza al rumore o altre proprietà, oltre alla banale capacità di copiare.'}
-        {kind === 'eq' && 'Con tante unità nascoste quante sono gli input la rete può limitarsi a copiare.'}
+          tx(
+            'Lo strato nascosto è più grande dell’input: serve una regolarizzazione che imponga sparsità, robustezza al rumore o altre proprietà, oltre alla banale capacità di copiare.',
+            'The hidden layer is larger than the input: regularization is needed to enforce sparsity, noise robustness, or other properties beyond merely copying.',
+          )}
+        {kind === 'eq' && tx('Con tante unità nascoste quante sono gli input la rete può limitarsi a copiare.', 'With as many hidden units as inputs, the network can simply copy.')}
         <div className="wmath">
           <Tex>{hot === 'dec' ? '\\mathbf{r} = g(\\mathbf{h})' : hot === 'enc' ? '\\mathbf{h} = f(\\mathbf{x})' : '\\mathbf{h} = f(\\mathbf{x}), \\qquad \\mathbf{r} = g(\\mathbf{h})'}</Tex>
         </div>
       </div>
       <Controls>
-        <Slider label="unità nello strato nascosto" min={2} max={9} step={1} value={k} onChange={setK} width={260} />
+        <Slider label={tx('unità nello strato nascosto', 'units in hidden layer')} min={2} max={9} step={1} value={k} onChange={setK} width={260} />
         <div className="readouts">
           <Readout label="input" value={String(NIN)} />
-          <Readout label="codice" tone="accent" value={String(k)} />
+          <Readout label={tx('codice', 'code')} tone="accent" value={String(k)} />
         </div>
       </Controls>
       <Tasks
         items={[
-          { label: 'Riduci lo strato nascosto sotto 5 unità: l’autoencoder diventa undercomplete.', done: seen.under },
-          { label: 'Riportalo sopra 5: è overcomplete (come nella figura originale, con 7 unità).', done: seen.under && seen.over },
+          { label: tx('Riduci lo strato nascosto sotto 5 unità: l’autoencoder diventa undercomplete.', 'Reduce the hidden layer below 5 units: the autoencoder becomes undercomplete.'), done: seen.under },
+          { label: tx('Riportalo sopra 5: è overcomplete (come nella figura originale, con 7 unità).', 'Bring it back above 5: it is overcomplete (as in the original figure, with 7 units).'), done: seen.under && seen.over },
         ]}
       />
     </div>
@@ -108,6 +115,7 @@ export function Autoencoder() {
 /* ------------------------------------------------------------------ Fig. 17.8: localista e distribuita */
 
 const CONCEPTS = ['cane', 'gatto', 'tigre']
+const CONCEPTS_EN = ['dog', 'cat', 'tiger']
 /** attivazioni illustrative: gatto e tigre condividono più feature tra loro che con il cane */
 const DIST = [
   [0.9, 0.2, 0.7, 0.1, 0.6],
@@ -126,7 +134,7 @@ function Units({ rows, pair, showVals }: { rows: number[][]; pair: [number, numb
     <div className="ld17__rows">
       {rows.map((r, i) => (
         <div key={i} className={'ld17__row' + (pair.includes(i) ? ' is-on' : '')}>
-          <span className="ld17__name">{CONCEPTS[i]}</span>
+          <span className="ld17__name">{tx(CONCEPTS[i], CONCEPTS_EN[i])}</span>
           {r.map((v, j) => (
             <span key={j} className="ld17__u" title={fmt(v, 1)}>
               <i style={{ opacity: v }} />
@@ -154,43 +162,48 @@ export function LocalDistributed() {
       <div className="wbar">
         <Segmented
           size="sm"
-          label="confronta"
+          label={tx('confronta', 'compare')}
           value={p}
           onChange={(v) => {
             setP(v)
             setSeenP((s) => ({ ...s, [v]: true }))
           }}
-          options={PAIRS.map(([a, b], i) => ({ value: i, label: `${CONCEPTS[a]} – ${CONCEPTS[b]}` }))}
+          options={PAIRS.map(([a, b], i) => ({ value: i, label: `${tx(CONCEPTS[a], CONCEPTS_EN[a])} – ${tx(CONCEPTS[b], CONCEPTS_EN[b])}` }))}
         />
       </div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Localista (one-hot)</div>
+          <div className="htf__title">{tx('Localista (one-hot)', 'Localist (one-hot)')}</div>
           <Units rows={ONEHOT} pair={pair} />
           <div className="readouts">
             <Readout
-              label="distanza"
+              label={tx('distanza', 'distance')}
               value={<Tex>{'\\sqrt{2} \\approx 1{,}41'}</Tex>}
-              sub="sempre la stessa, tra concetti diversi"
+              sub={tx('sempre la stessa, tra concetti diversi', 'always the same between different concepts')}
             />
           </div>
         </div>
         <div>
-          <div className="htf__title">Distribuita</div>
+          <div className="htf__title">{tx('Distribuita', 'Distributed')}</div>
           <Units rows={DIST} pair={pair} showVals />
           <div className="readouts">
-            <Readout label="distanza" tone="accent" value={fmt(dist(DIST[pair[0]], DIST[pair[1]]), 2)} sub="riflette il significato" />
+            <Readout label={tx('distanza', 'distance')} tone="accent" value={fmt(dist(DIST[pair[0]], DIST[pair[1]]), 2)} sub={tx('riflette il significato', 'reflects meaning')} />
           </div>
         </div>
       </div>
       <p className="wnote">
-        Ogni cerchio è un’unità: vuoto = 0, pieno = 1, grigio = un valore intermedio (come 0,6). Qui non si classifica, si rappresenta.
-        I valori della rappresentazione distribuita sono illustrativi.
+        {tx(
+          'Ogni cerchio è un’unità: vuoto = 0, pieno = 1, grigio = un valore intermedio (come 0,6). Qui non si classifica, si rappresenta. I valori della rappresentazione distribuita sono illustrativi.',
+          'Each circle is a unit: empty = 0, filled = 1, gray = an intermediate value (such as 0.6). Here we do not classify, we represent. The values of the distributed representation are illustrative.',
+        )}
       </p>
       <Tasks
         items={[
           {
-            label: 'Confronta le tre coppie: nella rappresentazione one-hot la distanza non cambia mai, in quella distribuita gatto e tigre sono i più vicini.',
+            label: tx(
+              'Confronta le tre coppie: nella rappresentazione one-hot la distanza non cambia mai, in quella distribuita gatto e tigre sono i più vicini.',
+              'Compare the three pairs: in the one-hot representation distance never changes, in the distributed one cat and tiger are closest.',
+            ),
             done: !!seenP[1] && !!seenP[2],
           },
         ]}
@@ -202,10 +215,10 @@ export function LocalDistributed() {
 /* ------------------------------------------------------------------ Fig. 17.9: attributi condivisi */
 
 const OBJ = [
-  { name: 'auto rossa', car: 1, red: 1 },
-  { name: 'bici rossa', car: 0, red: 1 },
-  { name: 'auto blu', car: 1, red: 0 },
-  { name: 'bici blu', car: 0, red: 0 },
+  { name: 'auto rossa', nameEn: 'red car', car: 1, red: 1 },
+  { name: 'bici rossa', nameEn: 'red bike', car: 0, red: 1 },
+  { name: 'auto blu', nameEn: 'blue car', car: 1, red: 0 },
+  { name: 'bici blu', nameEn: 'blue bike', car: 0, red: 0 },
 ]
 
 export function Disentangle() {
@@ -216,18 +229,18 @@ export function Disentangle() {
       <div className="wbar">
         <Segmented
           size="sm"
-          label="oggetto mai visto in addestramento"
+          label={tx('oggetto mai visto in addestramento', 'object unseen in training')}
           value={hold}
           onChange={(v) => {
             setHold(v)
             setN(n + 1)
           }}
-          options={OBJ.map((o, i) => ({ value: i, label: o.name }))}
+          options={OBJ.map((o, i) => ({ value: i, label: tx(o.name, o.nameEn) }))}
         />
       </div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Rappresentazione localista</div>
+          <div className="htf__title">{tx('Rappresentazione localista', 'Localist representation')}</div>
           <table className="dis17">
             <thead>
               <tr>
@@ -237,63 +250,78 @@ export function Disentangle() {
                     <Tex>{`u_${j + 1}`}</Tex>
                   </th>
                 ))}
-                <th>mi piace?</th>
+                <th>{tx('mi piace?', 'like it?')}</th>
               </tr>
             </thead>
             <tbody>
               {OBJ.map((o, i) => (
                 <tr key={i} className={i === hold ? 'is-hold' : undefined}>
-                  <th>{o.name}</th>
+                  <th>{tx(o.name, o.nameEn)}</th>
                   {OBJ.map((_, j) => (
                     <td key={j} className={j === hold ? 'is-new' : undefined}>
                       {i === j ? 1 : 0}
                     </td>
                   ))}
-                  <td className="dis17__ans">{i === hold ? '?' : o.red ? 'sì' : 'no'}</td>
+                  <td className="dis17__ans">{i === hold ? '?' : o.red ? tx('sì', 'yes') : tx('no', 'no')}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="wnote">
-            L’unità <Tex>{`u_${hold + 1}`}</Tex> non è mai stata attiva in addestramento: «{OBJ[hold].name}» è un caso del tutto nuovo, e non
-            c’è modo di rispondere.
+            {tx(
+              <>
+                L’unità <Tex>{`u_${hold + 1}`}</Tex> non è mai stata attiva in addestramento: «{OBJ[hold].name}» è un caso del tutto nuovo, e non c’è modo di rispondere.
+              </>,
+              <>
+                Unit <Tex>{`u_${hold + 1}`}</Tex> was never active during training: “{OBJ[hold].nameEn}” is a completely new case, and there is no way to answer.
+              </>,
+            )}
           </p>
         </div>
         <div>
-          <div className="htf__title">Rappresentazione distribuita</div>
+          <div className="htf__title">{tx('Rappresentazione distribuita', 'Distributed representation')}</div>
           <table className="dis17">
             <thead>
               <tr>
                 <th />
-                <th>auto (bici)</th>
-                <th className="is-shared">rosso (blu)</th>
-                <th>mi piace?</th>
+                <th>{tx('auto (bici)', 'car (bike)')}</th>
+                <th className="is-shared">{tx('rosso (blu)', 'red (blue)')}</th>
+                <th>{tx('mi piace?', 'like it?')}</th>
               </tr>
             </thead>
             <tbody>
               {OBJ.map((o, i) => (
                 <tr key={i} className={i === hold ? 'is-hold' : undefined}>
-                  <th>{o.name}</th>
+                  <th>{tx(o.name, o.nameEn)}</th>
                   <td>{o.car}</td>
                   <td className="is-shared">{o.red}</td>
                   <td className="dis17__ans">
-                    {o.red ? 'sì' : 'no'}
-                    {i === hold ? ' (previsto)' : ''}
+                    {o.red ? tx('sì', 'yes') : tx('no', 'no')}
+                    {i === hold ? tx(' (previsto)', ' (predicted)') : ''}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="wnote">
-            La colonna del «rosso» è condivisa tra oggetti diversi: dagli altri tre casi si impara che mi piacciono gli oggetti rossi, e la
-            risposta per «{OBJ[hold].name}» segue ({OBJ[hold].red ? 'mi piace, perché è rossa' : 'non mi piace, perché non è rossa'}).
+            {tx(
+              <>
+                La colonna del «rosso» è condivisa tra oggetti diversi: dagli altri tre casi si impara che mi piacciono gli oggetti rossi, e la risposta per «{OBJ[hold].name}» segue ({OBJ[hold].red ? 'mi piace, perché è rossa' : 'non mi piace, perché non è rossa'}).
+              </>,
+              <>
+                The “red” column is shared across different objects: from the other three cases we learn that I like red objects, and the answer for “{OBJ[hold].nameEn}” follows ({OBJ[hold].red ? 'like it, because it is red' : 'dislike it, because it is not red'}).
+              </>,
+            )}
           </p>
         </div>
       </div>
       <Tasks
         items={[
           {
-            label: 'Cambia l’oggetto mai visto: con la rappresentazione distribuita la risposta si ricava sempre dagli altri tre, con quella localista mai.',
+            label: tx(
+              'Cambia l’oggetto mai visto: con la rappresentazione distribuita la risposta si ricava sempre dagli altri tre, con quella localista mai.',
+              'Change the unseen object: with the distributed representation the answer is always inferred from the other three, with the localist one never.',
+            ),
             done: n >= 2,
           },
         ]}
@@ -392,14 +420,14 @@ export function WordEmbedding() {
     <div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Paesi e lingue</div>
+          <div className="htf__title">{tx('Paesi e lingue', 'Countries and languages')}</div>
           <Plot xDomain={[-35, -25]} yDomain={[-14.4, -6]} aspect={0.9} minH={240} maxH={340} margin={{ l: 34, r: 12 }}>
             <Axes xTicks={[-34, -32, -30, -28, -26]} yTicks={[-14, -12, -10, -8, -6]} />
             <Words words={COUNTRIES} sel={sel} onSel={pick} near={near} />
           </Plot>
         </div>
         <div>
-          <div className="htf__title">Anni</div>
+          <div className="htf__title">{tx('Anni', 'Years')}</div>
           <Plot xDomain={[35, 38]} yDomain={[17, 22]} aspect={0.9} minH={240} maxH={340} margin={{ l: 34, r: 12 }}>
             <Axes xTicks={[35, 36, 37, 38]} yTicks={[17, 18, 19, 20, 21, 22]} />
             <Words words={YEARS} sel={sel} onSel={pick} near={near} />
@@ -409,16 +437,16 @@ export function WordEmbedding() {
       <div className="controls">
         {cur ? (
           <span className="verdict verdict--info">
-            Le parole più vicine a «{cur[0]}»: {nearest.map((q) => q.w[0]).join(', ')}.
+            {tx(`Le parole più vicine a «${cur[0]}»: ${nearest.map((q) => q.w[0]).join(', ')}.`, `Words closest to “${cur[0]}”: ${nearest.map((q) => q.w[0]).join(', ')}.`)}
           </span>
         ) : (
-          <p className="wnote">Clicca una parola per vedere le sue tre vicine più prossime nello spazio appreso.</p>
+          <p className="wnote">{tx('Clicca una parola per vedere le sue tre vicine più prossime nello spazio appreso.', 'Click a word to see its three nearest neighbors in the learned space.')}</p>
         )}
       </div>
       <Tasks
         items={[
-          { label: 'Clicca il nome di un paese: i suoi vicini sono altri paesi o lingue.', done: picked.c },
-          { label: 'Clicca un anno: i suoi vicini sono altri anni. Nessuno ha detto al modello che cosa sia un paese o un anno.', done: picked.y },
+          { label: tx('Clicca il nome di un paese: i suoi vicini sono altri paesi o lingue.', 'Click a country name: its neighbors are other countries or languages.'), done: picked.c },
+          { label: tx('Clicca un anno: i suoi vicini sono altri anni. Nessuno ha detto al modello che cosa sia un paese o un anno.', 'Click a year: its neighbors are other years. Nobody told the model what a country or a year is.'), done: picked.y },
         ]}
       />
     </div>

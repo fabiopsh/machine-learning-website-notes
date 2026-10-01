@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Tasks } from '../../components/prose/Figure'
 import { Slider, Toggle } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 
 /** Fig. 3.10: il triangolo di Kanizsa. Ruotando i "pac-man" l'illusione svanisce. */
 export function Kanizsa() {
@@ -35,14 +36,14 @@ export function Kanizsa() {
 
   return (
     <div className="kan">
-      <svg viewBox="0 0 400 390" className="kan__svg" role="img" aria-label="Triangolo di Kanizsa">
+      <svg viewBox="0 0 400 390" className="kan__svg" role="img" aria-label={tx('Triangolo di Kanizsa', 'Kanizsa triangle')}>
         {down.map(corner)}
         {up.map(pac)}
         {outline && <path d={`M${up[0].x},${up[0].y}L${up[1].x},${up[1].y}L${up[2].x},${up[2].y}Z`} className="kan__ghost" />}
       </svg>
       <div className="controls">
         <Slider
-          label="ruota i pac-man"
+          label={tx('ruota i pac-man', 'rotate the pac-men')}
           min={0}
           max={90}
           step={1}
@@ -54,7 +55,7 @@ export function Kanizsa() {
           format={(v) => `${v}°`}
         />
         <Toggle
-          label="mostra il triangolo che «vediamo»"
+          label={tx('mostra il triangolo che «vediamo»', 'show the triangle we "see"')}
           checked={outline}
           onChange={(v) => {
             setOutline(v)
@@ -64,8 +65,8 @@ export function Kanizsa() {
       </div>
       <Tasks
         items={[
-          { label: 'Mostra il contorno: il triangolo bianco non è disegnato da nessuna parte.', done: seen.out },
-          { label: 'Ruota i pac-man: basta poco perché il triangolo «sparisca».', done: seen.rot },
+          { label: tx('Mostra il contorno: il triangolo bianco non è disegnato da nessuna parte.', 'Show the outline: the white triangle is not drawn anywhere.'), done: seen.out },
+          { label: tx('Ruota i pac-man: basta poco perché il triangolo «sparisca».', 'Rotate the pac-men: just a little rotation makes the triangle "disappear."'), done: seen.rot },
         ]}
       />
     </div>

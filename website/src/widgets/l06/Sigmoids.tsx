@@ -4,6 +4,7 @@ import { fmt } from '../../components/plot/scale'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Btn, Legend, Readout, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { useLatch } from '../../lib/useLatch'
 import { sigmoid } from './NetSvg'
 
@@ -25,13 +26,13 @@ export function Sigmoids() {
         <Legend
           items={[
             ...REF.map((r) => ({ label: `a = ${fmt(r.a, 1)}`, color: r.color })),
-            { label: `il tuo a = ${fmt(a, 2)}`, color: 'var(--c-violet)', kind: 'dash' as const },
+            { label: `${tx('il tuo', 'your')} a = ${fmt(a, 2)}`, color: 'var(--c-violet)', kind: 'dash' as const },
           ]}
         />
       </div>
       <div className="wgrid wgrid--even">
         <div>
-          <div className="htf__title">Logistica, valori in [0, 1]</div>
+          <div className="htf__title">{tx('Logistica, valori in [0, 1]', 'Logistic, values in [0, 1]')}</div>
           <Plot xDomain={[-10, 10]} yDomain={[-0.05, 1.05]} aspect={0.72} minH={200} maxH={300} margin={{ l: 36, r: 10, t: 10, b: 30 }}>
             <Axes xTicks={[-10, -5, 0, 5, 10]} yTicks={[0, 0.5, 1]} xLabel="x" />
             {REF.map((r) => (
@@ -42,7 +43,7 @@ export function Sigmoids() {
           </Plot>
         </div>
         <div>
-          <div className="htf__title">Tangente iperbolica, valori in [−1, +1]</div>
+          <div className="htf__title">{tx('Tangente iperbolica, valori in [−1, +1]', 'Hyperbolic tangent, values in [−1, +1]')}</div>
           <Plot xDomain={[-10, 10]} yDomain={[-1.1, 1.1]} aspect={0.72} minH={200} maxH={300} margin={{ l: 36, r: 10, t: 10, b: 30 }}>
             <Axes xTicks={[-10, -5, 0, 5, 10]} yTicks={[-1, 0, 1]} xLabel="x" origin />
             <FnPath f={(x) => Math.tanh(x / 2)} color="var(--c-red)" width={2} />
@@ -54,7 +55,7 @@ export function Sigmoids() {
         <Slider
           label={
             <>
-              pendenza <Tex>a</Tex>
+              {tx('pendenza ', 'slope ')}<Tex>a</Tex>
             </>
           }
           min={-4}
@@ -67,12 +68,12 @@ export function Sigmoids() {
         />
         <Btn onClick={() => setS(-4)}>a → 0</Btn>
         <Btn onClick={() => setS(6)}>a → ∞</Btn>
-        <Readout label="pendenza in 0" value={fmt(a / 4, 3)} sub="a/4 per la logistica" />
+        <Readout label={tx('pendenza in 0', 'slope at 0')} value={fmt(a / 4, 3)} sub={tx('a/4 per la logistica', 'a/4 for logistic')} />
       </div>
       <Tasks
         items={[
-          { label: 'Porta a verso 0: la sigmoide diventa quasi piatta, cioè quasi lineare.', done: seen.flat },
-          { label: 'Porta a verso ∞: diventa un gradino, cioè la LTU.', done: seen.step },
+          { label: tx('Porta a verso 0: la sigmoide diventa quasi piatta, cioè quasi lineare.', 'Bring a towards 0: the sigmoid becomes nearly flat, i.e., quasi-linear.'), done: seen.flat },
+          { label: tx('Porta a verso ∞: diventa un gradino, cioè la LTU.', 'Bring a towards ∞: it becomes a step function, i.e., the LTU.'), done: seen.step },
         ]}
       />
     </div>
@@ -137,7 +138,7 @@ export function SigmoidDerivatives() {
           <Dot x={net} y={f(net)} color="var(--ink)" r={4.5} />
           <Dot x={net} y={f1(net)} color="var(--c-red)" r={4.5} />
           <Dot x={net} y={f2(net)} color="var(--c-green)" r={4} />
-          <Handle x={net} y={-0.15} axis="x" label="input netto" onMove={(p) => setNet(Math.round(p.x * 20) / 20)} />
+          <Handle x={net} y={-0.15} axis="x" label={tx('input netto', 'net input')} onMove={(p) => setNet(Math.round(p.x * 20) / 20)} />
         </Plot>
         <div className="wside">
           <div className="readouts">
@@ -146,25 +147,25 @@ export function SigmoidDerivatives() {
             <Readout label={<Tex>{"f''_\\sigma"}</Tex>} tone="green" value={fmt(f2(net), 3)} />
           </div>
           <div className="wpanel">
-            <div className="wpanel__title">Quanto è grande la correzione</div>
+            <div className="wpanel__title">{tx('Quanto è grande la correzione', 'Magnitude of correction')}</div>
             <div className="sig6__bar">
               <span style={{ width: `${(f1(net) / 0.25) * 100}%` }} />
             </div>
             <p className="wnote">
-              Il delta contiene <Tex>{"f'_\\sigma(net)"}</Tex>:{' '}
+              {tx('Il delta contiene ', 'Delta contains ')}<Tex>{"f'_\\sigma(net)"}</Tex>:{' '}
               {sat
-                ? 'unità satura, i pesi cambiano lentissimamente.'
+                ? tx('unità satura, i pesi cambiano lentissimamente.', 'saturated unit, weights change very slowly.')
                 : Math.abs(net) < 1
-                  ? 'zona quasi lineare, delta grandi.'
-                  : 'correzione intermedia.'}
+                  ? tx('zona quasi lineare, delta grandi.', 'quasi-linear region, large deltas.')
+                  : tx('correzione intermedia.', 'intermediate correction.')}
             </p>
           </div>
         </div>
       </div>
       <Tasks
         items={[
-          { label: 'Porta net a 0: la derivata è massima (vale 0,25), la zona quasi lineare.', done: seen.zero },
-          { label: 'Porta net lontano da 0: la derivata è quasi nulla, l’unità è satura.', done: seen.sat },
+          { label: tx('Porta net a 0: la derivata è massima (vale 0,25), la zona quasi lineare.', 'Bring net to 0: derivative is maximum (0.25), quasi-linear region.'), done: seen.zero },
+          { label: tx('Porta net lontano da 0: la derivata è quasi nulla, l’unità è satura.', 'Move net away from 0: derivative is near zero, unit is saturated.'), done: seen.sat },
         ]}
       />
     </div>
@@ -179,10 +180,10 @@ function Zone() {
       <rect x={x(-6)} y={m.t} width={x(-lo) - x(-6)} height={ih} />
       <rect x={x(lo)} y={m.t} width={x(6) - x(lo)} height={ih} />
       <text x={x(-4.5)} y={y(0.95)} textAnchor="middle" className="plot-label plot-label--muted">
-        saturazione
+        {tx('saturazione', 'saturation')}
       </text>
       <text x={x(4.5)} y={y(0.3)} textAnchor="middle" className="plot-label plot-label--muted">
-        saturazione
+        {tx('saturazione', 'saturation')}
       </text>
     </g>
   )

@@ -5,6 +5,7 @@ import { svgScript } from '../../components/plot/svgText'
 import { Tasks } from '../../components/prose/Figure'
 import { Tex } from '../../components/prose/Tex'
 import { Legend, Readout, Segmented, Slider } from '../../components/ui/Controls'
+import { tx } from '../../lib/i18n'
 import { polyval, ridgePolyfit } from '../../lib/math'
 import { useLatch } from '../../lib/useLatch'
 import { rms, target, testSet, trainingSet } from '../l04/polyStore'
@@ -75,8 +76,8 @@ export function RidgeFit() {
         <Legend
           items={[
             { label: <Tex>{'\\sin(2\\pi x)'}</Tex>, color: 'var(--c-green)' },
-            { label: 'dati di training', color: 'var(--c-blue)', kind: 'dot' },
-            { label: 'polinomio di grado 9 regolarizzato', color: 'var(--c-red)' },
+            { label: tx('dati di training', 'training data'), color: 'var(--c-blue)', kind: 'dot' },
+            { label: tx('polinomio di grado 9 regolarizzato', 'regularized degree-9 polynomial'), color: 'var(--c-red)' },
           ]}
         />
         <Presets ln={ln} />
@@ -95,8 +96,8 @@ export function RidgeFit() {
         </Plot>
         <div className="wside">
           <div className="readouts">
-            <Readout label="errore RMS di training" tone="blue" value={fmt(tr, 3)} />
-            <Readout label="errore RMS di test" tone="orange" value={fmt(te, 3)} />
+            <Readout label={tx('errore RMS di training', 'training RMS error')} tone="blue" value={fmt(tr, 3)} />
+            <Readout label={tx('errore RMS di test', 'test RMS error')} tone="orange" value={fmt(te, 3)} />
             <Readout
               label={<Tex>{'\\|\\mathbf{w}\\|'}</Tex>}
               value={norm > 1e5 ? sci(norm) : fmt(norm, 2)}
@@ -125,9 +126,9 @@ export function RidgeFit() {
       </div>
       <Tasks
         items={[
-          { label: 'Togli la regolarizzazione (ln λ = −∞): il polinomio interpola i punti e oscilla, con pesi enormi.', done: seen.none },
-          { label: 'Porta ln λ a 0: la curva diventa quasi piatta (underfitting).', done: seen.high },
-          { label: 'Torna a ln λ = −18: curva liscia vicina al seno, peggiore sul training ma migliore sul test.', done: seen.back },
+          { label: tx('Togli la regolarizzazione (ln λ = −∞): il polinomio interpola i punti e oscilla, con pesi enormi.', 'Remove regularization (ln λ = −∞): the polynomial interpolates points and oscillates wildly, with huge weights.'), done: seen.none },
+          { label: tx('Porta ln λ a 0: la curva diventa quasi piatta (underfitting).', 'Set ln λ to 0: the curve becomes nearly flat (underfitting).'), done: seen.high },
+          { label: tx('Torna a ln λ = −18: curva liscia vicina al seno, peggiore sul training ma migliore sul test.', 'Return to ln λ = −18: smooth curve close to the sine wave, worse on training but better on test.'), done: seen.back },
         ]}
       />
     </div>
@@ -139,7 +140,7 @@ function Coefs({ w }: { w: number[] }) {
   return (
     <div className="wpanel coef">
       <div className="wpanel__title">
-        Coefficienti <Tex>{'\\mathbf{w}^*'}</Tex>
+        {tx('Coefficienti', 'Coefficients')} <Tex>{'\\mathbf{w}^*'}</Tex>
       </div>
       <ul className="coef__list">
         {w.map((v, j) => {
@@ -187,8 +188,8 @@ export function RidgeRms() {
       <div className="wbar">
         <Legend
           items={[
-            { label: 'training', color: 'var(--c-blue)' },
-            { label: 'test', color: 'var(--c-orange)' },
+            { label: tx('training', 'training'), color: 'var(--c-blue)' },
+            { label: tx('test', 'test'), color: 'var(--c-orange)' },
           ]}
         />
         <Presets ln={ln} />
@@ -202,10 +203,10 @@ export function RidgeRms() {
         <Polyline pts={curves.te} color="var(--c-orange)" width={2.4} />
         <GoodZone x={best.x} y={best.y} />
         <Label x={-39.5} y={1.28} className="plot-label--muted">
-          λ piccolo → overfitting
+          {tx('λ piccolo → overfitting', 'small λ → overfitting')}
         </Label>
         <Label x={-0.5} y={1.28} anchor="end" className="plot-label--muted">
-          λ grande → underfitting
+          {tx('λ grande → underfitting', 'large λ → underfitting')}
         </Label>
         <Polyline
           pts={[
@@ -227,14 +228,14 @@ export function RidgeRms() {
       </Plot>
       <div className="readouts">
         <Readout label="ln λ" value={fmtLn(ln)} />
-        <Readout label="training" tone="blue" value={fmt(rms(w, TR), 3)} />
-        <Readout label="test" tone="orange" value={fmt(rms(w, TS), 3)} sub={`minimo del test vicino a ln λ = ${fmt(best.x, 0)}`} />
+        <Readout label={tx('training', 'training')} tone="blue" value={fmt(rms(w, TR), 3)} />
+        <Readout label={tx('test', 'test')} tone="orange" value={fmt(rms(w, TS), 3)} sub={`${tx('minimo del test vicino a', 'test minimum near')} ln λ = ${fmt(best.x, 0)}`} />
       </div>
       <Tasks
         items={[
-          { label: 'Sposta ln λ tutto a sinistra: errore di training quasi zero, test alto (overfitting).', done: seen.left },
-          { label: 'Sposta ln λ verso 0: salgono entrambi gli errori (underfitting).', done: seen.right },
-          { label: 'Cerca il minimo dell’errore di test: è il buon compromesso.', done: seen.best },
+          { label: tx('Sposta ln λ tutto a sinistra: errore di training quasi zero, test alto (overfitting).', 'Move ln λ all the way left: training error near zero, high test error (overfitting).'), done: seen.left },
+          { label: tx('Sposta ln λ verso 0: salgono entrambi gli errori (underfitting).', 'Move ln λ toward 0: both errors rise (underfitting).'), done: seen.right },
+          { label: tx('Cerca il minimo dell’errore di test: è il buon compromesso.', 'Find the minimum test error: this is the optimal trade-off.'), done: seen.best },
         ]}
       />
     </div>
@@ -247,7 +248,7 @@ function GoodZone({ x: xv, y: yv }: { x: number; y: number }) {
     <g>
       <ellipse cx={x(xv)} cy={y(yv)} rx={46} ry={22} fill="none" stroke="var(--ink-3)" strokeWidth={1.2} strokeDasharray="4 4" />
       <text x={x(xv)} y={y(yv) - 28} textAnchor="middle" className="plot-label">
-        buon compromesso
+        {tx('buon compromesso', 'optimal trade-off')}
       </text>
     </g>
   )
