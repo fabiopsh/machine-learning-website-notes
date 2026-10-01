@@ -1,0 +1,253 @@
+import * as F from '../formulas/l15'
+import { TwentyPoints, FiftyFits, SpaceView, VarianceFits, Darts, LambdaFits, Tradeoff } from '../../widgets/l15/BiasVar'
+
+<Lead>La SLT ha spiegato underfitting e overfitting tramite la complessità del modello e il numero di dati. La **decomposizione bias-varianza** offre un altro punto di vista, complementare: considera il fatto che il training set è **una sola** delle possibili realizzazioni dei dati, e scompone l’errore atteso in tre componenti — **bias**, **varianza** e **rumore**. Da qui si arriva in modo naturale agli **ensemble** (bagging, boosting), che sfruttano proprio la riduzione della varianza.</Lead>
+
+## L’idea
+
+Un training set è solo una possibile realizzazione dall’universo dei dati: **training set diversi producono stime diverse**. L’errore atteso (sui vari training set) in un punto $\mathbf{x}$ si scompone in:
+
+- **Bias**: quantifica la discrepanza tra la funzione vera e $h(\mathbf{x})$ (mediata sui dati). È alto se $H$ è troppo piccolo (modello troppo rigido).
+- **Varianza**: quantifica la variabilità della risposta del modello $h$ per diverse realizzazioni dei dati di training. È dovuta a un’eccessiva flessibilità.
+- **Rumore**: le etichette contengono un errore casuale (ad esempio, per un dato $\mathbf{x}$ ci possono essere più valori di $d$ possibili).
+
+Si assume lo scenario della **regressione** con target $y$ e loss quadratica.
+
+## Analisi nella regressione
+
+Supponiamo esempi $\langle \mathbf{x}, y\rangle$ con funzione vera $y = f(\mathbf{x}) + \varepsilon$, dove $\varepsilon$ è rumore gaussiano con media zero e deviazione standard $\sigma$. Con la regressione lineare, dato un insieme di esempi $\langle\mathbf{x}_i, y_i\rangle$, $i = 1..l$, si adatta un’ipotesi lineare $h(\mathbf{x}) = \mathbf{w}\mathbf{x} + w_0$ minimizzando $\sum_{i=1}^l (y_i - h(\mathbf{x}_i))^2$. Due fatti:
+
+1. per la classe di ipotesi scelta (lineari), per alcune $f$ si avrà un **errore di predizione sistematico**;
+2. a seconda del dataset, i parametri $\mathbf{w}$ trovati **saranno diversi**.
+
+<Callout type="example" title="20 punti e 50 fit">
+
+Funzione vera $y = x + 2\sin(1{,}5x) + \mathcal{N}(0; 0{,}2)$. Con 20 punti si adatta una retta. Ripetendo con 50 dataset diversi (ciascuno di 20 punti), si ottengono 50 rette diverse.
+
+</Callout>
+
+<Figure n="15.1" title="20 punti, la funzione vera e la retta adattata">
+  <TwentyPoints />
+  <Caption>Un dataset di 20 punti generati da $y = x + 2\sin(1{,}5x)$ più rumore, la funzione vera (curva ondulata, verde) e l’ipotesi lineare adattata ai dati (rossa). Estrai un nuovo dataset per vedere come cambia la retta.</Caption>
+</Figure>
+
+<Figure n="15.2" title="50 fit su 50 dataset diversi">
+  <FiftyFits />
+  <Caption>50 fit, ciascuno su 20 punti, sovrapposti alla funzione vera: le rette variano da un dataset all’altro. Cambia il numero di dataset mostrati.</Caption>
+</Figure>
+
+### L’errore di predizione atteso
+
+Dato un nuovo punto $\mathbf{x}$, qual è l’**errore di predizione atteso**? Si assume che i dati siano estratti in modo <T id="iid">**i.i.d.**</T> (indipendenti e identicamente distribuiti) da un’unica distribuzione $P$. L’obiettivo è calcolare, per un $\mathbf{x}$ arbitrario,
+
+<Formula f={F.expectedError} />
+
+dove $y$ è il valore di $\mathbf{x}$ che potrebbe comparire in un dataset, e l’aspettativa è **su tutti i training set** estratti secondo $P$. Attenzione: per ogni training set «estratto» c’è una $h$ diversa (e un $y$ diverso).
+
+### Richiamo di statistica
+
+Per una variabile aleatoria discreta $Z$: $\bar Z = E_P[Z] = \sum_i z_i P(z_i)$ e $\operatorname{Var}[Z] = E[(Z - \bar Z)^2]$.
+
+<Callout type="theorem" title="Lemma della varianza">
+
+$$
+\operatorname{Var}[Z] = E[Z^2] - \bar Z^2 \qquad\Longleftrightarrow\qquad E[Z^2] = \bar Z^2 + \operatorname{Var}[Z].
+$$
+
+**Dimostrazione.**
+
+$$
+\begin{aligned}
+\operatorname{Var}[Z] &= \sum_i (z_i - \bar Z)^2 P(z_i) \\
+&= \sum_i z_i^2P(z_i) - 2\bar Z\sum_i z_iP(z_i) + \bar Z^2\sum_i P(z_i) \\
+&= E[Z^2] - 2\bar Z^2 + \bar Z^2 = E[Z^2] - \bar Z^2.
+\end{aligned}
+$$
+
+</Callout>
+
+### La decomposizione
+
+Sviluppando il quadrato e usando la linearità dell’aspettativa (e il fatto che $y$ e $h(\mathbf{x})$ sono indipendenti, perché $y$ è un nuovo dato e $h$ dipende dal training set):
+
+$$
+\begin{aligned}
+E_P\big[(y - h(\mathbf{x}))^2\big] &= E_P\big[h(\mathbf{x})^2 - 2yh(\mathbf{x}) + y^2\big] \\
+&= E_P\big[h(\mathbf{x})^2\big] + E_P\big[y^2\big] - 2E_P[y]\,E_P[h(\mathbf{x})].
+\end{aligned}
+$$
+
+Sia $\bar h(\mathbf{x}) = E_P[h(\mathbf{x})]$ la **predizione media** dell’ipotesi in $\mathbf{x}$, quando $h$ è addestrata su dati estratti da $P$.
+
+- **Primo termine**, con il lemma: $E_P[h(\mathbf{x})^2] = E_P\big[(h(\mathbf{x}) - \bar h(\mathbf{x}))^2\big] + \bar h(\mathbf{x})^2$.
+- Si noti che $E_P[y] = E_P[f(\mathbf{x}) + \varepsilon] = f(\mathbf{x})$ (il rumore ha media zero).
+- **Secondo termine**, con il lemma: $E_P[y^2] = E_P\big[(y - f(\mathbf{x}))^2\big] + f(\mathbf{x})^2$.
+
+Mettendo tutto insieme:
+
+$$
+\begin{aligned}
+E_P\big[(y - h(\mathbf{x}))^2\big] &= E_P\big[(h(\mathbf{x}) - \bar h(\mathbf{x}))^2\big] + \underbrace{\bar h(\mathbf{x})^2 - 2f(\mathbf{x})\bar h(\mathbf{x}) + f(\mathbf{x})^2}_{(\bar h(\mathbf{x}) - f(\mathbf{x}))^2} + E_P\big[(y - f(\mathbf{x}))^2\big] \\
+&= \underbrace{E_P\big[(h(\mathbf{x}) - \bar h(\mathbf{x}))^2\big]}_{\text{varianza}} + \underbrace{\big(\bar h(\mathbf{x}) - f(\mathbf{x})\big)^2}_{\text{bias}^2} + \underbrace{E_P\big[(y - f(\mathbf{x}))^2\big]}_{\text{rumore}^2} \\
+&= \operatorname{Var}[h(\mathbf{x})] + \operatorname{Bias}[h(\mathbf{x})]^2 + E_P[\varepsilon^2] \\
+&= \operatorname{Var}[h(\mathbf{x})] + \operatorname{Bias}[h(\mathbf{x})]^2 + \sigma^2.
+\end{aligned}
+$$
+
+<Formula f={F.decomposition} />
+
+<Callout type="theorem" title="Decomposizione bias-varianza">
+
+$$
+\text{Errore di predizione atteso} = \text{Varianza} + \text{Bias}^2 + \text{Rumore}^2.
+$$
+
+</Callout>
+
+### Interpretazione delle tre componenti
+
+- <T id="bias-statistico">**Bias**</T> $\big(\bar h(\mathbf{x}) - f(\mathbf{x})\big)^2$: la discrepanza tra la funzione vera e la predizione **media** sui diversi training set. È un **errore sistematico**, dovuto ad esempio a uno spazio $H$ troppo piccolo o a un modello troppo rigido.
+- <T id="varianza-modello">**Varianza**</T>: la variabilità della risposta del modello per diverse realizzazioni del training set. È dovuta a una **flessibilità eccessiva**.
+- <T id="rumore-irriducibile">**Rumore**</T>: anche la soluzione ottima può sbagliare (ad esempio se per un dato $\mathbf{x}$ sono possibili più valori di $d$). È **irriducibile**: non dipende dal modello e rappresenta una tolleranza sulla risposta ($\sigma$).
+
+<Figure n="15.3" title="Bias, varianza e rumore nello spazio delle funzioni" size="wide">
+  <SpaceView />
+  <Caption>Vista grafica: lo spazio delle funzioni (azzurro) contiene la regione (blu) delle soluzioni ottenute con training set diversi (punti neri; in rosso la loro media). La varianza è l’ampiezza di questa regione, il bias la distanza tra il suo centro e la soluzione ottima, il rumore la distanza tra la soluzione ottima e i dati. L’ampiezza della regione dipende dall’ampiezza dell’insieme delle funzioni: prova a cambiarla.</Caption>
+</Figure>
+
+Tornando all’esempio: il **bias** è evidente nella media $\bar h$ delle 50 rette, che resta lontana dalla funzione vera ondulata (il modello lineare è troppo rigido); la **varianza** è la dispersione delle 50 rette attorno a $\bar h$; il **rumore** è la dispersione dei dati attorno alla funzione vera.
+
+<Figure n="15.4" title="La varianza: le 50 ipotesi attorno alla loro media">
+  <VarianceFits />
+  <Caption>La varianza: la dispersione delle 50 ipotesi (nere) attorno alla predizione media $\bar h(\mathbf{x})$ (in rosso). Trascina il punto $x$: il tratto viola è la dispersione delle rette in quel punto (una deviazione standard sopra e sotto la media), e i tre termini della decomposizione sono calcolati sui 50 fit.</Caption>
+</Figure>
+
+<Callout type="example" title="L’analogia delle freccette">
+
+Il centro è la funzione vera, ogni freccetta è un modello addestrato su un training set diverso. **Alto bias e bassa varianza** (in basso a sinistra) corrisponde all’**underfitting**; **basso bias e alta varianza** (in alto a destra) all’**overfitting**. L’analogia non è perfetta per il ML, ma aiuta.
+
+</Callout>
+
+<Figure n="15.5" title="L’analogia delle freccette">
+  <Darts />
+  <Caption>Quattro bersagli: basso bias e bassa varianza (freccette tutte al centro); basso bias e alta varianza (sparse attorno al centro); alto bias e bassa varianza (raggruppate ma lontane dal centro); alto bias e alta varianza (sparse e lontane). Clicca un bersaglio.</Caption>
+</Figure>
+
+---
+
+## Bias, varianza e regolarizzazione
+
+Ricordiamo la loss regolarizzata:
+
+<Formula f={F.regLoss} />
+
+Variando $\lambda$ si ottengono soluzioni meno regolarizzate (complesse, $\lambda$ basso) o più regolarizzate (meno complesse, $\lambda$ alto). (L’intercetta è tipicamente esclusa dalla penalità.)
+
+Esempio di Bishop: 25 dataset estratti dalla sinusoide, modello (una rete RBF) addestrato su ciascuno con diversi valori di $\lambda$.
+
+<Figure n="15.6" title="Effetto di λ su bias e varianza" size="wide">
+  <LambdaFits />
+  <Caption>Effetto di $\lambda$ su bias e varianza, per $\ln\lambda = 2{,}6$; $-0{,}31$; $-2{,}4$. A sinistra le 25 ipotesi, a destra la loro media $\bar h(x)$ (rossa) e la funzione vera (verde). Con $\lambda$ alto le curve sono simili tra loro ma la media è lontana dalla sinusoide; con $\lambda$ basso le curve sono molto diverse ma la media coincide con la sinusoide. Le curve sono calcolate davvero (25 dataset di 25 punti, 24 funzioni di base gaussiane); il valore di $\ln\lambda$ è condiviso con la figura 15.7.</Caption>
+</Figure>
+
+- **$\lambda$ alto**: **alto bias, bassa varianza**. La penalità domina, il modello dipende poco dai dati ed è «troppo rigido»: le curve si somigliano ma la loro media è lontana dalla sinusoide.
+- **$\lambda$ medio**: bias più basso, varianza più alta. Diminuendo $\lambda$ si dipende di più dal particolare training set.
+- **$\lambda$ molto basso**: **basso bias, alta varianza**. L’errore di test per un singolo training set può essere alto (per la componente di varianza), ma anche se le curve sono molto diverse tra loro, **in media** sono corrette (grafico a destra).
+
+<Figure n="15.7" title="Il compromesso bias-varianza al variare di ln λ">
+  <Tradeoff />
+  <Caption>Il compromesso bias-varianza al variare di $\ln\lambda$: bias al quadrato (blu), varianza (rossa), loro somma (viola) ed errore di test (nero). La varianza decresce e il bias cresce all’aumentare di $\lambda$; la somma ha un minimo che coincide circa con il minimo dell’errore di test. Attenzione: qui la complessità è più alta a **sinistra** (al contrario dei grafici usuali). Le curve sono calcolate sugli stessi 25 dataset della figura 15.6, quindi i valori non sono quelli della figura di Bishop.</Caption>
+</Figure>
+
+Un modello **sovra-regolarizzato** (grande $\lambda$) ha bias alto; uno **sotto-regolarizzato** (piccolo $\lambda$) ha varianza alta. Di nuovo, **il compromesso**: il minimo di bias² + varianza coincide circa con il minimo dell’errore di test.
+
+La stessa figura vista nella validazione ([lezione 9](#/lezione/09)) mostra, al crescere della complessità, errori di training e test su 100 training set: un modello complesso ha **bias basso e varianza alta**, quindi rischio di overfitting, e a seconda del training set si può essere fortunati o sfortunati.
+
+<Callout type="tip" title="Il collegamento con la SLT">
+
+Bias e varianza sono un’altra faccia del compromesso tra adattamento ai dati e complessità: il bias corrisponde all’incapacità del modello di rappresentare la funzione (alto $R_{emp}$, underfitting), la varianza alla sensibilità ai dati specifici (alta <T id="vc-confidence">VC-confidence</T>, overfitting).
+
+</Callout>
+
+---
+
+## Ensemble learning
+
+L’idea degli <T id="ensemble">**ensemble**</T> è sfruttare **più modelli** combinandone le risposte.
+
+Nel caso più semplice (**schema a voto**):
+
+- **Regressione**: <T id="comitato">comitato</T> a media semplice, $o(\mathbf{x}) = \frac{1}{K}\sum_{i=1}^K h_i(\mathbf{x})$.
+- **Classificazione**: voto su molti classificatori (purché diano risposte **diversificate**), oppure si classifica dopo aver mediato le uscite continue.
+
+In alternativa (<T id="stacking">**stacking**</T>) il combinatore è a sua volta un modello di ML.
+
+<Callout type="theorem" title="Il comitato non è peggiore della media dei suoi membri">
+
+Per una loss convessa come l’errore quadratico, l’errore del comitato è minore o uguale alla media degli errori dei singoli modelli:
+
+<Formula f={F.committee} />
+
+(È la disuguaglianza di Jensen.) Esempio con target $t = 5$ e due modelli che predicono 2 e 4: la media degli errori è $\frac{(5-2)^2 + (5-4)^2}{2} = 5$, mentre l’errore del comitato ($o = 3$) è $(5-3)^2 = 4$. Con predizioni 6 e 4: media degli errori $\frac{1 + 1}{2} = 1$, errore del comitato $(5-5)^2 = 0$.
+
+</Callout>
+
+### Bagging (bootstrap aggregating)
+
+- Si addestrano $K$ classificatori su **sottoinsiemi diversi** del training set, differenziati con il <T id="bootstrap">**bootstrap**</T> (ricampionamento con reinserimento).
+- Regressione: si usa la media; classificazione: voto dei $K$ classificatori.
+
+Il legame con bias-varianza è diretto (si ricordi il caso «$\lambda$ basso»): modelli ad **alta varianza** e **basso bias** possono funzionare bene **in media**. In altri termini, **la media delle $h$ riduce la varianza** senza aumentare il bias. Inoltre il <T id="bagging">bagging</T> tende ad aumentare il **margine** di un classificatore: la media di $K$ curve di separazione tende a stare «nel mezzo» (*in medio stat virtus*).
+
+### Boosting (es. AdaBoost)
+
+Se i modelli commettono gli **stessi errori**, combinarli non serve. Il <T id="boosting">boosting</T> li differenzia di proposito:
+
+1. addestra i classificatori in sequenza concentrandosi sugli **errori**: il secondo dà più peso alle istanze sbagliate dal primo (ad esempio sono più probabili nel suo training set), e così via;
+2. combina i risultati con un **voto pesato**, dando più peso ai classificatori con errore più basso.
+
+Se non lo si ferma, il boosting impara a classificare correttamente **tutte** le istanze di training usando <T id="weak-learner">**weak learner**</T> (classificatori appena migliori del caso, con errore minore di $1/2$ nel binario), costruendo in modo incrementale modelli complessi. Può migliorare molto le prestazioni di learner deboli; riduce il bias senza aumentare la varianza (resiste all’overfitting) e, come il bagging, tende a produrre curve di separazione «nel mezzo» (margine massimo). Però **soffre con dati rumorosi** (che vengono pesati sempre di più), e non risolve di per sé il problema underfitting/overfitting.
+
+## Feature selection (cenni)
+
+Trovare il sottoinsieme delle feature più informative per il problema porta grandi benefici: **riduzione della dimensionalità** (effetti sulla VC-dim delle reti, sulla <T id="curse-of-dimensionality">curse of dimensionality</T>…), filtraggio di informazione irrilevante e rumore (con possibili forti miglioramenti delle prestazioni), **interpretabilità** (trovare descrittori utili). Ma:
+
+- è **computazionalmente difficile** (numero enorme di sottoinsiemi possibili, e ogni valutazione richiede di riaddestrare);
+- si usa tipicamente una **ricerca euristica** (greedy, algoritmi genetici o altre tecniche di ottimizzazione), includendo o meno il learner;
+- i risultati sono particolarmente sensibili al metodo di validazione: attenzione al <T id="subset-selection-bias">**feature subset selection bias**</T>, cioè all’errore di fare la selezione sull’intero dataset (vedi le slide sulla cross-validation).
+
+Altri argomenti collegati: PAC learning; confronto tra principi induttivi (SRM, MDL, inferenza bayesiana, regolarizzazione) rispetto al controllo della complessità.
+
+<Callout type="abstract" title="Sintesi">
+
+L’errore atteso (sui training set) si scompone in **varianza + bias² + rumore**. Modelli rigidi (o molto regolarizzati) hanno alto bias e bassa varianza (underfitting); modelli flessibili (poco regolarizzati) basso bias e alta varianza (overfitting); il rumore è irriducibile. Gli **ensemble** sfruttano la decomposizione: il **bagging** media modelli ad alta varianza riducendola; il **boosting** combina learner deboli concentrandosi sugli errori.
+
+</Callout>
+
+<Exam>
+<Q q="Derivare la decomposizione bias-varianza per la loss quadratica.">
+
+Si parte da $E_P[(y - h(\mathbf{x}))^2]$ con $y = f(\mathbf{x}) + \varepsilon$ e l’aspettativa sui training set. Si sviluppa il quadrato: $E_P[h^2] + E_P[y^2] - 2E_P[y]E_P[h]$ (linearità; $y$ e $h$ sono indipendenti). Con il lemma $E[Z^2] = \bar Z^2 + \operatorname{Var}[Z]$: $E_P[h^2] = E_P[(h - \bar h)^2] + \bar h^2$ e $E_P[y^2] = E_P[(y - f)^2] + f^2$, con $E_P[y] = f$ perché il rumore ha media zero. I termini $\bar h^2 - 2f\bar h + f^2$ formano il quadrato $(\bar h - f)^2$. Risultato: $\operatorname{Var}[h(\mathbf{x})] + \operatorname{Bias}[h(\mathbf{x})]^2 + \sigma^2$.
+
+</Q>
+<Q q="Cosa rappresentano bias, varianza e rumore? Quale componente è irriducibile?">
+
+Il bias è la discrepanza tra la funzione vera e la predizione media sui diversi training set: un errore sistematico, da spazio $H$ troppo piccolo o modello troppo rigido. La varianza è la variabilità della risposta del modello al variare del training set, dovuta a una flessibilità eccessiva. Il rumore è l’errore casuale nelle etichette: anche la soluzione ottima può sbagliare. Il rumore è irriducibile, perché non dipende dal modello ($\sigma^2$).
+
+</Q>
+<Q q="Come variano bias e varianza con il parametro di regolarizzazione $\lambda$?">
+
+Con $\lambda$ alto la penalità domina e il modello dipende poco dai dati: alto bias, bassa varianza (sovra-regolarizzato, underfitting). Diminuendo $\lambda$ il bias scende e la varianza sale; con $\lambda$ molto basso si ha basso bias e alta varianza (sotto-regolarizzato, overfitting), anche se in media le ipotesi sono corrette. Il minimo di bias² + varianza coincide circa con il minimo dell’errore di test.
+
+</Q>
+<Q q="Perché un comitato non è peggiore della media dei suoi membri?">
+
+Per una loss convessa come l’errore quadratico vale la disuguaglianza di Jensen: $\text{loss}(E_i[h_i]) \le E_i[\text{loss}(h_i)]$. Esempio con target 5: predizioni 2 e 4 hanno media degli errori 5, mentre il comitato predice 3 con errore 4; predizioni 6 e 4 hanno media degli errori 1, il comitato predice 5 con errore 0.
+
+</Q>
+<Q q="Differenza tra bagging e boosting; perché il bagging riduce la varianza?">
+
+Il bagging addestra $K$ modelli su sottoinsiemi diversi del training set ottenuti con il bootstrap e ne fa la media (o il voto). Il boosting addestra i classificatori in sequenza, ognuno dando più peso alle istanze sbagliate dai precedenti, e li combina con un voto pesato in base all’errore; usa weak learner, riduce il bias, ma soffre con dati rumorosi. Il bagging riduce la varianza perché modelli ad alta varianza e basso bias sono corretti in media: la media delle $h$ si avvicina a $\bar h$, attenuando la dispersione dovuta al singolo training set, senza aumentare il bias.
+
+</Q>
+</Exam>

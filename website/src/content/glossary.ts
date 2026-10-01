@@ -1029,6 +1029,72 @@ export const glossary: GlossaryEntry[] = [
     lesson: '14',
     section: 'Metodi kernel',
   },
+  // ------------------------------------------------------------------ 15
+  {
+    id: 'bias-statistico',
+    term: 'Bias (di un modello)',
+    def: 'La discrepanza $\\big(\\bar h(\\mathbf{x}) - f(\\mathbf{x})\\big)^2$ tra la funzione vera e la predizione **media** sui diversi training set: un errore sistematico, dovuto a uno spazio $H$ troppo piccolo o a un modello troppo rigido.',
+    lesson: '15',
+    section: 'Interpretazione delle tre componenti',
+  },
+  {
+    id: 'varianza-modello',
+    term: 'Varianza (di un modello)',
+    def: 'La variabilità della risposta del modello per diverse realizzazioni del training set, $E_P\\big[(h(\\mathbf{x}) - \\bar h(\\mathbf{x}))^2\\big]$: è dovuta a una flessibilità eccessiva.',
+    lesson: '15',
+    section: 'Interpretazione delle tre componenti',
+  },
+  {
+    id: 'rumore-irriducibile',
+    term: 'Rumore irriducibile',
+    def: 'La componente $\\sigma^2$ dell’errore atteso dovuta all’errore casuale nelle etichette: anche la soluzione ottima può sbagliare, e non dipende dal modello.',
+    lesson: '15',
+    section: 'Interpretazione delle tre componenti',
+  },
+  {
+    id: 'bias-varianza',
+    term: 'Decomposizione bias-varianza',
+    def: 'L’errore di predizione atteso sui training set, con loss quadratica, è la somma di **varianza**, **bias²** e **rumore²**.',
+    lesson: '15',
+    section: 'La decomposizione',
+  },
+  {
+    id: 'comitato',
+    term: 'Comitato',
+    def: 'Ensemble a voto: nella regressione la media semplice $o(\\mathbf{x}) = \\frac{1}{K}\\sum_i h_i(\\mathbf{x})$, nella classificazione il voto di molti classificatori. Per una loss convessa non è peggiore della media dei suoi membri.',
+    lesson: '15',
+    section: 'Ensemble learning',
+  },
+  {
+    id: 'stacking',
+    term: 'Stacking',
+    def: 'Ensemble in cui il combinatore delle risposte dei modelli è a sua volta un modello di ML.',
+    lesson: '15',
+    section: 'Ensemble learning',
+  },
+  {
+    id: 'bagging',
+    term: 'Bagging',
+    en: 'bootstrap aggregating',
+    def: 'Si addestrano $K$ modelli su sottoinsiemi diversi del training set ottenuti con il bootstrap e se ne fa la media (regressione) o il voto (classificazione): la media riduce la varianza senza aumentare il bias.',
+    lesson: '15',
+    section: 'Bagging (bootstrap aggregating)',
+  },
+  {
+    id: 'boosting',
+    term: 'Boosting',
+    en: 'es. AdaBoost',
+    def: 'Classificatori addestrati in sequenza, ognuno concentrato sulle istanze sbagliate dai precedenti, e combinati con un voto pesato in base all’errore. Soffre con dati rumorosi.',
+    lesson: '15',
+    section: 'Boosting (es. AdaBoost)',
+  },
+  {
+    id: 'weak-learner',
+    term: 'Weak learner',
+    def: 'Classificatore appena migliore del caso (errore minore di $1/2$ nel binario): il boosting ne combina molti per costruire in modo incrementale modelli complessi.',
+    lesson: '15',
+    section: 'Boosting (es. AdaBoost)',
+  },
 ]
 
 export const glossaryById = new Map(glossary.map((g) => [g.id, g]))

@@ -92,7 +92,9 @@ export const parts: LessonPart[] = [
       L('14', 'SVM e kernel — aspetti pratici e visione critica', {
         summary: 'Pregi e difetti delle SVM, i risultati sul problema delle due classi, il ruolo critico di C e dei parametri del kernel, i luoghi comuni da sfatare e i metodi kernel come misure di similarità.',
       }),
-      L('15', 'Bias-varianza ed ensemble'),
+      L('15', 'Bias-varianza ed ensemble', {
+        summary: 'L’errore atteso sui training set scomposto in varianza, bias² e rumore, il ruolo di λ nel compromesso, poi gli ensemble: comitati, bagging e boosting, e cenni di feature selection.',
+      }),
     ],
   },
   {

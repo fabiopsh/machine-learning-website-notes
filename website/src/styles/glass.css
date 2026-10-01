@@ -889,6 +889,20 @@
   rx: 10px;
 }
 
+/* lezione 15: schede della vista grafica, bersagli */
+:root[data-style='glass'] .sv15__key {
+  border-radius: 14px;
+  background: var(--glass-inner);
+  border-color: var(--line-2);
+  box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .sv15__key.is-hot {
+  border-color: var(--accent);
+}
+:root[data-style='glass'] .darts15__board {
+  border-radius: 18px;
+}
+
 /* ------------------------------------------------------------------ mobile */
 
 @media (max-width: 1023px) {

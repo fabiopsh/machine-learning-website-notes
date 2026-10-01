@@ -1,0 +1,187 @@
+/* ------------------------------------------------------------------ lezione 15: vista grafica di bias, varianza e rumore (15.3) */
+
+.sv15 {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 2px 0 8px;
+}
+.sv15__h {
+  fill: color-mix(in srgb, var(--c-blue) 12%, var(--surface));
+  stroke: color-mix(in srgb, var(--c-blue) 55%, var(--line-2));
+  stroke-width: 1.4;
+  transition:
+    rx 0.25s var(--ease),
+    ry 0.25s var(--ease);
+}
+.sv15__reg {
+  fill: color-mix(in srgb, var(--c-blue) 46%, var(--surface-solid));
+  stroke: var(--c-blue);
+  stroke-width: 1.4;
+}
+.sv15__reg.is-hot {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.sv15__seg line {
+  stroke: var(--ink);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.sv15__seg.is-hot line {
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+.sv15__seg.is-dim line,
+.sv15__reg.is-dim {
+  opacity: 0.45;
+}
+.sv15__sol,
+.sv15__pt {
+  fill: var(--ink);
+  stroke: var(--plot-bg);
+  stroke-width: 1.6;
+}
+.sv15__mean {
+  fill: var(--c-red);
+  stroke: var(--plot-bg);
+  stroke-width: 1.6;
+}
+.sv15__cap,
+.sv15__lbl {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  fill: var(--ink-2);
+}
+.sv15__lbl--sm {
+  font-size: 12.5px;
+  fill: var(--ink-3);
+}
+.sv15__name {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  fill: var(--ink);
+}
+.sv15__name.is-hot {
+  fill: var(--accent-ink);
+  font-weight: 600;
+}
+.sv15__name.is-dim {
+  opacity: 0.5;
+}
+.sv15__keys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.sv15__key {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: default;
+  transition: border-color 0.15s var(--ease);
+}
+.sv15__key b {
+  color: var(--ink);
+  font-weight: 650;
+}
+.sv15__key.is-hot,
+.sv15__key:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ le freccette (15.5) */
+
+.darts15 {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px 14px;
+  align-items: center;
+  max-width: 470px;
+  margin: 0 auto 12px;
+}
+.darts15__col,
+.darts15__row {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-3);
+  text-align: center;
+}
+.darts15__row {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.darts15__board {
+  padding: 6px;
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  background: none;
+  cursor: pointer;
+  transition:
+    border-color 0.15s var(--ease),
+    background 0.15s var(--ease);
+}
+.darts15__board svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.darts15__board:hover {
+  border-color: var(--line-2);
+}
+.darts15__board.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.darts15__board:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.darts15__ring {
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+}
+.darts15__ring--0 {
+  fill: var(--surface-solid);
+}
+.darts15__ring--1 {
+  fill: color-mix(in srgb, var(--c-green) 38%, var(--surface-solid));
+}
+.darts15__bull {
+  fill: var(--c-red);
+}
+.darts15__dart {
+  fill: var(--c-blue);
+  stroke: var(--plot-bg);
+  stroke-width: 0.6;
+}
+.darts15__info {
+  flex: 1 1 260px;
+  max-width: 460px;
+}
+
+@media (max-width: 640px) {
+  .sv15__keys {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sv15__cap,
+  .sv15__lbl {
+    font-size: 23px;
+  }
+  .sv15__lbl--sm {
+    font-size: 20px;
+  }
+  .sv15__name {
+    font-size: 27px;
+  }
+}

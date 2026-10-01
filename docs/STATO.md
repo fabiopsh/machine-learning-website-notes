@@ -21,7 +21,7 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 12 | 12 - Statistical Learning Theory e VC-dimension.md | ✅ fatta | (non indicato) | 12.1–12.5 |
 | 13 | 13 - Support Vector Machines.md | ✅ fatta | (non indicato) | 13.1–13.9 |
 | 14 | 14 - SVM e kernel - aspetti pratici e visione critica.md | ✅ fatta | (non indicato) | 14.1–14.4 |
-| 15 | 15 - Bias-varianza ed ensemble.md | ⏳ da fare | | |
+| 15 | 15 - Bias-varianza ed ensemble.md | ✅ fatta | (non indicato) | 15.1–15.7 |
 | 16 | 16 - Reti neurali convoluzionali (CNN).md | ⏳ da fare | | |
 | 17 | 17 - Deep learning.md | ⏳ da fare | | |
 | 18 | 18 - Reti neurali randomizzate.md | ⏳ da fare | | |
@@ -84,6 +84,9 @@ Decisioni di stile confermate dall'utente:
   secondo anche a pagina ferma. Ora le macchie sono ferme (a riposo nessun frame). Inoltre `Figure` mette in
   pausa le animazioni CSS delle figure fuori dallo schermo (attributo `data-away`): gli anelli e le frecce
   tratteggiate della lezione 3 costavano ~50% di CPU anche nello stile classico.
+- 2026-10-01 — Lezione 15 (bias-varianza ed ensemble), 7 figure (`widgets/l15/BiasVar.tsx`, dati e calcoli in `widgets/l15/bv.ts`:
+  50 rette ai minimi quadrati, 25 modelli a basi gaussiane con penalità λ, ln λ condiviso tra 15.6 e 15.7).
+
 ## Immagini degli appunti → figure del sito
 
 Ogni immagine degli appunti viene **sostituita** da una figura interattiva (mai inclusa come immagine),
@@ -245,6 +248,16 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `14-svmo_iperparametri.png` → Fig. 14.3 `CGamma` — errore di test in funzione di $C$ per $\gamma = 5; 1; 0{,}5; 0{,}1$, calcolato addestrando 76 SVM; $C$ a scelta con il miglior $\gamma$.
 - `14-svmo_oggetti.png` → Fig. 14.4 `KernelObjects` — oggetti di sei forme e la loro immagine φ nello spazio delle feature per tre similarità (forma, grandezza, tutti uguali).
 
+### 15 — Bias-varianza ed ensemble
+
+- `15-bv_20punti.png` → Fig. 15.1 `TwentyPoints` — 20 punti da $y = x + 2\sin(1{,}5x)$ più rumore, funzione vera, retta ai minimi quadrati; nuovo dataset a richiesta.
+- `15-bv_50fit.png` → Fig. 15.2 `FiftyFits` — le 50 rette (una per dataset) sulla funzione vera; numero di dataset a scelta.
+- `15-bv_vista-grafica.png` → Fig. 15.3 `SpaceView` — insieme delle funzioni, regione delle soluzioni, media, soluzione ottima e dati; bias, varianza e rumore evidenziabili; ampiezza dell’insieme regolabile, training set aggiuntivi.
+- `15-bv_varianza.png` → Fig. 15.4 `VarianceFits` — le 50 rette e la media $ar h$ in rosso; punto $x$ trascinabile con varianza, bias², rumore² e somma; funzione vera a richiesta.
+- `15-bv_freccette.png` → Fig. 15.5 `Darts` — i quattro bersagli (bias basso/alto × varianza bassa/alta) cliccabili, freccette rilanciabili (la fotografia del gioco non è riprodotta).
+- `15-bv_lambda.png` → Fig. 15.6 `LambdaFits` — 25 ipotesi e la loro media contro la sinusoide per $\ln\lambda = 2{,}6;\ -0{,}31;\ -2{,}4$ o a scelta.
+- `15-bv_tradeoff.png` → Fig. 15.7 `Tradeoff` — bias², varianza, somma ed errore di test in funzione di $\ln\lambda$, con i minimi.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -253,6 +266,12 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 15: letture e spiegazioni delle formule (errore atteso, decomposizione, loss regolarizzata, comitato); tracce di
+  risposta. Nelle figure: i dati di 15.1, 15.2 e 15.4 sono generati ($x$ uniforme in $[0, 10]$, rumore gaussiano di
+  varianza 0,2), con bias² e varianza stimati sui 50 fit; nella 15.3 il legame «insieme più ampio → regione più ampia e
+  più vicina all’ottimo» è reso con un cursore; 15.6 e 15.7 sono calcolate davvero (25 dataset di 25 punti da
+  $\sin(2\pi x)$ con rumore 0,3, intercetta più 24 gaussiane di larghezza 0,1, penalità $\lambda\|\mathbf{w}\|^2$ senza
+  intercetta, test su 400 punti), quindi i valori e la posizione del minimo differiscono dalla figura di Bishop.
 - 14: lettura e spiegazione della distanza indotta dal kernel; tracce di risposta. Nelle figure: 14.1–14.3 usano i
   dati generati della lezione 5, quindi errori e percentuali di support vector sono diversi dalle slide (riportate
   nelle didascalie); il kernel polinomiale lavora sulle coordinate dimezzate; nella 14.4 le similarità «grandezza»
