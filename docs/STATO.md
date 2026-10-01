@@ -27,7 +27,9 @@ Aggiornare questo file **alla fine di ogni lezione convertita**: è la memoria c
 | 18 | 18 - Reti neurali randomizzate.md | ✅ fatta | (non indicato) | 18.1–18.4 |
 | 19 | 19 - Apprendimento non supervisionato - K-means e SOM.md | ✅ fatta | (non indicato) | 19.1–19.9 |
 | 20 | 20 - Reti neurali ricorrenti (RNN).md | ✅ fatta | (non indicato) | 20.1–20.11 |
-| 21 | 21 - Apprendimento su dati strutturati e grafi.md | ⏳ da fare | | |
+| 21 | 21 - Apprendimento su dati strutturati e grafi.md | ✅ fatta | (non indicato) | 21.1–21.12 |
+
+**Tutte le 21 lezioni sono convertite.** Restano possibili solo revisioni (figure, testi) su richiesta dell’utente.
 
 Decisioni di stile confermate dall'utente:
 
@@ -102,6 +104,15 @@ Decisioni di stile confermate dall'utente:
   calcolata dal vivo, unfolding con pesi condivisi evidenziabili, reservoir vero a due unità, `TreeSvg` (codifica di
   alberi dal basso verso l’alto, riusabile per la lezione 21). `.shots/step20.mjs NN fig-N-k:clic[:selettore]`
   fotografa una figura dopo alcuni clic su un pulsante.
+- 2026-10-01 — Lezione 21 (dati strutturati e grafi), 12 figure (`widgets/l21/Graphs.tsx`, `Dgn.tsx`): message passing
+  calcolato dal vivo (stato = miscela dell’informazione dei nodi), piani sovrapposti del contesto (`ContextPlanes`, usato
+  da 21.7 e 21.8), GraphESN vera a stati scalari, omofilia ed energia di Dirichlet calcolate. Con questa lezione il
+  corso è completo (lezioni 15–21 fatte in un’unica sessione, un commit per lezione).
+- 2026-10-01 — Nuovi controlli `npm run check:math` e `npm run check:text` (`scripts/check-math.mjs`,
+  `scripts/check-text.mjs`): confrontano formule e frasi degli appunti con il sito. Lezioni 15–21: tutte le formule
+  inline presenti; le formule in display non trovate alla lettera sono solo quelle spezzate su più righe (15, 19, 21),
+  il punto finale dentro `cases` (17) e «errore $< 1/2$» scritto a parole (15); le frasi non trovate sono solo
+  didascalie riformulate (riguardate una per una) e l’intestazione delle domande d’esame.
 
 ## Immagini degli appunti → figure del sito
 
@@ -341,6 +352,21 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 - `20-rnn_alberi.png` → Fig. 20.10 `TreeEncoding` — albero a, b, c, d, e, f codificato dalle foglie alla radice con i riquadri annidati; modello grafico con i ritardi $q_1 \dots q_k$; struttura alternativa.
 - `20-rnn_recnn.png` → Fig. 20.11 `RecNN` — i due frammenti chimici codificati passo per passo fino all’uscita alla radice.
 
+### 21 — Dati strutturati e grafi
+
+- `21-sdl_esempi-grafi.png` → Fig. 21.1 `GraphExamples` — dieci schede (un grafo schematico per dominio) con che cosa sono nodi e archi. Le immagini dei domini non sono ricostruibili: resta lo schema.
+- `21-sdl_scenario.png` → Fig. 21.2 `Scenario` — le tre righe (dominio di input, stratificazione, efficienza) con una casella selezionabile per riga, le caselle del «focus» bordate e la freccia.
+- `21-sdl_grafo-etichettato.png` → Fig. 21.3 `LabeledGraph` — grafo d, b, c, a, a con archi orientati e ciclo; nodo o arco cliccabile con la sua etichetta; matrice di adiacenza $A$.
+- `21-sdl_trasduzioni.png` → Fig. 21.4 `GraphTransduction` — grafo di input → $T_{enc}$ → embedding dei nodi → $T_{out}$ per nodo, oppure readout $R$ → $\mathbf{h}_g$ → $T_{out}$ per il grafo.
+- `21-sdl_message-passing.png` → Fig. 21.5 `MessagePassing` — le tre fasi (messaggi, aggregazione, aggiornamento) su un grafo di 7 nodi, stato a barra colorata, iterazioni ripetibili, global pooling.
+- `21-sdl_cnn-vs-grafi.png` → Fig. 21.6 `CnnVsGraph` — griglia con finestra 3×3 (8 vicini numerati) e grafo (vicini in numero variabile), nodo cliccabile in entrambi.
+- `21-sdl_contesto.png` → Fig. 21.7 `ContextPlanes variant="context"` — tre piani con lo stesso grafo, contesto di raggio 0, 1, 2 del nodo scelto e stati dei vicini usati dallo strato sopra.
+- `21-sdl_nn4g.png` → Fig. 21.8 `ContextPlanes variant="layers"` — tre strati, stato $h_v^{(l)}$ da calcolare e stati da cui dipende, per NN4G (tutti gli strati precedenti) o GCN (lo strato sotto).
+- `21-sdl_gesn.png` → Fig. 21.9 `GraphEsn` — grafo di input, stati iterati fino al punto fisso (grafico della variazione), global pooling per il readout; peso ricorrente e stato iniziale a scelta.
+- `21-sdl_problemi-aperti.png` → Fig. 21.10 `OpenIssues` — le tre schede (efficienza, under-reaching, espressività) e il campo recettivo di un nodo al variare degli strati.
+- `21-sdl_eterofilia.png` → Fig. 21.11 `Homophily` — lo stesso grafo con classi ad alta o bassa omofilia, classi dei nodi modificabili, omofilia ed energia calcolate.
+- `21-sdl_convolution-kernel.png` → Fig. 21.12 `ConvKernel` — bicicletta e auto schematiche, le loro sotto-strutture e il kernel $K^S$ tra le parti. Le immagini originali non sono ricostruibili: disegni schematici.
+
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
@@ -349,6 +375,17 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
 - 03: come leggere gli indici $x_{p,i}$; esempio di self-supervised; derivazione del version space
   $\neg x_2 \wedge x_4$; intuizione della dimostrazione sull'unbiased learner; tracce di risposta.
+- 21: letture e spiegazioni delle formule (formula generale del message passing, NN4G, GraphESN, sensibilità,
+  energia di Dirichlet); tracce di risposta. Nelle figure: nella 21.1 «nodi» e «archi» di ogni esempio sono letti
+  dall’immagine; nella 21.2 il testo delle singole caselle riformula le scritte della slide; nella 21.3 le etichette
+  vettoriali dei nodi diversi da d e i valori della matrice $A$ (ricavati dal disegno); nella 21.4 embedding e uscite
+  inventati; nella 21.5 il grafo, la media come aggregazione e l’aggiornamento «metà stato proprio, metà media dei
+  vicini»; nella 21.6 la numerazione dei vicini sulla griglia; nella 21.7 il primo strato ha contesto di raggio 0,
+  come nella formula di NN4G (il testo alternativo dell’immagine dice «il nodo e i vicini»); nella 21.9 stati
+  scalari, etichette dei nodi inventate, la condizione $\hat w\,\|A\| < 1$ come contrattività e il global pooling
+  come somma; nella 21.10 l’albero binario che illustra insieme under-reaching e collo di bottiglia; nella 21.11 il
+  grafo, il conteggio dei «nodi in accordo con i vicini» e l’energia di Dirichlet calcolata sulle etichette one-hot;
+  nella 21.12 i nomi delle parti, i valori di similarità e la somma su tutte le coppie come modo di combinare i kernel.
 - 20: letture e spiegazioni delle formule (unità ricorrente, sistema a transizione di stato, Simple RNN in forma
   vettoriale); tracce di risposta. Nelle figure: i vettori degli elementi della 20.1 dopo il primo sono inventati; nella
   20.4 i pesi partono da $0{,}5$ perché l’esercizio sia da risolvere, e si può provare la sigmoide; nella 20.7 la

@@ -1,0 +1,663 @@
+/* ------------------------------------------------------------------ lezione 21: esempi di grafi (21.1) */
+
+.ex21 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ex21__card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 6px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-align: center;
+  cursor: pointer;
+  min-width: 0;
+}
+.ex21__card:hover {
+  border-color: var(--ink-3);
+}
+.ex21__card.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+  color: var(--ink);
+}
+.ex21__card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.ex21__g {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ex21__g line {
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+}
+.ex21__g circle {
+  fill: color-mix(in srgb, var(--c-yellow) 60%, var(--surface-solid));
+  stroke: var(--ink-2);
+  stroke-width: 1;
+}
+
+/* ------------------------------------------------------------------ lo scenario (21.2) */
+
+.sc21 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.sc21__head {
+  padding: 5px 12px;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--c-blue);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+}
+.sc21__opts {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 4px;
+}
+.sc21__opt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 12px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: var(--bg-sunken);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.sc21__opt small {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.sc21__opt.is-focus {
+  border-color: color-mix(in srgb, var(--c-orange) 60%, transparent);
+}
+.sc21__opt.is-on {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border-color: var(--accent);
+}
+.sc21__opt:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.sc21__focus {
+  position: relative;
+  align-self: flex-end;
+  width: 62%;
+  margin-right: 22px;
+  padding: 4px 12px;
+  background-color: var(--c-blue);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+}
+.sc21__tip {
+  position: absolute;
+  top: -7px;
+  right: -22px;
+  border-style: solid;
+  border-width: 20px 0 20px 22px;
+  border-color: transparent transparent transparent var(--c-blue);
+}
+
+/* ------------------------------------------------------------------ grafo etichettato (21.3) */
+
+.lg21,
+.tg21,
+.mp21,
+.cg21,
+.pl21,
+.ge21,
+.hm21,
+.ck21,
+.oi21__tree {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.lg21__e {
+  cursor: pointer;
+  outline: none;
+}
+.lg21__e line {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.lg21__e .lg21__hit {
+  stroke: transparent;
+  stroke-width: 16;
+}
+.lg21__e.is-cyc line:not(.lg21__hit) {
+  stroke: var(--c-green);
+  stroke-width: 4;
+}
+.lg21__e.is-on line:not(.lg21__hit),
+.lg21__e:focus-visible line:not(.lg21__hit) {
+  stroke: var(--accent);
+  stroke-width: 3.4;
+}
+.lg21__n {
+  cursor: pointer;
+  outline: none;
+}
+.lg21__n circle {
+  fill: color-mix(in srgb, var(--c-yellow) 60%, var(--surface-solid));
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+.lg21__n.is-on circle,
+.lg21__n:focus-visible circle {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.lg21__n text {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  fill: var(--ink);
+}
+.lg21__A {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.lg21__A caption {
+  padding-bottom: 5px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--ink-3);
+  text-align: left;
+}
+.lg21__A th,
+.lg21__A td {
+  width: 28px;
+  height: 26px;
+  border: 1px solid var(--line-2);
+  text-align: center;
+  color: var(--ink-3);
+}
+.lg21__A th {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--bg-sunken);
+}
+.lg21__A td.is-1 {
+  color: var(--ink);
+  font-weight: 650;
+}
+.lg21__A td.is-hot {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+/* ------------------------------------------------------------------ trasduzioni su grafi (21.4) */
+
+.tg21__e {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+.tg21__n {
+  fill: var(--surface-solid);
+  stroke: var(--c-blue);
+  stroke-width: 2.4;
+}
+.tg21__n.is-on {
+  stroke: var(--accent);
+  stroke-width: 3.4;
+}
+.tg21__y {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 650;
+  fill: #fff;
+}
+.tg21__cell {
+  stroke: var(--ink-2);
+  stroke-width: 0.8;
+}
+.tg21__arrow {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.tg21__T {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  fill: var(--ink);
+}
+.tg21__t,
+.tg21__cap {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--ink-2);
+}
+.tg21__t {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+}
+
+/* ------------------------------------------------------------------ message passing (21.5) */
+
+.mp21__e {
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+}
+.mp21__msg {
+  stroke: var(--c-blue);
+  stroke-width: 2;
+}
+.mp21__head {
+  fill: var(--c-blue);
+}
+.mp21__n {
+  cursor: pointer;
+  outline: none;
+}
+.mp21__n ellipse {
+  fill: var(--surface-solid);
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+.mp21__n.is-nb ellipse {
+  stroke: var(--c-blue);
+  stroke-width: 2;
+}
+.mp21__n.is-v ellipse,
+.mp21__n:focus-visible ellipse {
+  fill: color-mix(in srgb, var(--c-red) 22%, var(--surface-solid));
+  stroke: var(--c-red);
+  stroke-width: 2.4;
+}
+.mp21__bar {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.1;
+}
+.mp21__t {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--ink-3);
+}
+.mp21__lbl {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  fill: var(--c-red);
+}
+.mp21__pool {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: 16px;
+  margin: 4px 0;
+  border: 1px solid var(--ink-2);
+  border-radius: 3px;
+}
+
+/* ------------------------------------------------------------------ griglia e grafo (21.6) */
+
+.cg21 {
+  max-width: 300px;
+  margin: 0 auto 8px;
+}
+.cg21__e {
+  stroke: var(--c-blue);
+  stroke-width: 1.6;
+  opacity: 0.55;
+}
+.cg21__link {
+  stroke: var(--ink-3);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+.cg21__win {
+  fill: color-mix(in srgb, var(--c-blue) 8%, transparent);
+  stroke: color-mix(in srgb, var(--c-blue) 60%, var(--line-2));
+  stroke-width: 1.6;
+}
+.cg21__n {
+  cursor: pointer;
+  outline: none;
+}
+.cg21__n circle {
+  fill: var(--surface-solid);
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+}
+.cg21__n.is-nb circle {
+  fill: color-mix(in srgb, var(--c-blue) 26%, var(--surface-solid));
+  stroke: var(--c-blue);
+}
+.cg21__n.is-v circle,
+.cg21__n:focus-visible circle {
+  fill: var(--c-red);
+  stroke: var(--ink);
+}
+.cg21__n text {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--ink);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ il contesto sugli strati (21.7, 21.8) */
+
+.pl21__plane {
+  fill: var(--surface);
+  stroke: var(--ink-2);
+  stroke-width: 1.1;
+}
+.pl21__plane.is-on {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.pl21__t {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  fill: var(--ink-3);
+}
+.pl21__e {
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.pl21__e.is-ctx {
+  stroke: var(--c-blue);
+  stroke-width: 5;
+}
+.pl21__dep {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+.pl21__n {
+  fill: var(--surface-solid);
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  cursor: pointer;
+  outline: none;
+}
+.pl21__n.is-ctx {
+  fill: color-mix(in srgb, var(--c-blue) 55%, var(--surface-solid));
+  stroke: var(--c-blue);
+}
+.pl21__n.is-v {
+  fill: var(--c-red);
+  stroke: var(--ink);
+}
+.pl21__n:focus-visible {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.pl21__h {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  fill: var(--c-red);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 4px;
+}
+
+/* ------------------------------------------------------------------ GraphESN (21.9) */
+
+.ge21 {
+  max-width: 300px;
+  margin: 0 auto;
+}
+.ge21__e {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.ge21__n {
+  fill: color-mix(in srgb, var(--ink-4) 45%, var(--surface-solid));
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  transition: fill 0.25s var(--ease);
+}
+.ge21__v {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--ink-2);
+  paint-order: stroke;
+  stroke: var(--plot-bg);
+  stroke-width: 3px;
+}
+
+/* ------------------------------------------------------------------ problemi aperti (21.10) */
+
+.oi21 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.oi21__card {
+  --k: var(--c-yellow);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 2px solid color-mix(in srgb, var(--k) 70%, var(--line-2));
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+}
+.oi21__card--under {
+  --k: var(--c-blue);
+}
+.oi21__card--expr {
+  --k: var(--c-red);
+}
+.oi21__card b {
+  font-size: 15.5px;
+  color: var(--ink);
+}
+.oi21__card.is-on {
+  background: color-mix(in srgb, var(--k) 10%, var(--surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--k) 45%, transparent);
+}
+.oi21__card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.oi21__icon {
+  display: block;
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  margin: 0 auto 4px;
+}
+.oi21__icon circle {
+  fill: var(--k);
+  stroke: var(--ink-2);
+  stroke-width: 0.6;
+}
+.oi21__ln {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+}
+.oi21__far {
+  fill: none;
+  stroke: var(--k);
+  stroke-width: 1.6;
+}
+.oi21__e {
+  stroke: var(--ink-4);
+  stroke-width: 1;
+}
+.oi21__e.is-on {
+  stroke: var(--c-red);
+  stroke-width: 1.8;
+}
+.oi21__n {
+  fill: var(--surface-solid);
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+}
+.oi21__n.is-on {
+  fill: color-mix(in srgb, var(--c-blue) 45%, var(--surface-solid));
+  stroke: var(--c-blue);
+}
+.oi21__n.is-v {
+  fill: var(--c-red);
+  stroke: var(--ink);
+}
+.oi21__n.is-far {
+  stroke: var(--ink);
+  stroke-width: 2.6;
+}
+.oi21__t {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  fill: var(--ink);
+}
+.oi21__cap {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  fill: var(--ink-3);
+}
+
+/* ------------------------------------------------------------------ omofilia (21.11) */
+
+.hm21 {
+  max-width: 360px;
+  margin: 0 auto;
+}
+.hm21__e {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.hm21__e.is-het {
+  stroke: var(--c-red);
+  stroke-dasharray: 5 4;
+}
+.hm21__n {
+  stroke: var(--ink);
+  stroke-width: 1.3;
+  cursor: pointer;
+  outline: none;
+}
+.hm21__n:focus-visible {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+/* ------------------------------------------------------------------ kernel di convoluzione (21.12) */
+
+.ck21__obj {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+.ck21__arrow {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ck21__set {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+.ck21__k {
+  stroke: var(--accent);
+  stroke-linecap: round;
+}
+.ck21__part {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.3;
+}
+.ck21__part .ck21__bg {
+  fill: var(--surface-solid);
+  stroke: transparent;
+}
+.ck21__part text {
+  fill: var(--ink-2);
+  stroke: none;
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+.ck21__part[role='button'] {
+  cursor: pointer;
+  outline: none;
+}
+.ck21__part.is-on .ck21__bg,
+.ck21__part[role='button']:focus-visible .ck21__bg {
+  fill: color-mix(in srgb, var(--accent) 12%, var(--surface-solid));
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+.ck21__part--r.is-hit .ck21__bg {
+  stroke: var(--accent-line);
+  stroke-width: 1.2;
+}
+.ck21__K {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 19px;
+  fill: var(--ink);
+}
+.ck21__t {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--ink-2);
+}
+
+@media (max-width: 640px) {
+  .ex21 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .oi21 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .oi21__icon {
+    display: none;
+  }
+  .sc21__opt {
+    padding: 7px 8px;
+    font-size: 13px;
+  }
+  .sc21__opt small {
+    font-size: 11px;
+  }
+}

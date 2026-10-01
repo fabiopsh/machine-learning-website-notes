@@ -378,6 +378,8 @@ Testo nelle figure:
 cd website
 npm run verify                       # typecheck + lint + controllo contenuti (tutte le lezioni)
 npm run check -- --only NN           # solo la lezione NN (titoli, riquadri, immagini, domande)
+npm run check:math -- NN             # ogni formula degli appunti compare nel sito? (elenca quelle da riguardare)
+npm run check:text -- NN             # ogni frase degli appunti compare nel sito? (elenca quelle da riguardare)
 npm run dev                          # in un altro terminale, poi:
 # npm run smoke esiste ma NON va usato: l'utente lo ritiene lento e inutile (2026-09-30)
 npm run shot -- lezione/NN fig --sel "#fig-N-k"                 # una figura
@@ -387,6 +389,20 @@ npm run shot -- lezione/NN mobile --w 390 --h 844 --dpr 2
 npm run shot -- lezione/NN pagina --pages 40                    # tutta la pagina a schermate
 npm run build                        # build di produzione
 ```
+
+`check:math` e `check:text` confrontano gli appunti con MDX, file delle formule e widget della lezione: le formule
+e le frasi non trovate alla lettera vanno riguardate **una per una** (di solito sono formule spezzate su più righe,
+didascalie riformulate o rimandi ad altre lezioni; una frase davvero assente è un errore da correggere).
+
+Trappole incontrate:
+- mai modificare file con TeX o `\n` (MDX, formule, `STATO.md`) da uno script nella shell: le barre rovesciate e gli
+  apici inversi si perdono. Usare gli strumenti di modifica dei file;
+- su Windows due file che differiscono solo per le maiuscole (`vq.ts` e `Vq.tsx`) collidono: dare nomi diversi
+  (`engine.ts`, `solver.ts`) e riavviare il server Vite dopo una rinomina;
+- negli schemi SVG larghi riservare a ogni blocco uno spazio largo quanto la sua etichetta e avvolgerli in
+  `<div className="pipe16__scroll">` con `minWidth` (su mobile scorrono in orizzontale);
+- niente variabili modificate dentro `.map()` durante il render (il lint lo blocca): calcolare le posizioni con una
+  funzione pura fuori dal componente.
 
 Guardare **ogni** screenshot: sovrapposizioni di etichette, testi tagliati, contrasto in scuro/glass,
 figure troppo piccole su mobile, «Prova a…» già spuntati all'apertura.

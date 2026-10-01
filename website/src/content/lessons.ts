@@ -116,7 +116,9 @@ export const parts: LessonPart[] = [
       L('20', 'Reti neurali ricorrenti (RNN)', {
         summary: 'Sequenze e trasduzioni, la memoria finita delle IDNN e lo stato delle unità ricorrenti, la Simple RNN, l’unfolding e la backpropagation nel tempo, poi transformer, Echo State Network e reti ricorsive.',
       }),
-      L('21', 'Apprendimento su dati strutturati e grafi'),
+      L('21', 'Apprendimento su dati strutturati e grafi', {
+        summary: 'Dai vettori ai grafi: trasduzioni su grafi, message passing e Deep Graph Networks (GCN, NN4G, GNN, GraphESN), i problemi della profondità (over-smoothing, over-squashing, eterofilia) e i kernel per strutture.',
+      }),
     ],
   },
 ]

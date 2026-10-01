@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "check": "node scripts/check-content.mjs",
+    "check:math": "node scripts/check-math.mjs",
+    "check:text": "node scripts/check-text.mjs",
     "smoke": "node scripts/smoke.mjs",
     "shot": "node scripts/shot.mjs",
     "verify": "tsc -b && eslint . && node scripts/check-content.mjs"
