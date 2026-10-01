@@ -56,15 +56,14 @@ export function Home() {
     <div className="page page--home">
       <section className="hero">
         <div className="hero__text">
-          <p className="hero__eyebrow">Università di Pisa · Laurea Magistrale in Informatica · a.a. 2026/27</p>
           <h1 className="hero__title">
             Machine Learning,
             <br />
-            <em>un esempio alla volta.</em>
+            <em>appunti interattivi.</em>
           </h1>
           <p className="hero__lead">
-            Gli appunti del corso 654AA del Prof. Alessio Micheli, riscritti per essere esplorati: ogni formula si
-            spiega, ogni figura si può toccare, ogni termine rimanda alla sua definizione.
+            Gli appunti del corso 654AA del Prof. Alessio Micheli, riscritti per essere esplorati e per poter interagire con grafici
+            ed esempi fatti a lezione.
           </p>
           <div className="hero__cta">
             {resume ? (
