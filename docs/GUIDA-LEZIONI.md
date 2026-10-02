@@ -424,14 +424,18 @@ ogni push su `main` che tocca `website/` avvia `.github/workflows/deploy.yml` (b
 Si può anche avviare a mano da GitHub → Actions → «Pubblica il sito» → *Run workflow*.
 ### Anteprime dei link e motori di ricerca
 
-Chi genera l'anteprima di un link (WhatsApp, Telegram, Slack, social) non esegue JavaScript e non vede l'hash:
-per questo la build genera, oltre all'app, **una pagina statica per lezione** (`lezione/NN/index.html`) e una per il
-glossario, con titolo, riassunto, sezioni, dati strutturati e immagine propri; in un browser portano subito alla
-pagina interattiva. **Il link da condividere è quindi `…/lezione/05/`** (senza `#`).
+Chi genera l'anteprima di un link (WhatsApp, Telegram, Slack, social) non esegue JavaScript e non riceve la parte
+dopo `#`. Per questo **ogni pagina ha un indirizzo vero, con un file dietro**: la build scrive una copia di
+`index.html` per ogni lezione (`lezione/NN/index.html`), per il glossario e per i prerequisiti, ciascuna con titolo,
+riassunto, dati strutturati e immagine propri. È la stessa applicazione, che apre subito quella pagina: l'indirizzo
+nella barra del browser (`…/lezione/05/`, `…/lezione/05/#sezione`) è già quello da condividere.
 
+- `website/src/lib/router.ts` — legge la pagina dall'indirizzo e riscrive nell'indirizzo vero i link interni, che
+  nel codice e negli MDX restano nella forma `#/lezione/05/sezione` (valgono ancora anche i vecchi link con l'hash);
 - `website/plugins/site-meta.ts` — indirizzo del sito, titoli e descrizioni (letti da `lessons.ts` e dagli MDX);
-- `website/plugins/seo.ts` — `<head>` della home, pagine statiche, `sitemap.xml`;
-- `website/src/lib/meta.ts` — titolo, descrizione e canonical aggiornati nell'app a ogni cambio di pagina;
+- `website/plugins/seo.ts` — `<head>` di ogni pagina, copie di `index.html` (con un testo essenziale dentro `#root`
+  per chi non esegue JavaScript), `sitemap.xml`;
+- `website/src/lib/meta.ts` — titolo, descrizione, canonical e immagine aggiornati nell'app a ogni cambio di pagina;
 - le stesse pagine esistono in inglese sotto `en/` (`en/lezione/05/`), con `hreflang` reciproco e immagini `public/og/en/`;
 - `npm run og` — rigenera le immagini di anteprima `public/og/*.png` (1200 × 630) e le icone: **va rilanciato e
   committato** quando cambia un titolo o un `summary`, o si aggiunge una lezione;
@@ -441,5 +445,5 @@ Dopo il deploy le anteprime si provano incollando il link in una chat; molte app
 Per l'indicizzazione su Google va registrato il sito in Search Console e inviata `sitemap.xml` (un `robots.txt`
 in una sottocartella di `github.io` non viene letto).
 
-Le route usano l'hash (`#/lezione/05/sezione`), quindi funzionano tutte anche su Pages senza
-configurazioni aggiuntive. Dopo il deploy: `npm run smoke -- --base https://fabiopsh.github.io/machine-learning-website-notes/`.
+Un indirizzo senza un file dietro (per esempio `…/lezione/05/sezione`) passa da `public/404.html`, che lo consegna
+all'applicazione. Dopo il deploy: `npm run smoke -- --base https://fabiopsh.github.io/machine-learning-website-notes/`.

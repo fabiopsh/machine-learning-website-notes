@@ -4,7 +4,7 @@ import { lang, setLang, tx, type Lang } from '../../lib/i18n'
 import { setMode, useMode } from '../../lib/mode'
 import { clearProgress, useProgress } from '../../lib/progress'
 import { useLook, useTheme } from '../../lib/theme'
-import { lessonHref, type Route } from '../../lib/router'
+import { glossaryHref, lessonHref, urlOf, type Route } from '../../lib/router'
 import { Icon } from '../ui/Icon'
 
 function useScrollState(active: boolean) {
@@ -34,8 +34,9 @@ function useScrollState(active: boolean) {
  * Route da riaprire dopo il cambio di lingua: in una lezione, la sezione che si sta leggendo
  * (gli id dei titoli sono gli stessi nelle due lingue).
  */
-function currentHash(route: Route): string | undefined {
-  if (route.name !== 'lesson') return undefined
+function currentHash(route: Route): string {
+  if (route.name === 'glossary') return glossaryHref(route.term)
+  if (route.name !== 'lesson') return '#/'
   const line = window.innerHeight * 0.28
   let section: string | undefined
   for (const h of document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]')) {
@@ -126,7 +127,7 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
               className={l.value === lang ? 'is-on' : undefined}
               aria-pressed={l.value === lang}
               title={l.name}
-              onClick={() => setLang(l.value, currentHash(route))}
+              onClick={() => setLang(l.value, urlOf(currentHash(route), l.value))}
             >
               {l.label}
             </button>

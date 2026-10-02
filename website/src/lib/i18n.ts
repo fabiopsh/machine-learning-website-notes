@@ -1,8 +1,10 @@
 /**
  * Lingua del sito: italiano (originale) o inglese (traduzione).
  *
- * La lingua è decisa da index.html prima del primo paint (`<html lang>`: parametro `?lang=`, poi la scelta
- * salvata, poi la lingua del browser) e **non cambia durante la sessione**: cambiarla ricarica la pagina.
+ * La lingua è quella dell'indirizzo (le pagine inglesi stanno sotto `en/`) ed è scritta in `<html lang>` da
+ * index.html prima del primo paint; da un indirizzo italiano chi ha scelto l'inglese (o ha il browser in un'altra
+ * lingua e non ha scelto) viene portato alla pagina inglese. **Non cambia durante la sessione**: cambiarla apre
+ * l'altra pagina.
  * Per questo `tx()` si può usare ovunque, anche nelle costanti a livello di modulo.
  */
 
@@ -21,18 +23,16 @@ export function tx<T>(it: T, en: T): T {
   return isEn ? en : it
 }
 
-/** Cambia lingua e ricarica; `hash` (facoltativo) è la route da aprire dopo il cambio. */
-export function setLang(next: Lang, hash?: string) {
+/** Cambia lingua: salva la scelta e apre `url`, l'indirizzo della stessa pagina nell'altra lingua (`urlOf`). */
+export function setLang(next: Lang, url: string) {
   if (next === lang) return
-  const url = new URL(window.location.href)
-  url.searchParams.delete('lang')
+  let query = ''
   try {
     localStorage.setItem(KEY, next)
   } catch {
     // storage non disponibile: la scelta viaggia nell'indirizzo
-    url.searchParams.set('lang', next)
+    query = `?lang=${next}`
   }
-  if (hash) url.hash = hash
-  history.replaceState(history.state, '', url)
-  window.location.reload()
+  const [page, fragment] = url.split('#')
+  window.location.assign(page + query + (fragment ? '#' + fragment : ''))
 }

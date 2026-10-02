@@ -87,6 +87,32 @@ export function readLessons(lang: Lang = 'it'): LessonMeta[] {
   return out
 }
 
+/** Id (e cartella) della pagina dei prerequisiti: come `PREREQ_ID` in `src/lib/router.ts`. */
+export const PREREQ_ID = 'prerequisiti'
+
+/** La pagina dei prerequisiti, letta da `src/content/lessons.ts` (`prereq`) e dal suo MDX. */
+export function readPrereq(lang: Lang = 'it'): LessonMeta {
+  const src = readFileSync(resolve(ROOT, 'src/content/lessons.ts'), 'utf8')
+  const block = src.slice(src.indexOf('export const prereq'))
+  const pair = (name: string) => new RegExp(`${name}: tx\\(\\s*'([^']*)',\\s*'([^']*)'`).exec(block)
+  const [title, eyebrow, summary] = ['title', 'eyebrow', 'summary'].map((name) => {
+    const m = pair(name)
+    if (!m) throw new Error(`site-meta: campo "${name}" dei prerequisiti non trovato in src/content/lessons.ts`)
+    return m[lang === 'en' ? 2 : 1]
+  })
+  const mdx = readFileSync(resolve(ROOT, `src/content/${lang === 'en' ? 'extra-en' : 'extra'}/${PREREQ_ID}.mdx`), 'utf8')
+  return {
+    id: PREREQ_ID,
+    title,
+    part: '',
+    partTitle: '',
+    eyebrow,
+    summary,
+    sections: [...mdx.matchAll(/^## (.*)$/gm)].map((m) => plain(m[1])),
+    figures: (mdx.match(/<Figure\b/g) ?? []).length,
+  }
+}
+
 /** Titolo, descrizione e indirizzo di ogni pagina condivisibile. */
 export function pages(lang: Lang = 'it') {
   const lessons = readLessons(lang)
@@ -123,7 +149,15 @@ export function pages(lang: Lang = 'it') {
             'I termini del corso di Machine Learning, dal bias induttivo al message passing: una definizione breve per ciascuno e il rimando alla lezione in cui è spiegato.',
           image,
         }
-  return { lessons, figures, home, glossary }
+  const pre = readPrereq(lang)
+  const prereq = {
+    path: `${prefix}${PREREQ_ID}/`,
+    title: `${pre.title} · ${notesName(lang)}`,
+    description: pre.summary,
+    image: `og/${prefix}${PREREQ_ID}.png`,
+    meta: pre,
+  }
+  return { lessons, figures, home, glossary, prereq }
 }
 
 /** Le pagine inglesi stanno sotto `en/` (stessi percorsi dell'italiano). */

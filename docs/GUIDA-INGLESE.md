@@ -8,10 +8,11 @@ lezione. Lezione modello: la 02 (`lessons-en/02-curricula.mdx`, `widgets/l02/*`)
 
 ## 1. Come funziona
 
-- **Lingua** (`website/src/lib/i18n.ts`): decisa da `index.html` prima del primo paint (`<html lang>`): parametro
-  `?lang=en`, poi la scelta salvata (`localStorage['ml-lang']`), poi la lingua del browser (italiano → italiano,
-  qualsiasi altra → inglese). **Non cambia durante la sessione**: il selettore `IT | EN` nella barra in alto salva la
-  scelta e ricarica la pagina sulla sezione che si stava leggendo. Per questo `tx()` funziona ovunque, anche nelle
+- **Lingua** (`website/src/lib/i18n.ts`): è quella dell'indirizzo (le pagine inglesi stanno sotto `en/`), scritta in
+  `<html lang>` da `index.html` prima del primo paint. Da un indirizzo italiano si viene portati a quello inglese se
+  lo chiede `?lang=en`, la scelta salvata (`localStorage['ml-lang']`) o, senza una scelta, la lingua del browser
+  (italiano → italiano, qualsiasi altra → inglese; non per i crawler). **Non cambia durante la sessione**: il selettore `IT | EN` nella barra in alto salva la
+  scelta e apre la stessa pagina nell'altra lingua, sulla sezione che si stava leggendo. Per questo `tx()` funziona ovunque, anche nelle
   costanti a livello di modulo.
 - **`tx(it, en)`**: restituisce il primo argomento in italiano, il secondo in inglese. Vale per stringhe, JSX,
   numeri, array, oggetti. `isEn`, `lang` e `LOCALE` (`'it-IT'` / `'en-US'`, per `toLocaleString`) sono esportati
@@ -25,7 +26,7 @@ lezione. Lezione modello: la 02 (`lessons-en/02-curricula.mdx`, `widgets/l02/*`)
 - **Gli id delle sezioni sono gli stessi nelle due lingue** (quelli italiani, assegnati in ordine dal plugin
   `plugins/lesson-index.ts`): i link `#/lezione/07/slug-italiano`, il glossario e gli indirizzi condivisi funzionano
   in entrambe le lingue. Quindi l'MDX inglese deve avere **gli stessi titoli, nello stesso ordine**.
-- **Pagine statiche e anteprime**: `en/lezione/NN/` e `en/glossario/` (plugin `seo.ts`), immagini `public/og/en/`.
+- **Pagine statiche e anteprime**: `en/`, `en/lezione/NN/`, `en/prerequisiti/` e `en/glossario/` (plugin `seo.ts`), immagini `public/og/en/`.
 
 ---
 

@@ -116,3 +116,11 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* testo essenziale scritto in ogni pagina statica per chi non esegue JavaScript (plugins/seo.ts):
+   l'applicazione lo sostituisce appena parte */
+.ssr {
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}

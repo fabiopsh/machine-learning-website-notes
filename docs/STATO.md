@@ -134,6 +134,7 @@ Decisioni di stile confermate dall'utente:
   al 100% (lezioni 03, 04, 05, 06, 08, 17 con etichette, compiti, grafici e descrizioni accessibili in inglese accademico naturale).
   Tutti i controlli `npm run check:en` e `npm run verify` (`tsc -b && eslint . && node scripts/check-content.mjs`) passano
   con successo su tutte le 21 lezioni.
+- 2026-10-02 — **Indirizzi veri per ogni pagina** (anteprime dei link e SEO). Prima la barra del browser mostrava sempre `…/#/lezione/NN`: la parte dopo `#` non arriva a chi genera l'anteprima, quindi ogni link condiviso mostrava la home. Ora il router (`src/lib/router.ts`) usa `…/lezione/NN/#sezione`, `…/glossario/#voce`, `…/prerequisiti/#sezione` (e gli stessi sotto `en/`, che decide anche la lingua); le pagine statiche sono copie dell'applicazione, senza più redirect, con un testo essenziale per chi non esegue JavaScript; i vecchi link con l'hash e `?lang=en` continuano a funzionare. Aggiunti pagina e immagine di anteprima dei prerequisiti, `hreflang` nella sitemap, `robots` con `max-image-preview:large`.
 - 2026-10-02 — **Versione «spiegata semplice»** delle lezioni 01, 03, 04 e 05 (la 02 è esclusa su richiesta), in italiano
   e in inglese: stessi titoli, formule, esempi, figure e domande d’esame, con la teoria riscritta in parole facili
   (`src/content/lessons-easy/`, `lessons-easy-en/`). Si attiva dal riquadro con l’icona del neonato in cima alla

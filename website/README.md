@@ -15,8 +15,9 @@ npm run lint
 npm run verify    # typecheck + lint + controllo contenuti
 ```
 
-Il routing usa l'hash (`#/lezione/03/...`) e `base: './'`: la cartella `dist/` funziona su qualsiasi
-hosting statico, anche in una sottocartella.
+Ogni pagina ha un indirizzo vero (`lezione/03/`, `glossario/`, `prerequisiti/`, lo stesso sotto `en/`) con un file
+dietro, scritto dalla build (`plugins/seo.ts`); con `base: './'` la cartella `dist/` funziona su qualsiasi hosting
+statico, anche in una sottocartella. I link interni si scrivono `#/lezione/03/sezione`: li riscrive il router.
 
 ## Struttura
 

@@ -5,21 +5,20 @@
     <meta name="robots" content="noindex" />
     <title>Machine Learning — Appunti interattivi</title>
     <script>
-      // GitHub Pages serve questa pagina per ogni percorso sconosciuto.
-      // Il sito usa route con l'hash: /repo/lezione/03/sezione → /repo/#/lezione/03/sezione
+      // GitHub Pages serve questa pagina per ogni percorso senza un file dietro.
+      // Si passa la richiesta all'applicazione, che la riscrive nell'indirizzo vero (src/lib/router.ts):
+      //   /repo/lezione/03/bias → /repo/#/lezione/03/bias → /repo/lezione/03/#bias
       ;(function () {
         var parts = location.pathname.split('/').filter(Boolean)
         var base = '/'
         if (/\.github\.io$/.test(location.hostname) && parts.length) base = '/' + parts.shift() + '/'
         if (parts[parts.length - 1] === 'index.html') parts.pop()
         // gli indirizzi sotto /en/ aprono il sito in inglese
-        var query = ''
         if (parts[0] === 'en') {
           parts.shift()
-          query = '?lang=en'
+          base += 'en/'
         }
-        var route = parts.length ? '#/' + parts.join('/') : ''
-        location.replace(base + query + route)
+        location.replace(base + '#/' + parts.join('/'))
       })()
     </script>
   </head>

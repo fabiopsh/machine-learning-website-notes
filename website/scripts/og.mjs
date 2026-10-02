@@ -2,6 +2,7 @@
 //
 //   public/og/home.png          anteprima della home (e del glossario)
 //   public/og/NN.png            anteprima della lezione NN
+//   public/og/prerequisiti.png  anteprima della pagina dei prerequisiti
 //   public/og/en/…              le stesse in inglese (`--lang it` o `--lang en` rigenera solo una lingua)
 //   public/apple-touch-icon.png, public/icon-192.png, public/icon-512.png
 //
@@ -77,7 +78,7 @@ const T = {
 
 const onlyLang = opt(process.argv, 'lang', null)
 const cards = LANGS.filter((lang) => !onlyLang || lang === onlyLang).flatMap((lang) => {
-  const { lessons, figures } = pages(lang)
+  const { lessons, figures, prereq } = pages(lang)
   const t = T[lang]
   const dir = `og/${langPrefix(lang)}`
   return [
@@ -106,6 +107,16 @@ const cards = LANGS.filter((lang) => !onlyLang || lang === onlyLang).flatMap((la
         right: t.right,
       }
     }),
+    {
+      lang,
+      file: prereq.image,
+      kicker: prereq.meta.eyebrow,
+      title: prereq.meta.title,
+      size: 80,
+      text: prereq.meta.summary,
+      left: t.left,
+      right: t.right,
+    },
   ]
 })
 
