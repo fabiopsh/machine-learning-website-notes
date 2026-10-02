@@ -44,7 +44,7 @@ npm run check:easy -- NN              # versione semplice allineata all'original
 npm run figs -- NN --lang en          # screenshot di tutte le figure: SOLO se l'utente lo chiede (anche --w 390, --style glass, --mode easy)
 npm run smoke -- --only NN            # test nel browser: NON usarlo (lento, l'utente lo ritiene inutile)
 npm run shot -- lezione/NN nome --sel "#fig-N-k"   # screenshot in website/.shots/: SOLO se l'utente lo chiede
-npm run og                            # rigenera le anteprime dei link (public/og/): dopo ogni cambio di titolo o summary
+npm run og                            # rigenera le anteprime dei link (public/og/, schermate del sito: serve npm run dev acceso)
 npm run build                         # build di produzione (dist/), con pagine statiche per lezione e sitemap
 ```
 

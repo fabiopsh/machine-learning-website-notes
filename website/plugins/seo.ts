@@ -98,7 +98,7 @@ function head(p: Page, ld: unknown[], lang: Lang) {
     <meta property="og:title" content="${esc(p.title)}" />
     <meta property="og:description" content="${esc(p.description)}" />
     <meta property="og:image" content="${img}" />
-    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="${esc(p.title)}" />
@@ -234,7 +234,7 @@ ${credit}`
             route: lessonPath(l.id),
             title: lessonTitle(l, lang),
             description: l.summary,
-            image: `og/${langPrefix(lang)}${l.id}.png`,
+            image: `og/${langPrefix(lang)}${l.id}.jpg`,
           }
           const nav = [lessons[i - 1], lessons[i + 1]]
             .filter(Boolean)

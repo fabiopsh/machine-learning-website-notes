@@ -52,7 +52,7 @@ export function applyMeta(route: Route) {
 
   const page = routePath(route)?.page ?? ''
   const url = SITE.url + (isEn ? 'en/' : '') + page
-  const img = `${SITE.url}og/${isEn ? 'en/' : ''}${image}.png`
+  const img = `${SITE.url}og/${isEn ? 'en/' : ''}${image}.jpg`
   set('link[rel="canonical"]', 'href', url)
   set('link[rel="alternate"][hreflang="it"]', 'href', SITE.url + page)
   set('link[rel="alternate"][hreflang="en"]', 'href', SITE.url + 'en/' + page)

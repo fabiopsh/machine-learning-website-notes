@@ -118,7 +118,7 @@ export function pages(lang: Lang = 'it') {
   const lessons = readLessons(lang)
   const figures = lessons.reduce((s, l) => s + l.figures, 0)
   const prefix = langPrefix(lang)
-  const image = `og/${prefix}home.png`
+  const image = `og/${prefix}home.jpg`
   const home =
     lang === 'en'
       ? {
@@ -154,7 +154,7 @@ export function pages(lang: Lang = 'it') {
     path: `${prefix}${PREREQ_ID}/`,
     title: `${pre.title} · ${notesName(lang)}`,
     description: pre.summary,
-    image: `og/${prefix}${PREREQ_ID}.png`,
+    image: `og/${prefix}${PREREQ_ID}.jpg`,
     meta: pre,
   }
   return { lessons, figures, home, glossary, prereq }

@@ -437,8 +437,10 @@ nella barra del browser (`…/lezione/05/`, `…/lezione/05/#sezione`) è già q
   per chi non esegue JavaScript), `sitemap.xml`;
 - `website/src/lib/meta.ts` — titolo, descrizione, canonical e immagine aggiornati nell'app a ogni cambio di pagina;
 - le stesse pagine esistono in inglese sotto `en/` (`en/lezione/05/`), con `hreflang` reciproco e immagini `public/og/en/`;
-- `npm run og` — rigenera le immagini di anteprima `public/og/*.png` (1200 × 630) e le icone: **va rilanciato e
-  committato** quando cambia un titolo o un `summary`, o si aggiunge una lezione;
+- `npm run og` — rigenera le immagini di anteprima `public/og/*.jpg` (1200 × 630) e le icone. Sono **schermate del
+  sito** (la home; per ogni lezione una sua figura, scelta in automatico o indicata in `FIGURE` dentro
+  `scripts/og.mjs`): serve il server di sviluppo acceso. **Va rilanciato e committato** quando cambia l'aspetto di
+  una lezione o se ne aggiunge una (`-- --only 05` per una sola);
 - il `summary` di `lessons.ts` è anche la descrizione nell'anteprima: una frase concreta, senza formule.
 
 Dopo il deploy le anteprime si provano incollando il link in una chat; molte app le tengono in cache per giorni.
