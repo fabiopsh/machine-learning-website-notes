@@ -619,3 +619,9 @@ kbd {
     font-size: 11.5px;
   }
 }
+
+/* interruttore della versione «spiegata semplice» nella barra in alto */
+.easy-btn.is-on {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}

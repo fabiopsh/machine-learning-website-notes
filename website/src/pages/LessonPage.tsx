@@ -1,20 +1,26 @@
 import type { MDXContent } from 'mdx/types'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { mdxComponents } from '../components/shell/mdxComponents'
-import { scrollToSection, TocList, useScrollSpy, type TocItem } from '../components/shell/Toc'
+import { currentSectionId, scrollToSection, TocList, useScrollSpy, type TocItem } from '../components/shell/Toc'
 import { Icon } from '../components/ui/Icon'
 import { getLesson, lessonIndex, lessonStats, neighbours, partOf } from '../content/lessons'
 import { tx } from '../lib/i18n'
+import { setMode, useMode } from '../lib/mode'
 import { recordProgress } from '../lib/progress'
-import { lessonHref } from '../lib/router'
+import { lessonHref, PREREQ_ID } from '../lib/router'
 
 type Props = { route: { id: string; section?: string; silent?: boolean }; tocOpen: boolean; onCloseToc: () => void }
 
 export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
   const { id } = route
   const lesson = getLesson(id)
-  const [Content, setContent] = useState<{ id: string; C: MDXContent } | null>(null)
+  const isPrereq = id === PREREQ_ID
+  // versione «spiegata semplice»: solo se la lezione ce l'ha
+  const easy = useMode() === 'easy' && Boolean(lesson?.loadEasy)
+  const [Content, setContent] = useState<{ id: string; easy: boolean; C: MDXContent } | null>(null)
   const article = useRef<HTMLElement>(null)
+  // sezione da ritrovare dopo il cambio di versione (gli id dei titoli sono gli stessi)
+  const keep = useRef<string | undefined>(undefined)
   const ready = Content?.id === id
   const items: TocItem[] = useMemo(
     () => (ready ? (lessonIndex[id]?.headings ?? []).map((h) => ({ id: h.slug, text: h.text, depth: h.depth })) : []),
@@ -22,19 +28,31 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
   )
   const ids = useMemo(() => items.map((i) => i.id), [items])
   const active = useScrollSpy(ids)
-  const stats = lessonStats(id)
+  const stats = lessonStats(id, easy ? 'easy' : 'full')
   const part = partOf(id)
   const { prev, next } = neighbours(id)
 
   useEffect(() => {
     let alive = true
-    lesson?.load?.().then((mod) => {
-      if (alive) setContent({ id, C: mod.default })
+    const loader = easy ? lesson?.loadEasy : lesson?.load
+    loader?.().then((mod) => {
+      if (!alive) return
+      // finché arriva l'altra versione resta visibile quella vecchia: qui si legge a che sezione si era
+      keep.current = currentSectionId()
+      setContent({ id, easy, C: mod.default })
     })
     return () => {
       alive = false
     }
-  }, [id, lesson])
+  }, [id, lesson, easy])
+
+  // dopo il cambio di versione si torna alla sezione che si stava leggendo
+  const shown = useRef<{ id: string; easy: boolean } | null>(null)
+  useEffect(() => {
+    const prev = shown.current
+    shown.current = Content && { id: Content.id, easy: Content.easy }
+    if (prev && Content && prev.id === Content.id && prev.easy !== Content.easy && keep.current) scrollToSection(Content.id, keep.current, false)
+  }, [Content])
 
   // posizionamento iniziale: sezione richiesta o inizio pagina
   useEffect(() => {
@@ -64,7 +82,7 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
 
   // avanzamento di lettura
   useEffect(() => {
-    if (!ready) return
+    if (!ready || isPrereq) return
     let raf = 0
     const on = () => {
       cancelAnimationFrame(raf)
@@ -82,7 +100,7 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
       cancelAnimationFrame(raf)
       window.removeEventListener('scroll', on)
     }
-  }, [ready, id])
+  }, [ready, id, isPrereq])
 
   // i link "#" accanto ai titoli restano dentro il routing a hash
   useEffect(() => {
@@ -120,13 +138,20 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
       <article className="lesson" ref={article} key={id}>
         <header className="lesson-head">
           <div className="lesson-head__eyebrow">
-            <span>
-              {tx('Parte', 'Part')} {part?.roman} · {part?.title}
-            </span>
+            {part && (
+              <span>
+                {tx('Parte', 'Part')} {part.roman} · {part.title}
+              </span>
+            )}
             {lesson.eyebrow && <span className="lesson-head__tag">{lesson.eyebrow}</span>}
+            {easy && (
+              <span className="lesson-head__tag lesson-head__tag--easy">
+                <Icon name="baby" size={13} /> {tx('Spiegata semplice', 'Explained simply')}
+              </span>
+            )}
           </div>
           <h1 className="lesson-head__title">
-            <span className="lesson-head__num">{lesson.id}</span>
+            {!isPrereq && <span className="lesson-head__num">{lesson.id}</span>}
             {lesson.title}
           </h1>
           <div className="lesson-head__meta">
@@ -145,17 +170,48 @@ export function LessonPage({ route, tocOpen, onCloseToc }: Props) {
               </>
             )}
           </div>
-          <p className="lesson-head__credits">
-            {tx(
-              'Appunti di Fabio Piscitelli — Machine Learning (654AA), Prof. Alessio Micheli, Università di Pisa, a.a. 2026/27',
-              'Notes by Fabio Piscitelli — Machine Learning (654AA), Prof. Alessio Micheli, University of Pisa, a.y. 2026/27',
-            )}
-          </p>
+          {!isPrereq && (
+            <p className="lesson-head__credits">
+              {tx(
+                'Appunti di Fabio Piscitelli — Machine Learning (654AA), Prof. Alessio Micheli, Università di Pisa, a.a. 2026/27',
+                'Notes by Fabio Piscitelli — Machine Learning (654AA), Prof. Alessio Micheli, University of Pisa, a.y. 2026/27',
+              )}
+            </p>
+          )}
+          {lesson.loadEasy && (
+            <div className={`easy-box${easy ? ' is-on' : ''}`}>
+              <span className="easy-box__icon">
+                <Icon name="baby" size={24} />
+              </span>
+              <div className="easy-box__text">
+                <strong>
+                  {easy
+                    ? tx('Stai leggendo la versione «spiegata semplice»', 'You are reading the “explained simply” version')
+                    : tx('C’è anche la versione «spiegata semplice»', 'There is also an “explained simply” version')}
+                </strong>
+                <span>
+                  {tx(
+                    'Stessi argomenti, stesse formule e stesse figure, ma con parole facili, un passo alla volta e senza dare nulla per scontato.',
+                    'Same topics, same formulas and same figures, but in plain words, one step at a time and taking nothing for granted.',
+                  )}{' '}
+                  {easy && (
+                    <a href={lessonHref(PREREQ_ID)}>
+                      {tx('Ti manca una base di matematica? Guarda i prerequisiti.', 'Missing some basic maths? See the prerequisites.')}
+                    </a>
+                  )}
+                </span>
+              </div>
+              <button className={`btn ${easy ? 'btn--ghost' : 'btn--solid'}`} aria-pressed={easy} onClick={() => setMode(easy ? 'full' : 'easy')}>
+                <Icon name={easy ? 'book' : 'baby'} size={16} />
+                {easy ? tx('Appunti completi', 'Full notes') : tx('Versione semplice', 'Simple version')}
+              </button>
+            </div>
+          )}
         </header>
 
-        <div className="prose">{C ? <C components={mdxComponents} /> : <LessonSkeleton />}</div>
+        <div className={`prose${Content?.easy ? ' prose--easy' : ''}`}>{C ? <C components={mdxComponents} /> : <LessonSkeleton />}</div>
 
-        {ready && (
+        {ready && !isPrereq && (
           <nav className="pager" aria-label={tx('Lezioni vicine', 'Adjacent lessons')}>
             {prev ? (
               <a className="pager__card pager__card--prev" href={lessonHref(prev.id)}>

@@ -126,6 +126,22 @@ const paths = {
       <path d="M14 3.5V7.5h4" />
     </>
   ),
+  // viso di neonato con ciuffo: versione «spiegata semplice»
+  baby: (
+    <>
+      <circle cx="12" cy="13.5" r="7" />
+      <path d="M12 6.5c-.3-1.9.9-3.2 2.7-2.9" />
+      <path d="M9.4 12.8h.01M14.6 12.8h.01" />
+      <path d="M9.9 16.2c.6.6 1.3.9 2.1.9s1.5-.3 2.1-.9" />
+    </>
+  ),
+  // squadra da disegno: prerequisiti
+  ruler: (
+    <>
+      <path d="M4.5 19.5v-14l14 14z" />
+      <path d="M8 16v-3.2l3.2 3.2z" />
+    </>
+  ),
   star: <path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4.1-4 5.7-.8z" />,
   // marchio di GitHub (pieno, non a tratto)
   github: (

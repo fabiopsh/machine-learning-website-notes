@@ -52,8 +52,8 @@ export async function openBrowser({ scrollbars = false } = {}) {
   })
 }
 
-/** Nuova pagina con tema, stile e lingua (`it` o `en`) impostati e raccolta degli errori di console. */
-export async function newPage(browser, { width = 1440, height = 900, dpr = 1, theme = 'light', style = 'classic', lang = 'it' } = {}) {
+/** Nuova pagina con tema, stile, lingua (`it` o `en`) e versione delle lezioni (`full` o `easy`) impostati e raccolta degli errori di console. */
+export async function newPage(browser, { width = 1440, height = 900, dpr = 1, theme = 'light', style = 'classic', lang = 'it', mode = 'full' } = {}) {
   const page = await browser.newPage()
   const errors = []
   page.on('pageerror', (e) => errors.push('[pageerror] ' + e.message))
@@ -63,14 +63,16 @@ export async function newPage(browser, { width = 1440, height = 900, dpr = 1, th
   page.on('requestfailed', (r) => errors.push('[rete] ' + r.url() + ' ' + (r.failure()?.errorText ?? '')))
   await page.setViewport({ width, height, deviceScaleFactor: dpr })
   await page.evaluateOnNewDocument(
-    (t, s, l) => {
+    (t, s, l, m) => {
       localStorage.setItem('ml-theme', t)
       localStorage.setItem('ml-style', s)
       localStorage.setItem('ml-lang', l)
+      localStorage.setItem('ml-mode', m)
     },
     theme,
     style,
     lang,
+    mode,
   )
   return { page, errors }
 }

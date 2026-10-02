@@ -1,0 +1,1003 @@
+import * as F from '../formulas/l05'
+import { HtfData, HtfLinear, KnnRegions, KnnCurves, BayesVsKnn } from '../../widgets/l05/HtfFigures'
+import { Hyperplane3D, Seismic, SeparatorProps, LossSmooth } from '../../widgets/l05/LinearBasics'
+import { Descent1D, ErrorSurface, BatchOnline, LearningCurves } from '../../widgets/l05/Descent'
+import { DeltaRule } from '../../widgets/l05/DeltaRule'
+import { AndSeparable, Shattering } from '../../widgets/l05/Separability'
+import { RidgeFit, RidgeRms } from '../../widgets/l05/Ridge'
+import { KnnQuery, Voronoi, ScaleNN } from '../../widgets/l05/KnnBasics'
+import { Curse } from '../../widgets/l05/Curse'
+
+<Lead>Finita l’introduzione, si passa ai primi modelli veri e propri. Sono due, e stanno ai due estremi opposti del ML. Da una parte i **modelli lineari**: rigidi (in sostanza disegnano rette), con pochi numeri da regolare, basati sulla matematica classica ma già pieni di idee moderne (funzione di loss, discesa del gradiente, regolarizzazione). Dall’altra il **K-nearest neighbors** («i K vicini più vicini»): molto flessibile, locale (guarda solo i dati vicini) e senza un vero modello da addestrare. Confrontarli fa vedere in concreto il compromesso tra flessibilità e controllo della complessità.</Lead>
+
+<Callout type="note" title="Due lezioni distinte">
+
+Nelle slide 2026/27 i due argomenti sono in due pacchi separati (*linear* e *knn*); il contenuto è lo stesso e qui restano in un’unica nota: nella prima parte i modelli lineari, nella seconda il K-NN.
+
+</Callout>
+
+Con i modelli lineari si passa da uno spazio delle ipotesi discreto (quello del concept learning, dove le ipotesi si potevano contare) a uno **continuo**: è ancora ristretto, ma le ipotesi sono descritte da numeri reali che possono cambiare a piacere.
+
+## Notazione sui dati
+
+I dati sono organizzati in una [matrice](#/prerequisiti/matrici) $X$, cioè una tabella di numeri, di dimensione $l \times n$: $l$ righe (i pattern, cioè gli esempi, numerati con $p = 1,\dots,l$) e $n$ colonne (le feature, cioè le proprietà misurate, numerate con $i = 1,\dots,n$).
+
+- $\mathbf{x}$ (in grassetto) è un pattern qualsiasi, cioè una riga della tabella. Si chiama anche esempio, istanza, campione, vettore di input;
+- $x_i$ o $x_j$ (uno scalare, cioè un numero solo) è la componente $i$ o $j$ di un pattern $\mathbf{x}$: il numero in quella posizione (qui non si scrive l’indice del pattern);
+- $\mathbf{x}_p$ è il $p$-esimo pattern (la riga numero $p$);
+- $x_{p,i}$, scritto anche $(\mathbf{x}_p)_i$, è la componente $i$ del pattern $p$: riga $p$, colonna $i$;
+- per il target (la risposta giusta) si usa $y_p$ (oppure $d_p$, $t_p$), con $p = 1,\dots,l$.
+
+Quando si capisce dal contesto, alcuni indici non vengono scritti.
+
+---
+
+## Modelli lineari
+
+Il modello lineare è stato la colonna portante della statistica. Come scrive Hastie: *«nonostante i grandi progressi delle moderne tecniche di regressione non parametrica, i modelli lineari restano importanti, e dobbiamo capirli bene»*. Si parte dalla forma più semplice, quella lineare nelle variabili di input. Il modello lineare è anche una **baseline** naturale, cioè un punto di riferimento con cui confrontare i modelli più complicati: la prima domanda davanti a un problema è «è un problema lineare?».
+
+### Regressione lineare univariata
+
+Riprendiamo l’[esercizio dell’introduzione](#/lezione/03/regressione): dati i punti $(1;\,2{,}1)$, $(2;\,3{,}9)$, $(3;\,6{,}1)$, $(4;\,8{,}4)$, $(5;\,9{,}8)$ avevamo «indovinato» a occhio $h(x) = 2x$. Ora vogliamo trovare i parametri in modo **sistematico**, cioè con un procedimento preciso.
+
+«Univariato» vuol dire: una sola variabile di input $x$ e una sola di output $y$. In questo caso si assume il modello
+
+$$
+h_\mathbf{w}(x) = w_1 x + w_0,
+$$
+
+cioè l’equazione di una [retta](#/prerequisiti/la-retta): $w_1$ è la *pendenza* (quanto sale la retta quando $x$ aumenta di 1) e $w_0$ è l’*intercetta* (il valore quando $x = 0$). I due numeri $w_0, w_1$ si chiamano **pesi** (*weights*) o parametri liberi. Si tratta quindi di adattare una retta ai dati. Le rette possibili sono infinite (i pesi sono numeri continui), ma la matematica classica dà una soluzione elegante, che risale a Gauss e Legendre (circa 1795). La cosa sorprendente è che già con questo strumento di base si può «apprendere», e che dentro ci sono molti concetti importanti del ML moderno.
+
+#### Apprendimento tramite Least Mean Squares
+
+Addestrare vuol dire trovare i pesi $\mathbf{w}$ che **minimizzano l’errore empirico** sui dati di training, cioè che rendono più piccolo possibile l’errore sugli esempi che abbiamo. Per ora guardiamo solo $R_{emp}$ (il controllo della complessità verrà dopo). Abbiamo $l$ esempi $(x_p, y_p)$ e cerchiamo la retta $h_\mathbf{w}(x) = w_1 x + w_0$ che minimizza la **somma dei quadrati dei residui**:
+
+<Formula f={F.lms} />
+
+**In parole semplici.** Per ogni esempio si calcola il *residuo*: la differenza tra il valore giusto $y_p$ e il valore che dà la retta in quel punto. Lo si eleva al quadrato (così è sempre positivo e gli errori grandi pesano di più), e si sommano i quadrati di tutti gli esempi (il simbolo $\sum$ è la [sommatoria](#/prerequisiti/la-sommatoria)). Più la retta passa vicino ai punti, più questa somma è piccola.
+
+Per avere la media si divide per $l$. È il metodo dei **minimi quadrati** (<T id="lms">*Least (Mean) Squares*, LMS</T>). Si scrive anche $\arg\min_\mathbf{w} E(\mathbf{w})$, che si legge «i valori di $\mathbf{w}$ che rendono minimo $E(\mathbf{w})$», in norma $L^2$ (cioè misurando l’errore con i quadrati).
+
+<Callout type="tip" title="Perché i minimi quadrati?">
+
+Ogni retta candidata produce dei **residui**, cioè le distanze verticali tra i punti $(x_p, y_p)$ e la retta. Rette diverse hanno residui diversi: rendere minima la somma dei loro quadrati è un modo naturale di trovare la retta che approssima meglio i dati. In generale, i minimi quadrati sono il metodo standard per risolvere in modo approssimato i **sistemi sovradeterminati**, cioè quelli con più equazioni (gli esempi) che incognite (i parametri): non esiste una retta che passa per tutti i punti, quindi si cerca quella che sbaglia di meno.
+
+</Callout>
+
+#### Come si risolve
+
+L’errore $E$ dipende dai pesi: è una funzione di $w_0$ e $w_1$. Cerchiamo il suo punto più basso. In un [minimo](#/prerequisiti/massimi-e-minimi) la funzione è «piatta»: è un **punto stazionario**, dove il gradiente è nullo, cioè tutte le [derivate parziali](#/prerequisiti/derivate-parziali-e-gradiente) valgono zero:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_i} = 0, \qquad i = 1, \dots, n+1.
+$$
+
+Nel caso semplice con due parametri si cercano $w_0, w_1$ per cui $\frac{\partial E}{\partial w_0} = 0$ e $\frac{\partial E}{\partial w_1} = 0$. La loss è **convessa**: ha la forma di una scodella (una parabola in due dimensioni), con un solo fondo. Quindi non ci sono minimi «falsi» in cui restare bloccati, e la soluzione si può scrivere direttamente con una formula (si dice *in forma chiusa*):
+
+$$
+w_1 = \frac{\sum_p x_p y_p - \frac{1}{l}\sum_p x_p \sum_p y_p}{\sum_p x_p^2 - \frac{1}{l}\left(\sum_p x_p\right)^2} = \frac{\operatorname{Cov}[x,y]}{\operatorname{Var}[x]}, \qquad w_0 = \bar{y} - w_1 \bar{x},
+$$
+
+dove $\bar{x} = \frac{1}{l}\sum_p x_p$ e $\bar{y} = \frac{1}{l}\sum_p y_p$ sono le [medie](#/prerequisiti/media-varianza-e-deviazione-standard) delle $x$ e delle $y$. $\operatorname{Var}[x]$ è la *varianza* di $x$ (quanto le $x$ sono sparpagliate) e $\operatorname{Cov}[x,y]$ è la *covarianza* (quanto $x$ e $y$ crescono insieme).
+
+<Callout type="tip" title="Da capire, non da memorizzare">
+
+Il professore precisa che questa soluzione «diretta» serve solo a sapere che **esiste** (grazie alla convessità della loss): non va imparata a memoria. Quello che conta è saperla **ricavare** mettendo il gradiente uguale a zero, come nell’esercizio qui sotto.
+
+</Callout>
+
+<Deep title="Come si ricava la soluzione in forma chiusa" kind="dimostrazione">
+
+Si usano le derivate del paragrafo successivo.
+
+**Primo passo: $w_0$.** Mettiamo a zero la derivata rispetto a $w_0$: $\frac{\partial E}{\partial w_0} = -2\sum_p (y_p - w_1 x_p - w_0) = 0$. Dividendo per $-2$ e separando i pezzi della somma si ottiene $\sum_p y_p = w_1 \sum_p x_p + l\,w_0$ (il termine $w_0$ viene sommato $l$ volte). Dividendo tutto per $l$: $w_0 = \bar y - w_1 \bar x$. Questo dice una cosa bella: la retta migliore passa per il punto medio $(\bar x, \bar y)$.
+
+**Secondo passo: $w_1$.** Mettiamo a zero la derivata rispetto a $w_1$: $\frac{\partial E}{\partial w_1} = -2\sum_p (y_p - w_1 x_p - w_0)\,x_p = 0$. Sostituendo il $w_0$ appena trovato si ottiene $\sum_p x_p y_p - \bar y \sum_p x_p = w_1\left(\sum_p x_p^2 - \bar x \sum_p x_p\right)$. Poiché $\bar y \sum_p x_p = \frac1l \sum_p x_p \sum_p y_p$ e $\bar x \sum_p x_p = \frac1l\left(\sum_p x_p\right)^2$, dividendo si ottiene esattamente la formula di $w_1$.
+
+</Deep>
+
+#### Calcolo del gradiente per un pattern
+
+Calcoliamo le derivate dell’errore per un solo pattern $(x, y)$. Servono quattro [regole di derivazione](#/prerequisiti/le-regole-per-calcolarla):
+
+- $\frac{\partial k}{\partial w} = 0$: la derivata di una costante $k$ (un numero che non dipende da $w$) è zero;
+- $\frac{\partial w}{\partial w} = 1$: la derivata di $w$ rispetto a sé stesso è 1;
+- $\frac{\partial f(w)^2}{\partial w} = 2 f(w) \frac{\partial f(w)}{\partial w}$: la derivata di un quadrato è «due volte la cosa dentro, per la derivata della cosa dentro» (è la [regola della catena](#/prerequisiti/la-regola-della-catena));
+- «la derivata della somma è la somma delle derivate».
+
+Applicandole:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_i} = \frac{\partial (y - h_\mathbf{w}(x))^2}{\partial w_i} = 2\big(y - h_\mathbf{w}(x)\big) \frac{\partial \big(y - (w_1 x + w_0)\big)}{\partial w_i},
+$$
+
+Resta da derivare la «cosa dentro», $y - w_1 x - w_0$. Rispetto a $w_0$ la sua derivata è $-1$; rispetto a $w_1$ è $-x$. Quindi:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_0} = -2\big(y - h_\mathbf{w}(x)\big), \qquad \frac{\partial E(\mathbf{w})}{\partial w_1} = -2\big(y - h_\mathbf{w}(x)\big)\, x.
+$$
+
+La quantità $\delta = y - h(x)$ (lettera greca «delta»), cioè l’errore sul pattern (risposta giusta meno risposta del modello), verrà chiamata **delta**. Per $l$ pattern basta sommare i contributi di ciascuno; poi si estende a input con più dimensioni.
+
+<Callout type="example" title="Esercizio svolto">
+
+Con i dati $(1;2{,}1), (2;3{,}9), (3;6{,}1), (4;8{,}4), (5;9{,}8)$, un passo alla volta:
+
+1. Medie: $\bar x = 3$ (la media di 1, 2, 3, 4, 5), $\bar y = 6{,}06$ (la media delle cinque $y$).
+2. Somma dei prodotti: $\sum x_p y_p = 2{,}1 + 7{,}8 + 18{,}3 + 33{,}6 + 49 = 110{,}8$ (ogni $x$ per la sua $y$: $1 \cdot 2{,}1$, $2 \cdot 3{,}9$, …).
+3. Somma dei quadrati delle $x$: $\sum x_p^2 = 1 + 4 + 9 + 16 + 25 = 55$.
+4. Pendenza: $w_1 = \frac{110{,}8 - 5 \cdot 3 \cdot 6{,}06}{55 - 45} = \frac{110{,}8 - 90{,}9}{10} = 1{,}99$.
+5. Intercetta: $w_0 = 6{,}06 - 1{,}99 \cdot 3 = 0{,}09$.
+
+La retta trovata, $h(x) \approx 1{,}99x + 0{,}09$, conferma l’intuizione $h(x) = 2x$.
+
+</Callout>
+
+### Notazione per input multidimensionali
+
+Se le variabili di input sono più di una, $\mathbf{x}$ e $\mathbf{w}$ sono [vettori](#/prerequisiti/vettori) (scritti come colonne di numeri), e il modello lineare è
+
+$$
+\mathbf{w}^T\mathbf{x} + w_0 = w_0 + w_1 x_1 + w_2 x_2 + \dots + w_n x_n = w_0 + \sum_{i=1}^{n} w_i x_i.
+$$
+
+In parole: ogni variabile $x_i$ viene moltiplicata per il suo peso $w_i$, si somma tutto e si aggiunge $w_0$. Il simbolo $^T$ («trasposto») serve solo a dire che si fa il [prodotto scalare](#/prerequisiti/prodotto-scalare) tra i due vettori.
+
+$w_0$ si chiama **intercetta**, soglia, <T id="bias-intercetta">**bias**</T> o offset. C’è un trucco comodo per non doverlo scrivere a parte: si aggiunge all’input una componente fissa $x_0 = 1$. Così $\mathbf{x}^T = [1, x_1, \dots, x_n]$, $\mathbf{w}^T = [w_0, w_1, \dots, w_n]$ e $w_0 \cdot 1$ entra nella somma come tutti gli altri termini:
+
+<Formula f={F.linModel} />
+
+Il modello lineare è quindi semplicemente un **prodotto scalare** tra input e pesi. (Nelle reti neurali il simbolo di trasposta spesso non viene scritto.)
+
+---
+
+## Classificazione con modelli lineari
+
+### Il problema
+
+Consideriamo 200 punti in $\mathbb{R}^2$ (cioè nel piano: ogni punto ha due coordinate), generati da una distribuzione che non conosciamo, 100 per ciascuna di due classi (due colori). Possiamo costruire una regola che predica il colore dei punti futuri? I dati potrebbero essere stati generati in due modi: da una gaussiana per classe (una «nuvola» di punti per classe, con centri diversi), oppure da una miscela di tante gaussiane a bassa varianza (tante nuvolette piccole per classe).
+
+<Figure n="5.1" title="Il problema di esempio: 200 punti di due classi">
+  <HtfData />
+  <Caption>Il problema di esempio (Hastie-Tibshirani-Friedman): 200 punti di due classi, 100 per classe (qui la classe 1 è in blu e la classe 0 in arancione). I punti sono generati nei due modi possibili: una miscela di 10 gaussiane strette per classe (scenario 2) o una sola gaussiana per classe (scenario 1). Lo scenario scelto vale per tutte le figure di questa pagina che usano questi dati.</Caption>
+</Figure>
+
+### Iperpiani e regioni di decisione
+
+Gli stessi modelli usati per la regressione si possono usare per la **classificazione**, con target categorici scritti come numeri ($0/1$ oppure $-1/+1$). L’espressione $\mathbf{w}^T\mathbf{x}$ definisce un **iperpiano**: un «taglio dritto» dello spazio (una retta nel piano, un piano nello spazio a tre dimensioni, e così via). Si sfrutta questo fatto: $\mathbf{w}^T\mathbf{x}$ è positivo da un lato del taglio e negativo dall’altro. Il segno dice quindi a quale classe appartiene un punto. L’obiettivo dell’apprendimento è trovare un $\mathbf{w}$ che dia una buona accuratezza.
+
+In due dimensioni, $\mathbf{w}^T\mathbf{x} = w_0 + w_1 x_1 + w_2 x_2 = 0$ è l’equazione di una retta: è il <T id="confine-di-decisione">**confine di decisione**</T> (*decision boundary*), la linea che separa le due zone.
+
+<Figure n="5.2" title="L’iperpiano e il confine di decisione" size="wide">
+  <Hyperplane3D />
+  <Caption>L’iperpiano $z = \mathbf{w}^T\mathbf{x} + w_0$ e la sua intersezione con il piano degli input ($z = 0$): la retta rossa è il confine di decisione. Gli esempi $\langle(1;1),1\rangle$, $\langle(0{,}5;3),1\rangle$ e $\langle(2;2),0\rangle$ stanno sul piano degli input; la linea tratteggiata sale (o scende) fino al valore del piano. Muovi i pesi e ruota la vista trascinando.</Caption>
+</Figure>
+
+Per ottenere un classificatore si applica una **funzione soglia**: una regola che guarda se il numero supera una certa soglia e risponde con una classe. In una prima versione le due classi si chiamano $1$ e $0$:
+
+$$
+h(\mathbf{x}) = \begin{cases} 1 & \text{se } \mathbf{w}^T\mathbf{x} + w_0 \ge 0 \\ 0 & \text{altrimenti} \end{cases} \quad \text{(output in } [0,1]\text{)},
+$$
+
+In una seconda versione si chiamano $+1$ e $-1$, e si usa la funzione *segno* ($\operatorname{sign}$), che dà $+1$ per i numeri positivi e $-1$ per quelli negativi:
+
+<Formula f={F.ltu} />
+
+con output in $[-1,+1]$. Se si mette $w_0$ dentro $\mathbf{w}$ (con il trucco di $x_0 = 1$): $h(\mathbf{x}_p) = \operatorname{sign}(\mathbf{x}_p^T\mathbf{w}) = \operatorname{sign}\left(\sum_{i=0}^{n} x_{p,i} w_i\right)$. È la <T id="ltu">**Linear Threshold Unit**</T> (LTU, «unità lineare a soglia»).
+
+<Callout type="note" title="Il bias come soglia">
+
+Dire $\mathbf{w}^T\mathbf{x} + w_0 \ge 0$ è la stessa cosa che dire $\mathbf{w}^T\mathbf{x} \ge -w_0$ (si è solo spostato $w_0$ dall’altra parte). Le due scritture indicano la stessa zona positiva, ma la seconda fa vedere meglio il ruolo del bias: $-w_0$ è il **valore di soglia** che la somma pesata degli input deve superare per «accendere» l’uscita $+1$.
+
+</Callout>
+
+### Usare il modello: due esempi
+
+<Callout type="example" title="Terremoti o esplosioni nucleari? (AIMA)">
+
+Dati sismici (1982–1990, Asia): $x_1$ è la magnitudo (la forza) delle onde di volume, $x_2$ quella delle onde di superficie. Un algoritmo di apprendimento trova il confine $-4{,}9 + 1{,}7x_1 - x_2 = 0$. Cioè i pesi sono $w_0 = -4{,}9$, $w_1 = 1{,}7$, $w_2 = -1$.
+
+Per classificare un nuovo evento $(6, 3)$ basta sostituire $x_1 = 6$ e $x_2 = 3$ e guardare il segno del risultato:
+
+$$
+h(6,3) = \operatorname{sign}(-4{,}9 + 1{,}7 \cdot 6 - 1 \cdot 3) = \operatorname{sign}(2{,}3) = +1 \;\Rightarrow\; \text{esplosione nucleare.}
+$$
+
+Il conto: $1{,}7 \cdot 6 = 10{,}2$; poi $-4{,}9 + 10{,}2 - 3 = 2{,}3$, che è positivo.
+
+(Ottenere nuovi esempi di training, in questo caso, è decisamente costoso.)
+
+</Callout>
+
+<Figure n="5.3" title="Classificare dati sismici">
+  <Seismic />
+  <Caption>Classificazione di dati sismici con un confine di decisione lineare: terremoti (cerchi arancioni) in alto a sinistra, esplosioni nucleari (punti blu) in basso a destra, separati dalla retta tratteggiata. La stella è il nuovo evento $(6, 3)$: trascinala per classificare altri eventi.</Caption>
+</Figure>
+
+<Callout type="example" title="Filtro antispam">
+
+Si vuole $h(\text{mail}) = +1$ per lo spam e $-1$ altrimenti. Come si trasforma una mail in numeri? Con delle feature $\phi_k(\text{mail})$ ($\phi$ è la lettera greca «fi»): per esempio la presenza ($1$ se c’è, $0$ se non c’è) di certe parole o frasi («free money»), oppure la lunghezza della mail (un numero intero). Questa rappresentazione si chiama *bag of words* («sacco di parole»): conta quali parole ci sono, non il loro ordine.
+
+Ogni peso $w_k$ dice quanto quella feature spinge verso «spam»: positivo per «free money», negativo per «.edu» o «unipi». La classificazione è $h_\mathbf{w}(\mathbf{x}) = \operatorname{sign}\left(\sum_k w_k \phi_k(\mathbf{x})\right)$: si sommano i pesi delle feature presenti e, se il totale è positivo, è spam.
+
+</Callout>
+
+### Proprietà utili dell’iperpiano
+
+<Figure n="5.4" title="Molte soluzioni, e w ortogonale all’iperpiano" size="wide">
+  <SeparatorProps />
+  <Caption>Un problema linearmente separabile ammette molti iperpiani separatori; $\mathbf{w}$ è ortogonale all’iperpiano. Trascina le due maniglie della retta rossa; il cursore $K$ moltiplica tutti i pesi senza spostare la retta.</Caption>
+</Figure>
+
+- Se $w_0 = 0$ la retta passa per l’**origine** (il punto dove tutte le coordinate valgono zero).
+- Se $n > 2$ (più di due variabili) il confine è un **iperpiano**.
+- **Libertà di scala**: se si moltiplicano tutti i pesi $\mathbf{w}$ per lo stesso numero $K$, il confine non cambia. (Se $\mathbf{w}^T\mathbf{x} = 0$, allora anche $K \cdot \mathbf{w}^T\mathbf{x} = 0$: i punti del confine sono gli stessi.)
+- **$\mathbf{w}$ è ortogonale all’iperpiano**, cioè perpendicolare: forma un angolo retto con il confine. Perché? Prendiamo due punti $\mathbf{x}_a, \mathbf{x}_b$ sull’iperpiano. Per entrambi vale l’equazione: $\mathbf{w}^T\mathbf{x}_a + w_0 = 0$ e $\mathbf{w}^T\mathbf{x}_b + w_0 = 0$. Sottraendo la seconda dalla prima, $w_0$ sparisce e resta $\mathbf{w}^T(\mathbf{x}_a - \mathbf{x}_b) = 0$. Ma $\mathbf{x}_a - \mathbf{x}_b$ è una freccia che va da un punto all’altro restando sul confine, e un prodotto scalare uguale a zero vuol dire angolo retto. Quindi $\mathbf{w}$ è perpendicolare a ogni freccia che giace sull’iperpiano.
+- Se esiste un iperpiano che separa le classi, **ne esistono molti** (basta spostarlo o ruotarlo di poco), e quindi esistono anche molti algoritmi per trovarli.
+
+L’equazione della retta si può riscrivere mettendo $x_2$ da solo: $x_2 = -x_1 \frac{w_1}{w_2} - \frac{w_0}{w_2}$. In questa forma si legge subito la pendenza ($-w_1/w_2$) e l’intercetta ($-w_0/w_2$). Provare a disegnarla con valori diversi di $\mathbf{w}$ è un buon esercizio.
+
+---
+
+## Il problema di apprendimento
+
+### Formulazione
+
+Abbiamo $l$ esempi $(\mathbf{x}_p, y_p)$, con $y_p \in \{0,1\}$ oppure $\{-1,+1\}$ (il target è una delle due classi), e una loss $L$ che misura l’errore su un esempio. Cerchiamo i pesi $\mathbf{w}$ che rendono minimo il rischio empirico, cioè l’errore medio sugli esempi:
+
+$$
+R_{emp} = \frac{1}{l}\sum_{p=1}^{l} L\big(h(\mathbf{x}_p), y_p\big).
+$$
+
+Per la classificazione la loss più naturale sarebbe la 0/1 (0 se la classe è giusta, 1 se è sbagliata), applicata a $\operatorname{sign}(\mathbf{w}^T\mathbf{x})$. Ma così il problema diventa difficile. Questa funzione è **costante a tratti**: se si cambiano i pesi di pochissimo, il numero di errori resta uguale, finché all’improvviso un punto cambia lato e l’errore fa un salto. È come una scala con gradini piatti: stando su un gradino non si capisce da che parte si scende. In termini matematici, il gradiente è zero quasi ovunque e non dà nessuna indicazione su come muoversi; si finisce in problemi *combinatori* (provare tantissime combinazioni).
+
+### Sostituire la loss con una funzione liscia
+
+L’idea è sostituire la loss 0/1 con una funzione **liscia e differenziabile** (senza salti e senza spigoli, di cui si può calcolare la derivata), come l’errore quadratico. La si applica direttamente all’uscita lineare $\mathbf{w}^T\mathbf{x}$, cioè al numero *prima* di prenderne il segno (non a $h(\mathbf{x})$, che contiene il segno ed è a gradini):
+
+$$
+E(\mathbf{w}) = \sum_{p=1}^{l}(y_p - \mathbf{x}_p^T\mathbf{w})^2 = \|\mathbf{y} - X\mathbf{w}\|^2.
+$$
+
+La seconda scrittura dice la stessa cosa in forma compatta: $\mathbf{y}$ è il vettore di tutti i target, $X\mathbf{w}$ è il vettore di tutte le uscite del modello (una per esempio), e $\|\cdot\|^2$ è la [lunghezza](#/prerequisiti/lunghezza-e-distanza) al quadrato della loro differenza, cioè la somma dei quadrati delle differenze.
+
+<Figure n="5.5" title="Loss 0/1 e loss quadratica">
+  <LossSmooth />
+  <Caption>Loss 0/1 (viola) e loss quadratica (rossa) per un pattern con target $y = 1$, in funzione di $\mathbf{w}^T\mathbf{x}$: entrambe sono minimizzate nella zona $\mathbf{w}^T\mathbf{x} > 0$. Trascina il valore di $\mathbf{w}^T\mathbf{x}$: la tangente tratteggiata è la pendenza della loss quadratica e la freccia verde il verso in cui conviene muoversi.</Caption>
+</Figure>
+
+Perché funziona? Prendiamo un esempio con target $y_p = 1$. Rendere minimo $(1 - \mathbf{x}_p^T\mathbf{w})^2$ vuol dire spingere $\mathbf{x}_p^T\mathbf{w}$ verso $1$. Ma $1$ è positivo, quindi il segno è quello giusto: nessun errore di classificazione. Con $y_p = -1$ l’uscita viene spinta verso $-1$, che è negativo: di nuovo il lato giusto. Le due loss hanno il minimo nella stessa zona (a destra nel grafico). La funzione è **quadratica** (una scodella), quindi un minimo esiste sempre (anche se non è detto che sia uno solo). Lo stesso identico metodo vale per la regressione.
+
+Vediamo ora due algoritmi di apprendimento. Tutti e due si basano su LMS e valgono sia per la regressione sia per la classificazione:
+
+1. un **approccio diretto**, basato sulle **equazioni normali** (una formula che dà subito la soluzione);
+2. un **approccio iterativo**, basato sulla **discesa del gradiente** (tanti piccoli passi che si avvicinano alla soluzione).
+
+### Approccio diretto: le equazioni normali
+
+Deriviamo $E(\mathbf{w})$ rispetto a un peso qualsiasi $w_j$, con la stessa regola del quadrato usata prima:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_j} = \sum_{p=1}^{l} 2(y_p - \mathbf{x}_p^T\mathbf{w}) \frac{\partial (y_p - \mathbf{x}_p^T\mathbf{w})}{\partial w_j}.
+$$
+
+Ora bisogna derivare la «cosa dentro». Il prodotto scalare è $\mathbf{x}_p^T\mathbf{w} = x_{p,1}w_1 + x_{p,2}w_2 + \dots$ In questa somma, l’unico pezzo che contiene $w_j$ è $x_{p,j}w_j$, e la sua derivata è $x_{p,j}$ (tutti gli altri pezzi sono costanti rispetto a $w_j$ e hanno derivata zero). Con il segno meno davanti:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_j} = -2\sum_{p=1}^{l} (y_p - \mathbf{x}_p^T\mathbf{w})\, x_{p,j} = -2\sum_{p=1}^{l} \delta_p\, x_{p,j},
+$$
+
+dove $\delta_p = y_p - \mathbf{x}_p^T\mathbf{w}$ è l’errore sul pattern $p$ (il delta). In parole: la derivata rispetto al peso $w_j$ è la somma, su tutti gli esempi, di «errore dell’esempio per il suo input numero $j$». Questa forma tornerà nelle reti neurali.
+
+Mettendo il gradiente uguale a zero (una equazione per ogni peso) e scrivendo tutto con le [matrici](#/prerequisiti/trasposta-prodotto-e-inversa), si ottengono le <T id="equazioni-normali">**equazioni normali**</T>:
+
+$$
+(X^T X)\,\mathbf{w} = X^T \mathbf{y}.
+$$
+
+È un sistema di equazioni in cui l’incognita è $\mathbf{w}$. $X^T$ è la *trasposta* di $X$ (la stessa tabella con righe e colonne scambiate).
+
+<Callout type="theorem" title="Soluzione ai minimi quadrati">
+
+Se $X^TX$ è *non singolare* (cioè invertibile: esiste la sua matrice inversa, che è l’equivalente di «dividere» per una matrice), la soluzione è unica:
+
+<Formula f={F.normal} />
+
+dove $X^+$ è la <T id="pseudoinversa">**pseudoinversa di Moore-Penrose**</T>: una specie di inversa che esiste sempre, anche quando $X$ non è invertibile. Se invece $X^TX$ non è invertibile, le soluzioni sono infinite, e tra tutte si può scegliere quella a **norma minima** di $\mathbf{w}$, cioè quella con i pesi più piccoli.
+
+</Callout>
+
+In pratica si usa la **decomposizione ai valori singolari** (SVD), un modo di scrivere una matrice come prodotto di tre matrici più semplici: $X = U\Sigma V^T$. Da qui si ricava $X^+ = V\Sigma^+U^T$, dove $\Sigma^+$ si ottiene da $\Sigma$ sostituendo ogni numero non nullo sulla diagonale con il suo reciproco (cioè $1$ diviso quel numero). Con la SVD si calcola direttamente $\mathbf{w} = X^+\mathbf{y}$, e si ottiene la soluzione a norma minima. **Questo è l’algoritmo di apprendimento** dell’approccio diretto. È già pronto in tutte le librerie di calcolo numerico (Numerical Recipes, Armadillo, NumPy, R, Matlab…), con molte varianti per renderlo più veloce e più stabile.
+
+### Approccio iterativo: la discesa del gradiente
+
+Se esiste la soluzione diretta, perché cercare altri metodi? Perché un metodo *iterativo* (che procede per passi ripetuti) permette di avere:
+
+- soluzioni **più efficienti**: quella diretta è *cubica* nella dimensione della matrice, cioè se la matrice diventa 10 volte più grande il calcolo diventa 1000 volte più lungo;
+- **regolarizzazione** (per ridurre la complessità del modello);
+- una migliore approssimazione con dati rumorosi, fermando la ricerca **prima del minimo**;
+- soprattutto, un metodo che si può applicare anche a **modelli non lineari**. È la base dei metodi fondamentali che vedremo (le reti neurali).
+
+#### L’idea
+
+Il gradiente $\frac{\partial E}{\partial w_j} = -2\sum_p (y_p - \mathbf{x}_p^T\mathbf{w})\, x_{p,j}$ indica la direzione in cui l’errore **sale** più in fretta. Muovendosi nel verso opposto ($\Delta\mathbf{w} = -\nabla E(\mathbf{w})$; il simbolo $\Delta$ vuol dire «spostamento, cambiamento») si scende verso il minimo.
+
+Immagina di essere in montagna con la nebbia e di voler arrivare a valle: non vedi lontano, ma senti con i piedi da che parte il terreno scende. Fai un passo in quella direzione, poi senti di nuovo, e così via. È una **ricerca locale**: si parte da un vettore di pesi iniziale e lo si modifica un po’ alla volta per far diminuire l’errore (<T id="discesa-del-gradiente">*steepest descent*</T>, «discesa più ripida»).
+
+<Figure n="5.6" title="Discesa del gradiente in una dimensione">
+  <Descent1D />
+  <Caption>Discesa del gradiente in una dimensione: a ogni passo il peso si sposta nel verso opposto alla pendenza (le tangenti tratteggiate), da $w_0$ a $w_1$, $w_2$, … verso il minimo. Qui $E(w)$ è l’errore quadratico medio della retta $h(x) = wx$ sui cinque punti dell’esercizio. Trascina il peso iniziale sull’asse e scegli $\eta$.</Caption>
+</Figure>
+
+Con due pesi, l’errore $E([w_0, w_1]^T)$ si può disegnare come una superficie: per ogni coppia di pesi, l’altezza è l’errore. Questa superficie è un **paraboloide** (una scodella: una funzione quadratica convessa), e il gradiente negativo è la nostra «bussola» per trovare il fondo.
+
+<Figure n="5.7" title="La superficie d’errore di un modello lineare" size="wide">
+  <ErrorSurface />
+  <Caption>La superficie d’errore di un modello lineare con due pesi: ogni punto del piano $(w_0, w_1)$ è un’ipotesi, cioè una retta (a destra, con i residui in verde, sui dati dell’esercizio svolto). La freccia verde, appoggiata sulla superficie, è $-\nabla E$: la direzione in cui l’errore scende più in fretta. Muovi i pesi o fai un passo di discesa; trascina la superficie per ruotarla.</Caption>
+</Figure>
+
+In generale il vettore $\Delta\mathbf{w}$ ha una componente per ogni peso: per ciascun peso, la sua derivata parziale con il segno cambiato.
+
+$$
+\Delta\mathbf{w} = -\frac{\partial E(\mathbf{w})}{\partial \mathbf{w}} = \left( -\frac{\partial E}{\partial w_0}, -\frac{\partial E}{\partial w_1}, \dots, -\frac{\partial E}{\partial w_n} \right)^T,
+$$
+
+Così si può lavorare in spazi con moltissime dimensioni senza bisogno di disegnarli: basta fare i conti peso per peso.
+
+#### La regola di apprendimento (delta rule)
+
+Ci si muove passo dopo passo con una **regola di apprendimento**:
+
+$$
+\mathbf{w}_{new} = \mathbf{w} + \eta\, \Delta\mathbf{w},
+$$
+
+In parole: i pesi nuovi sono i pesi vecchi più un pezzetto della direzione di discesa. $\eta$ (lettera greca «eta») è il <T id="learning-rate">**learning rate**</T> (*step size*, la «lunghezza del passo»): decide quanto è lungo ogni passo, e quindi quanto è veloce la discesa.
+
+<Callout type="abstract" title="Algoritmo di discesa del gradiente">
+
+1. Dare a $\mathbf{w}$ dei valori iniziali piccoli; fissare $\eta$ tra 0 e 1 ($0 < \eta < 1$).
+2. Calcolare la direzione di discesa $\Delta\mathbf{w} = -\frac{\partial E(\mathbf{w})}{\partial \mathbf{w}}$.
+3. Aggiornare i pesi: $\mathbf{w}_{new} = \mathbf{w} + \eta\,\Delta\mathbf{w}$.
+4. Ripetere dal passo 2 fino a *convergenza* (cioè finché i pesi smettono di cambiare) o finché $E(\mathbf{w})$ è «abbastanza piccolo».
+
+</Callout>
+
+Note:
+
+- usare $\Delta\mathbf{w}/l$ (cioè dividere per il numero di esempi) corrisponde al *least mean squares*, l’errore medio; dividere per $l$ sarà il caso standard;
+- $\eta$ regola un compromesso **velocità/stabilità**: passi lunghi fanno andare veloci ma si rischia di saltare oltre il minimo; passi corti sono sicuri ma lenti. Si può ridurre $\eta$ un po’ alla volta verso zero, per garantire la convergenza ed evitare di oscillare attorno al minimo (molte varianti verranno viste più avanti).
+
+#### Batch e on-line
+
+Ci sono due modi di usare gli esempi.
+
+- **Versione batch** («a blocco»): il gradiente è la somma su **tutti** gli $l$ pattern, e i pesi si aggiornano una volta sola, dopo aver visto l’intero training set. Un passaggio completo su tutto il training set si chiama <T id="epoca">**epoca**</T>. La stima del gradiente è più «precisa».
+- **Versione on-line** (o **stocastica**, <T id="online-sgd">SGD</T>): i pesi si aggiornano dopo **ogni** pattern, usando il gradiente di quel solo pattern:
+
+$$
+\frac{\partial E_p(\mathbf{w})}{\partial w_j} = -2(y_p - \mathbf{x}_p^T\mathbf{w})\, x_{p,j} = -\Delta_p w_j.
+$$
+
+Quindi l’uscita per il secondo pattern viene calcolata con i pesi già corretti dal primo, e così via. Si fanno progressi a ogni esempio e può essere più veloce, ma serve un $\eta$ più piccolo (ogni singolo esempio dà un’indicazione meno affidabile dell’insieme di tutti).
+
+Esistono casi intermedi (**mini-batch**: piccoli gruppi di esempi alla volta), che vedremo più avanti.
+
+<Figure n="5.8" title="Percorsi batch e on-line sulla superficie d’errore" size="wide">
+  <BatchOnline />
+  <Caption>Percorsi sulle curve di livello della superficie d’errore (la retta dell’esercizio svolto): batch in blu, regolare; on-line in viola e in arancione (due ordini diversi dei pattern), più irregolari. Il punto nero è il minimo. Trascina i pesi iniziali, cambia $\eta$ e il numero di epoche.</Caption>
+</Figure>
+
+<Figure n="5.9" title="Curve di apprendimento">
+  <LearningCurves />
+  <Caption>Curve di apprendimento: l’errore in funzione delle iterazioni (epoche). Le tre curve differiscono solo per il learning rate; la tratteggiata viola la controlli tu.</Caption>
+</Figure>
+
+<Callout type="question" label="Esercizio" title="Esercizio: quale curva è lenta, quale instabile, quale buona?">
+
+La curva **verde** scende molto lentamente (learning rate troppo piccolo: passi troppo corti); la **blu** ha picchi e oscillazioni (learning rate troppo grande: salta da una parte all’altra del minimo, è instabile); la **rossa** scende in fretta e poi si stabilizza (buona).
+
+</Callout>
+
+#### Interpretazione: una regola di correzione dell’errore
+
+Ricapitolando,
+
+<Formula f={F.deltaRule} />
+
+(la costante 2 si può non scrivere: la si considera già «dentro» $\eta$). È una regola di **correzione dell’errore**, detta **regola di Widrow-Hoff** o <T id="delta-rule">**delta rule**</T>: ogni peso $w_j$ cambia **in proporzione all’errore** (target − output). Più grande è l’errore, più grande è la correzione.
+
+- Se l’errore è 0, non c’è nessuna correzione.
+- Con input $x_j > 0$: se l’errore è positivo (l’output è troppo basso), il delta è positivo → $w_j$ aumenta → l’output aumenta → l’errore diminuisce.
+- Con input $x_j > 0$: se l’errore è negativo (l’output è troppo alto), il delta è negativo → $w_j$ diminuisce → l’output diminuisce → l’errore diminuisce.
+- Con input negativo i segni si invertono; con input nullo il peso non cambia. È l’input a «decidere» quanto, e in che verso, ogni peso è responsabile dell’errore: un peso il cui input vale zero non ha contribuito all’uscita, quindi non ha colpa e non viene toccato.
+
+Si impara dagli errori precedenti: *«cercando e sbagliando si impara»* (Goethe).
+
+<Figure n="5.10" title="La delta rule all’opera" size="wide">
+  <DeltaRule />
+  <Caption>La delta rule all’opera: con input $(1, 0, 1)$ e pesi $(-0{,}2;\ 0{,}5;\ -0{,}2)$ l’uscita è $-1$ ma il target è $+1$; la correzione aumenta i pesi degli input attivi finché il pattern viene classificato correttamente. Clicca gli input per cambiarli, scegli il target e applica la regola.</Caption>
+</Figure>
+
+Seguiamo l’esempio con i numeri. L’input è $(1, 0, 1)$, i pesi sono $(-0{,}2;\ 0{,}5;\ -0{,}2)$ e $w_0 = 0$.
+
+1. Uscita lineare: $\mathbf{w}^T\mathbf{x} = (-0{,}2 \cdot 1) + (0{,}5 \cdot 0) + (-0{,}2 \cdot 1) = -0{,}4$. È negativa, quindi l’uscita è $-1$. Ma il target è $+1$: errore.
+2. Il delta è positivo (l’uscita è troppo bassa). Quindi $w_1$ e $w_3$, i cui input valgono 1, vengono aumentati; $w_2$, il cui input vale 0, resta com’è.
+3. Dopo la correzione ($w_1 = w_3 = +0{,}1$) si ha $\mathbf{w}^T\mathbf{x} = 0{,}1 + 0 + 0{,}1 = 0{,}2 > 0$: l’uscita è $+1$, corretta.
+
+<Deep title="Quanto valgono delta ed eta nell’esempio?" kind="esempio">
+
+Il delta sul pattern è $\delta = y - \mathbf{w}^T\mathbf{x} = 1 - (-0{,}4) = 1{,}4$. Con la costante 2 già dentro $\eta$, la correzione di ogni peso è $\Delta w_j = \eta\,\delta\,x_j$:
+
+- per $w_2$ vale 0, perché $x_2 = 0$;
+- per $w_1$ e $w_3$ vale $1{,}4\,\eta$, perché i loro input valgono 1.
+
+Perché $w_1$ e $w_3$ passino da $-0{,}2$ a $+0{,}1$ devono aumentare di $0{,}3$. Serve quindi $1{,}4\,\eta = 0{,}3$, cioè $\eta = 0{,}3/1{,}4 \approx 0{,}21$: è il valore iniziale del cursore nella figura 5.10.
+
+</Deep>
+
+<Callout type="tip" title="Perché la discesa del gradiente è così importante">
+
+È un metodo di ricerca locale semplice ed efficace, che permette di esplorare uno spazio delle ipotesi **infinito e continuo**. Si può applicare ogni volta che $H$ è continuo e la loss è differenziabile (cioè se ne può calcolare la derivata), **non solo ai modelli lineari**: sarà la base dell’addestramento delle reti neurali e del deep learning. Esistono molti miglioramenti (metodi di Newton e quasi-Newton, gradiente coniugato…).
+
+</Callout>
+
+### Riepilogo per la classificazione
+
+- Il modello viene addestrato sul TR con LMS applicato a $\mathbf{w}^T\mathbf{x}$ (l’uscita prima del segno), con la stessa discesa del gradiente usata per la regressione.
+- Il modello viene poi **usato** per classificare applicando la soglia: $h(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$.
+- L’errore si può valutare come **errore di classificazione** (loss 0/1: il numero di pattern sbagliati), non solo come MSE:
+
+$$
+\text{mean\_err} = \frac{1}{l}\sum_{p=1}^{l} L\big(h(\mathbf{x}_p), d_p\big) = \frac{\text{num\_err}}{l}, \qquad \text{accuratezza} = \frac{l - \text{num\_err}}{l}.
+$$
+
+In parole: l’errore medio è il numero di errori diviso il numero di esempi; l’accuratezza è il numero di risposte giuste diviso il numero di esempi. Con 200 esempi e 30 errori: errore $= 30/200 = 15\%$, accuratezza $= 170/200 = 85\%$.
+
+### Torniamo al problema: è una buona soluzione?
+
+<Figure n="5.11" title="Soluzione lineare al problema di esempio" size="wide">
+  <HtfLinear />
+  <Caption>Soluzione lineare al problema di esempio: regressione sulle classi codificate $0$ e $1$ (negli appunti GREEN = 0, RED = 1; qui arancione = 0, blu = 1), con confine $\mathbf{x}^T\mathbf{w} = 0{,}5$. I puntini colorano la regione assegnata a ciascuna classe. Confronta i due scenari e il confine ottimo.</Caption>
+</Figure>
+
+Il confine $\{\mathbf{x} \mid \mathbf{x}^T\mathbf{w} = 0{,}5\}$ (l’insieme dei punti in cui l’uscita vale $0{,}5$, cioè a metà strada tra le due classi $0$ e $1$) è una retta, e sembra fare molti errori sul training. È una cattiva soluzione? Dipende da come sono stati generati i dati:
+
+- **Scenario 1**: ogni classe è generata da una gaussiana (una sola nuvola per classe) con componenti scorrelate, stessa varianza e medie diverse. In questo caso la regola lineare è **quasi ottima**: le due nuvole si sovrappongono un po’, e questa sovrapposizione è inevitabile (è dovuta al rumore nei dati): nessun metodo potrebbe fare molto meglio.
+- **Scenario 2**: ogni classe è una miscela di 10 gaussiane (tante nuvolette). In questo caso il modello lineare è **troppo rigido**, e servono i modelli che vedremo dopo.
+
+<Callout type="note" title="Minimi quadrati e massima verosimiglianza">
+
+I minimi quadrati corrispondono al criterio di **massima verosimiglianza** (scegliere il modello che rende più probabili i dati osservati) se gli errori sperimentali hanno distribuzione normale (la «campana»).
+
+</Callout>
+
+### Bias induttivo del modello lineare
+
+Il [bias induttivo](#/lezione/03/il-bias-induttivo) è l’insieme delle assunzioni fatte in partenza. Per il modello lineare:
+
+- <T id="language-bias">**Language bias**</T>: $H$ è l’insieme delle funzioni lineari, che può essere molto restrittivo e rigido (si possono disegnare solo confini dritti).
+- <T id="search-bias">**Search bias**</T>: la ricerca è ordinata e guidata dalla minimizzazione dei minimi quadrati. Si potrebbe preferire un metodo diverso, che per esempio limiti i valori dei parametri: si otterrebbero soluzioni con proprietà diverse (in particolare riguardo alla generalizzazione).
+
+Anche per un modello «semplice» le possibilità sono molte: serve un modo di procedere fondato su principi (la teoria del ML).
+
+---
+
+## Limiti dei modelli lineari
+
+### Regressione di problemi non lineari
+
+Se la funzione target non è lineare (come il seno dell’[esempio polinomiale](#/lezione/04/un-caso-di-studio-il-fitting-polinomiale)), una retta è una soluzione **troppo povera**: è il caso $M = 1$ già visto, in piena zona di underfitting.
+
+### Classificazione: separabilità lineare
+
+<Callout type="definition" title="Separabilità lineare">
+
+Due insiemi di punti nel piano sono <T id="separabilita-lineare">**linearmente separabili**</T> se si possono separare completamente con una sola retta: tutti i punti di un insieme da una parte, tutti quelli dell’altro dall’altra. In generale, due gruppi sono linearmente separabili in uno spazio a $n$ dimensioni se si possono separare con un iperpiano di dimensione $n-1$ (una retta nel piano, un piano nello spazio 3D, …).
+
+</Callout>
+
+Il confine di decisione lineare dà soluzioni esatte **solo** per insiemi linearmente separabili.
+
+Il modello lineare sa rappresentare, per esempio, le **congiunzioni** (gli «e» logici: vedi [logica](#/prerequisiti/logica-e-conteggi)). La congiunzione $x_1 \wedge x_2 \wedge x_4$ («$x_1$ e $x_2$ e $x_4$ valgono tutti 1») si realizza con $1 \cdot x_1 + 1 \cdot x_2 + 0 \cdot x_3 + 1 \cdot x_4 \ge 2{,}5$: la somma supera $2{,}5$ solo se tutti e tre valgono 1 (allora fa 3); se ne manca anche uno solo, fa al massimo 2. L’AND a due variabili si realizza con $x_1 + x_2 \ge 1{,}5$. I pesi $\mathbf{w}$ di queste soluzioni possono essere appresi.
+
+<Figure n="5.12" title="L’AND è linearmente separabile" size="wide">
+  <AndSeparable />
+  <Caption>L’AND è linearmente separabile: nel piano $x_1$-$x_2$ solo $(1, 1)$ è positivo e una retta lo separa dagli altri tre punti; accanto la tabella di verità. Trascina la retta; nel riquadro a destra, la congiunzione a quattro variabili realizzata da una soglia.</Caption>
+</Figure>
+
+Ma non tutto è separabile:
+
+- **3 punti**: si può sempre trovare una retta, comunque si assegnino le etichette (le classi) ai punti? Sì, **se non sono allineati**. Se sono allineati, l’etichettatura «1–0–1» (con lo 0 in mezzo) non è separabile: una retta non può lasciare i due estremi da una parte e il punto centrale dall’altra.
+- **4 punti**: no. Esiste un’etichettatura per cui nessun classificatore lineare è perfetto: lo **XOR** («o esclusivo»: vale 1 se i due ingressi sono diversi). Cioè $00 \mapsto 0$, $01 \mapsto 1$, $10 \mapsto 1$, $11 \mapsto 0$. Disegnando i quattro punti ai vertici di un quadrato, i positivi stanno su una diagonale e i negativi sull’altra: nessuna retta li separa.
+
+<Figure n="5.13" title="Limiti della separazione lineare" size="wide">
+  <Shattering />
+  <Caption>Limiti della separazione lineare: tre punti non allineati sono sempre separabili (tutte le $2^3$ etichettature, qui in miniatura), lo XOR su quattro punti no. Trascina i tre punti per allinearli; nel riquadro dello XOR clicca i punti per cambiarne l’etichetta.</Caption>
+</Figure>
+
+<Callout type="note" title="Anticipazione">
+
+Questo «contare quante etichettature si riescono a separare» è esattamente l’idea della <T id="vc-dimension">**VC-dimension**</T>: una retta nel piano riesce a separare tutte le etichettature di 3 punti (non allineati), ma non di 4. La VC-dimension delle rette nel piano è quindi 3.
+
+</Callout>
+
+---
+
+## Estendere il modello lineare
+
+### «Lineare» nei parametri, non negli input
+
+Nei modelli statistici parametrici, **la parola «lineare» non si riferisce alla retta**, ma al modo in cui i **coefficienti $\mathbf{w}$** compaiono nella formula: ognuno compare «da solo», moltiplicato per qualcosa, e i pezzi vengono sommati. Quindi niente vieta di usare, al posto di $x$, degli input trasformati come $x, x^2, x^3, \dots$ In questo modo si descrivono relazioni non lineari (curve) tra input e output, usando **la stessa macchina di apprendimento** (i minimi quadrati). È proprio la regressione polinomiale dell’introduzione:
+
+$$
+h_\mathbf{w}(x) = w_0 + w_1 x + w_2 x^2 + \dots + w_M x^M = \sum_{j=0}^{M} w_j x^j.
+$$
+
+La curva non è una retta rispetto a $x$, ma i pesi $w_j$ compaiono ancora in modo lineare.
+
+### Linear Basis Expansion (LBE)
+
+<Callout type="definition" title="Espansione in basi lineare">
+
+$$
+h_\mathbf{w}(\mathbf{x}) = \sum_{k=0}^{K} w_k\, \phi_k(\mathbf{x})
+$$
+
+dove le $\phi_k: \mathbb{R}^n \to \mathbb{R}$ sono trasformazioni dell’input fissate in partenza: ognuna prende il vettore di input ($n$ numeri) e restituisce un numero. In pratica si allunga il vettore di input aggiungendo nuove variabili calcolate a partire da $\mathbf{x}$ (<T id="basis-expansion">*linear basis expansion*</T>), e poi si fa un normale modello lineare su queste nuove variabili.
+
+</Callout>
+
+Esempi di $\phi$:
+
+- rappresentazione **polinomiale**: $\phi(\mathbf{x}) = x_j^2$ (una variabile al quadrato), $\phi(\mathbf{x}) = x_j x_i$ (il prodotto di due variabili), …;
+- trasformazioni non lineari di un singolo input: $\log(x_j)$ (il [logaritmo](#/prerequisiti/esponenziale-e-logaritmo)), $\sqrt{x_j}$ (la radice quadrata), …;
+- trasformazioni di più input insieme: $\phi(\mathbf{x}) = \|\mathbf{x}\|$ (la lunghezza del vettore);
+- spline, …
+
+Per esempio: $h(\mathbf{x}) = w_1x_1 + w_2x_2 + w_3\log(x_2) + w_4\log(x_3) + w_5(x_2x_3) + w_0$.
+
+Di solito il numero di parametri diventa $K > n$ (più pesi che variabili di partenza). Il modello è **lineare nei parametri** (e nelle $\phi$), non in $\mathbf{x}$: si usa lo stesso algoritmo di apprendimento. Vale per la regressione e anche per la classificazione (basta applicare la soglia a $\sum_k w_k\phi_k(\mathbf{x})$).
+
+<Callout type="warning" title="Pro e contro della basis expansion">
+
+**Pro**: descrive relazioni più complesse, è più espressivo.
+
+**Contro**:
+
+- con molte funzioni di base è facile cadere nell’**overfitting**, quindi servono metodi per controllare la complessità (intesa come flessibilità, cioè VC-dim, non come costo di calcolo);
+- la **maledizione della dimensionalità** (*curse of dimensionality*): il volume dello spazio cresce così in fretta, quando aumentano le dimensioni, che i dati disponibili diventano *sparsi* (pochi e lontani tra loro) e non bastano più a sostenere la complessità del modello;
+- le $\phi$ sono **fissate prima** di vedere i dati. L’alternativa sono i modelli adattivi, non lineari nei parametri, come le **reti neurali** (che imparano da sole le $\phi$) e le **SVM**.
+
+Resta poi aperta la domanda: quali $\phi$ scegliere? (approcci «a dizionario»).
+
+</Callout>
+
+---
+
+## Regolarizzazione: il controllo della complessità
+
+Come si controlla la complessità del modello? Tra i molti modi c’è il **coefficient shrinkage** («restringimento» dei coefficienti): tenere piccoli i pesi.
+
+### Ridge regression (regolarizzazione di Tikhonov)
+
+Alla loss si aggiunge un termine che **penalizza i pesi grandi** (<T id="ridge">ridge regression</T>):
+
+<Formula f={F.tikhonov} />
+
+**In parole semplici.** La loss ha ora due pezzi. Il primo è il solito errore sui dati. Il secondo è $\lambda\|\mathbf{w}\|^2$: la somma dei quadrati di tutti i pesi, moltiplicata per un numero $\lambda$ (lettera greca «lambda»). Se i pesi sono grandi, questo pezzo è grande e la loss sale: è una «multa» sui pesi grandi.
+
+$\lambda$ è l’**iperparametro di regolarizzazione**: un piccolo valore positivo, scelto da noi nella fase di **model selection**. Il modello che si ottiene è più «liscio» (*smooth*): vengono favoriti i modelli con pesi piccoli o nulli, cioè quelli che usano meno termini e quindi sono meno complessi. (Ricorda la [lezione 4](#/lezione/04/errore-di-training-e-di-test-al-variare-di-m): pesi enormi erano il segnale dell’overfitting.)
+
+<Callout type="note" title="Loss ed Errore non sono più sinonimi">
+
+Da qui in poi **Loss** indica la funzione obiettivo usata per l’addestramento (errore + penalità), mentre **Errore** $E$ indica la misura dell’errore del modello (solo il pezzo sui dati). Finora li avevamo trattati come la stessa cosa.
+
+</Callout>
+
+<Callout type="tip" title="Cambia l’obiettivo dell’apprendimento">
+
+Con la regolarizzazione cambia lo scopo: non si vuole più **solo** il modello che si adatta meglio ai dati, ma **il modello più semplice che si adatta bene ai dati**. La loss è una bilancia con due piatti:
+
+- **adattamento ai dati** (errore di training, $\sum_p(y_p - \mathbf{w}^T\mathbf{x}_p)^2$): spinge il modello a seguire i dati e a rendere minimi i residui;
+- **semplicità del modello** (penalità di Tikhonov, $\|\mathbf{w}\|^2$): punisce i pesi grandi, e così rende il modello più liscio, più semplice e più capace di generalizzare;
+
+e il **parametro di regolarizzazione** $\lambda$ decide quanto peso dare alla penalità.
+
+</Callout>
+
+#### Soluzione
+
+Come prima, ci sono due modi di trovare i pesi.
+
+- **Approccio diretto**: $\mathbf{w} = (X^TX + \lambda I)^{-1}X^T\mathbf{y}$. È la formula di prima con in più $\lambda I$, dove $I$ è la *matrice identità* (tutti 1 sulla diagonale e 0 altrove). La matrice $X^TX + \lambda I$ è **sempre invertibile** (per $\lambda > 0$): un vantaggio anche per i calcoli al computer.
+- **Approccio a gradiente**: si segue ancora il gradiente negativo della loss. La penalità per il peso $w_j$ è $\lambda w_j^2$, e la sua derivata rispetto a $w_j$ è $2\lambda w_j$. Quindi la nuova regola è
+
+$$
+\mathbf{w}_{new} = \mathbf{w} + \eta\,\Delta\mathbf{w} - 2\lambda\mathbf{w},
+$$
+
+dove $\Delta\mathbf{w}$ è il gradiente negativo del solo termine d’errore (moltiplicato per $\eta$), mentre la penalità è moltiplicata direttamente per $\lambda$. È la tecnica del <T id="weight-decay">**weight decay**</T> («decadimento dei pesi»): anche quando il gradiente dell’errore è nullo, a ogni passo ogni peso perde una piccola frazione del suo valore. I pesi tendono a «sgonfiarsi», a meno che i dati non li tengano su.
+
+<Deep title="Perché X^T X + λI è sempre invertibile?" kind="intuizione">
+
+Una matrice non è invertibile quando «schiaccia a zero» qualche direzione: esiste un vettore $\mathbf{v}$ non nullo che, moltiplicato per la matrice, dà zero.
+
+Per ogni vettore $\mathbf{v}$ si ha $\mathbf{v}^T X^TX\,\mathbf{v} = \|X\mathbf{v}\|^2 \ge 0$ (è una lunghezza al quadrato, quindi mai negativa). La matrice $X^TX$ può quindi avere direzioni in cui questo valore è zero (e allora è singolare, cioè non invertibile), ma mai valori negativi.
+
+Aggiungendo $\lambda I$ si somma $\lambda\|\mathbf{v}\|^2 > 0$ in ogni direzione. Quindi $\mathbf{v}^T(X^TX + \lambda I)\mathbf{v} > 0$ per ogni $\mathbf{v} \ne \mathbf{0}$: nessuna direzione viene mandata a zero e la matrice è invertibile.
+
+</Deep>
+
+#### Il compromesso governato da $\lambda$
+
+- **$\lambda$ piccolo**: nella loss conta soprattutto l’errore; la penalità quasi non si sente. Si ottiene un modello troppo complesso (pesi grandi, cioè di norma alta), con rischio di **overfitting**.
+- **$\lambda$ grande**: conta soprattutto la penalità; pur di tenere piccoli i pesi, il modello smette di seguire i dati. L’errore sui dati può crescere troppo, e si va verso l’**underfitting**.
+
+Il grande vantaggio è che abbiamo un **modo concreto di controllare la complessità**, facile da realizzare e utilizzabile in generale.
+
+<Callout type="tip" title="Tikhonov e SLT">
+
+La penalità spinge tutti i pesi verso valori piccoli (alcuni anche a zero), e così controlla la complessità: si ottiene un modello con VC-dimension più bassa (o più adatta), e il compromesso si regola con **un solo parametro**, $\lambda$. Nel [grafico del bound SLT](#/lezione/04/vc-dimension-e-bound-sul-rischio), aumentare $\lambda$ è come spostarsi verso sinistra (meno complessità): un $\lambda$ scelto bene porta vicino al minimo del bound su $R$.
+
+</Callout>
+
+#### Effetto sul polinomio di grado 9
+
+Riprendiamo il polinomio di grado 9 con 10 punti che, senza regolarizzazione ($\lambda = 0$), aveva errore di training nullo e overfitting fortissimo.
+
+<Figure n="5.14" title="Polinomio di grado 9 regolarizzato" size="wide">
+  <RidgeFit />
+  <Caption>Polinomio di grado 9 regolarizzato (in rosso) sui dieci punti della lezione 4, con la funzione vera in verde: con $\ln\lambda = -18$ la curva è liscia e segue bene la funzione vera; con $\ln\lambda = 0$ è troppo piatta. Il cursore di $\ln\lambda$ è condiviso con la figura 5.15; i coefficienti sono calcolati sui dati della figura.</Caption>
+</Figure>
+
+Nella figura $\lambda$ è indicato con il suo logaritmo, $\ln\lambda$, perché i valori utili sono piccolissimi e scomodi da scrivere. Con un $\lambda$ adatto ($\ln\lambda = -18$, cioè $\lambda \approx 1{,}5 \cdot 10^{-8}$, un numero con sette zeri dopo la virgola) il modello funziona bene: è **peggiore sul training** (non passa più esattamente per i punti) ma l’overfitting si riduce. Con $\lambda$ troppo alto ($\ln\lambda = 0$, cioè $\lambda = 1$) si finisce in underfitting.
+
+<Figure n="5.15" title="Errore RMS al variare di ln λ">
+  <RidgeRms />
+  <Caption>$E_{RMS}$ di training (blu) e di test (arancione) al variare di $\ln\lambda$: a sinistra overfitting, a destra underfitting, al centro il buon compromesso. Trascina il cursore sull’asse per scegliere $\lambda$.</Caption>
+</Figure>
+
+Anche i coefficienti mostrano l’effetto della regolarizzazione:
+
+| | $\ln\lambda = -\infty$ ($\lambda = 0$) | $\ln\lambda = -18$ | $\ln\lambda = 0$ |
+|---|---|---|---|
+| $w_0^*$ | 0,35 | 0,35 | 0,13 |
+| $w_1^*$ | 232,37 | 4,74 | −0,05 |
+| $w_2^*$ | −5321,83 | −0,77 | −0,06 |
+| $w_3^*$ | 48568,31 | −31,97 | −0,05 |
+| $w_4^*$ | −231639,30 | −3,89 | −0,03 |
+| $w_5^*$ | 640042,26 | 55,28 | −0,02 |
+| $w_6^*$ | −1061800,52 | 41,32 | −0,01 |
+| $w_7^*$ | 1042400,18 | −45,95 | −0,00 |
+| $w_8^*$ | −557682,99 | −91,53 | 0,00 |
+| $w_9^*$ | 125201,43 | 72,68 | 0,01 |
+
+I pesi enormi del caso senza regolarizzazione (prima colonna) diventano molto più piccoli: la regolarizzazione «doma» le oscillazioni. Nell’ultima colonna sono quasi tutti zero: troppo.
+
+### Altre tecniche di regolarizzazione
+
+- **Ridge regression** (norma $\|\cdot\|_2$): penalizza il quadrato dei pesi e tende a rendere **tutti** i pesi più piccoli.
+- <T id="lasso">**Lasso**</T> (norma $\|\cdot\|_1$): penalizza il valore assoluto dei pesi e tende a portare **alcuni pesi esattamente a zero** (lasciandone altri grandi). Un peso a zero vuol dire che quella variabile non viene usata: è una forma di **feature selection**. Purtroppo il valore assoluto ha uno spigolo in zero, e lì la loss non è differenziabile (non si può calcolare la derivata): servono altri metodi.
+- **Elastic net**: usa tutte e due le norme.
+
+<Callout type="tip" title="Perché L1 azzera i pesi e L2 no?">
+
+Guardiamo la «spinta» verso zero che ogni penalità dà a un peso $w$.
+
+Con L2 la penalità è $\lambda w^2$ e il suo gradiente è $2\lambda w$: la spinta è proporzionale al peso stesso. Quando $w$ è vicino a zero, la spinta diventa piccolissima: il peso si avvicina a zero sempre più piano e resta piccolo ma non nullo.
+
+Con L1 la penalità è $\lambda|w|$ e il suo gradiente (meglio: *sub-gradiente*, perché in zero c’è lo spigolo) è $\lambda\operatorname{sign}(w)$: una spinta **costante** verso zero, uguale anche per i pesi già piccoli. Questa spinta li porta esattamente a zero, se il termine d’errore non li «difende».
+
+</Callout>
+
+### Altri miglioramenti (opzionali)
+
+- **Data augmentation** («aumento dei dati»): aggiungere rumore agli input insegna al modello a ignorare le variazioni che non contano (robustezza e regolarizzazione); l’*oversampling* (ripetere più volte gli esempi delle classi rare) aiuta con i dataset sbilanciati.
+- **Input derivati**: si usa un piccolo numero di nuove variabili, ottenute come combinazioni lineari degli input (Principal Component Regression, Partial Least Squares).
+
+### Classificazione multi-classe (opzionale)
+
+Se le classi sono più di due, ci sono alcuni modi semplici:
+
+- codifica **1-of-K** delle classi (es. rosso, verde, blu → $(0,0,1), (0,1,0), (1,0,0)$) e un modello lineare per ciascuna componente;
+- **OVA** (*one-vs-all*, «uno contro tutti»): si addestrano $K$ classificatori binari, e ognuno distingue una classe da tutte le altre; per classificare si sceglie quello con l’uscita più alta (più positiva);
+- **AVA** (*all-vs-all*, *one-vs-one*, «tutti contro tutti»): un classificatore per ogni coppia di classi ($K(K-1)/2$ classificatori distinti: con 4 classi sono 6); vince la classe con la massima somma di uscite o con più voti. Ogni classificatore si addestra su meno dati.
+
+Con molte classi possono verificarsi fenomeni di **mascheramento** (una classe resta «nascosta» dalle altre e non vince mai). Esistono metodi più raffinati e modelli che hanno di natura più uscite. Altri classificatori lineari noti sono la **Linear Discriminant Analysis** e la **regressione logistica** (che modella direttamente $P(y \mid \mathbf{x})$, la probabilità della classe $y$ dato l’input $\mathbf{x}$).
+
+### Uno sguardo avanti
+
+- Il **Perceptron** (Rosenblatt, 1958, ispirato alla biologia) minimizza solo le classificazioni sbagliate ed è la base delle **reti neurali**: più unità organizzate in strati, che realizzano un’**espansione in basi adattiva** (le $\phi$ vengono imparate dai dati invece di essere fissate), cioè *representation learning* (apprendimento della rappresentazione), addestrate con la discesa del gradiente.
+- Le **SVM** (Vapnik, 1996) regolarizzano tramite la **massimizzazione del margine** tra le classi (cercano il confine più lontano possibile dai punti) e allargano lo spazio delle feature con la basis expansion (es. polinomi).
+
+Tutte e due realizzano un’approssimazione non lineare e flessibile, per classificazione e regressione.
+
+<Callout type="abstract" title="Lezioni apprese dai modelli lineari">
+
+- È possibile **apprendere regolando dei parametri liberi** $\mathbf{w}$, cercando in uno spazio continuo con la guida di una funzione di loss.
+- Si scrive il problema come **LMS** e se ne ricavano due algoritmi: **diretto** (equazioni normali, SVD) e **iterativo** (discesa del gradiente, delta rule).
+- I modelli lineari hanno un forte **language bias** (risolvono solo problemi linearmente separabili).
+- Due concetti chiave del filo rosso del corso: la **basis expansion** (più **flessibilità**) e la **regolarizzazione** (**controllo della complessità**). Li ritroveremo, in forme diverse, nelle reti neurali e nelle SVM.
+
+</Callout>
+
+---
+
+## K-nearest neighbors
+
+Ora ci si sposta all’estremo opposto: da un metodo rigido a uno **molto flessibile** (e locale, cioè che guarda solo i dati vicini).
+
+### Apprendimento eager e lazy
+
+I metodi si distinguono anche per *quando* fanno il lavoro (<T id="eager-lazy">eager e lazy</T>):
+
+- **eager** («avido», che si porta avanti): si analizzano subito i dati di training e si costruisce un’**ipotesi esplicita** (come il modello lineare, che calcola i suoi pesi una volta per tutte);
+- **lazy** («pigro»): si memorizzano i dati e non si fa altro, finché non arriva un punto di test; solo allora si costruisce una risposta fatta apposta per quel punto.
+
+### 1-nearest neighbor
+
+L’idea è semplicissima: per classificare un punto nuovo, si cerca l’esempio più simile tra quelli memorizzati e si copia la sua risposta.
+
+<Callout type="definition" title="Algoritmo 1-NN">
+
+1. Memorizzare i dati di training $\langle \mathbf{x}_p, y_p\rangle$, $p = 1,\dots,l$.
+2. Dato un input $\mathbf{x}$ (di dimensione $n$), trovare l’esempio di training più vicino:
+
+   $$
+   i(\mathbf{x}) = \arg\min_p d(\mathbf{x}, \mathbf{x}_p),
+   $$
+
+   cioè l’indice $p$ dell’esempio che rende minima la distanza $d$ da $\mathbf{x}$. Per esempio con la [distanza](#/prerequisiti/lunghezza-e-distanza) euclidea (quella «in linea d’aria», calcolata con Pitagora) $d(\mathbf{x}, \mathbf{x}_p) = \sqrt{\sum_{t=1}^{n}(x_t - x_{p,t})^2} = \|\mathbf{x} - \mathbf{x}_p\|$.
+3. Restituire $y_i$, la risposta di quell’esempio.
+
+</Callout>
+
+Il 1-NN è **molto flessibile**: sul training set fa **zero errori** (ogni punto di training ha come vicino più prossimo sé stesso). Il confine di decisione non è una retta ed è molto irregolare, forse inutilmente «rumoroso» (per esempio nello scenario 1, dove sappiamo che la soluzione migliore è quasi una retta). E sui dati di test?
+
+### K-nearest neighbors
+
+Invece di fidarsi di un solo vicino, è naturale guardare **più vicini** e fare la media delle loro risposte (<T id="k-nn">K-nearest neighbors</T>):
+
+<Formula f={F.knnAvg} />
+
+dove $N_k(\mathbf{x})$ è l’insieme dei $k$ pattern più vicini a $\mathbf{x}$ secondo la distanza $d$ (la lettera $N$ sta per *neighborhood*, «vicinato»). **In parole semplici**: si sommano i target dei $k$ vicini e si divide per $k$.
+
+Se attorno a $\mathbf{x}$ una classe è chiaramente la più numerosa, è probabile che anche $\mathbf{x}$ le appartenga: la regola di classificazione è il **voto a maggioranza** tra i membri di $N_k(\mathbf{x})$. Per target in $\{0,1\}$:
+
+$$
+h(\mathbf{x}) = \begin{cases} 1 & \text{se } \text{avg}_k(\mathbf{x}) > 0{,}5 \\ 0 & \text{altrimenti.} \end{cases}
+$$
+
+Perché $0{,}5$? Se i target sono $0$ e $1$, la loro media è la frazione di vicini di classe 1. Con 5 vicini di cui 3 di classe 1, la media è $3/5 = 0{,}6 > 0{,}5$: vince la classe 1.
+
+Per la **regressione** si usa direttamente la media dei target dei $k$ vicini come risposta.
+
+<Figure n="5.16" title="1-NN e 5-NN sullo stesso punto">
+  <KnnQuery />
+  <Caption>1-NN restituisce «+» per $x_q$, 5-NN restituisce «−»: aumentare $k$ «liscia» la decisione, utile con dati rumorosi. Il cerchio contiene i $k$ vicini che votano; trascina $x_q$ e cambia $k$.</Caption>
+</Figure>
+
+<Figure n="5.17" title="Confini di decisione del 1-NN e del k-NN" size="wide">
+  <KnnRegions />
+  <Caption>Confini di decisione del 1-NN (sinistra) e del $k$-NN (destra, $k = 15$ all’inizio) sullo stesso problema della figura 5.1. I puntini colorano la classe predetta in ogni zona del piano. Il valore di $k$ è condiviso con le figure 5.19–5.21.</Caption>
+</Figure>
+
+Con $k = 15$ il modello è ancora molto flessibile, ma fa qualche errore sul training; il confine è ancora irregolare ma meno, e si **adatta alle densità locali** delle classi (cioè segue le zone in cui una classe è più fitta).
+
+Il K-NN usa, senza dirlo, il <T id="voronoi">**diagramma di Voronoi**</T>. È una divisione del piano in celle, una per ogni pattern: la cella di un pattern contiene tutti i punti che sono più vicini a lui che a qualunque altro pattern. I lati delle celle sono i punti alla stessa distanza da due pattern. Il 1-NN dà a ogni cella l’etichetta del suo pattern.
+
+<Figure n="5.18" title="Il diagramma di Voronoi" size="wide">
+  <Voronoi />
+  <Caption>Diagramma di Voronoi: il confine del 1-NN segue i lati delle celle tra punti di classi diverse (celle colorate in blu per la classe 1 e in arancione per la classe 0). Trascina il punto da classificare: la sua cella si evidenzia.</Caption>
+</Figure>
+
+### Il comportamento al variare di $k$
+
+Anche nel K-NN ritroviamo il **compromesso tra underfitting e overfitting**: qui lo governa il valore di $k$. L’errore di test ha la classica forma a **U** (alto, poi basso, poi di nuovo alto) passando tra due estremi:
+
+- $k = 1$: il caso **estremamente flessibile** (errore di training nullo, confine frastagliato, rischio di overfitting);
+- $k = l$ (tutti i dati): un modello **rigidissimo**. I «vicini» sono sempre tutti gli esempi, quindi risponde con **un’unica media per tutti i dati** (per la classificazione, la classe più frequente nel training set), qualunque sia l’input.
+
+<Figure n="5.19" title="L’errore del K-NN al variare di k" size="wide">
+  <KnnCurves variant="u" />
+  <Caption>Comportamento del K-NN: da $k = l$ (rigido, a sinistra) a $k = 1$ (flessibile, a destra) l’errore di training scende sempre, quello di test ha forma a U, con il minimo cerchiato. Errori calcolati sul problema della figura 5.1 (test su 4000 punti nuovi). Trascina il cursore per scegliere $k$.</Caption>
+</Figure>
+
+Dove l’abbiamo già visto? È lo stesso andamento del **fitting polinomiale** al crescere del grado $M$, e del grafico del **VC-bound** della SLT ([lezione 4](#/lezione/04/vc-dimension-e-bound-sul-rischio)). Qui è $k$ a fare da controllo della complessità (letto da destra verso sinistra, cioè come $l/k$: $k$ piccolo vuol dire modello complesso). I valori intermedi di $k$ danno il miglior compromesso.
+
+### Varianti
+
+**Multi-classe**: con più di due classi si restituisce la classe più frequente tra i $k$ vicini:
+
+$$
+h(\mathbf{x}) = \arg\max_v \sum_{\mathbf{x}_i \in N_k(\mathbf{x})} \mathbb{1}_{v, y_i}, \qquad \mathbb{1}_{v, y_i} = \begin{cases} 1 & \text{se } v = y_i \\ 0 & \text{altrimenti.} \end{cases}
+$$
+
+In parole: il simbolo $\mathbb{1}_{v, y_i}$ vale 1 se il vicino $i$ è della classe $v$, e 0 altrimenti. Sommandolo sui vicini si contano i voti per la classe $v$. $\arg\max_v$ vuol dire «la classe $v$ che ha preso più voti».
+
+**Distanza pesata**: i vicini più vicini contano di più. Ogni voto viene diviso per il quadrato della distanza: un vicino a distanza doppia conta un quarto.
+
+$$
+h(\mathbf{x}) = \arg\max_v \sum_{\mathbf{x}_i \in N_k(\mathbf{x})} \frac{\mathbb{1}_{v, y_i}}{d(\mathbf{x}, \mathbf{x}_i)^2},
+$$
+
+e se $d = 0$ per qualche $\mathbf{x}_i$ (il punto coincide con un esempio) si restituisce direttamente $y_i$ (non si può dividere per zero).
+
+### Un estremo del ML
+
+Il K-NN non costruisce un’ipotesi globale, valida per tutte le istanze: **non c’è un modello da addestrare**, ma bisogna tenere in memoria tutti gli esempi. Fa stime **locali** (con funzioni localmente costanti: in ogni piccola zona dà la stessa risposta) invece di un’approssimazione lineare globale. È un metodo *lazy*, basato sulla memoria, sulle istanze, sulle distanze.
+
+### K-NN contro modello lineare
+
+| | Lineare | K-NN |
+|---|---|---|
+| Flessibilità | rigido (**bassa varianza**) | flessibile (**alta varianza**) |
+| Timing | eager | lazy |
+| Tipo | parametrico | instance-based |
+| Parametri | $n+1$ (3 nell’esempio) | circa $l/k$ «parametri effettivi» |
+
+«Varianza» qui vuol dire: quanto cambia il modello se cambiano un po’ i dati di training. Con $k$ piccolo bastano pochi punti diversi per cambiare il confine: la flessibilità si paga. Si potrebbe pensare che il K-NN abbia un solo parametro ($k$), ma in realtà ha circa **$l/k$ parametri effettivi** (Hastie-Tibshirani-Friedman): è come se dividesse lo spazio in $l/k$ regioni, ognuna con la sua «media». Con $l = 200$ e $k = 10$ sono circa 20 regioni.
+
+<Figure n="5.20" title="K-NN, modello lineare ed errore di Bayes" size="wide">
+  <KnnCurves variant="htf" />
+  <Caption>Curve di errore del K-NN al variare di $k$ (in alto) e dei gradi di libertà $l/k$ (in basso): training di 200 punti, test di 4000. I quadratini sono il modello lineare (3 parametri), la linea viola l’errore ottimo di Bayes. Trascina il cursore per scegliere $k$.</Caption>
+</Figure>
+
+Passando da $k$ grande a $k = 1$ (cioè aumentando $l/k$) si va dall’**underfitting** all’**overfitting**: l’errore di training scende fino a zero, quello di test ha un minimo per valori intermedi. È di nuovo il grafico del bound SLT, con $k$ nel ruolo del controllo della complessità: più flessibilità permette di trovare il risultato migliore, **se** la complessità viene tenuta sotto controllo.
+
+### Il classificatore ottimo di Bayes
+
+Qual è il miglior classificatore possibile in assoluto? Se sapessimo esattamente come sono generati i dati, potremmo calcolarlo.
+
+<Callout type="definition" title="Classificatore di Bayes ed errore di Bayes">
+
+Se si conosce la densità $P(\mathbf{x}, y)$ (la legge di probabilità che genera i dati), la scelta migliore è assegnare a ogni punto la classe più probabile (<T id="bayes">classificatore ottimo di Bayes</T>):
+
+<Formula f={F.bayes} />
+
+**In parole semplici.** $P(v \mid \mathbf{x})$ è una [probabilità condizionata](#/prerequisiti/probabilità-condizionata): la probabilità che la classe sia $v$, *sapendo* che il punto è $\mathbf{x}$. La formula dice: tra tutte le classi $v$, scegli quella con la probabilità più alta.
+
+Il suo tasso d’errore, detto **Bayes rate**, è il **minimo errore raggiungibile** con quella distribuzione dei dati (assumendo di conoscere la densità che li genera). Non è zero: dove le classi si sovrappongono, anche la scelta più probabile a volte è sbagliata.
+
+</Callout>
+
+Il K-NN approssima direttamente questa soluzione: il voto a maggioranza in un intorno è proprio una stima di $\arg\max_v P(v \mid \mathbf{x})$. Rispetto a Bayes fa due «sconti»:
+
+- la probabilità condizionata **in un punto** diventa la probabilità condizionata **in un intorno** del punto (approssimazione locale): invece di chiedersi «qual è la classe più probabile esattamente qui?», ci si chiede «qual è la classe più frequente qui attorno?»;
+- le probabilità non si conoscono, quindi si stimano con le **proporzioni** nel campione di training (3 vicini su 5 di classe 1 → probabilità stimata 60%).
+
+<Figure n="5.21" title="Confine di Bayes e confine del K-NN" size="wide">
+  <BayesVsKnn />
+  <Caption>Confine di Bayes ottimo (sinistra, tratteggiato in viola), calcolato conoscendo la densità che ha generato i dati, e confine del 15-NN (destra): il 15-NN è molto vicino all’ottimo, coerentemente con il minimo dell’errore di test nella figura precedente.</Caption>
+</Figure>
+
+### Bias induttivo del K-NN
+
+Anche il K-NN fa delle assunzioni in partenza:
+
+1. **La distanza scelta** stabilisce quali esempi sono simili: si assume che la classe di un punto sia simile a quella dei suoi vicini **secondo la metrica scelta** («metrica» = modo di misurare le distanze). Si possono usare metriche diverse da quella euclidea; i dati simbolici richiedono metriche fatte apposta (es. la **distanza di Hamming** tra stringhe della stessa lunghezza: il numero di posizioni in cui sono diverse; tra «casa» e «cosa» vale 1).
+2. **Località**: l’approssimazione è locale, e si assume una *smoothness* locale, cioè che punti vicini abbiano risposte simili (da confrontare più avanti con il bias del deep learning).
+
+Il bias legato alla metrica è spesso sottovalutato nei libri, ma è cruciale.
+
+### Limiti del K-NN
+
+#### Scala delle variabili e metrica
+
+La scelta della scala dipende da quello che si sa del problema. Se le variabili devono contare tutte allo stesso modo, bisogna stare attenti alle differenze di *range* (l’intervallo di valori di ogni variabile). Esempio: se una variabile è l’altezza in metri (da 1,5 a 2) e un’altra è lo stipendio in euro (da 1000 a 5000), nella distanza conta solo lo stipendio. **Riscalare i dati** (es. portarli a media zero e varianza uno) equivale a **cambiare la metrica**. La scalatura può cambiare del tutto quale sia il vicino più prossimo: il K-NN è fragile anche davanti a una preparazione dei dati elementare.
+
+<Figure n="5.22" title="Riscalare una variabile cambia il vicino">
+  <ScaleNN />
+  <Caption>Riscalando una variabile cambia il vicino più prossimo: con la scala originale il vicino di $x$ è il punto in alto (blu); comprimendo l’asse $x_1$ diventa il punto a destra (arancione). Muovi il cursore della scala.</Caption>
+</Figure>
+
+#### Costo computazionale
+
+Il K-NN costruisce l’approssimazione locale **per ogni nuovo esempio** da predire: il costo di calcolo è **spostato nella fase di predizione**. Addestrare non costa nulla, ma rispondere sì: per ogni input si calcolano le distanze da tutti i vettori memorizzati (il tempo cresce in proporzione al numero di pattern). Esistono algoritmi di ricerca fatti apposta per andare più veloci, come l’indicizzazione dei pattern o le tecniche di ricerca **approssimata** dei vicini (*approximate nearest neighbor search*), che rinunciano a trovare sempre il vicino esatto in cambio di una ricerca molto più rapida. Anche il costo in **spazio** (memoria) è alto: bisogna conservare tutti i dati di training.
+
+#### Interpretabilità
+
+I modelli K-NN si lasciano interpretare poco: la spiegazione di una risposta è soggettiva e dipende dalla metrica.
+
+#### La maledizione della dimensionalità
+
+Il K-NN funziona bene se vicino a ogni $\mathbf{x}$ si trova un buon numero di dati, cioè se il **campionamento è denso**. Quando le variabili di input sono molte (dimensione $n$ alta) spesso fallisce, per la <T id="curse-of-dimensionality">**curse of dimensionality**</T> («maledizione della dimensionalità»). Si manifesta in molti modi; tre in particolare toccano direttamente la generalizzazione.
+
+**1. In alta dimensione è difficile trovare punti vicini.** Diventa difficile raccogliere $k$ osservazioni «vicine» (cioè simili) a un punto di query (il punto da classificare). Gli intorni tendono a diventare grandi nello spazio, e le stime non sono più locali. Si potrebbe rimpicciolire l’intorno, ma allora ci cadono dentro meno punti: vuol dire ridurre $k$, e la varianza della stima aumenta (overfitting).
+
+Facciamo un conto. Prendiamo dati sparsi in modo uniforme in un cubo di lato 1 (il «cubo unitario») e cerchiamo un cubetto, al suo interno, che contenga una frazione $r$ dei dati. Il suo lato deve essere $r^{1/n}$. Perché? Il volume di un cubo è il lato elevato al numero di dimensioni (volume $=$ lato$^n$), e il cubetto deve avere volume $r$: quindi il lato è la radice $n$-esima di $r$, cioè $r^{1/n}$.
+
+<Figure n="5.23" title="La maledizione della dimensionalità" size="wide">
+  <Curse />
+  <Caption>Maledizione della dimensionalità: lato del sottocubo necessario per catturare una frazione $r$ del volume, al variare della dimensione $n$ (a sinistra il sottocubo in 3D dentro il cubo unitario). Scegli la frazione di dati, oppure fissa il lato e leggi la frazione catturata.</Caption>
+</Figure>
+
+- Per catturare il 10% dei dati: in 2D basta un lato di $0{,}1^{1/2} \approx 0{,}32$ (circa il 30% del range di ogni variabile); in 10D serve $0{,}1^{1/10} \approx 0{,}8$, cioè l’**80% del range** di ogni coordinata! Anche solo per l’1% del volume, in 10D serve il 63% del range. L’intorno non è più «locale» e i vicini non sono più simili.
+- Al contrario, fissiamo il lato a 0,3: in 1D si cattura il 30% dei dati, in 2D il 9% ($0{,}3 \cdot 0{,}3$), in 3D il 2,7%, in 10D circa lo **0,0006%**. Quel lato può non bastare a trovare $k$ dati, a meno di usare un $k$ piccolo (e quindi rischiare l’overfitting).
+
+**2. Bassa densità di campionamento.** La densità di campionamento (quanto sono fitti i dati lungo ogni direzione) è proporzionale a $l^{1/n}$. Se 100 punti bastano a stimare una funzione in $\mathbb{R}^1$ (su una linea), per avere un’accuratezza simile in $\mathbb{R}^{10}$ ne servono $100^{10} = 10^{20}$: un 1 seguito da venti zeri.
+
+**3. Feature irrilevanti** (*curse of noisy*). Se il target dipende solo da poche delle tante feature (es. 2 su 20), la somiglianza tra pattern può essere dominata dal gran numero di feature che non c’entrano, e il «vicino» trovato non è davvero simile nelle cose che contano. Il problema cresce con la dimensionalità. Rimedi: **pesare le feature** secondo quanto sono importanti (è come allungare gli assi lungo alcune dimensioni; i pesi si possono cercare con una costosa model selection o con altri metodi), oppure fare **feature selection** (eliminare delle variabili, riducendo la dimensione dell’input).
+
+### Scelte di progetto del K-NN
+
+- La **metrica** $d$ (euclidea, Hamming, Manhattan, pesi sulle feature…): spesso è la chiave del successo di un’applicazione.
+- Il valore di **$k$**, che controlla underfitting e overfitting.
+- Spesso bisogna scegliere un **sottoinsieme dei dati** (un insieme di prototipi, per esempio trovati con il clustering) e un **sottoinsieme delle feature**.
+
+Estensioni ad altri modelli locali: *kernel smoothers*, regressione lineare locale, metodi a prototipi, *case-based reasoning* (ragionamento basato sui casi).
+
+<Callout type="abstract" title="Lezioni generali dal K-NN">
+
+- Una varianza troppo bassa è povera (modelli lineari rigidi), una troppo alta è pericolosa (K-NN).
+- **Smoothing** (rendere più liscio): nel K-NN si ottiene aumentando $k$.
+- **Curse of dimensionality**: il volume dello spazio cresce così in fretta che i dati diventano sparsi.
+- Le curve di errore al variare di $k$ sono un altro esempio del grafico del bound SLT.
+- Il bias induttivo del K-NN è legato alla metrica.
+
+</Callout>
+
+### E adesso?
+
+Il K-NN non costruisce un vero «modello appreso»: non trova regolarità e non riassume la conoscenza, e non raggiunge l’obiettivo dell’apprendimento (poter «dimenticare» gli esempi dopo aver costruito il modello). Nelle prossime lezioni si cercano modelli **compatti** come la LTU (tutta la conoscenza in pochi parametri) ma **flessibili** come il K-NN, con un buon controllo della complessità: le **reti neurali**.
+
+Il professore suggerisce di guardare in anticipo le slide delle lezioni successive, e in particolare la **dimostrazione del teorema di convergenza del Perceptron** ([lezione 6](#/lezione/06)).
+
+<Exam>
+<Q q="Formulare il problema di apprendimento per un modello lineare con LMS, per regressione e classificazione.">
+
+Dati $l$ esempi $(\mathbf{x}_p, y_p)$ si cercano i pesi $\mathbf{w}$ che rendono minimo $E(\mathbf{w}) = \sum_p (y_p - \mathbf{x}_p^T\mathbf{w})^2 = \|\mathbf{y} - X\mathbf{w}\|^2$ (con $x_0 = 1$ per il bias), cioè la somma dei quadrati degli errori. In regressione la risposta è $h(\mathbf{x}) = \mathbf{x}^T\mathbf{w}$. In classificazione si addestra con la stessa loss applicata all’uscita lineare $\mathbf{w}^T\mathbf{x}$ (target $0/1$ o $\pm1$) e poi si usa $h(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$, valutando l’errore di classificazione.
+
+</Q>
+<Q q="Derivare il gradiente dell’errore quadratico e le equazioni normali.">
+
+$\frac{\partial E}{\partial w_j} = \sum_p 2(y_p - \mathbf{x}_p^T\mathbf{w})\,\frac{\partial(y_p - \mathbf{x}_p^T\mathbf{w})}{\partial w_j} = -2\sum_p \delta_p\,x_{p,j}$, perché nel prodotto scalare solo il pezzo $x_{p,j}w_j$ dipende da $w_j$. Mettendo il gradiente uguale a zero per ogni $j$ e scrivendo con le matrici: $X^T(\mathbf{y} - X\mathbf{w}) = 0$, cioè $(X^TX)\mathbf{w} = X^T\mathbf{y}$. Se $X^TX$ è non singolare, $\mathbf{w} = (X^TX)^{-1}X^T\mathbf{y} = X^+\mathbf{y}$; in pratica si usa la SVD, che dà la soluzione a norma minima.
+
+</Q>
+<Q q="Descrivere l’algoritmo di discesa del gradiente; differenza tra batch e on-line; ruolo di $\eta$.">
+
+Si parte da pesi piccoli, si calcola $\Delta\mathbf{w} = -\partial E/\partial\mathbf{w}$, si aggiorna $\mathbf{w} \leftarrow \mathbf{w} + \eta\Delta\mathbf{w}$ e si ripete fino a convergenza. Batch: il gradiente è sommato su tutti i pattern, un aggiornamento per epoca, stima più precisa. On-line (stocastica): un aggiornamento per ogni pattern; si fanno progressi a ogni esempio ma con più rumore, e serve un $\eta$ più piccolo. $\eta$ regola il compromesso velocità/stabilità: troppo piccolo è lento, troppo grande oscilla o diverge (si allontana dal minimo); si può ridurre un po’ alla volta.
+
+</Q>
+<Q q="Spiegare la delta rule come regola di correzione dell’errore.">
+
+$\Delta w_j \propto \sum_p \delta_p\,x_{p,j}$ con $\delta_p = y_p - \mathbf{x}_p^T\mathbf{w}$ (il simbolo $\propto$ vuol dire «proporzionale a»). Se l’errore è zero non si corregge. Con input positivo e output troppo basso ($\delta > 0$) il peso cresce e l’output sale; con output troppo alto il peso scende. Con input negativo i segni si invertono; con input nullo il peso resta fermo. L’input dice quanto ogni peso è responsabile dell’errore (esempio della figura 5.10).
+
+</Q>
+<Q q="Perché per la classificazione si usa l’errore quadratico su $\mathbf{w}^T\mathbf{x}$ invece della loss 0/1?">
+
+La loss 0/1 su $\operatorname{sign}(\mathbf{w}^T\mathbf{x})$ è costante a tratti (a gradini): il gradiente è zero quasi ovunque e non indica come muoversi (il problema diventa combinatorio). L’errore quadratico su $\mathbf{w}^T\mathbf{x}$ è liscio e differenziabile, e con target $\pm1$ spinge $\mathbf{w}^T\mathbf{x}$ verso il target, cioè dal lato giusto: le due loss hanno il minimo nella stessa zona.
+
+</Q>
+<Q q="Cos’è la separabilità lineare? Perché lo XOR non è linearmente separabile?">
+
+Due insiemi sono linearmente separabili se un iperpiano (una retta nel piano) li separa completamente. Nello XOR i positivi ($01$, $10$) stanno su una diagonale del quadrato e i negativi ($00$, $11$) sull’altra. Una retta che lasci $01$ e $10$ dallo stesso lato lascia da quel lato anche il punto a metà strada tra loro (il centro del quadrato). Ma il centro è anche a metà strada tra $00$ e $11$: quindi almeno uno dei due negativi finisce dal lato sbagliato. Tre punti non allineati sono invece sempre separabili (VC-dim delle rette nel piano = 3).
+
+</Q>
+<Q q="Cos’è la linear basis expansion? Pro e contro.">
+
+$h_\mathbf{w}(\mathbf{x}) = \sum_k w_k\phi_k(\mathbf{x})$ con $\phi_k$ fissate (polinomi, log, prodotti, norme, spline): il modello non è lineare in $\mathbf{x}$ ma è lineare nei parametri, quindi si usa lo stesso algoritmo LMS. Pro: è più espressivo. Contro: rischio di overfitting (serve il controllo della complessità), maledizione della dimensionalità, $\phi$ fissate prima di vedere i dati (alternativa: modelli adattivi come reti neurali e SVM) e il problema di quali $\phi$ scegliere.
+
+</Q>
+<Q q="Scrivere la loss di Tikhonov, la soluzione diretta e la regola di weight decay; ruolo di $\lambda$.">
+
+$\text{Loss}(\mathbf{w}) = \sum_p (y_p - \mathbf{x}_p^T\mathbf{w})^2 + \lambda\|\mathbf{w}\|^2$ (errore sui dati più penalità sui pesi grandi). Soluzione diretta: $\mathbf{w} = (X^TX + \lambda I)^{-1}X^T\mathbf{y}$, sempre invertibile per $\lambda > 0$. A gradiente: $\mathbf{w}_{new} = \mathbf{w} + \eta\Delta\mathbf{w} - 2\lambda\mathbf{w}$ (weight decay). $\lambda$ è un iperparametro scelto in model selection: piccolo porta a overfitting, grande a underfitting; controlla la complessità con un solo parametro.
+
+</Q>
+<Q q="Differenza tra regolarizzazione L1 e L2.">
+
+L2 (ridge) penalizza $w^2$: rende tutti i pesi più piccoli, ma il gradiente $2\lambda w$ si indebolisce vicino a zero e i pesi restano non nulli. L1 (lasso) penalizza $|w|$: il sub-gradiente $\lambda\operatorname{sign}(w)$ è costante e porta alcuni pesi esattamente a zero (feature selection), ma la loss non è differenziabile in zero. Elastic net usa entrambe.
+
+</Q>
+<Q q="Descrivere il K-NN; confrontarlo con il modello lineare; cos’è il classificatore di Bayes?">
+
+Il K-NN memorizza il training set e classifica un punto con il voto a maggioranza dei $k$ vicini (per la regressione, con la loro media); $k = 1$ è flessibilissimo, $k = l$ rigidissimo. Rispetto al lineare: alta varianza contro bassa, lazy contro eager, instance-based contro parametrico, circa $l/k$ parametri effettivi contro $n+1$. Il classificatore di Bayes sceglie $\arg\max_v P(v \mid \mathbf{x})$ conoscendo la densità: il suo errore è il minimo possibile, e il K-NN lo approssima stimando le probabilità con le proporzioni in un intorno.
+
+</Q>
+<Q q="Spiegare la maledizione della dimensionalità.">
+
+In alta dimensione il volume cresce così in fretta che i dati diventano sparsi. Per catturare una frazione $r$ di dati uniformi nel cubo unitario serve un lato $r^{1/n}$: il 10% in 10D richiede l’80% del range di ogni coordinata, quindi gli intorni non sono più locali. La densità di campionamento va come $l^{1/n}$ (servono $100^{10}$ punti in 10D per la stessa accuratezza di 100 punti in 1D). Le feature irrilevanti dominano le distanze. Rimedi: pesare le feature o fare feature selection.
+
+</Q>
+</Exam>

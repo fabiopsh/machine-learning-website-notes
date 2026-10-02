@@ -25,6 +25,17 @@ export function useScrollSpy(ids: string[]) {
   return active
 }
 
+/** Id della sezione (h2/h3) che si sta leggendo, o `undefined` se si è ancora sopra la prima. */
+export function currentSectionId(): string | undefined {
+  const line = window.innerHeight * 0.28
+  let section: string | undefined
+  for (const h of document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]')) {
+    if (h.getBoundingClientRect().top - line > 0) break
+    section = h.id
+  }
+  return section
+}
+
 export function scrollToSection(lessonId: string, id: string, smooth = true) {
   const el = document.getElementById(id)
   if (!el) return

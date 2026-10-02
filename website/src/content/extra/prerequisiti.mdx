@@ -1,0 +1,497 @@
+import { DotProduct } from '../../widgets/l01/DotProduct'
+import { GradientExplorer } from '../../widgets/l01/GradientExplorer'
+import { GaussianExplorer } from '../../widgets/l01/GaussianExplorer'
+import { LineExplorer } from '../../widgets/pre/LineExplorer'
+import { TangentExplorer } from '../../widgets/pre/TangentExplorer'
+
+<Lead>Gli appunti del corso danno per scontate alcune basi di matematica: che cos’è una funzione, una derivata, un vettore, una probabilità. Questa pagina le spiega **da zero**, con parole semplici e con esempi fatti di numeri. Non serve leggerla tutta in ordine: usala come un prontuario, e torna qui ogni volta che una formula delle lezioni ti blocca. Le lezioni nella versione «spiegata semplice» rimandano direttamente al punto giusto di questa pagina.</Lead>
+
+<Callout type="note" title="Che cosa c’è qui (e che cosa no)">
+
+Questa pagina **non fa parte degli appunti del corso**: è un aiuto in più, scritto per chi ha bisogno di ripassare. Contiene solo quello che serve per leggere le lezioni: l’idea di ogni concetto, come si legge il simbolo, un esempio. Non ci sono dimostrazioni.
+
+</Callout>
+
+## Come leggere i simboli
+
+Una formula è una frase scritta in un altro alfabeto. Prima di tutto bisogna saperla leggere.
+
+### Lettere, pedici e apici
+
+- Una **lettera** ($x$, $w$, $l$…) è il nome di un numero. Si usa una lettera quando il numero non è fissato o non lo conosciamo ancora: «chiamiamo $x$ l’età di una persona».
+- Le **lettere greche** sono lettere come le altre, usate per avere più nomi a disposizione. Le più frequenti nel corso: $\eta$ (eta), $\lambda$ (lambda), $\mu$ (mu), $\sigma$ (sigma), $\delta$ (delta), $\varepsilon$ (epsilon), $\theta$ (theta), $\phi$ (fi), $\pi$ (pi greco, circa $3{,}14$).
+- Un **pedice** è il numerino scritto in basso: $x_1$, $x_2$, $x_3$. Serve a distinguere più numeri della stessa famiglia: $x_1$ è «il primo $x$», $x_2$ «il secondo». Non è un’operazione. $x_i$ vuol dire «l’$i$-esimo $x$», dove $i$ è un numero che scegliamo (1, 2, 3…).
+- Un **apice** è il numerino scritto in alto, e di solito è una **potenza**: $x^2$ vuol dire $x \cdot x$ («$x$ al quadrato»), $x^3$ vuol dire $x \cdot x \cdot x$. In generale $x^n$ è $x$ moltiplicato per sé stesso $n$ volte. Esempio: $2^4 = 2 \cdot 2 \cdot 2 \cdot 2 = 16$.
+- La **radice quadrata** $\sqrt{x}$ è l’operazione inversa del quadrato: è il numero che, moltiplicato per sé stesso, dà $x$. Esempio: $\sqrt{9} = 3$, perché $3 \cdot 3 = 9$. Si può scrivere anche come potenza: $\sqrt{x} = x^{1/2}$. Allo stesso modo $x^{1/n}$ è la radice $n$-esima: il numero che moltiplicato $n$ volte per sé stesso dà $x$.
+- Il **grassetto** indica un vettore, cioè una lista di numeri: $\mathbf{x} = (x_1, x_2, \dots, x_n)$. I tre puntini vogliono dire «e così via».
+
+### La sommatoria
+
+Il simbolo $\sum$ (la lettera greca sigma maiuscola) vuol dire **«somma tutti questi»**. È solo un modo corto di scrivere una somma lunga.
+
+$$
+\sum_{i=1}^{4} x_i = x_1 + x_2 + x_3 + x_4
+$$
+
+Si legge così: «somma degli $x_i$, per $i$ che va da 1 a 4». Sotto il simbolo c’è il punto di partenza ($i = 1$), sopra il punto di arrivo ($4$), a destra la cosa da sommare ($x_i$). L’indice $i$ fa da contatore: prima vale 1, poi 2, poi 3, poi 4.
+
+<Callout type="example" title="Una sommatoria con i numeri">
+
+Se $x_1 = 2$, $x_2 = 5$, $x_3 = 1$, $x_4 = 4$:
+
+- $\sum_{i=1}^{4} x_i = 2 + 5 + 1 + 4 = 12$;
+- $\sum_{i=1}^{4} x_i^2 = 4 + 25 + 1 + 16 = 46$ (prima si eleva al quadrato ogni numero, poi si somma);
+- $\frac{1}{4}\sum_{i=1}^{4} x_i = 12 / 4 = 3$ (la somma divisa per quanti sono: è la **media**).
+
+</Callout>
+
+Quando è chiaro da dove a dove va l’indice, si scrive più in breve $\sum_i x_i$ o $\sum_p$. Esiste anche il simbolo per i prodotti, $\prod$ (pi greco maiuscolo): funziona allo stesso modo, ma moltiplica invece di sommare.
+
+### Insiemi e numeri reali
+
+Un **insieme** è una collezione di oggetti. Si scrive tra parentesi graffe: $\{0, 1\}$ è l’insieme che contiene solo 0 e 1.
+
+- $\in$ si legge «appartiene a»: $y \in \{0, 1\}$ vuol dire «$y$ vale 0 oppure 1».
+- $\mathbb{R}$ è l’insieme dei **numeri reali**: tutti i numeri, positivi e negativi, interi o con la virgola ($3$; $-2{,}5$; $0{,}001$; $\pi$…).
+- $\mathbb{R}^n$ è l’insieme delle liste di $n$ numeri reali. $\mathbb{R}^2$ sono le coppie (i punti del piano), $\mathbb{R}^3$ le terne (i punti dello spazio). Scrivere $\mathbf{x} \in \mathbb{R}^{64}$ vuol dire «$\mathbf{x}$ è una lista di 64 numeri».
+- $|A|$, con $A$ un insieme, è il numero di elementi di $A$.
+- $A \setminus B$ è «$A$ meno $B$»: gli elementi di $A$ che non stanno in $B$.
+- $\{x \mid \text{condizione}\}$ si legge «l’insieme degli $x$ tali che vale la condizione».
+
+### Altri simboli
+
+| Simbolo | Come si legge | Esempio |
+|---|---|---|
+| $\approx$ | circa uguale | $\pi \approx 3{,}14$ |
+| $\ne$ | diverso da | $2 \ne 3$ |
+| $\le$, $\ge$ | minore o uguale, maggiore o uguale | $x \ge 0$: $x$ non è negativo |
+| $\vert x \vert$ | valore assoluto: il numero senza segno | $\vert -3 \vert = 3$ |
+| $\propto$ | proporzionale a | se una cosa raddoppia, raddoppia anche l’altra |
+| $\to$, $\mapsto$ | «va in», «diventa» | $x \mapsto 2x$: a $x$ si associa $2x$ |
+| $\Rightarrow$ | «quindi», «implica» | piove $\Rightarrow$ la strada è bagnata |
+| $\Delta$ | variazione, differenza | $\Delta w$: di quanto cambia $w$ |
+| $\max$, $\min$ | il più grande, il più piccolo | $\max(2, 7, 5) = 7$ |
+| $\arg\max$, $\arg\min$ | *dove* si trova il massimo o il minimo | vedi sotto |
+| $\infty$ | infinito | |
+
+La differenza tra $\min$ e $\arg\min$ è importante. Prendi i voti di tre studenti: Anna 28, Bruno 22, Carla 30. Il $\max$ dei voti è $30$ (un voto); l’$\arg\max$ è Carla (*chi* ha il voto più alto). Nel corso si scrive spesso $\arg\min_\mathbf{w} E(\mathbf{w})$: «i pesi $\mathbf{w}$ per cui l’errore $E$ è il più piccolo possibile».
+
+---
+
+## Funzioni
+
+### Che cos’è una funzione
+
+Una **funzione** è una regola che prende un numero in ingresso e ne restituisce uno in uscita. Sempre lo stesso: a ingresso uguale, uscita uguale. Puoi pensarla come una macchinetta: metti dentro $x$, esce $f(x)$.
+
+La scrittura $f(x)$ si legge «$f$ di $x$» e **non** è una moltiplicazione: vuol dire «il risultato che la funzione $f$ dà quando in ingresso c’è $x$».
+
+<Callout type="example" title="Una funzione semplice">
+
+$f(x) = 2x + 1$ è la regola «raddoppia e aggiungi uno».
+
+- $f(0) = 2 \cdot 0 + 1 = 1$
+- $f(3) = 2 \cdot 3 + 1 = 7$
+- $f(-1) = 2 \cdot (-1) + 1 = -1$
+
+</Callout>
+
+Il **grafico** di una funzione è il suo disegno. Si prendono due assi: su quello orizzontale si mette l’ingresso $x$, su quello verticale l’uscita $f(x)$. Per ogni $x$ si segna un punto all’altezza $f(x)$. Tutti i punti insieme formano una linea: guardandola si vede subito dove la funzione sale, dove scende, dove ha il punto più alto o più basso.
+
+Nel Machine Learning tutto è una funzione: il modello è una funzione che dall’input calcola la risposta; l’errore è una funzione che dai parametri del modello calcola quanto si sbaglia.
+
+### La retta
+
+La funzione più semplice è la **retta**:
+
+$$
+y = m\,x + q
+$$
+
+Ha due numeri che la descrivono:
+
+- $m$ è la **pendenza**: di quanto sale $y$ quando $x$ aumenta di 1. Se $m = 2$, a ogni passo di 1 verso destra la retta sale di 2. Se $m$ è negativo la retta scende; se $m = 0$ è orizzontale.
+- $q$ è l’**intercetta**: il valore di $y$ quando $x = 0$, cioè il punto in cui la retta taglia l’asse verticale.
+
+<Figure n="P.1" title="La retta: pendenza e intercetta">
+  <LineExplorer />
+  <Caption>La retta $y = mx + q$ (in rosso). Il gradino verde tratteggiato mostra la pendenza: avanzando di 1 verso destra, la retta sale (o scende) di $m$. Il punto blu è l’intercetta $q$, dove la retta taglia l’asse verticale. Muovi i due cursori.</Caption>
+</Figure>
+
+Nel corso la retta si scrive con altre lettere: $h(x) = w_1 x + w_0$. È la stessa cosa: $w_1$ è la pendenza e $w_0$ l’intercetta. Si chiamano *pesi*.
+
+Una funzione si dice **lineare** quando il suo grafico è una retta (o, con più variabili, un piano): l’uscita cambia sempre nella stessa proporzione rispetto all’ingresso.
+
+### Polinomi
+
+Un **polinomio** è una somma di potenze di $x$, ognuna moltiplicata per un numero (il suo *coefficiente*):
+
+$$
+w_0 + w_1 x + w_2 x^2 + w_3 x^3 + \dots + w_M x^M
+$$
+
+Il **grado** $M$ è la potenza più alta. Più è alto, più «curve» può fare il grafico:
+
+- grado 0: $w_0$, una linea orizzontale;
+- grado 1: $w_0 + w_1 x$, una retta;
+- grado 2: una *parabola*, cioè una curva a forma di U (o di U rovesciata);
+- grado 3 e oltre: curve con più salite e discese.
+
+Esempio: $x^2 - 2x + 1$ nel punto $x = 3$ vale $9 - 6 + 1 = 4$.
+
+### Esponenziale e logaritmo
+
+L’**esponenziale** è una funzione in cui la $x$ sta all’esponente: $2^x$, $10^x$, $e^x$. Cresce in modo rapidissimo: $2^1 = 2$, $2^2 = 4$, $2^{10} = 1024$, $2^{20}$ è più di un milione. Il numero $e \approx 2{,}718$ è una base speciale, la più comoda per i calcoli con le derivate; $e^x$ si scrive anche $\exp(x)$.
+
+Due proprietà utili: $e^0 = 1$; ed $e^{-x} = 1/e^x$, che quindi diventa piccolissimo quando $x$ è grande.
+
+Il **logaritmo** è l’operazione inversa: risponde alla domanda «a che esponente devo elevare la base per ottenere questo numero?».
+
+- $\log_{10}(1000) = 3$, perché $10^3 = 1000$;
+- $\log_2(8) = 3$, perché $2^3 = 8$;
+- $\ln(x)$ è il *logaritmo naturale*, quello in base $e$: $\ln(e) = 1$, $\ln(1) = 0$.
+
+Tre cose da ricordare sul logaritmo:
+
+1. cresce, ma molto lentamente: comprime i numeri enormi in numeri piccoli ($\ln$ di un milione è circa 14);
+2. dei numeri tra 0 e 1 è **negativo**: $\ln(0{,}5) \approx -0{,}69$, $\ln(0{,}01) \approx -4{,}6$. Per questo $-\ln$ di una probabilità piccola è un numero grande;
+3. trasforma i prodotti in somme: $\ln(a \cdot b) = \ln(a) + \ln(b)$.
+
+Una **scala logaritmica** su un grafico è un asse in cui ogni tacca vale dieci volte la precedente (1, 10, 100, 1000…): serve a mostrare insieme numeri piccoli e numeri enormi.
+
+### Funzioni di più variabili
+
+Una funzione può avere **più ingressi**: $f(x_1, x_2)$ prende due numeri e ne restituisce uno. Esempio: $f(x_1, x_2) = x_1^2 + x_2^2$; nel punto $(1, 2)$ vale $1 + 4 = 5$.
+
+Come si disegna? Gli ingressi $(x_1, x_2)$ sono un punto sul pavimento; l’uscita è l’altezza sopra quel punto. Il grafico diventa una **superficie**: un paesaggio di colline e valli. Lo stesso paesaggio visto dall’alto si disegna con le **curve di livello**, come nelle carte di montagna: ogni curva unisce i punti che stanno alla stessa altezza.
+
+Con più di due ingressi il disegno non si può più fare, ma i conti funzionano allo stesso modo.
+
+---
+
+## Vettori e matrici
+
+### Vettori
+
+Un **vettore** è una lista ordinata di numeri: $\mathbf{x} = (3, 1)$ oppure $\mathbf{x} = (2, 0, -1, 5)$. I numeri si chiamano *componenti*; quanti sono è la *dimensione* del vettore. Un numero solo, per distinguerlo, si chiama **scalare**.
+
+Un vettore si può vedere in due modi:
+
+- come una **scheda di dati**: (età, altezza, peso) di una persona è un vettore di dimensione 3;
+- come una **freccia**: il vettore $(3, 1)$ è la freccia che parte dall’origine (il punto $(0,0)$) e arriva nel punto che sta 3 passi a destra e 1 passo in su.
+
+Le operazioni di base si fanno componente per componente:
+
+- **somma**: $(3, 1) + (1, 2) = (4, 3)$;
+- **prodotto per uno scalare**: $2 \cdot (3, 1) = (6, 2)$ (la freccia diventa lunga il doppio);
+- **differenza**: $(3, 1) - (1, 2) = (2, -1)$ (è la freccia che va dal secondo punto al primo).
+
+### Prodotto scalare
+
+Il **prodotto scalare** prende due vettori della stessa dimensione e restituisce un numero solo. Si moltiplicano le componenti che stanno nella stessa posizione e si somma tutto:
+
+$$
+\mathbf{a} \cdot \mathbf{b} = a_1 b_1 + a_2 b_2 + \dots + a_n b_n = \sum_{i=1}^{n} a_i b_i
+$$
+
+Esempio: $(3, 1) \cdot (1, 2) = 3 \cdot 1 + 1 \cdot 2 = 5$.
+
+Si scrive anche $\mathbf{a}^T\mathbf{b}$ (si legge «$a$ trasposto $b$»): è la stessa identica operazione. Nel corso compare dappertutto come $\mathbf{w}^T\mathbf{x}$: ogni ingresso $x_i$ moltiplicato per il suo peso $w_i$, e poi la somma. È una **somma pesata**.
+
+Che cosa misura? **Quanto due frecce puntano nella stessa direzione**:
+
+- positivo e grande: puntano dalla stessa parte;
+- zero: sono *ortogonali*, cioè perpendicolari (formano un angolo retto);
+- negativo: puntano in versi opposti.
+
+<Figure n="P.2" title="Il prodotto scalare">
+  <DotProduct />
+  <Caption>Trascina le punte dei due vettori e guarda come cambia il prodotto scalare: è massimo quando le frecce sono allineate, zero quando sono perpendicolari, negativo quando sono opposte. Nella scheda «Norme» trovi le misure di lunghezza.</Caption>
+</Figure>
+
+### Lunghezza e distanza
+
+La **lunghezza** di un vettore (detta *norma* e scritta $\|\mathbf{x}\|$) si calcola con il teorema di Pitagora: si elevano al quadrato le componenti, si sommano e si fa la radice quadrata.
+
+$$
+\|\mathbf{x}\| = \sqrt{x_1^2 + x_2^2 + \dots + x_n^2}
+$$
+
+Esempio: $\|(3, 4)\| = \sqrt{9 + 16} = \sqrt{25} = 5$.
+
+Spesso si usa la lunghezza **al quadrato**, $\|\mathbf{x}\|^2 = x_1^2 + \dots + x_n^2$: è la stessa cosa senza la radice, cioè semplicemente la somma dei quadrati.
+
+La **distanza** tra due punti $\mathbf{a}$ e $\mathbf{b}$ è la lunghezza della loro differenza: $\|\mathbf{a} - \mathbf{b}\|$. Esempio: la distanza tra $(1, 1)$ e $(4, 5)$ è $\|(-3, -4)\| = \sqrt{9 + 16} = 5$. È la distanza «in linea d’aria», detta *euclidea*.
+
+### Matrici
+
+Una **matrice** è una tabella di numeri, con righe e colonne. Si indica con una lettera maiuscola.
+
+$$
+X = \begin{pmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{pmatrix}
+$$
+
+Questa matrice ha 3 righe e 2 colonne: si dice che è «$3 \times 2$» (prima le righe, poi le colonne). Il numero nella riga $p$ e nella colonna $i$ si scrive $x_{p,i}$: qui $x_{2,1} = 3$.
+
+Nel corso la matrice $X$ è la tabella dei dati: ogni **riga** è un esempio, ogni **colonna** è una proprietà misurata (una *feature*).
+
+### Trasposta, prodotto e inversa
+
+- La **trasposta** $X^T$ si ottiene scambiando righe e colonne: la prima riga diventa la prima colonna, e così via. Una matrice $3 \times 2$ diventa $2 \times 3$.
+- **Matrice per vettore**, $X\mathbf{w}$: si fa il prodotto scalare di ogni riga di $X$ con $\mathbf{w}$. Il risultato è un vettore con un numero per ogni riga. Con la $X$ qui sopra e $\mathbf{w} = (1, 2)$: $X\mathbf{w} = (1 \cdot 1 + 2 \cdot 2,\; 3 \cdot 1 + 4 \cdot 2,\; 5 \cdot 1 + 6 \cdot 2) = (5, 11, 17)$. Se le righe sono gli esempi e $\mathbf{w}$ i pesi, $X\mathbf{w}$ è la lista delle risposte del modello, una per esempio.
+- **Matrice per matrice**, $AB$: ogni casella del risultato è il prodotto scalare di una riga di $A$ con una colonna di $B$. Attenzione: l’ordine conta, in generale $AB$ è diverso da $BA$.
+- La **matrice identità** $I$ ha 1 sulla diagonale e 0 altrove. È l’equivalente del numero 1: moltiplicare per $I$ non cambia nulla.
+- L’**inversa** $A^{-1}$ è l’equivalente della divisione. Per i numeri, $5 \cdot \frac{1}{5} = 1$; per le matrici, $A \cdot A^{-1} = I$. Serve a risolvere le equazioni: se $A\mathbf{w} = \mathbf{b}$, allora $\mathbf{w} = A^{-1}\mathbf{b}$. Non tutte le matrici hanno un’inversa (come non si può dividere per zero): quelle che non ce l’hanno si dicono *singolari*.
+
+---
+
+## Derivate
+
+### La derivata
+
+La **derivata** di una funzione in un punto dice **quanto è ripida** la funzione in quel punto. Più precisamente: se sposto l’ingresso di pochissimo, di quanto cambia l’uscita?
+
+Pensa a una strada di montagna disegnata di profilo. In ogni punto la strada ha una pendenza: in salita è positiva, in discesa è negativa, in piano è zero. La derivata è esattamente quella pendenza.
+
+Per una retta $y = mx + q$ la pendenza è la stessa dappertutto: è $m$. Per una curva la pendenza cambia da punto a punto. In un punto, la pendenza della curva è quella della **retta tangente**: la retta che in quel punto «sfiora» la curva seguendone la direzione.
+
+<Figure n="P.3" title="La derivata è la pendenza della tangente">
+  <TangentExplorer />
+  <Caption>La funzione (in blu) e la sua retta tangente nel punto scelto (in rosso). La derivata è la pendenza della tangente: positiva dove la funzione sale, negativa dove scende, zero dove è piatta. Trascina il punto lungo la curva.</Caption>
+</Figure>
+
+La derivata di $f$ si scrive in due modi equivalenti:
+
+$$
+f'(x) \qquad \text{oppure} \qquad \frac{df}{dx}
+$$
+
+La seconda scrittura si legge «de effe su de ics» e ricorda il significato: una piccola variazione di $f$ divisa per la piccola variazione di $x$ che l’ha causata. **Non** è una frazione da semplificare.
+
+<Callout type="tip" title="A che cosa serve nel corso">
+
+Per addestrare un modello si vuole rendere piccolo l’errore. La derivata dell’errore rispetto a un parametro dice: «se aumento un po’ questo parametro, l’errore sale o scende? E di quanto?». Se la derivata è positiva, aumentare il parametro peggiora le cose, quindi conviene diminuirlo; se è negativa, conviene aumentarlo. In breve: **ci si muove nel verso opposto alla derivata**. È l’idea della discesa del gradiente.
+
+</Callout>
+
+### Le regole per calcolarla
+
+Non serve ricalcolare la pendenza ogni volta: bastano poche regole.
+
+| Funzione | Derivata | A parole |
+|---|---|---|
+| $k$ (un numero fisso) | $0$ | una costante non cambia: pendenza zero |
+| $x$ | $1$ | la retta $y = x$ ha pendenza 1 |
+| $k\,x$ | $k$ | la retta $y = kx$ ha pendenza $k$ |
+| $x^2$ | $2x$ | |
+| $x^n$ | $n\,x^{n-1}$ | l’esponente scende davanti e cala di 1 |
+| $e^x$ | $e^x$ | l’esponenziale è la derivata di sé stesso |
+| $\ln x$ | $1/x$ | |
+
+Due regole per combinare le funzioni:
+
+- **somma**: la derivata di una somma è la somma delle derivate;
+- **costante che moltiplica**: un numero che moltiplica resta lì. La derivata di $5x^2$ è $5 \cdot 2x = 10x$.
+
+<Callout type="example" title="Una derivata passo per passo">
+
+$f(x) = 3x^2 + 4x + 7$.
+
+1. $3x^2$ → $3 \cdot 2x = 6x$;
+2. $4x$ → $4$;
+3. $7$ → $0$ (è una costante).
+
+Quindi $f'(x) = 6x + 4$. Nel punto $x = 1$ la pendenza è $6 + 4 = 10$: lì la funzione sale ripida. Nel punto $x = -1$ è $-6 + 4 = -2$: lì scende.
+
+</Callout>
+
+### Massimi e minimi
+
+Nel punto più basso di una valle (un **minimo**) e nel punto più alto di una collina (un **massimo**) la funzione è piatta: la derivata vale **zero**. Un punto in cui la derivata è zero si chiama **punto stazionario**.
+
+Per questo, per trovare il minimo di una funzione, si fa così: si calcola la derivata, la si mette uguale a zero e si risolve l’equazione.
+
+<Callout type="example" title="Trovare un minimo">
+
+$f(x) = x^2 - 4x + 5$. La derivata è $f'(x) = 2x - 4$. La metto uguale a zero: $2x - 4 = 0$, cioè $x = 2$. Il minimo sta in $x = 2$, e lì la funzione vale $4 - 8 + 5 = 1$.
+
+</Callout>
+
+Attenzione: derivata zero non vuol dire per forza minimo. Può essere un massimo, oppure un punto in cui la funzione si appiattisce un attimo e poi riparte. E un minimo può essere solo **locale**: il fondo di una valletta, mentre più in là c’è una valle più profonda (il minimo **globale**).
+
+Una funzione **convessa** è una funzione a forma di scodella: ha una sola valle. Per le funzioni convesse non ci sono sorprese: il punto in cui la derivata è zero è il minimo globale. $x^2$ è convessa.
+
+### Derivate parziali e gradiente
+
+Se la funzione ha più ingressi, $f(x_1, x_2)$, ci si può chiedere quanto è ripida in ogni direzione. La **derivata parziale** rispetto a $x_1$, scritta $\frac{\partial f}{\partial x_1}$, è la pendenza che si sente muovendosi solo lungo $x_1$, tenendo fermo $x_2$.
+
+Si calcola con le stesse regole di prima, trattando le altre variabili **come se fossero numeri fissi**.
+
+<Callout type="example" title="Due derivate parziali">
+
+$f(x_1, x_2) = x_1^2 + 3x_1x_2$.
+
+- Rispetto a $x_1$ (con $x_2$ fisso): $x_1^2$ → $2x_1$; $3x_1x_2$ → $3x_2$ (qui $3x_2$ è solo un numero che moltiplica $x_1$). Risultato: $\frac{\partial f}{\partial x_1} = 2x_1 + 3x_2$.
+- Rispetto a $x_2$ (con $x_1$ fisso): $x_1^2$ → $0$ (non contiene $x_2$: è una costante); $3x_1x_2$ → $3x_1$. Risultato: $\frac{\partial f}{\partial x_2} = 3x_1$.
+
+</Callout>
+
+Il **gradiente** è il vettore che mette insieme tutte le derivate parziali:
+
+$$
+\nabla f = \left( \frac{\partial f}{\partial x_1}, \frac{\partial f}{\partial x_2}, \dots, \frac{\partial f}{\partial x_n} \right)
+$$
+
+Il simbolo $\nabla$ si legge «nabla». Nell’esempio, $\nabla f = (2x_1 + 3x_2,\; 3x_1)$, e nel punto $(1, 2)$ vale $(8, 3)$.
+
+Sul paesaggio della funzione, il gradiente è una freccia disegnata sul pavimento che indica **la direzione in cui la salita è più ripida**; la sua lunghezza dice quanto è ripida. La freccia opposta, $-\nabla f$, indica la discesa più ripida. Dove il gradiente è il vettore nullo (tutte le derivate parziali sono zero) il terreno è piatto: è un punto stazionario.
+
+<Figure n="P.4" title="Il gradiente su una superficie" size="wide">
+  <GradientExplorer />
+  <Caption>Una funzione di due variabili come superficie (a sinistra) e vista dall’alto con le curve di livello (a destra). La freccia arancione è il gradiente $\nabla f$, che punta verso la salita più ripida; la verde è $-\nabla f$, la discesa più ripida. Sposta il punto e prova le tre forme: conca, cupola e sella.</Caption>
+</Figure>
+
+### La regola della catena
+
+Spesso una funzione è fatta di due passaggi uno dentro l’altro: prima si calcola qualcosa, poi si applica un’altra funzione al risultato. Esempio: $(3x + 1)^2$. Prima si calcola la «cosa dentro», $u = 3x + 1$; poi la si eleva al quadrato, $u^2$.
+
+La **regola della catena** dice: la derivata è la derivata del passaggio esterno, moltiplicata per la derivata del passaggio interno.
+
+$$
+\frac{d}{dx}\, f(u(x)) = f'(u) \cdot u'(x)
+$$
+
+Nell’esempio: la derivata di $u^2$ è $2u$; la derivata di $3x + 1$ è $3$. Quindi la derivata di $(3x+1)^2$ è $2(3x+1) \cdot 3 = 6(3x+1)$.
+
+Il caso che serve di più nel corso è il quadrato di qualcosa:
+
+$$
+\frac{\partial\, f(w)^2}{\partial w} = 2\, f(w) \cdot \frac{\partial f(w)}{\partial w}
+$$
+
+cioè «due volte la cosa dentro, per la derivata della cosa dentro». È esattamente il conto che si fa per derivare l’errore quadratico $(y - h(x))^2$.
+
+L’idea intuitiva: se $u$ cambia 3 volte più in fretta di $x$, e $f$ cambia $2u$ volte più in fretta di $u$, allora $f$ cambia $2u \cdot 3$ volte più in fretta di $x$. Le velocità si moltiplicano, come in una catena di ingranaggi.
+
+### Integrali
+
+L’**integrale**, scritto $\int$, è una somma fatta su infiniti pezzetti piccolissimi. Il simbolo è una S allungata, da «somma».
+
+Il modo più semplice di pensarlo: $\int_a^b f(x)\,dx$ è l’**area** sotto il grafico di $f$, tra $x = a$ e $x = b$.
+
+Nel corso l’integrale compare soprattutto per fare **medie su infiniti casi**. Con un numero finito di casi la media è una somma divisa per quanti sono; quando i casi possibili sono infiniti (tutti i dati che potrebbero capitare), la somma diventa un integrale, e ogni caso conta in proporzione alla sua probabilità. Quando vedi $\int L \, dP$, leggilo così: «la media di $L$ su tutti i casi possibili». Non dovrai mai calcolarlo a mano.
+
+---
+
+## Probabilità e statistica
+
+### Media, varianza e deviazione standard
+
+Hai una lista di numeri, per esempio i voti $6, 7, 8, 9$.
+
+- La **media** è la somma divisa per quanti sono: $(6 + 7 + 8 + 9)/4 = 7{,}5$. Si scrive $\bar{x}$ o $\mu$. È il «centro» dei dati.
+
+$$
+\bar{x} = \frac{1}{l}\sum_{p=1}^{l} x_p
+$$
+
+- La **varianza** dice quanto i numeri sono **sparpagliati** attorno alla media. Si calcola così: per ogni numero si prende la distanza dalla media, la si eleva al quadrato, e si fa la media di questi quadrati. Qui le distanze dalla media sono $-1{,}5;\ -0{,}5;\ 0{,}5;\ 1{,}5$; i quadrati sono $2{,}25;\ 0{,}25;\ 0{,}25;\ 2{,}25$; la loro media è $1{,}25$. Si scrive $\sigma^2$.
+- La **deviazione standard** $\sigma$ è la radice quadrata della varianza: qui $\sqrt{1{,}25} \approx 1{,}12$. Ha il vantaggio di essere nella stessa unità dei dati: dice, più o meno, di quanto un numero tipico si allontana dalla media.
+
+Voti tutti uguali ($7, 7, 7, 7$) hanno varianza zero; voti molto diversi ($2, 5, 9, 10$) hanno varianza grande.
+
+La **covarianza** tra due liste di numeri dice se si muovono insieme: è positiva se quando una è sopra la sua media di solito lo è anche l’altra (altezza e peso), negativa se si muovono in versi opposti, vicina a zero se non c’entrano nulla l’una con l’altra.
+
+### Probabilità
+
+La **probabilità** di un evento è un numero tra 0 e 1 che dice quanto è facile che accada: 0 vuol dire impossibile, 1 vuol dire certo. Si scrive $P(\text{evento})$. In percentuale: $0{,}25$ è il 25%.
+
+Con un dado: $P(\text{esce } 3) = 1/6 \approx 0{,}17$; $P(\text{esce un numero pari}) = 3/6 = 0{,}5$.
+
+Due regole di base:
+
+- le probabilità di tutti i casi possibili, sommate, danno 1;
+- la probabilità che una cosa **non** accada è $1 - P$.
+
+Quando non conosciamo la probabilità vera, la **stimiamo** con una proporzione: se su 100 mail ne arrivano 20 di spam, stimiamo $P(\text{spam}) \approx 20/100 = 0{,}2$.
+
+### Variabili casuali e valore atteso
+
+Una **variabile casuale** è un numero che dipende dal caso: il risultato di un dado, l’altezza di una persona presa a caso, l’errore di una misura.
+
+La sua **distribuzione** dice quali valori può prendere e con quale probabilità. Per il dado: ogni valore da 1 a 6 con probabilità $1/6$.
+
+Se la variabile può prendere qualunque valore con la virgola (un’altezza, un peso), la distribuzione si descrive con una **densità di probabilità**: una curva che è alta dove i valori sono più probabili. La probabilità che il valore cada in un certo intervallo è l’**area** sotto la curva in quell’intervallo. L’area totale vale 1.
+
+Il **valore atteso**, scritto $\mathbb{E}[X]$, è la media che si otterrebbe ripetendo l’esperimento moltissime volte. Si calcola pesando ogni valore con la sua probabilità. Per il dado: $1 \cdot \frac16 + 2 \cdot \frac16 + \dots + 6 \cdot \frac16 = 3{,}5$.
+
+Le parole «atteso», «in media», «rischio» nel corso vogliono dire tutte questo: una media fatta su tutti i casi possibili, pesati con la loro probabilità.
+
+### La distribuzione normale
+
+La distribuzione più famosa è la **normale**, o **gaussiana**: la curva a campana. Descrive le quantità che stanno quasi sempre vicino a un valore centrale e solo raramente molto lontano (altezze, errori di misura…).
+
+Bastano due numeri per descriverla:
+
+- la media $\mu$: dove sta il centro della campana;
+- la deviazione standard $\sigma$: quanto è larga. Circa il 68% dei valori cade entro una $\sigma$ dalla media, circa il 95% entro due.
+
+<Figure n="P.5" title="La curva a campana">
+  <GaussianExplorer />
+  <Caption>La densità normale. Cambia $\mu$ per spostare la campana e $\sigma$ per allargarla o stringerla. L’area colorata a sinistra della soglia è la probabilità che il valore sia più piccolo della soglia.</Caption>
+</Figure>
+
+Quando negli appunti si parla di **rumore gaussiano** si intende questo: a ogni dato viene aggiunto un piccolo errore casuale, estratto da una campana centrata in zero. Quasi sempre l’errore è piccolo, ogni tanto è più grande.
+
+### Probabilità condizionata
+
+La **probabilità condizionata** $P(A \mid B)$ si legge «probabilità di $A$ **dato** $B$»: è la probabilità di $A$ quando sappiamo già che $B$ è vero. La barra verticale $\mid$ vuol dire «sapendo che».
+
+<Callout type="example" title="Sapere qualcosa cambia la probabilità">
+
+In una classe di 20 studenti, 8 portano gli occhiali. Dei 10 studenti della prima fila, 6 portano gli occhiali.
+
+- $P(\text{occhiali}) = 8/20 = 0{,}4$;
+- $P(\text{occhiali} \mid \text{prima fila}) = 6/10 = 0{,}6$.
+
+Sapere che lo studente è in prima fila fa salire la probabilità: si guarda solo dentro il gruppo «prima fila».
+
+</Callout>
+
+Nel corso si scrive $P(y \mid \mathbf{x})$: la probabilità che la risposta giusta sia $y$, sapendo che l’input è $\mathbf{x}$. Un buon classificatore sceglie la classe $y$ per cui questa probabilità è più alta.
+
+La **probabilità congiunta** $P(A, B)$ è invece la probabilità che $A$ e $B$ siano veri **tutti e due insieme**. Nell’esempio, $P(\text{occhiali}, \text{prima fila}) = 6/20 = 0{,}3$.
+
+---
+
+## Logica e conteggi
+
+Le variabili **booleane** (o *binarie*) possono valere solo due cose: vero o falso, scritti di solito 1 e 0. Si combinano con queste operazioni:
+
+| Operazione | Simbolo | Vale 1 quando… |
+|---|---|---|
+| AND (congiunzione, «e») | $a \wedge b$ | tutti e due valgono 1 |
+| OR (disgiunzione, «oppure») | $a \vee b$ | almeno uno dei due vale 1 |
+| NOT (negazione, «non») | $\neg a$ | $a$ vale 0 |
+| XOR («o esclusivo») | $a \oplus b$ | i due sono diversi |
+
+La **tabella di verità** elenca il risultato per ogni combinazione degli ingressi:
+
+| $a$ | $b$ | $a \wedge b$ | $a \vee b$ | $a \oplus b$ |
+|---|---|---|---|---|
+| 0 | 0 | 0 | 0 | 0 |
+| 0 | 1 | 0 | 1 | 1 |
+| 1 | 0 | 0 | 1 | 1 |
+| 1 | 1 | 1 | 1 | 0 |
+
+**Contare le combinazioni.** Con una variabile binaria ci sono 2 casi (0 e 1). Con due variabili i casi sono $2 \cdot 2 = 4$ (le righe della tabella). Ogni variabile in più raddoppia i casi: con $n$ variabili binarie i casi sono
+
+$$
+\underbrace{2 \cdot 2 \cdots 2}_{n \text{ volte}} = 2^n
+$$
+
+Con 4 variabili: $2^4 = 16$. Con 10: $2^{10} = 1024$.
+
+La stessa regola vale ogni volta che si fanno scelte indipendenti una dopo l’altra: **si moltiplica il numero di possibilità di ogni scelta**. Tre scelte possibili per ognuna di 4 variabili: $3 \cdot 3 \cdot 3 \cdot 3 = 3^4 = 81$.
+
+Per questo i numeri diventano enormi in fretta. Una funzione booleana di 4 variabili deve decidere 0 oppure 1 per ognuno dei 16 casi: sono 16 scelte da 2 possibilità ciascuna, cioè $2^{16} = 65536$ funzioni diverse.

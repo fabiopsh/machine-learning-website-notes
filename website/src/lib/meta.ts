@@ -1,6 +1,6 @@
 import { getLesson } from '../content/lessons'
 import { isEn, tx } from './i18n'
-import type { Route } from './router'
+import { PREREQ_ID, type Route } from './router'
 
 /**
  * Titolo, descrizione e indirizzo canonico della pagina corrente, aggiornati a ogni cambio di route:
@@ -29,7 +29,8 @@ export function applyMeta(route: Route) {
     const l = getLesson(route.id)
     title = `${l?.title ?? tx('Lezione', 'Lesson')} · ${tx('Appunti di Machine Learning', 'Machine Learning notes')}`
     description = l?.summary ?? HOME.description
-    path = `${isEn ? 'en/' : ''}lezione/${route.id}/`
+    // i prerequisiti non hanno una pagina statica propria: il canonical resta la home
+    path = route.id === PREREQ_ID ? (isEn ? 'en/' : '') : `${isEn ? 'en/' : ''}lezione/${route.id}/`
   } else if (route.name === 'glossary') {
     title = tx('Glossario di Machine Learning — Appunti interattivi', 'Machine Learning glossary — Interactive notes')
     description = tx(

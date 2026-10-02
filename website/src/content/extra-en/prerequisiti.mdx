@@ -1,0 +1,497 @@
+import { DotProduct } from '../../widgets/l01/DotProduct'
+import { GradientExplorer } from '../../widgets/l01/GradientExplorer'
+import { GaussianExplorer } from '../../widgets/l01/GaussianExplorer'
+import { LineExplorer } from '../../widgets/pre/LineExplorer'
+import { TangentExplorer } from '../../widgets/pre/TangentExplorer'
+
+<Lead>The course notes take some basic maths for granted: what a function is, a derivative, a vector, a probability. This page explains them **from scratch**, in plain words and with examples made of numbers. You do not need to read it all in order: use it as a handbook, and come back here whenever a formula in the lessons stops you. The lessons in the “explained simply” version point directly to the right place on this page.</Lead>
+
+<Callout type="note" title="What is here (and what is not)">
+
+This page **is not part of the course notes**: it is an extra help, written for those who need a refresher. It contains only what is needed to read the lessons: the idea of each concept, how the symbol is read, an example. There are no proofs.
+
+</Callout>
+
+## How to read the symbols
+
+A formula is a sentence written in another alphabet. First of all you need to be able to read it.
+
+### Letters, subscripts and superscripts
+
+- A **letter** ($x$, $w$, $l$…) is the name of a number. A letter is used when the number is not fixed or we do not know it yet: “let us call $x$ the age of a person”.
+- **Greek letters** are letters like the others, used to have more names available. The most frequent ones in the course: $\eta$ (eta), $\lambda$ (lambda), $\mu$ (mu), $\sigma$ (sigma), $\delta$ (delta), $\varepsilon$ (epsilon), $\theta$ (theta), $\phi$ (phi), $\pi$ (pi, about $3.14$).
+- A **subscript** is the small number written at the bottom: $x_1$, $x_2$, $x_3$. It serves to tell apart several numbers of the same family: $x_1$ is “the first $x$”, $x_2$ “the second”. It is not an operation. $x_i$ means “the $i$-th $x$”, where $i$ is a number we choose (1, 2, 3…).
+- A **superscript** is the small number written at the top, and it is usually a **power**: $x^2$ means $x \cdot x$ (“$x$ squared”), $x^3$ means $x \cdot x \cdot x$. In general $x^n$ is $x$ multiplied by itself $n$ times. Example: $2^4 = 2 \cdot 2 \cdot 2 \cdot 2 = 16$.
+- The **square root** $\sqrt{x}$ is the inverse operation of the square: it is the number that, multiplied by itself, gives $x$. Example: $\sqrt{9} = 3$, because $3 \cdot 3 = 9$. It can also be written as a power: $\sqrt{x} = x^{1/2}$. In the same way $x^{1/n}$ is the $n$-th root: the number that multiplied $n$ times by itself gives $x$.
+- **Bold** indicates a vector, that is, a list of numbers: $\mathbf{x} = (x_1, x_2, \dots, x_n)$. The three dots mean “and so on”.
+
+### Summation
+
+The symbol $\sum$ (the capital Greek letter sigma) means **“add all of these up”**. It is just a short way of writing a long sum.
+
+$$
+\sum_{i=1}^{4} x_i = x_1 + x_2 + x_3 + x_4
+$$
+
+It is read like this: “sum of the $x_i$, for $i$ going from 1 to 4”. Below the symbol is the starting point ($i = 1$), above it the end point ($4$), on the right the thing to be added ($x_i$). The index $i$ acts as a counter: first it is 1, then 2, then 3, then 4.
+
+<Callout type="example" title="A summation with numbers">
+
+If $x_1 = 2$, $x_2 = 5$, $x_3 = 1$, $x_4 = 4$:
+
+- $\sum_{i=1}^{4} x_i = 2 + 5 + 1 + 4 = 12$;
+- $\sum_{i=1}^{4} x_i^2 = 4 + 25 + 1 + 16 = 46$ (first square each number, then add);
+- $\frac{1}{4}\sum_{i=1}^{4} x_i = 12 / 4 = 3$ (the sum divided by how many there are: it is the **mean**).
+
+</Callout>
+
+When it is clear where the index starts and ends, we write more briefly $\sum_i x_i$ or $\sum_p$. There is also the symbol for products, $\prod$ (capital pi): it works in the same way, but multiplies instead of adding.
+
+### Sets and real numbers
+
+A **set** is a collection of objects. It is written between curly braces: $\{0, 1\}$ is the set that contains only 0 and 1.
+
+- $\in$ is read “belongs to”: $y \in \{0, 1\}$ means “$y$ is 0 or 1”.
+- $\mathbb{R}$ is the set of the **real numbers**: all numbers, positive and negative, whole or with decimals ($3$; $-2.5$; $0.001$; $\pi$…).
+- $\mathbb{R}^n$ is the set of the lists of $n$ real numbers. $\mathbb{R}^2$ are the pairs (the points of the plane), $\mathbb{R}^3$ the triples (the points of space). Writing $\mathbf{x} \in \mathbb{R}^{64}$ means “$\mathbf{x}$ is a list of 64 numbers”.
+- $|A|$, with $A$ a set, is the number of elements of $A$.
+- $A \setminus B$ is “$A$ minus $B$”: the elements of $A$ that are not in $B$.
+- $\{x \mid \text{condition}\}$ is read “the set of the $x$ such that the condition holds”.
+
+### Other symbols
+
+| Symbol | How it is read | Example |
+|---|---|---|
+| $\approx$ | approximately equal | $\pi \approx 3.14$ |
+| $\ne$ | different from | $2 \ne 3$ |
+| $\le$, $\ge$ | less than or equal, greater than or equal | $x \ge 0$: $x$ is not negative |
+| $\vert x \vert$ | absolute value: the number without its sign | $\vert -3 \vert = 3$ |
+| $\propto$ | proportional to | if one thing doubles, the other doubles too |
+| $\to$, $\mapsto$ | “goes to”, “becomes” | $x \mapsto 2x$: $2x$ is associated with $x$ |
+| $\Rightarrow$ | “so”, “implies” | it rains $\Rightarrow$ the road is wet |
+| $\Delta$ | change, difference | $\Delta w$: by how much $w$ changes |
+| $\max$, $\min$ | the largest, the smallest | $\max(2, 7, 5) = 7$ |
+| $\arg\max$, $\arg\min$ | *where* the maximum or the minimum is | see below |
+| $\infty$ | infinity | |
+
+The difference between $\min$ and $\arg\min$ is important. Take the grades of three students: Anna 28, Bruno 22, Carla 30. The $\max$ of the grades is $30$ (a grade); the $\arg\max$ is Carla (*who* has the highest grade). In the course we often write $\arg\min_\mathbf{w} E(\mathbf{w})$: “the weights $\mathbf{w}$ for which the error $E$ is as small as possible”.
+
+---
+
+## Functions
+
+### What a function is
+
+A **function** is a rule that takes a number as input and gives one back as output. Always the same one: same input, same output. You can think of it as a little machine: you put in $x$, out comes $f(x)$.
+
+The notation $f(x)$ is read “$f$ of $x$” and is **not** a multiplication: it means “the result that the function $f$ gives when the input is $x$”.
+
+<Callout type="example" title="A simple function">
+
+$f(x) = 2x + 1$ is the rule “double it and add one”.
+
+- $f(0) = 2 \cdot 0 + 1 = 1$
+- $f(3) = 2 \cdot 3 + 1 = 7$
+- $f(-1) = 2 \cdot (-1) + 1 = -1$
+
+</Callout>
+
+The **graph** of a function is its drawing. Take two axes: on the horizontal one put the input $x$, on the vertical one the output $f(x)$. For every $x$ mark a point at height $f(x)$. All the points together form a line: looking at it you see at once where the function goes up, where it goes down, where it has its highest or lowest point.
+
+In Machine Learning everything is a function: the model is a function that computes the answer from the input; the error is a function that computes how wrong we are from the parameters of the model.
+
+### The straight line
+
+The simplest function is the **straight line**:
+
+$$
+y = m\,x + q
+$$
+
+It has two numbers that describe it:
+
+- $m$ is the **slope**: how much $y$ rises when $x$ increases by 1. If $m = 2$, at every step of 1 to the right the line rises by 2. If $m$ is negative the line goes down; if $m = 0$ it is horizontal.
+- $q$ is the **intercept**: the value of $y$ when $x = 0$, that is, the point where the line crosses the vertical axis.
+
+<Figure n="P.1" title="The straight line: slope and intercept">
+  <LineExplorer />
+  <Caption>The line $y = mx + q$ (in red). The dashed green step shows the slope: moving 1 to the right, the line rises (or falls) by $m$. The blue point is the intercept $q$, where the line crosses the vertical axis. Move the two sliders.</Caption>
+</Figure>
+
+In the course the line is written with other letters: $h(x) = w_1 x + w_0$. It is the same thing: $w_1$ is the slope and $w_0$ the intercept. They are called *weights*.
+
+A function is called **linear** when its graph is a straight line (or, with several variables, a plane): the output always changes in the same proportion with respect to the input.
+
+### Polynomials
+
+A **polynomial** is a sum of powers of $x$, each multiplied by a number (its *coefficient*):
+
+$$
+w_0 + w_1 x + w_2 x^2 + w_3 x^3 + \dots + w_M x^M
+$$
+
+The **degree** $M$ is the highest power. The higher it is, the more “bends” the graph can make:
+
+- degree 0: $w_0$, a horizontal line;
+- degree 1: $w_0 + w_1 x$, a straight line;
+- degree 2: a *parabola*, that is, a U-shaped curve (or an upside-down U);
+- degree 3 and beyond: curves with several rises and falls.
+
+Example: $x^2 - 2x + 1$ at the point $x = 3$ is $9 - 6 + 1 = 4$.
+
+### Exponential and logarithm
+
+The **exponential** is a function in which $x$ is in the exponent: $2^x$, $10^x$, $e^x$. It grows extremely fast: $2^1 = 2$, $2^2 = 4$, $2^{10} = 1024$, $2^{20}$ is more than a million. The number $e \approx 2.718$ is a special base, the most convenient for calculations with derivatives; $e^x$ is also written $\exp(x)$.
+
+Two useful properties: $e^0 = 1$; and $e^{-x} = 1/e^x$, which therefore becomes tiny when $x$ is large.
+
+The **logarithm** is the inverse operation: it answers the question “to which exponent must I raise the base to get this number?”.
+
+- $\log_{10}(1000) = 3$, because $10^3 = 1000$;
+- $\log_2(8) = 3$, because $2^3 = 8$;
+- $\ln(x)$ is the *natural logarithm*, the one in base $e$: $\ln(e) = 1$, $\ln(1) = 0$.
+
+Three things to remember about the logarithm:
+
+1. it grows, but very slowly: it squeezes huge numbers into small numbers ($\ln$ of a million is about 14);
+2. for numbers between 0 and 1 it is **negative**: $\ln(0.5) \approx -0.69$, $\ln(0.01) \approx -4.6$. This is why $-\ln$ of a small probability is a large number;
+3. it turns products into sums: $\ln(a \cdot b) = \ln(a) + \ln(b)$.
+
+A **logarithmic scale** on a plot is an axis in which each tick is worth ten times the previous one (1, 10, 100, 1000…): it serves to show small numbers and huge numbers together.
+
+### Functions of several variables
+
+A function can have **several inputs**: $f(x_1, x_2)$ takes two numbers and gives back one. Example: $f(x_1, x_2) = x_1^2 + x_2^2$; at the point $(1, 2)$ it is $1 + 4 = 5$.
+
+How is it drawn? The inputs $(x_1, x_2)$ are a point on the floor; the output is the height above that point. The graph becomes a **surface**: a landscape of hills and valleys. The same landscape seen from above is drawn with **level curves**, as in mountain maps: each curve joins the points that are at the same height.
+
+With more than two inputs the drawing can no longer be made, but the calculations work in the same way.
+
+---
+
+## Vectors and matrices
+
+### Vectors
+
+A **vector** is an ordered list of numbers: $\mathbf{x} = (3, 1)$ or $\mathbf{x} = (2, 0, -1, 5)$. The numbers are called *components*; how many there are is the *dimension* of the vector. A single number, to tell it apart, is called a **scalar**.
+
+A vector can be seen in two ways:
+
+- as a **data record**: (age, height, weight) of a person is a vector of dimension 3;
+- as an **arrow**: the vector $(3, 1)$ is the arrow that starts from the origin (the point $(0,0)$) and arrives at the point that is 3 steps to the right and 1 step up.
+
+The basic operations are done component by component:
+
+- **sum**: $(3, 1) + (1, 2) = (4, 3)$;
+- **product by a scalar**: $2 \cdot (3, 1) = (6, 2)$ (the arrow becomes twice as long);
+- **difference**: $(3, 1) - (1, 2) = (2, -1)$ (it is the arrow that goes from the second point to the first).
+
+### Dot product
+
+The **dot product** takes two vectors of the same dimension and gives back a single number. Multiply the components that are in the same position and add everything up:
+
+$$
+\mathbf{a} \cdot \mathbf{b} = a_1 b_1 + a_2 b_2 + \dots + a_n b_n = \sum_{i=1}^{n} a_i b_i
+$$
+
+Example: $(3, 1) \cdot (1, 2) = 3 \cdot 1 + 1 \cdot 2 = 5$.
+
+It is also written $\mathbf{a}^T\mathbf{b}$ (read “$a$ transpose $b$”): it is the very same operation. In the course it appears everywhere as $\mathbf{w}^T\mathbf{x}$: every input $x_i$ multiplied by its weight $w_i$, and then the sum. It is a **weighted sum**.
+
+What does it measure? **How much two arrows point in the same direction**:
+
+- positive and large: they point the same way;
+- zero: they are *orthogonal*, that is, perpendicular (they form a right angle);
+- negative: they point in opposite directions.
+
+<Figure n="P.2" title="The dot product">
+  <DotProduct />
+  <Caption>Drag the tips of the two vectors and watch how the dot product changes: it is largest when the arrows are aligned, zero when they are perpendicular, negative when they are opposite. In the “Norms” tab you find the measures of length.</Caption>
+</Figure>
+
+### Length and distance
+
+The **length** of a vector (called the *norm* and written $\|\mathbf{x}\|$) is computed with the Pythagorean theorem: square the components, add them up and take the square root.
+
+$$
+\|\mathbf{x}\| = \sqrt{x_1^2 + x_2^2 + \dots + x_n^2}
+$$
+
+Example: $\|(3, 4)\| = \sqrt{9 + 16} = \sqrt{25} = 5$.
+
+The **squared** length is often used, $\|\mathbf{x}\|^2 = x_1^2 + \dots + x_n^2$: it is the same thing without the root, that is, simply the sum of the squares.
+
+The **distance** between two points $\mathbf{a}$ and $\mathbf{b}$ is the length of their difference: $\|\mathbf{a} - \mathbf{b}\|$. Example: the distance between $(1, 1)$ and $(4, 5)$ is $\|(-3, -4)\| = \sqrt{9 + 16} = 5$. It is the distance “as the crow flies”, called *Euclidean*.
+
+### Matrices
+
+A **matrix** is a table of numbers, with rows and columns. It is denoted by an uppercase letter.
+
+$$
+X = \begin{pmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{pmatrix}
+$$
+
+This matrix has 3 rows and 2 columns: we say it is “$3 \times 2$” (rows first, then columns). The number in row $p$ and column $i$ is written $x_{p,i}$: here $x_{2,1} = 3$.
+
+In the course the matrix $X$ is the table of the data: every **row** is an example, every **column** is a measured property (a *feature*).
+
+### Transpose, product and inverse
+
+- The **transpose** $X^T$ is obtained by swapping rows and columns: the first row becomes the first column, and so on. A $3 \times 2$ matrix becomes $2 \times 3$.
+- **Matrix times vector**, $X\mathbf{w}$: take the dot product of every row of $X$ with $\mathbf{w}$. The result is a vector with one number per row. With the $X$ above and $\mathbf{w} = (1, 2)$: $X\mathbf{w} = (1 \cdot 1 + 2 \cdot 2,\; 3 \cdot 1 + 4 \cdot 2,\; 5 \cdot 1 + 6 \cdot 2) = (5, 11, 17)$. If the rows are the examples and $\mathbf{w}$ the weights, $X\mathbf{w}$ is the list of the answers of the model, one per example.
+- **Matrix times matrix**, $AB$: every cell of the result is the dot product of a row of $A$ with a column of $B$. Beware: the order matters, in general $AB$ is different from $BA$.
+- The **identity matrix** $I$ has 1 on the diagonal and 0 elsewhere. It is the equivalent of the number 1: multiplying by $I$ changes nothing.
+- The **inverse** $A^{-1}$ is the equivalent of division. For numbers, $5 \cdot \frac{1}{5} = 1$; for matrices, $A \cdot A^{-1} = I$. It serves to solve equations: if $A\mathbf{w} = \mathbf{b}$, then $\mathbf{w} = A^{-1}\mathbf{b}$. Not all matrices have an inverse (just as we cannot divide by zero): those that do not are called *singular*.
+
+---
+
+## Derivatives
+
+### The derivative
+
+The **derivative** of a function at a point tells **how steep** the function is at that point. More precisely: if I move the input by a tiny amount, by how much does the output change?
+
+Think of a mountain road drawn in profile. At every point the road has a slope: uphill it is positive, downhill it is negative, on the flat it is zero. The derivative is exactly that slope.
+
+For a line $y = mx + q$ the slope is the same everywhere: it is $m$. For a curve the slope changes from point to point. At a point, the slope of the curve is that of the **tangent line**: the line that “brushes” the curve at that point, following its direction.
+
+<Figure n="P.3" title="The derivative is the slope of the tangent">
+  <TangentExplorer />
+  <Caption>The function (in blue) and its tangent line at the chosen point (in red). The derivative is the slope of the tangent: positive where the function goes up, negative where it goes down, zero where it is flat. Drag the point along the curve.</Caption>
+</Figure>
+
+The derivative of $f$ is written in two equivalent ways:
+
+$$
+f'(x) \qquad \text{or} \qquad \frac{df}{dx}
+$$
+
+The second notation is read “dee f by dee x” and recalls the meaning: a small change in $f$ divided by the small change in $x$ that caused it. It is **not** a fraction to be simplified.
+
+<Callout type="tip" title="What it is for in the course">
+
+To train a model we want to make the error small. The derivative of the error with respect to a parameter says: “if I increase this parameter a little, does the error go up or down? And by how much?”. If the derivative is positive, increasing the parameter makes things worse, so it pays to decrease it; if it is negative, it pays to increase it. In short: **we move in the direction opposite to the derivative**. This is the idea of gradient descent.
+
+</Callout>
+
+### The rules to compute it
+
+There is no need to recompute the slope every time: a few rules are enough.
+
+| Function | Derivative | In words |
+|---|---|---|
+| $k$ (a fixed number) | $0$ | a constant does not change: zero slope |
+| $x$ | $1$ | the line $y = x$ has slope 1 |
+| $k\,x$ | $k$ | the line $y = kx$ has slope $k$ |
+| $x^2$ | $2x$ | |
+| $x^n$ | $n\,x^{n-1}$ | the exponent comes down in front and drops by 1 |
+| $e^x$ | $e^x$ | the exponential is its own derivative |
+| $\ln x$ | $1/x$ | |
+
+Two rules to combine functions:
+
+- **sum**: the derivative of a sum is the sum of the derivatives;
+- **multiplying constant**: a number that multiplies stays there. The derivative of $5x^2$ is $5 \cdot 2x = 10x$.
+
+<Callout type="example" title="A derivative step by step">
+
+$f(x) = 3x^2 + 4x + 7$.
+
+1. $3x^2$ → $3 \cdot 2x = 6x$;
+2. $4x$ → $4$;
+3. $7$ → $0$ (it is a constant).
+
+So $f'(x) = 6x + 4$. At the point $x = 1$ the slope is $6 + 4 = 10$: there the function rises steeply. At the point $x = -1$ it is $-6 + 4 = -2$: there it goes down.
+
+</Callout>
+
+### Maxima and minima
+
+At the lowest point of a valley (a **minimum**) and at the highest point of a hill (a **maximum**) the function is flat: the derivative is **zero**. A point where the derivative is zero is called a **stationary point**.
+
+This is why, to find the minimum of a function, we proceed like this: compute the derivative, set it equal to zero and solve the equation.
+
+<Callout type="example" title="Finding a minimum">
+
+$f(x) = x^2 - 4x + 5$. The derivative is $f'(x) = 2x - 4$. I set it equal to zero: $2x - 4 = 0$, that is, $x = 2$. The minimum is at $x = 2$, and there the function is $4 - 8 + 5 = 1$.
+
+</Callout>
+
+Beware: zero derivative does not necessarily mean minimum. It can be a maximum, or a point where the function flattens for a moment and then goes on. And a minimum can be only **local**: the bottom of a small valley, while further on there is a deeper valley (the **global** minimum).
+
+A **convex** function is a bowl-shaped function: it has a single valley. For convex functions there are no surprises: the point where the derivative is zero is the global minimum. $x^2$ is convex.
+
+### Partial derivatives and gradient
+
+If the function has several inputs, $f(x_1, x_2)$, we can ask how steep it is in each direction. The **partial derivative** with respect to $x_1$, written $\frac{\partial f}{\partial x_1}$, is the slope felt when moving only along $x_1$, keeping $x_2$ still.
+
+It is computed with the same rules as before, treating the other variables **as if they were fixed numbers**.
+
+<Callout type="example" title="Two partial derivatives">
+
+$f(x_1, x_2) = x_1^2 + 3x_1x_2$.
+
+- With respect to $x_1$ (with $x_2$ fixed): $x_1^2$ → $2x_1$; $3x_1x_2$ → $3x_2$ (here $3x_2$ is just a number multiplying $x_1$). Result: $\frac{\partial f}{\partial x_1} = 2x_1 + 3x_2$.
+- With respect to $x_2$ (with $x_1$ fixed): $x_1^2$ → $0$ (it does not contain $x_2$: it is a constant); $3x_1x_2$ → $3x_1$. Result: $\frac{\partial f}{\partial x_2} = 3x_1$.
+
+</Callout>
+
+The **gradient** is the vector that puts all the partial derivatives together:
+
+$$
+\nabla f = \left( \frac{\partial f}{\partial x_1}, \frac{\partial f}{\partial x_2}, \dots, \frac{\partial f}{\partial x_n} \right)
+$$
+
+The symbol $\nabla$ is read “nabla”. In the example, $\nabla f = (2x_1 + 3x_2,\; 3x_1)$, and at the point $(1, 2)$ it is $(8, 3)$.
+
+On the landscape of the function, the gradient is an arrow drawn on the floor that indicates **the direction in which the climb is steepest**; its length tells how steep it is. The opposite arrow, $-\nabla f$, indicates the steepest descent. Where the gradient is the zero vector (all the partial derivatives are zero) the ground is flat: it is a stationary point.
+
+<Figure n="P.4" title="The gradient on a surface" size="wide">
+  <GradientExplorer />
+  <Caption>A function of two variables as a surface (on the left) and seen from above with the level curves (on the right). The orange arrow is the gradient $\nabla f$, which points toward the steepest climb; the green one is $-\nabla f$, the steepest descent. Move the point and try the three shapes: bowl, dome and saddle.</Caption>
+</Figure>
+
+### The chain rule
+
+Often a function is made of two steps, one inside the other: first something is computed, then another function is applied to the result. Example: $(3x + 1)^2$. First we compute the “thing inside”, $u = 3x + 1$; then we square it, $u^2$.
+
+The **chain rule** says: the derivative is the derivative of the outer step, multiplied by the derivative of the inner step.
+
+$$
+\frac{d}{dx}\, f(u(x)) = f'(u) \cdot u'(x)
+$$
+
+In the example: the derivative of $u^2$ is $2u$; the derivative of $3x + 1$ is $3$. So the derivative of $(3x+1)^2$ is $2(3x+1) \cdot 3 = 6(3x+1)$.
+
+The case needed most in the course is the square of something:
+
+$$
+\frac{\partial\, f(w)^2}{\partial w} = 2\, f(w) \cdot \frac{\partial f(w)}{\partial w}
+$$
+
+that is, “twice the thing inside, times the derivative of the thing inside”. It is exactly the calculation done to differentiate the squared error $(y - h(x))^2$.
+
+The intuitive idea: if $u$ changes 3 times faster than $x$, and $f$ changes $2u$ times faster than $u$, then $f$ changes $2u \cdot 3$ times faster than $x$. The speeds multiply, as in a chain of gears.
+
+### Integrals
+
+The **integral**, written $\int$, is a sum taken over infinitely many tiny pieces. The symbol is a stretched S, from “sum”.
+
+The simplest way to think of it: $\int_a^b f(x)\,dx$ is the **area** under the graph of $f$, between $x = a$ and $x = b$.
+
+In the course the integral appears mostly to take **averages over infinitely many cases**. With a finite number of cases the average is a sum divided by how many there are; when the possible cases are infinite (all the data that might turn up), the sum becomes an integral, and each case counts in proportion to its probability. When you see $\int L \, dP$, read it like this: “the average of $L$ over all the possible cases”. You will never have to compute it by hand.
+
+---
+
+## Probability and statistics
+
+### Mean, variance and standard deviation
+
+You have a list of numbers, for example the grades $6, 7, 8, 9$.
+
+- The **mean** is the sum divided by how many there are: $(6 + 7 + 8 + 9)/4 = 7.5$. It is written $\bar{x}$ or $\mu$. It is the “center” of the data.
+
+$$
+\bar{x} = \frac{1}{l}\sum_{p=1}^{l} x_p
+$$
+
+- The **variance** tells how **spread out** the numbers are around the mean. It is computed like this: for each number take the distance from the mean, square it, and average these squares. Here the distances from the mean are $-1.5;\ -0.5;\ 0.5;\ 1.5$; the squares are $2.25;\ 0.25;\ 0.25;\ 2.25$; their average is $1.25$. It is written $\sigma^2$.
+- The **standard deviation** $\sigma$ is the square root of the variance: here $\sqrt{1.25} \approx 1.12$. It has the advantage of being in the same unit as the data: it tells, roughly, how far a typical number is from the mean.
+
+Grades that are all the same ($7, 7, 7, 7$) have zero variance; very different grades ($2, 5, 9, 10$) have a large variance.
+
+The **covariance** between two lists of numbers tells whether they move together: it is positive if, when one is above its mean, the other usually is too (height and weight), negative if they move in opposite directions, close to zero if they have nothing to do with each other.
+
+### Probability
+
+The **probability** of an event is a number between 0 and 1 that tells how easily it happens: 0 means impossible, 1 means certain. It is written $P(\text{event})$. As a percentage: $0.25$ is 25%.
+
+With a die: $P(\text{a 3 comes up}) = 1/6 \approx 0.17$; $P(\text{an even number comes up}) = 3/6 = 0.5$.
+
+Two basic rules:
+
+- the probabilities of all the possible cases, added up, give 1;
+- the probability that something does **not** happen is $1 - P$.
+
+When we do not know the true probability, we **estimate** it with a proportion: if out of 100 emails 20 are spam, we estimate $P(\text{spam}) \approx 20/100 = 0.2$.
+
+### Random variables and expected value
+
+A **random variable** is a number that depends on chance: the result of a die, the height of a person picked at random, the error of a measurement.
+
+Its **distribution** tells which values it can take and with which probability. For the die: every value from 1 to 6 with probability $1/6$.
+
+If the variable can take any value with decimals (a height, a weight), the distribution is described by a **probability density**: a curve that is high where the values are more likely. The probability that the value falls in a certain interval is the **area** under the curve in that interval. The total area is 1.
+
+The **expected value**, written $\mathbb{E}[X]$, is the average we would get by repeating the experiment a great many times. It is computed by weighting each value with its probability. For the die: $1 \cdot \frac16 + 2 \cdot \frac16 + \dots + 6 \cdot \frac16 = 3.5$.
+
+The words “expected”, “on average”, “risk” in the course all mean this: an average taken over all the possible cases, weighted with their probability.
+
+### The normal distribution
+
+The most famous distribution is the **normal**, or **Gaussian**: the bell curve. It describes the quantities that are almost always close to a central value and only rarely very far from it (heights, measurement errors…).
+
+Two numbers are enough to describe it:
+
+- the mean $\mu$: where the center of the bell is;
+- the standard deviation $\sigma$: how wide it is. About 68% of the values fall within one $\sigma$ of the mean, about 95% within two.
+
+<Figure n="P.5" title="The bell curve">
+  <GaussianExplorer />
+  <Caption>The normal density. Change $\mu$ to move the bell and $\sigma$ to widen or narrow it. The colored area to the left of the threshold is the probability that the value is smaller than the threshold.</Caption>
+</Figure>
+
+When the notes speak of **Gaussian noise** they mean this: a small random error, drawn from a bell centered at zero, is added to each data point. Almost always the error is small, every now and then it is larger.
+
+### Conditional probability
+
+The **conditional probability** $P(A \mid B)$ is read “probability of $A$ **given** $B$”: it is the probability of $A$ when we already know that $B$ is true. The vertical bar $\mid$ means “knowing that”.
+
+<Callout type="example" title="Knowing something changes the probability">
+
+In a class of 20 students, 8 wear glasses. Of the 10 students in the front row, 6 wear glasses.
+
+- $P(\text{glasses}) = 8/20 = 0.4$;
+- $P(\text{glasses} \mid \text{front row}) = 6/10 = 0.6$.
+
+Knowing that the student is in the front row makes the probability go up: we only look inside the “front row” group.
+
+</Callout>
+
+In the course we write $P(y \mid \mathbf{x})$: the probability that the right answer is $y$, knowing that the input is $\mathbf{x}$. A good classifier chooses the class $y$ for which this probability is highest.
+
+The **joint probability** $P(A, B)$ is instead the probability that $A$ and $B$ are **both true together**. In the example, $P(\text{glasses}, \text{front row}) = 6/20 = 0.3$.
+
+---
+
+## Logic and counting
+
+**Boolean** (or *binary*) variables can take only two values: true or false, usually written 1 and 0. They are combined with these operations:
+
+| Operation | Symbol | It is 1 when… |
+|---|---|---|
+| AND (conjunction) | $a \wedge b$ | both are 1 |
+| OR (disjunction) | $a \vee b$ | at least one of the two is 1 |
+| NOT (negation) | $\neg a$ | $a$ is 0 |
+| XOR (“exclusive or”) | $a \oplus b$ | the two are different |
+
+The **truth table** lists the result for every combination of the inputs:
+
+| $a$ | $b$ | $a \wedge b$ | $a \vee b$ | $a \oplus b$ |
+|---|---|---|---|---|
+| 0 | 0 | 0 | 0 | 0 |
+| 0 | 1 | 0 | 1 | 1 |
+| 1 | 0 | 0 | 1 | 1 |
+| 1 | 1 | 1 | 1 | 0 |
+
+**Counting the combinations.** With one binary variable there are 2 cases (0 and 1). With two variables the cases are $2 \cdot 2 = 4$ (the rows of the table). Every additional variable doubles the cases: with $n$ binary variables the cases are
+
+$$
+\underbrace{2 \cdot 2 \cdots 2}_{n \text{ times}} = 2^n
+$$
+
+With 4 variables: $2^4 = 16$. With 10: $2^{10} = 1024$.
+
+The same rule holds whenever independent choices are made one after the other: **multiply the number of possibilities of each choice**. Three possible choices for each of 4 variables: $3 \cdot 3 \cdot 3 \cdot 3 = 3^4 = 81$.
+
+This is why the numbers become huge quickly. A Boolean function of 4 variables must decide 0 or 1 for each of the 16 cases: these are 16 choices with 2 possibilities each, that is, $2^{16} = 65536$ different functions.

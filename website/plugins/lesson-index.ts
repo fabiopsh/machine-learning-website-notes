@@ -10,12 +10,20 @@ import type { Plugin } from 'vite'
  *
  * Le lezioni in inglese (`lessons-en/`) usano **gli stessi slug** di quelle in italiano, presi in ordine:
  * così i link alle sezioni, il glossario e gli indirizzi condivisi valgono in entrambe le lingue.
+ *
+ * Lo stesso vale per la versione «spiegata semplice» (`lessons-easy/`, `lessons-easy-en/`), che ha gli stessi
+ * titoli della lezione originale, e per le pagine fuori dalle lezioni (`extra/`, `extra-en/`: i prerequisiti),
+ * indicizzate con il nome del file come chiave.
  */
 
 const VIRTUAL_ID = 'virtual:lesson-index'
 const RESOLVED_ID = '\0' + VIRTUAL_ID
 const LESSONS_DIR = resolve(import.meta.dirname, '../src/content/lessons')
 const LESSONS_EN_DIR = resolve(import.meta.dirname, '../src/content/lessons-en')
+const EASY_DIR = resolve(import.meta.dirname, '../src/content/lessons-easy')
+const EASY_EN_DIR = resolve(import.meta.dirname, '../src/content/lessons-easy-en')
+const EXTRA_DIR = resolve(import.meta.dirname, '../src/content/extra')
+const EXTRA_EN_DIR = resolve(import.meta.dirname, '../src/content/extra-en')
 
 type Heading = { depth: number; text: string; slug: string }
 type FigureRef = { n: string; title: string }
@@ -53,6 +61,12 @@ function italianSource(id: string): string | undefined {
 export function italianSlugs(id: string): string[] {
   const src = italianSource(id)
   return src ? headingsOf(src).map((h) => h.slug) : []
+}
+
+/** Slug dei titoli della pagina italiana `extra/<name>.mdx`, in ordine. */
+function extraSlugs(name: string): string[] {
+  const file = join(EXTRA_DIR, name + '.mdx')
+  return existsSync(file) ? headingsOf(readFileSync(file, 'utf8')).map((h) => h.slug) : []
 }
 
 function indexLesson(source: string, slugs?: string[]): LessonIndexEntry {
@@ -93,7 +107,27 @@ export function lessonIndex(): Plugin {
         const key = file.slice(0, 2)
         en[key] = indexLesson(readFileSync(join(LESSONS_EN_DIR, file), 'utf8'), italianSlugs(key))
       }
-      return `export default ${JSON.stringify({ it, en })}`
+      // versione «spiegata semplice»: stessi slug della lezione originale
+      const easy: Record<string, LessonIndexEntry> = {}
+      const easyEn: Record<string, LessonIndexEntry> = {}
+      for (const [dir, out] of [[EASY_DIR, easy], [EASY_EN_DIR, easyEn]] as const) {
+        for (const file of existsSync(dir) ? readdirSync(dir) : []) {
+          if (!file.endsWith('.mdx')) continue
+          this.addWatchFile(join(dir, file))
+          const key = file.slice(0, 2)
+          out[key] = indexLesson(readFileSync(join(dir, file), 'utf8'), italianSlugs(key))
+        }
+      }
+      // pagine fuori dalle lezioni (prerequisiti): la chiave è il nome del file
+      for (const [dir, out] of [[EXTRA_DIR, it], [EXTRA_EN_DIR, en]] as const) {
+        for (const file of existsSync(dir) ? readdirSync(dir) : []) {
+          if (!file.endsWith('.mdx')) continue
+          this.addWatchFile(join(dir, file))
+          const key = file.slice(0, -4)
+          out[key] = indexLesson(readFileSync(join(dir, file), 'utf8'), dir === EXTRA_EN_DIR ? extraSlugs(key) : undefined)
+        }
+      }
+      return `export default ${JSON.stringify({ it, en, easy, easyEn })}`
     },
     handleHotUpdate(ctx) {
       if (!ctx.file.endsWith('.mdx')) return
@@ -106,14 +140,17 @@ export function lessonIndex(): Plugin {
 type HastNode = { type: string; tagName?: string; properties?: Record<string, unknown>; children?: HastNode[] }
 
 /**
- * Plugin rehype (dopo rehype-slug): nelle lezioni in inglese sostituisce gli id dei titoli con gli slug
- * della lezione italiana, nello stesso ordine. Se il numero dei titoli non coincide lascia gli id generati.
+ * Plugin rehype (dopo rehype-slug): nelle lezioni in inglese, nelle versioni semplici e nelle pagine `extra-en/`
+ * sostituisce gli id dei titoli con gli slug della pagina italiana originale, nello stesso ordine. Se il numero dei titoli non coincide lascia gli id generati.
  */
 export function enHeadingIds() {
   return (tree: HastNode, file: { path?: string }) => {
-    const m = /[\\/]lessons-en[\\/](\d\d)-[^\\/]*\.mdx$/.exec(String(file.path ?? ''))
-    if (!m) return
-    const slugs = italianSlugs(m[1])
+    const path = String(file.path ?? '')
+    const m = /[\\/](lessons-en|lessons-easy|lessons-easy-en)[\\/](\d\d)-[^\\/]*\.mdx$/.exec(path)
+    const x = /[\\/]extra-en[\\/]([^\\/]+)\.mdx$/.exec(path)
+    if (!m && !x) return
+    const where = m ? `${m[1]}/${m[2]}` : `extra-en/${x![1]}`
+    const slugs = m ? italianSlugs(m[2]) : extraSlugs(x![1])
     const found: HastNode[] = []
     const walk = (node: HastNode) => {
       if (node.type === 'element' && /^h[2-6]$/.test(node.tagName ?? '')) found.push(node)
@@ -121,7 +158,7 @@ export function enHeadingIds() {
     }
     walk(tree)
     if (found.length !== slugs.length) {
-      console.warn(`[lesson-index] lessons-en/${m[1]}: ${found.length} titoli, ${slugs.length} nella lezione italiana — id non allineati`)
+      console.warn(`[lesson-index] ${where}: ${found.length} titoli, ${slugs.length} nella lezione italiana — id non allineati`)
       return
     }
     found.forEach((node, i) => {

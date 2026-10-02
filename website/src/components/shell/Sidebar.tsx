@@ -1,7 +1,7 @@
 import { parts } from '../../content/lessons'
 import { tx } from '../../lib/i18n'
 import { useProgress } from '../../lib/progress'
-import { glossaryHref, lessonHref, type Route } from '../../lib/router'
+import { glossaryHref, lessonHref, PREREQ_ID, type Route } from '../../lib/router'
 import { Icon } from '../ui/Icon'
 
 function Ring({ pct, done }: { pct: number; done: boolean }) {
@@ -41,6 +41,9 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
           </a>
           <a href={glossaryHref()} className={route.name === 'glossary' ? 'is-active' : undefined} onClick={onNavigate}>
             <Icon name="list" size={16} /> {tx('Glossario', 'Glossary')}
+          </a>
+          <a href={lessonHref(PREREQ_ID)} className={activeId === PREREQ_ID ? 'is-active' : undefined} onClick={onNavigate}>
+            <Icon name="ruler" size={16} /> {tx('Prerequisiti', 'Prerequisites')}
           </a>
         </div>
 

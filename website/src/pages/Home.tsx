@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import avatar from '../assets/avatar.png'
-import { availableLessons, getLesson, lessonStats, lessons, parts } from '../content/lessons'
+import { availableLessons, getLesson, lessonStats, lessons, parts, prereq } from '../content/lessons'
 import { tx } from '../lib/i18n'
 import { lastVisited, useProgress } from '../lib/progress'
-import { glossaryHref, lessonHref } from '../lib/router'
+import { glossaryHref, lessonHref, PREREQ_ID } from '../lib/router'
 import { Icon } from '../components/ui/Icon'
 import { CourseMap } from '../widgets/l01/CourseMap'
 import { HeroFit } from '../widgets/HeroFit'
@@ -154,6 +154,11 @@ export function Home() {
                       <span className="index__meta">
                         {st && <span>{st.minutes} min</span>}
                         {st && st.figures > 0 && <span>{st.figures === 1 ? tx('1 figura', '1 figure') : `${st.figures} ${tx('figure', 'figures')}`}</span>}
+                        {l.loadEasy && (
+                          <span className="index__easy" title={tx('Ha anche la versione «spiegata semplice»', 'Also has an “explained simply” version')}>
+                            <Icon name="baby" size={14} /> {tx('anche semplice', 'simple too')}
+                          </span>
+                        )}
                         {p?.done ? (
                           <span className="index__done">
                             <Icon name="check" size={13} strokeWidth={2.2} /> {tx('letta', 'read')}
@@ -170,6 +175,34 @@ export function Home() {
             </ol>
           </div>
         ))}
+      </section>
+
+      <section className="index index--extra" aria-labelledby="pre-title">
+        <div className="section-head">
+          <h2 id="pre-title">{tx('Prima di cominciare', 'Before you start')}</h2>
+          <p>
+            {tx(
+              'Gli appunti danno per scontate alcune basi di matematica. Se una formula ti blocca, qui trovi spiegato da zero quello che serve. Le lezioni con l’icona del neonato hanno anche una versione «spiegata semplice», da attivare in cima alla pagina.',
+              'The notes take some basic maths for granted. If a formula stops you, here you find what you need explained from scratch. Lessons with the baby icon also have an “explained simply” version, which you can turn on at the top of the page.',
+            )}
+          </p>
+        </div>
+        <ol className="index__list">
+          <li>
+            <a className="index__row" href={lessonHref(PREREQ_ID)}>
+              <span className="index__num">
+                <Icon name="ruler" size={17} />
+              </span>
+              <span className="index__body">
+                <span className="index__eyebrow">{prereq.eyebrow}</span>
+                <span className="index__title">{prereq.title}</span>
+                <span className="index__summary">{prereq.summary}</span>
+              </span>
+              <span className="index__meta">{lessonStats(PREREQ_ID) && <span>{lessonStats(PREREQ_ID)!.minutes} min</span>}</span>
+              <Icon name="arrowRight" size={18} className="index__go" />
+            </a>
+          </li>
+        </ol>
       </section>
 
       <section className="home-map" aria-labelledby="map-title">

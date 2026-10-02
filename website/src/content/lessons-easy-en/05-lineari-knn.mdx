@@ -1,0 +1,1003 @@
+import * as F from '../formulas/l05'
+import { HtfData, HtfLinear, KnnRegions, KnnCurves, BayesVsKnn } from '../../widgets/l05/HtfFigures'
+import { Hyperplane3D, Seismic, SeparatorProps, LossSmooth } from '../../widgets/l05/LinearBasics'
+import { Descent1D, ErrorSurface, BatchOnline, LearningCurves } from '../../widgets/l05/Descent'
+import { DeltaRule } from '../../widgets/l05/DeltaRule'
+import { AndSeparable, Shattering } from '../../widgets/l05/Separability'
+import { RidgeFit, RidgeRms } from '../../widgets/l05/Ridge'
+import { KnnQuery, Voronoi, ScaleNN } from '../../widgets/l05/KnnBasics'
+import { Curse } from '../../widgets/l05/Curse'
+
+<Lead>With the introduction over, we move on to the first actual models. There are two of them, and they sit at the two opposite extremes of ML. On one side the **linear models**: rigid (in essence they draw straight lines), with few numbers to adjust, based on classical mathematics but already full of modern ideas (loss function, gradient descent, regularization). On the other side **K-nearest neighbors**: very flexible, local (it only looks at nearby data) and with no real model to train. Comparing them shows concretely the trade-off between flexibility and complexity control.</Lead>
+
+<Callout type="note" title="Two separate lectures">
+
+In the 2026/27 slides the two topics are in two separate decks (*linear* and *knn*); the content is the same and here they stay in a single note: linear models in the first part, K-NN in the second.
+
+</Callout>
+
+With linear models we move from a discrete hypothesis space (that of concept learning, where the hypotheses could be counted) to a **continuous** one: it is still restricted, but the hypotheses are described by real numbers that can change at will.
+
+## Notation for the data
+
+The data are organized in a [matrix](#/prerequisiti/matrici) $X$, that is, a table of numbers, of size $l \times n$: $l$ rows (the patterns, that is, the examples, numbered with $p = 1,\dots,l$) and $n$ columns (the features, that is, the measured properties, numbered with $i = 1,\dots,n$).
+
+- $\mathbf{x}$ (in bold) is any pattern, that is, a row of the table. It is also called example, instance, sample, input vector;
+- $x_i$ or $x_j$ (a scalar, that is, a single number) is component $i$ or $j$ of a pattern $\mathbf{x}$: the number in that position (here the index of the pattern is not written);
+- $\mathbf{x}_p$ is the $p$-th pattern (row number $p$);
+- $x_{p,i}$, also written $(\mathbf{x}_p)_i$, is component $i$ of pattern $p$: row $p$, column $i$;
+- for the target (the right answer) we use $y_p$ (or $d_p$, $t_p$), with $p = 1,\dots,l$.
+
+When it is clear from the context, some indices are not written.
+
+---
+
+## Linear models
+
+The linear model has been the backbone of statistics. As Hastie writes: *“despite the great advances of modern nonparametric regression techniques, linear models remain important, and we must understand them well”*. We start from the simplest form, the one that is linear in the input variables. The linear model is also a natural **baseline**, that is, a reference point with which to compare more complicated models: the first question in front of a problem is “is it a linear problem?”.
+
+### Univariate linear regression
+
+Let us go back to the [exercise of the introduction](#/lezione/03/regressione): given the points $(1;\,2.1)$, $(2;\,3.9)$, $(3;\,6.1)$, $(4;\,8.4)$, $(5;\,9.8)$ we had “guessed” $h(x) = 2x$ by eye. Now we want to find the parameters in a **systematic** way, that is, with a precise procedure.
+
+“Univariate” means: a single input variable $x$ and a single output variable $y$. In this case we assume the model
+
+$$
+h_\mathbf{w}(x) = w_1 x + w_0,
+$$
+
+that is, the equation of a [straight line](#/prerequisiti/la-retta): $w_1$ is the *slope* (how much the line rises when $x$ increases by 1) and $w_0$ is the *intercept* (the value when $x = 0$). The two numbers $w_0, w_1$ are called **weights** or free parameters. So the point is to fit a line to the data. There are infinitely many possible lines (the weights are continuous numbers), but classical mathematics gives an elegant solution, which goes back to Gauss and Legendre (around 1795). The surprising thing is that with this basic tool we can already “learn”, and that it contains many important concepts of modern ML.
+
+#### Learning via Least Mean Squares
+
+Training means finding the weights $\mathbf{w}$ that **minimize the empirical error** on the training data, that is, that make the error on the examples we have as small as possible. For now we only look at $R_{emp}$ (complexity control will come later). We have $l$ examples $(x_p, y_p)$ and we look for the line $h_\mathbf{w}(x) = w_1 x + w_0$ that minimizes the **sum of the squares of the residuals**:
+
+<Formula f={F.lms} />
+
+**In plain words.** For every example we compute the *residual*: the difference between the right value $y_p$ and the value the line gives at that point. We square it (so it is always positive and large errors weigh more), and we add up the squares of all the examples (the symbol $\sum$ is the [summation](#/prerequisiti/la-sommatoria)). The closer the line passes to the points, the smaller this sum.
+
+To get the mean we divide by $l$. This is the method of **least squares** (<T id="lms">Least (Mean) Squares, LMS</T>). It is also written $\arg\min_\mathbf{w} E(\mathbf{w})$, which is read “the values of $\mathbf{w}$ that make $E(\mathbf{w})$ smallest”, in the $L^2$ norm (that is, measuring the error with squares).
+
+<Callout type="tip" title="Why least squares?">
+
+Every candidate line produces some **residuals**, that is, the vertical distances between the points $(x_p, y_p)$ and the line. Different lines have different residuals: minimizing the sum of their squares is a natural way to find the line that best approximates the data. In general, least squares is the standard method for solving approximately **overdetermined systems**, that is, those with more equations (the examples) than unknowns (the parameters): there is no line that passes through all the points, so we look for the one that is least wrong.
+
+</Callout>
+
+#### How it is solved
+
+The error $E$ depends on the weights: it is a function of $w_0$ and $w_1$. We are looking for its lowest point. At a [minimum](#/prerequisiti/massimi-e-minimi) the function is “flat”: it is a **stationary point**, where the gradient is zero, that is, all the [partial derivatives](#/prerequisiti/derivate-parziali-e-gradiente) are zero:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_i} = 0, \qquad i = 1, \dots, n+1.
+$$
+
+In the simple case with two parameters we look for $w_0, w_1$ such that $\frac{\partial E}{\partial w_0} = 0$ and $\frac{\partial E}{\partial w_1} = 0$. The loss is **convex**: it has the shape of a bowl (a parabola in two dimensions), with a single bottom. So there are no “fake” minima in which to get stuck, and the solution can be written directly with a formula (we say *in closed form*):
+
+$$
+w_1 = \frac{\sum_p x_p y_p - \frac{1}{l}\sum_p x_p \sum_p y_p}{\sum_p x_p^2 - \frac{1}{l}\left(\sum_p x_p\right)^2} = \frac{\operatorname{Cov}[x,y]}{\operatorname{Var}[x]}, \qquad w_0 = \bar{y} - w_1 \bar{x},
+$$
+
+where $\bar{x} = \frac{1}{l}\sum_p x_p$ and $\bar{y} = \frac{1}{l}\sum_p y_p$ are the [means](#/prerequisiti/media-varianza-e-deviazione-standard) of the $x$ and of the $y$. $\operatorname{Var}[x]$ is the *variance* of $x$ (how spread out the $x$ are) and $\operatorname{Cov}[x,y]$ is the *covariance* (how much $x$ and $y$ grow together).
+
+<Callout type="tip" title="To be understood, not memorized">
+
+The professor points out that this “direct” solution only serves to know that it **exists** (thanks to the convexity of the loss): it must not be learned by heart. What matters is being able to **derive** it by setting the gradient to zero, as in the exercise below.
+
+</Callout>
+
+<Deep title="How the closed-form solution is derived" kind="dimostrazione">
+
+We use the derivatives of the next paragraph.
+
+**First step: $w_0$.** Set the derivative with respect to $w_0$ to zero: $\frac{\partial E}{\partial w_0} = -2\sum_p (y_p - w_1 x_p - w_0) = 0$. Dividing by $-2$ and separating the pieces of the sum we get $\sum_p y_p = w_1 \sum_p x_p + l\,w_0$ (the term $w_0$ is added $l$ times). Dividing everything by $l$: $w_0 = \bar y - w_1 \bar x$. This says a nice thing: the best line passes through the mean point $(\bar x, \bar y)$.
+
+**Second step: $w_1$.** Set the derivative with respect to $w_1$ to zero: $\frac{\partial E}{\partial w_1} = -2\sum_p (y_p - w_1 x_p - w_0)\,x_p = 0$. Substituting the $w_0$ just found we get $\sum_p x_p y_p - \bar y \sum_p x_p = w_1\left(\sum_p x_p^2 - \bar x \sum_p x_p\right)$. Since $\bar y \sum_p x_p = \frac1l \sum_p x_p \sum_p y_p$ and $\bar x \sum_p x_p = \frac1l\left(\sum_p x_p\right)^2$, dividing gives exactly the formula for $w_1$.
+
+</Deep>
+
+#### Computing the gradient for one pattern
+
+Let us compute the derivatives of the error for a single pattern $(x, y)$. Four [differentiation rules](#/prerequisiti/le-regole-per-calcolarla) are needed:
+
+- $\frac{\partial k}{\partial w} = 0$: the derivative of a constant $k$ (a number that does not depend on $w$) is zero;
+- $\frac{\partial w}{\partial w} = 1$: the derivative of $w$ with respect to itself is 1;
+- $\frac{\partial f(w)^2}{\partial w} = 2 f(w) \frac{\partial f(w)}{\partial w}$: the derivative of a square is “twice the thing inside, times the derivative of the thing inside” (it is the [chain rule](#/prerequisiti/la-regola-della-catena));
+- “the derivative of a sum is the sum of the derivatives”.
+
+Applying them:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_i} = \frac{\partial (y - h_\mathbf{w}(x))^2}{\partial w_i} = 2\big(y - h_\mathbf{w}(x)\big) \frac{\partial \big(y - (w_1 x + w_0)\big)}{\partial w_i},
+$$
+
+What remains is to differentiate the “thing inside”, $y - w_1 x - w_0$. With respect to $w_0$ its derivative is $-1$; with respect to $w_1$ it is $-x$. Hence:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_0} = -2\big(y - h_\mathbf{w}(x)\big), \qquad \frac{\partial E(\mathbf{w})}{\partial w_1} = -2\big(y - h_\mathbf{w}(x)\big)\, x.
+$$
+
+The quantity $\delta = y - h(x)$ (the Greek letter “delta”), that is, the error on the pattern (right answer minus answer of the model), will be called the **delta**. For $l$ patterns it is enough to add up the contributions of each one; then we extend to inputs with more dimensions.
+
+<Callout type="example" title="Worked exercise">
+
+With the data $(1;2.1), (2;3.9), (3;6.1), (4;8.4), (5;9.8)$, one step at a time:
+
+1. Means: $\bar x = 3$ (the mean of 1, 2, 3, 4, 5), $\bar y = 6.06$ (the mean of the five $y$).
+2. Sum of the products: $\sum x_p y_p = 2.1 + 7.8 + 18.3 + 33.6 + 49 = 110.8$ (each $x$ times its $y$: $1 \cdot 2.1$, $2 \cdot 3.9$, …).
+3. Sum of the squares of the $x$: $\sum x_p^2 = 1 + 4 + 9 + 16 + 25 = 55$.
+4. Slope: $w_1 = \frac{110.8 - 5 \cdot 3 \cdot 6.06}{55 - 45} = \frac{110.8 - 90.9}{10} = 1.99$.
+5. Intercept: $w_0 = 6.06 - 1.99 \cdot 3 = 0.09$.
+
+The line found, $h(x) \approx 1.99x + 0.09$, confirms the intuition $h(x) = 2x$.
+
+</Callout>
+
+### Notation for multidimensional inputs
+
+If there is more than one input variable, $\mathbf{x}$ and $\mathbf{w}$ are [vectors](#/prerequisiti/vettori) (written as columns of numbers), and the linear model is
+
+$$
+\mathbf{w}^T\mathbf{x} + w_0 = w_0 + w_1 x_1 + w_2 x_2 + \dots + w_n x_n = w_0 + \sum_{i=1}^{n} w_i x_i.
+$$
+
+In words: every variable $x_i$ is multiplied by its weight $w_i$, everything is added up and $w_0$ is added. The symbol $^T$ (“transpose”) only serves to say that we take the [dot product](#/prerequisiti/prodotto-scalare) of the two vectors.
+
+$w_0$ is called the **intercept**, threshold, <T id="bias-intercetta">**bias**</T> or offset. There is a handy trick to avoid writing it separately: we add a fixed component $x_0 = 1$ to the input. So $\mathbf{x}^T = [1, x_1, \dots, x_n]$, $\mathbf{w}^T = [w_0, w_1, \dots, w_n]$ and $w_0 \cdot 1$ enters the sum like all the other terms:
+
+<Formula f={F.linModel} />
+
+The linear model is therefore simply a **dot product** between input and weights. (In neural networks the transpose symbol is often not written.)
+
+---
+
+## Classification with linear models
+
+### The problem
+
+Consider 200 points in $\mathbb{R}^2$ (that is, in the plane: each point has two coordinates), generated by a distribution we do not know, 100 for each of two classes (two colors). Can we build a rule that predicts the color of future points? The data might have been generated in two ways: by one Gaussian per class (one “cloud” of points per class, with different centers), or by a mixture of many low-variance Gaussians (many small clouds per class).
+
+<Figure n="5.1" title="The example problem: 200 points of two classes">
+  <HtfData />
+  <Caption>The example problem (Hastie-Tibshirani-Friedman): 200 points of two classes, 100 per class (here class 1 is in blue and class 0 in orange). The points are generated in the two possible ways: a mixture of 10 narrow Gaussians per class (scenario 2) or a single Gaussian per class (scenario 1). The chosen scenario applies to all the figures of this page that use these data.</Caption>
+</Figure>
+
+### Hyperplanes and decision regions
+
+The same models used for regression can be used for **classification**, with categorical targets written as numbers ($0/1$ or $-1/+1$). The expression $\mathbf{w}^T\mathbf{x}$ defines a **hyperplane**: a “straight cut” of the space (a line in the plane, a plane in three-dimensional space, and so on). We exploit this fact: $\mathbf{w}^T\mathbf{x}$ is positive on one side of the cut and negative on the other. So the sign tells which class a point belongs to. The goal of learning is to find a $\mathbf{w}$ that gives good accuracy.
+
+In two dimensions, $\mathbf{w}^T\mathbf{x} = w_0 + w_1 x_1 + w_2 x_2 = 0$ is the equation of a straight line: it is the <T id="confine-di-decisione">**decision boundary**</T>, the line that separates the two areas.
+
+<Figure n="5.2" title="The hyperplane and the decision boundary" size="wide">
+  <Hyperplane3D />
+  <Caption>The hyperplane $z = \mathbf{w}^T\mathbf{x} + w_0$ and its intersection with the input plane ($z = 0$): the red line is the decision boundary. The examples $\langle(1;1),1\rangle$, $\langle(0.5;3),1\rangle$ and $\langle(2;2),0\rangle$ lie on the input plane; the dashed line goes up (or down) to the value of the plane. Move the weights and rotate the view by dragging.</Caption>
+</Figure>
+
+To get a classifier we apply a **threshold function**: a rule that looks at whether the number exceeds a certain threshold and answers with a class. In a first version the two classes are called $1$ and $0$:
+
+$$
+h(\mathbf{x}) = \begin{cases} 1 & \text{if } \mathbf{w}^T\mathbf{x} + w_0 \ge 0 \\ 0 & \text{otherwise} \end{cases} \quad \text{(output in } [0,1]\text{)},
+$$
+
+In a second version they are called $+1$ and $-1$, and we use the *sign* function ($\operatorname{sign}$), which gives $+1$ for positive numbers and $-1$ for negative ones:
+
+<Formula f={F.ltu} />
+
+with output in $[-1,+1]$. If we put $w_0$ inside $\mathbf{w}$ (with the trick of $x_0 = 1$): $h(\mathbf{x}_p) = \operatorname{sign}(\mathbf{x}_p^T\mathbf{w}) = \operatorname{sign}\left(\sum_{i=0}^{n} x_{p,i} w_i\right)$. This is the <T id="ltu">**Linear Threshold Unit**</T> (LTU).
+
+<Callout type="note" title="The bias as a threshold">
+
+Saying $\mathbf{w}^T\mathbf{x} + w_0 \ge 0$ is the same thing as saying $\mathbf{w}^T\mathbf{x} \ge -w_0$ ($w_0$ has just been moved to the other side). The two ways of writing it indicate the same positive area, but the second shows better the role of the bias: $-w_0$ is the **threshold value** that the weighted sum of the inputs must exceed to “switch on” the output $+1$.
+
+</Callout>
+
+### Using the model: two examples
+
+<Callout type="example" title="Earthquakes or nuclear explosions? (AIMA)">
+
+Seismic data (1982–1990, Asia): $x_1$ is the magnitude (the strength) of the body waves, $x_2$ that of the surface waves. A learning algorithm finds the boundary $-4.9 + 1.7x_1 - x_2 = 0$. That is, the weights are $w_0 = -4.9$, $w_1 = 1.7$, $w_2 = -1$.
+
+To classify a new event $(6, 3)$ just substitute $x_1 = 6$ and $x_2 = 3$ and look at the sign of the result:
+
+$$
+h(6,3) = \operatorname{sign}(-4.9 + 1.7 \cdot 6 - 1 \cdot 3) = \operatorname{sign}(2.3) = +1 \;\Rightarrow\; \text{nuclear explosion.}
+$$
+
+The calculation: $1.7 \cdot 6 = 10.2$; then $-4.9 + 10.2 - 3 = 2.3$, which is positive.
+
+(Getting new training examples, in this case, is decidedly expensive.)
+
+</Callout>
+
+<Figure n="5.3" title="Classifying seismic data">
+  <Seismic />
+  <Caption>Classification of seismic data with a linear decision boundary: earthquakes (orange circles) at the top left, nuclear explosions (blue points) at the bottom right, separated by the dashed line. The star is the new event $(6, 3)$: drag it to classify other events.</Caption>
+</Figure>
+
+<Callout type="example" title="Spam filter">
+
+We want $h(\text{mail}) = +1$ for spam and $-1$ otherwise. How is a mail turned into numbers? With some features $\phi_k(\text{mail})$ ($\phi$ is the Greek letter “phi”): for example the presence ($1$ if it is there, $0$ if it is not) of certain words or phrases (“free money”), or the length of the mail (an integer). This representation is called *bag of words*: it counts which words are there, not their order.
+
+Each weight $w_k$ says how much that feature pushes toward “spam”: positive for “free money”, negative for “.edu” or “unipi”. The classification is $h_\mathbf{w}(\mathbf{x}) = \operatorname{sign}\left(\sum_k w_k \phi_k(\mathbf{x})\right)$: add up the weights of the features that are present and, if the total is positive, it is spam.
+
+</Callout>
+
+### Useful properties of the hyperplane
+
+<Figure n="5.4" title="Many solutions, and w orthogonal to the hyperplane" size="wide">
+  <SeparatorProps />
+  <Caption>A linearly separable problem admits many separating hyperplanes; $\mathbf{w}$ is orthogonal to the hyperplane. Drag the two handles of the red line; the slider $K$ multiplies all the weights without moving the line.</Caption>
+</Figure>
+
+- If $w_0 = 0$ the line passes through the **origin** (the point where all the coordinates are zero).
+- If $n > 2$ (more than two variables) the boundary is a **hyperplane**.
+- **Freedom of scale**: if all the weights $\mathbf{w}$ are multiplied by the same number $K$, the boundary does not change. (If $\mathbf{w}^T\mathbf{x} = 0$, then also $K \cdot \mathbf{w}^T\mathbf{x} = 0$: the points of the boundary are the same.)
+- **$\mathbf{w}$ is orthogonal to the hyperplane**, that is, perpendicular: it forms a right angle with the boundary. Why? Take two points $\mathbf{x}_a, \mathbf{x}_b$ on the hyperplane. The equation holds for both: $\mathbf{w}^T\mathbf{x}_a + w_0 = 0$ and $\mathbf{w}^T\mathbf{x}_b + w_0 = 0$. Subtracting the second from the first, $w_0$ disappears and we are left with $\mathbf{w}^T(\mathbf{x}_a - \mathbf{x}_b) = 0$. But $\mathbf{x}_a - \mathbf{x}_b$ is an arrow that goes from one point to the other staying on the boundary, and a dot product equal to zero means a right angle. So $\mathbf{w}$ is perpendicular to every arrow that lies on the hyperplane.
+- If there is a hyperplane that separates the classes, **there are many** (just move or rotate it a little), and so there are also many algorithms to find them.
+
+The equation of the line can be rewritten with $x_2$ on its own: $x_2 = -x_1 \frac{w_1}{w_2} - \frac{w_0}{w_2}$. In this form we read off immediately the slope ($-w_1/w_2$) and the intercept ($-w_0/w_2$). Trying to draw it with different values of $\mathbf{w}$ is a good exercise.
+
+---
+
+## The learning problem
+
+### Formulation
+
+We have $l$ examples $(\mathbf{x}_p, y_p)$, with $y_p \in \{0,1\}$ or $\{-1,+1\}$ (the target is one of the two classes), and a loss $L$ that measures the error on an example. We look for the weights $\mathbf{w}$ that minimize the empirical risk, that is, the average error on the examples:
+
+$$
+R_{emp} = \frac{1}{l}\sum_{p=1}^{l} L\big(h(\mathbf{x}_p), y_p\big).
+$$
+
+For classification the most natural loss would be the 0/1 loss (0 if the class is right, 1 if it is wrong), applied to $\operatorname{sign}(\mathbf{w}^T\mathbf{x})$. But this makes the problem hard. This function is **piecewise constant**: if the weights are changed by a tiny amount, the number of errors stays the same, until suddenly a point changes side and the error makes a jump. It is like a staircase with flat steps: standing on a step you cannot tell which way is down. In mathematical terms, the gradient is zero almost everywhere and gives no indication of how to move; we end up in *combinatorial* problems (trying a huge number of combinations).
+
+### Replacing the loss with a smooth function
+
+The idea is to replace the 0/1 loss with a **smooth and differentiable** function (with no jumps and no corners, whose derivative can be computed), such as the squared error. It is applied directly to the linear output $\mathbf{w}^T\mathbf{x}$, that is, to the number *before* taking its sign (not to $h(\mathbf{x})$, which contains the sign and is step-shaped):
+
+$$
+E(\mathbf{w}) = \sum_{p=1}^{l}(y_p - \mathbf{x}_p^T\mathbf{w})^2 = \|\mathbf{y} - X\mathbf{w}\|^2.
+$$
+
+The second way of writing it says the same thing in compact form: $\mathbf{y}$ is the vector of all the targets, $X\mathbf{w}$ is the vector of all the outputs of the model (one per example), and $\|\cdot\|^2$ is the squared [length](#/prerequisiti/lunghezza-e-distanza) of their difference, that is, the sum of the squares of the differences.
+
+<Figure n="5.5" title="0/1 loss and squared loss">
+  <LossSmooth />
+  <Caption>0/1 loss (violet) and squared loss (red) for a pattern with target $y = 1$, as a function of $\mathbf{w}^T\mathbf{x}$: both are minimized in the region $\mathbf{w}^T\mathbf{x} > 0$. Drag the value of $\mathbf{w}^T\mathbf{x}$: the dashed tangent is the slope of the squared loss and the green arrow the direction in which it pays to move.</Caption>
+</Figure>
+
+Why does it work? Take an example with target $y_p = 1$. Minimizing $(1 - \mathbf{x}_p^T\mathbf{w})^2$ means pushing $\mathbf{x}_p^T\mathbf{w}$ toward $1$. But $1$ is positive, so the sign is the right one: no classification error. With $y_p = -1$ the output is pushed toward $-1$, which is negative: again the right side. The two losses have their minimum in the same region (on the right in the plot). The function is **quadratic** (a bowl), so a minimum always exists (even though it is not necessarily the only one). The very same method holds for regression.
+
+Let us now see two learning algorithms. Both are based on LMS and hold both for regression and for classification:
+
+1. a **direct approach**, based on the **normal equations** (a formula that gives the solution right away);
+2. an **iterative approach**, based on **gradient descent** (many small steps that get closer to the solution).
+
+### Direct approach: the normal equations
+
+Let us differentiate $E(\mathbf{w})$ with respect to any weight $w_j$, with the same rule for the square used before:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_j} = \sum_{p=1}^{l} 2(y_p - \mathbf{x}_p^T\mathbf{w}) \frac{\partial (y_p - \mathbf{x}_p^T\mathbf{w})}{\partial w_j}.
+$$
+
+Now the “thing inside” has to be differentiated. The dot product is $\mathbf{x}_p^T\mathbf{w} = x_{p,1}w_1 + x_{p,2}w_2 + \dots$ In this sum, the only piece that contains $w_j$ is $x_{p,j}w_j$, and its derivative is $x_{p,j}$ (all the other pieces are constant with respect to $w_j$ and have zero derivative). With the minus sign in front:
+
+$$
+\frac{\partial E(\mathbf{w})}{\partial w_j} = -2\sum_{p=1}^{l} (y_p - \mathbf{x}_p^T\mathbf{w})\, x_{p,j} = -2\sum_{p=1}^{l} \delta_p\, x_{p,j},
+$$
+
+where $\delta_p = y_p - \mathbf{x}_p^T\mathbf{w}$ is the error on pattern $p$ (the delta). In words: the derivative with respect to the weight $w_j$ is the sum, over all the examples, of “error of the example times its input number $j$”. This form will come back in neural networks.
+
+Setting the gradient to zero (one equation per weight) and writing everything with [matrices](#/prerequisiti/trasposta-prodotto-e-inversa), we obtain the <T id="equazioni-normali">**normal equations**</T>:
+
+$$
+(X^T X)\,\mathbf{w} = X^T \mathbf{y}.
+$$
+
+It is a system of equations in which the unknown is $\mathbf{w}$. $X^T$ is the *transpose* of $X$ (the same table with rows and columns swapped).
+
+<Callout type="theorem" title="Least-squares solution">
+
+If $X^TX$ is *non-singular* (that is, invertible: its inverse matrix exists, which is the equivalent of “dividing” by a matrix), the solution is unique:
+
+<Formula f={F.normal} />
+
+where $X^+$ is the <T id="pseudoinversa">**Moore-Penrose pseudoinverse**</T>: a kind of inverse that always exists, even when $X$ is not invertible. If instead $X^TX$ is not invertible, there are infinitely many solutions, and among them all one can choose the one with **minimum norm** of $\mathbf{w}$, that is, the one with the smallest weights.
+
+</Callout>
+
+In practice the **singular value decomposition** (SVD) is used, a way of writing a matrix as a product of three simpler matrices: $X = U\Sigma V^T$. From this we get $X^+ = V\Sigma^+U^T$, where $\Sigma^+$ is obtained from $\Sigma$ by replacing every nonzero number on the diagonal with its reciprocal (that is, $1$ divided by that number). With the SVD we compute $\mathbf{w} = X^+\mathbf{y}$ directly, and we get the minimum-norm solution. **This is the learning algorithm** of the direct approach. It is ready-made in all numerical libraries (Numerical Recipes, Armadillo, NumPy, R, Matlab…), with many variants to make it faster and more stable.
+
+### Iterative approach: gradient descent
+
+If the direct solution exists, why look for other methods? Because an *iterative* method (one that proceeds by repeated steps) makes it possible to have:
+
+- **more efficient** solutions: the direct one is *cubic* in the size of the matrix, that is, if the matrix becomes 10 times larger the computation becomes 1000 times longer;
+- **regularization** (to reduce the complexity of the model);
+- a better approximation with noisy data, by stopping the search **before the minimum**;
+- above all, a method that can also be applied to **nonlinear models**. It is the basis of the fundamental methods we will see (neural networks).
+
+#### The idea
+
+The gradient $\frac{\partial E}{\partial w_j} = -2\sum_p (y_p - \mathbf{x}_p^T\mathbf{w})\, x_{p,j}$ indicates the direction in which the error **rises** fastest. Moving in the opposite direction ($\Delta\mathbf{w} = -\nabla E(\mathbf{w})$; the symbol $\Delta$ means “shift, change”) we descend toward the minimum.
+
+Imagine being in the mountains in the fog and wanting to get down to the valley: you cannot see far, but you can feel with your feet which way the ground goes down. You take a step in that direction, then feel again, and so on. It is a **local search**: we start from an initial weight vector and modify it a little at a time to make the error decrease (<T id="discesa-del-gradiente">steepest descent</T>).
+
+<Figure n="5.6" title="Gradient descent in one dimension">
+  <Descent1D />
+  <Caption>Gradient descent in one dimension: at every step the weight moves in the direction opposite to the slope (the dashed tangents), from $w_0$ to $w_1$, $w_2$, … toward the minimum. Here $E(w)$ is the mean squared error of the line $h(x) = wx$ on the five points of the exercise. Drag the initial weight on the axis and choose $\eta$.</Caption>
+</Figure>
+
+With two weights, the error $E([w_0, w_1]^T)$ can be drawn as a surface: for every pair of weights, the height is the error. This surface is a **paraboloid** (a bowl: a convex quadratic function), and the negative gradient is our “compass” to find the bottom.
+
+<Figure n="5.7" title="The error surface of a linear model" size="wide">
+  <ErrorSurface />
+  <Caption>The error surface of a linear model with two weights: every point of the plane $(w_0, w_1)$ is a hypothesis, that is, a line (on the right, with the residuals in green, on the data of the worked exercise). The green arrow, resting on the surface, is $-\nabla E$: the direction in which the error decreases fastest. Move the weights or take a descent step; drag the surface to rotate it.</Caption>
+</Figure>
+
+In general the vector $\Delta\mathbf{w}$ has one component per weight: for each weight, its partial derivative with the sign changed.
+
+$$
+\Delta\mathbf{w} = -\frac{\partial E(\mathbf{w})}{\partial \mathbf{w}} = \left( -\frac{\partial E}{\partial w_0}, -\frac{\partial E}{\partial w_1}, \dots, -\frac{\partial E}{\partial w_n} \right)^T,
+$$
+
+In this way we can work in spaces with a great many dimensions without needing to draw them: it is enough to do the calculations weight by weight.
+
+#### The learning rule (delta rule)
+
+We move step after step with a **learning rule**:
+
+$$
+\mathbf{w}_{new} = \mathbf{w} + \eta\, \Delta\mathbf{w},
+$$
+
+In words: the new weights are the old weights plus a little piece of the descent direction. $\eta$ (the Greek letter “eta”) is the <T id="learning-rate">**learning rate**</T> (step size): it decides how long each step is, and so how fast the descent is.
+
+<Callout type="abstract" title="Gradient descent algorithm">
+
+1. Give $\mathbf{w}$ small initial values; fix $\eta$ between 0 and 1 ($0 < \eta < 1$).
+2. Compute the descent direction $\Delta\mathbf{w} = -\frac{\partial E(\mathbf{w})}{\partial \mathbf{w}}$.
+3. Update the weights: $\mathbf{w}_{new} = \mathbf{w} + \eta\,\Delta\mathbf{w}$.
+4. Repeat from step 2 until *convergence* (that is, until the weights stop changing) or until $E(\mathbf{w})$ is “small enough”.
+
+</Callout>
+
+Notes:
+
+- using $\Delta\mathbf{w}/l$ (that is, dividing by the number of examples) corresponds to *least mean squares*, the average error; dividing by $l$ will be the standard case;
+- $\eta$ governs a **speed/stability** trade-off: long steps make us go fast but we risk jumping past the minimum; short steps are safe but slow. $\eta$ can be reduced a little at a time toward zero, to guarantee convergence and avoid oscillating around the minimum (many variants will be seen later on).
+
+#### Batch and on-line
+
+There are two ways of using the examples.
+
+- **Batch version**: the gradient is the sum over **all** the $l$ patterns, and the weights are updated only once, after having seen the entire training set. One complete pass over the whole training set is called an <T id="epoca">**epoch**</T>. The estimate of the gradient is more “precise”.
+- **On-line version** (or **stochastic**, <T id="online-sgd">SGD</T>): the weights are updated after **every** pattern, using the gradient of that pattern alone:
+
+$$
+\frac{\partial E_p(\mathbf{w})}{\partial w_j} = -2(y_p - \mathbf{x}_p^T\mathbf{w})\, x_{p,j} = -\Delta_p w_j.
+$$
+
+So the output for the second pattern is computed with the weights already corrected by the first, and so on. Progress is made at every example and it can be faster, but a smaller $\eta$ is needed (each single example gives a less reliable indication than all of them together).
+
+There are intermediate cases (**mini-batch**: small groups of examples at a time), which we will see later on.
+
+<Figure n="5.8" title="Batch and on-line paths on the error surface" size="wide">
+  <BatchOnline />
+  <Caption>Paths on the contour lines of the error surface (the line of the worked exercise): batch in blue, regular; on-line in violet and in orange (two different orders of the patterns), more irregular. The black point is the minimum. Drag the initial weights, change $\eta$ and the number of epochs.</Caption>
+</Figure>
+
+<Figure n="5.9" title="Learning curves">
+  <LearningCurves />
+  <Caption>Learning curves: the error as a function of the iterations (epochs). The three curves differ only in the learning rate; the dashed violet one is controlled by you.</Caption>
+</Figure>
+
+<Callout type="question" label="Exercise" title="Exercise: which curve is slow, which unstable, which good?">
+
+The **green** curve goes down very slowly (learning rate too small: steps too short); the **blue** one has peaks and oscillations (learning rate too large: it jumps from one side of the minimum to the other, it is unstable); the **red** one goes down quickly and then settles (good).
+
+</Callout>
+
+#### Interpretation: an error-correction rule
+
+To sum up,
+
+<Formula f={F.deltaRule} />
+
+(the constant 2 need not be written: it is considered to be already “inside” $\eta$). It is an **error-correction** rule, called the **Widrow-Hoff rule** or <T id="delta-rule">**delta rule**</T>: every weight $w_j$ changes **in proportion to the error** (target − output). The larger the error, the larger the correction.
+
+- If the error is 0, there is no correction.
+- With input $x_j > 0$: if the error is positive (the output is too low), the delta is positive → $w_j$ increases → the output increases → the error decreases.
+- With input $x_j > 0$: if the error is negative (the output is too high), the delta is negative → $w_j$ decreases → the output decreases → the error decreases.
+- With a negative input the signs are reversed; with a zero input the weight does not change. It is the input that “decides” how much, and in which direction, each weight is responsible for the error: a weight whose input is zero did not contribute to the output, so it is not to blame and is not touched.
+
+We learn from previous errors: *“by seeking and blundering we learn”* (Goethe).
+
+<Figure n="5.10" title="The delta rule at work" size="wide">
+  <DeltaRule />
+  <Caption>The delta rule at work: with input $(1, 0, 1)$ and weights $(-0.2;\ 0.5;\ -0.2)$ the output is $-1$ but the target is $+1$; the correction increases the weights of the active inputs until the pattern is classified correctly. Click the inputs to change them, choose the target and apply the rule.</Caption>
+</Figure>
+
+Let us follow the example with the numbers. The input is $(1, 0, 1)$, the weights are $(-0.2;\ 0.5;\ -0.2)$ and $w_0 = 0$.
+
+1. Linear output: $\mathbf{w}^T\mathbf{x} = (-0.2 \cdot 1) + (0.5 \cdot 0) + (-0.2 \cdot 1) = -0.4$. It is negative, so the output is $-1$. But the target is $+1$: error.
+2. The delta is positive (the output is too low). So $w_1$ and $w_3$, whose inputs are 1, are increased; $w_2$, whose input is 0, stays as it is.
+3. After the correction ($w_1 = w_3 = +0.1$) we have $\mathbf{w}^T\mathbf{x} = 0.1 + 0 + 0.1 = 0.2 > 0$: the output is $+1$, correct.
+
+<Deep title="What are the values of delta and eta in the example?" kind="esempio">
+
+The delta on the pattern is $\delta = y - \mathbf{w}^T\mathbf{x} = 1 - (-0.4) = 1.4$. With the constant 2 already inside $\eta$, the correction of each weight is $\Delta w_j = \eta\,\delta\,x_j$:
+
+- for $w_2$ it is 0, because $x_2 = 0$;
+- for $w_1$ and $w_3$ it is $1.4\,\eta$, because their inputs are 1.
+
+For $w_1$ and $w_3$ to go from $-0.2$ to $+0.1$ they must increase by $0.3$. So we need $1.4\,\eta = 0.3$, that is, $\eta = 0.3/1.4 \approx 0.21$: it is the initial value of the slider in figure 5.10.
+
+</Deep>
+
+<Callout type="tip" title="Why gradient descent is so important">
+
+It is a simple and effective local search method, which makes it possible to explore an **infinite and continuous** hypothesis space. It can be applied whenever $H$ is continuous and the loss is differentiable (that is, its derivative can be computed), **not only to linear models**: it will be the basis of the training of neural networks and of deep learning. There are many improvements (Newton and quasi-Newton methods, conjugate gradient…).
+
+</Callout>
+
+### Recap for classification
+
+- The model is trained on the TR with LMS applied to $\mathbf{w}^T\mathbf{x}$ (the output before the sign), with the same gradient descent used for regression.
+- The model is then **used** to classify by applying the threshold: $h(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$.
+- The error can be evaluated as the **classification error** (0/1 loss: the number of wrong patterns), not only as the MSE:
+
+$$
+\text{mean\_err} = \frac{1}{l}\sum_{p=1}^{l} L\big(h(\mathbf{x}_p), d_p\big) = \frac{\text{num\_err}}{l}, \qquad \text{accuracy} = \frac{l - \text{num\_err}}{l}.
+$$
+
+In words: the mean error is the number of errors divided by the number of examples; the accuracy is the number of right answers divided by the number of examples. With 200 examples and 30 errors: error $= 30/200 = 15\%$, accuracy $= 170/200 = 85\%$.
+
+### Back to the problem: is it a good solution?
+
+<Figure n="5.11" title="Linear solution to the example problem" size="wide">
+  <HtfLinear />
+  <Caption>Linear solution to the example problem: regression on the classes coded $0$ and $1$ (in the notes GREEN = 0, RED = 1; here orange = 0, blue = 1), with boundary $\mathbf{x}^T\mathbf{w} = 0.5$. The dots color the region assigned to each class. Compare the two scenarios and the optimal boundary.</Caption>
+</Figure>
+
+The boundary $\{\mathbf{x} \mid \mathbf{x}^T\mathbf{w} = 0.5\}$ (the set of points where the output is $0.5$, that is, halfway between the two classes $0$ and $1$) is a straight line, and it seems to make many errors on the training set. Is it a bad solution? It depends on how the data were generated:
+
+- **Scenario 1**: each class is generated by a Gaussian (a single cloud per class) with uncorrelated components, the same variance and different means. In this case the linear rule is **almost optimal**: the two clouds overlap a little, and this overlap is unavoidable (it is due to the noise in the data): no method could do much better.
+- **Scenario 2**: each class is a mixture of 10 Gaussians (many small clouds). In this case the linear model is **too rigid**, and the models we will see next are needed.
+
+<Callout type="note" title="Least squares and maximum likelihood">
+
+Least squares corresponds to the **maximum likelihood** criterion (choosing the model that makes the observed data most probable) if the experimental errors have a normal distribution (the “bell”).
+
+</Callout>
+
+### Inductive bias of the linear model
+
+The [inductive bias](#/lezione/03/il-bias-induttivo) is the set of assumptions made at the start. For the linear model:
+
+- <T id="language-bias">**Language bias**</T>: $H$ is the set of linear functions, which can be very restrictive and rigid (only straight boundaries can be drawn).
+- <T id="search-bias">**Search bias**</T>: the search is ordered and guided by least-squares minimization. One might prefer a different method, which for example limits the values of the parameters: solutions with different properties would be obtained (in particular with respect to generalization).
+
+Even for a “simple” model there are many possibilities: a way of proceeding founded on principles (the theory of ML) is needed.
+
+---
+
+## Limits of linear models
+
+### Regression of nonlinear problems
+
+If the target function is not linear (like the sine of the [polynomial example](#/lezione/04/un-caso-di-studio-il-fitting-polinomiale)), a straight line is **too poor** a solution: it is the case $M = 1$ already seen, right in the underfitting zone.
+
+### Classification: linear separability
+
+<Callout type="definition" title="Linear separability">
+
+Two sets of points in the plane are <T id="separabilita-lineare">**linearly separable**</T> if they can be completely separated by a single straight line: all the points of one set on one side, all those of the other on the other side. In general, two groups are linearly separable in an $n$-dimensional space if they can be separated by a hyperplane of dimension $n-1$ (a line in the plane, a plane in 3D space, …).
+
+</Callout>
+
+The linear decision boundary gives exact solutions **only** for linearly separable sets.
+
+The linear model can represent, for example, **conjunctions** (the logical “and”: see [logic](#/prerequisiti/logica-e-conteggi)). The conjunction $x_1 \wedge x_2 \wedge x_4$ (“$x_1$ and $x_2$ and $x_4$ are all 1”) is implemented by $1 \cdot x_1 + 1 \cdot x_2 + 0 \cdot x_3 + 1 \cdot x_4 \ge 2.5$: the sum exceeds $2.5$ only if all three are 1 (then it is 3); if even one is missing, it is at most 2. The two-variable AND is implemented by $x_1 + x_2 \ge 1.5$. The weights $\mathbf{w}$ of these solutions can be learned.
+
+<Figure n="5.12" title="AND is linearly separable" size="wide">
+  <AndSeparable />
+  <Caption>AND is linearly separable: in the $x_1$-$x_2$ plane only $(1, 1)$ is positive and a line separates it from the other three points; next to it the truth table. Drag the line; in the box on the right, the four-variable conjunction implemented by a threshold.</Caption>
+</Figure>
+
+But not everything is separable:
+
+- **3 points**: can we always find a line, however the labels (the classes) are assigned to the points? Yes, **if they are not collinear** (not on the same line). If they are collinear, the labeling “1–0–1” (with the 0 in the middle) is not separable: a line cannot leave the two ends on one side and the middle point on the other.
+- **4 points**: no. There is a labeling for which no linear classifier is perfect: **XOR** (“exclusive or”: it is 1 if the two inputs are different). That is, $00 \mapsto 0$, $01 \mapsto 1$, $10 \mapsto 1$, $11 \mapsto 0$. Drawing the four points at the corners of a square, the positives lie on one diagonal and the negatives on the other: no line separates them.
+
+<Figure n="5.13" title="Limits of linear separation" size="wide">
+  <Shattering />
+  <Caption>Limits of linear separation: three non-collinear points are always separable (all the $2^3$ labelings, here as thumbnails), XOR on four points is not. Drag the three points to align them; in the XOR box click the points to change their label.</Caption>
+</Figure>
+
+<Callout type="note" title="A preview">
+
+This “counting how many labelings can be separated” is exactly the idea of the <T id="vc-dimension">**VC-dimension**</T>: a line in the plane manages to separate all the labelings of 3 (non-collinear) points, but not of 4. The VC-dimension of straight lines in the plane is therefore 3.
+
+</Callout>
+
+---
+
+## Extending the linear model
+
+### “Linear” in the parameters, not in the inputs
+
+In parametric statistical models, **the word “linear” does not refer to the straight line**, but to the way in which the **coefficients $\mathbf{w}$** appear in the formula: each one appears “on its own”, multiplied by something, and the pieces are added up. So nothing forbids using, in place of $x$, transformed inputs such as $x, x^2, x^3, \dots$ In this way nonlinear relations (curves) between input and output are described, using **the same learning machinery** (least squares). It is exactly the polynomial regression of the introduction:
+
+$$
+h_\mathbf{w}(x) = w_0 + w_1 x + w_2 x^2 + \dots + w_M x^M = \sum_{j=0}^{M} w_j x^j.
+$$
+
+The curve is not a straight line with respect to $x$, but the weights $w_j$ still appear linearly.
+
+### Linear Basis Expansion (LBE)
+
+<Callout type="definition" title="Linear basis expansion">
+
+$$
+h_\mathbf{w}(\mathbf{x}) = \sum_{k=0}^{K} w_k\, \phi_k(\mathbf{x})
+$$
+
+where the $\phi_k: \mathbb{R}^n \to \mathbb{R}$ are transformations of the input fixed at the start: each one takes the input vector ($n$ numbers) and gives back one number. In practice the input vector is lengthened by adding new variables computed from $\mathbf{x}$ (<T id="basis-expansion">linear basis expansion</T>), and then an ordinary linear model is built on these new variables.
+
+</Callout>
+
+Examples of $\phi$:
+
+- **polynomial** representation: $\phi(\mathbf{x}) = x_j^2$ (a variable squared), $\phi(\mathbf{x}) = x_j x_i$ (the product of two variables), …;
+- nonlinear transformations of a single input: $\log(x_j)$ (the [logarithm](#/prerequisiti/esponenziale-e-logaritmo)), $\sqrt{x_j}$ (the square root), …;
+- transformations of several inputs together: $\phi(\mathbf{x}) = \|\mathbf{x}\|$ (the length of the vector);
+- splines, …
+
+For example: $h(\mathbf{x}) = w_1x_1 + w_2x_2 + w_3\log(x_2) + w_4\log(x_3) + w_5(x_2x_3) + w_0$.
+
+Usually the number of parameters becomes $K > n$ (more weights than starting variables). The model is **linear in the parameters** (and in the $\phi$), not in $\mathbf{x}$: the same learning algorithm is used. It holds for regression and also for classification (it is enough to apply the threshold to $\sum_k w_k\phi_k(\mathbf{x})$).
+
+<Callout type="warning" title="Pros and cons of basis expansion">
+
+**Pros**: it describes more complex relations, it is more expressive.
+
+**Cons**:
+
+- with many basis functions it is easy to fall into **overfitting**, so methods to control complexity are needed (meant as flexibility, that is, VC-dim, not as computational cost);
+- the **curse of dimensionality**: the volume of the space grows so fast, as the dimensions increase, that the available data become *sparse* (few and far from one another) and are no longer enough to support the complexity of the model;
+- the $\phi$ are **fixed before** seeing the data. The alternative is adaptive models, nonlinear in the parameters, such as **neural networks** (which learn the $\phi$ by themselves) and **SVMs**.
+
+The question also remains open: which $\phi$ should be chosen? (“dictionary” approaches).
+
+</Callout>
+
+---
+
+## Regularization: controlling complexity
+
+How is the complexity of the model controlled? Among the many ways there is **coefficient shrinkage**: keeping the weights small.
+
+### Ridge regression (Tikhonov regularization)
+
+A term that **penalizes large weights** is added to the loss (<T id="ridge">ridge regression</T>):
+
+<Formula f={F.tikhonov} />
+
+**In plain words.** The loss now has two pieces. The first is the usual error on the data. The second is $\lambda\|\mathbf{w}\|^2$: the sum of the squares of all the weights, multiplied by a number $\lambda$ (the Greek letter “lambda”). If the weights are large, this piece is large and the loss goes up: it is a “fine” on large weights.
+
+$\lambda$ is the **regularization hyperparameter**: a small positive value, chosen by us in the **model selection** phase. The resulting model is “smoother”: models with small or zero weights are favored, that is, those that use fewer terms and so are less complex. (Remember [lesson 4](#/lezione/04/errore-di-training-e-di-test-al-variare-di-m): huge weights were the sign of overfitting.)
+
+<Callout type="note" title="Loss and Error are no longer synonyms">
+
+From here on **Loss** denotes the objective function used for training (error + penalty), while **Error** $E$ denotes the measure of the error of the model (only the piece on the data). So far we had treated them as the same thing.
+
+</Callout>
+
+<Callout type="tip" title="The goal of learning changes">
+
+With regularization the purpose changes: we no longer want **only** the model that best fits the data, but **the simplest model that fits the data well**. The loss is a scale with two pans:
+
+- **fit to the data** (training error, $\sum_p(y_p - \mathbf{w}^T\mathbf{x}_p)^2$): it pushes the model to follow the data and to minimize the residuals;
+- **simplicity of the model** (Tikhonov penalty, $\|\mathbf{w}\|^2$): it punishes large weights, and so makes the model smoother, simpler and more able to generalize;
+
+and the **regularization parameter** $\lambda$ decides how much weight to give to the penalty.
+
+</Callout>
+
+#### Solution
+
+As before, there are two ways of finding the weights.
+
+- **Direct approach**: $\mathbf{w} = (X^TX + \lambda I)^{-1}X^T\mathbf{y}$. It is the earlier formula with $\lambda I$ added, where $I$ is the *identity matrix* (all 1 on the diagonal and 0 elsewhere). The matrix $X^TX + \lambda I$ is **always invertible** (for $\lambda > 0$): an advantage for computer calculations too.
+- **Gradient approach**: we still follow the negative gradient of the loss. The penalty for the weight $w_j$ is $\lambda w_j^2$, and its derivative with respect to $w_j$ is $2\lambda w_j$. So the new rule is
+
+$$
+\mathbf{w}_{new} = \mathbf{w} + \eta\,\Delta\mathbf{w} - 2\lambda\mathbf{w},
+$$
+
+where $\Delta\mathbf{w}$ is the negative gradient of the error term alone (multiplied by $\eta$), while the penalty is multiplied directly by $\lambda$. This is the <T id="weight-decay">**weight decay**</T> technique: even when the gradient of the error is zero, at every step each weight loses a small fraction of its value. The weights tend to “deflate”, unless the data hold them up.
+
+<Deep title="Why is X^T X + λI always invertible?" kind="intuizione">
+
+A matrix is not invertible when it “squashes to zero” some direction: there is a nonzero vector $\mathbf{v}$ that, multiplied by the matrix, gives zero.
+
+For every vector $\mathbf{v}$ we have $\mathbf{v}^T X^TX\,\mathbf{v} = \|X\mathbf{v}\|^2 \ge 0$ (it is a squared length, so never negative). The matrix $X^TX$ can therefore have directions in which this value is zero (and then it is singular, that is, not invertible), but never negative values.
+
+Adding $\lambda I$ we add $\lambda\|\mathbf{v}\|^2 > 0$ in every direction. So $\mathbf{v}^T(X^TX + \lambda I)\mathbf{v} > 0$ for every $\mathbf{v} \ne \mathbf{0}$: no direction is sent to zero and the matrix is invertible.
+
+</Deep>
+
+#### The trade-off governed by $\lambda$
+
+- **Small $\lambda$**: in the loss the error counts most; the penalty is hardly felt. We get a model that is too complex (large weights, that is, of high norm), with a risk of **overfitting**.
+- **Large $\lambda$**: the penalty counts most; in order to keep the weights small, the model stops following the data. The error on the data can grow too much, and we move toward **underfitting**.
+
+The great advantage is that we have a **concrete way of controlling complexity**, easy to implement and usable in general.
+
+<Callout type="tip" title="Tikhonov and SLT">
+
+The penalty pushes all the weights toward small values (some even to zero), and in this way controls complexity: we get a model with a lower (or more suitable) VC-dimension, and the trade-off is adjusted with **a single parameter**, $\lambda$. In the [plot of the SLT bound](#/lezione/04/vc-dimension-e-bound-sul-rischio), increasing $\lambda$ is like moving to the left (less complexity): a well-chosen $\lambda$ brings us close to the minimum of the bound on $R$.
+
+</Callout>
+
+#### Effect on the degree-9 polynomial
+
+Let us go back to the degree-9 polynomial with 10 points which, without regularization ($\lambda = 0$), had zero training error and very strong overfitting.
+
+<Figure n="5.14" title="Regularized degree-9 polynomial" size="wide">
+  <RidgeFit />
+  <Caption>Regularized degree-9 polynomial (in red) on the ten points of lesson 4, with the true function in green: with $\ln\lambda = -18$ the curve is smooth and follows the true function well; with $\ln\lambda = 0$ it is too flat. The $\ln\lambda$ slider is shared with figure 5.15; the coefficients are computed on the data of the figure.</Caption>
+</Figure>
+
+In the figure $\lambda$ is given through its logarithm, $\ln\lambda$, because the useful values are tiny and awkward to write. With a suitable $\lambda$ ($\ln\lambda = -18$, that is, $\lambda \approx 1.5 \cdot 10^{-8}$, a number with seven zeros after the decimal point) the model works well: it is **worse on the training set** (it no longer passes exactly through the points) but the overfitting is reduced. With too high a $\lambda$ ($\ln\lambda = 0$, that is, $\lambda = 1$) we end up in underfitting.
+
+<Figure n="5.15" title="RMS error as ln λ varies">
+  <RidgeRms />
+  <Caption>Training (blue) and test (orange) $E_{RMS}$ as $\ln\lambda$ varies: overfitting on the left, underfitting on the right, the good trade-off in the middle. Drag the slider on the axis to choose $\lambda$.</Caption>
+</Figure>
+
+The coefficients too show the effect of regularization:
+
+| | $\ln\lambda = -\infty$ ($\lambda = 0$) | $\ln\lambda = -18$ | $\ln\lambda = 0$ |
+|---|---|---|---|
+| $w_0^*$ | 0.35 | 0.35 | 0.13 |
+| $w_1^*$ | 232.37 | 4.74 | −0.05 |
+| $w_2^*$ | −5321.83 | −0.77 | −0.06 |
+| $w_3^*$ | 48568.31 | −31.97 | −0.05 |
+| $w_4^*$ | −231639.30 | −3.89 | −0.03 |
+| $w_5^*$ | 640042.26 | 55.28 | −0.02 |
+| $w_6^*$ | −1061800.52 | 41.32 | −0.01 |
+| $w_7^*$ | 1042400.18 | −45.95 | −0.00 |
+| $w_8^*$ | −557682.99 | −91.53 | 0.00 |
+| $w_9^*$ | 125201.43 | 72.68 | 0.01 |
+
+The huge weights of the case without regularization (first column) become much smaller: regularization “tames” the oscillations. In the last column they are almost all zero: too much.
+
+### Other regularization techniques
+
+- **Ridge regression** ($\|\cdot\|_2$ norm): it penalizes the square of the weights and tends to make **all** the weights smaller.
+- <T id="lasso">**Lasso**</T> ($\|\cdot\|_1$ norm): it penalizes the absolute value of the weights and tends to drive **some weights exactly to zero** (leaving others large). A weight at zero means that that variable is not used: it is a form of **feature selection**. Unfortunately the absolute value has a corner at zero, and there the loss is not differentiable (the derivative cannot be computed): other methods are needed.
+- **Elastic net**: it uses both norms.
+
+<Callout type="tip" title="Why does L1 zero out the weights while L2 does not?">
+
+Let us look at the “push” toward zero that each penalty gives to a weight $w$.
+
+With L2 the penalty is $\lambda w^2$ and its gradient is $2\lambda w$: the push is proportional to the weight itself. When $w$ is close to zero, the push becomes tiny: the weight approaches zero more and more slowly and stays small but nonzero.
+
+With L1 the penalty is $\lambda|w|$ and its gradient (better: *sub-gradient*, because at zero there is the corner) is $\lambda\operatorname{sign}(w)$: a **constant** push toward zero, the same even for weights that are already small. This push drives them exactly to zero, if the error term does not “defend” them.
+
+</Callout>
+
+### Other improvements (optional)
+
+- **Data augmentation**: adding noise to the inputs teaches the model to ignore the variations that do not matter (robustness and regularization); *oversampling* (repeating the examples of the rare classes several times) helps with imbalanced datasets.
+- **Derived inputs**: a small number of new variables is used, obtained as linear combinations of the inputs (Principal Component Regression, Partial Least Squares).
+
+### Multi-class classification (optional)
+
+If there are more than two classes, there are some simple ways:
+
+- **1-of-K** encoding of the classes (e.g. red, green, blue → $(0,0,1), (0,1,0), (1,0,0)$) and one linear model for each component;
+- **OVA** (*one-vs-all*): $K$ binary classifiers are trained, and each one distinguishes one class from all the others; to classify, the one with the highest (most positive) output is chosen;
+- **AVA** (*all-vs-all*, *one-vs-one*): one classifier for every pair of classes ($K(K-1)/2$ distinct classifiers: with 4 classes there are 6); the class with the largest sum of outputs or with the most votes wins. Each classifier is trained on fewer data.
+
+With many classes **masking** phenomena can occur (one class stays “hidden” by the others and never wins). There are more refined methods and models that naturally have several outputs. Other well-known linear classifiers are **Linear Discriminant Analysis** and **logistic regression** (which models $P(y \mid \mathbf{x})$ directly, the probability of the class $y$ given the input $\mathbf{x}$).
+
+### A look ahead
+
+- The **Perceptron** (Rosenblatt, 1958, inspired by biology) minimizes only the misclassifications and is the basis of **neural networks**: several units organized in layers, which implement an **adaptive basis expansion** (the $\phi$ are learned from the data instead of being fixed), that is, *representation learning*, trained with gradient descent.
+- **SVMs** (Vapnik, 1996) regularize through the **maximization of the margin** between the classes (they look for the boundary as far as possible from the points) and enlarge the feature space with basis expansion (e.g. polynomials).
+
+Both implement a flexible nonlinear approximation, for classification and regression.
+
+<Callout type="abstract" title="Lessons learned from linear models">
+
+- It is possible to **learn by adjusting free parameters** $\mathbf{w}$, searching in a continuous space with the guidance of a loss function.
+- The problem is written as **LMS** and two algorithms are derived from it: **direct** (normal equations, SVD) and **iterative** (gradient descent, delta rule).
+- Linear models have a strong **language bias** (they solve only linearly separable problems).
+- Two key concepts of the common thread of the course: **basis expansion** (more **flexibility**) and **regularization** (**complexity control**). We will find them again, in different forms, in neural networks and in SVMs.
+
+</Callout>
+
+---
+
+## K-nearest neighbors
+
+Now we move to the opposite extreme: from a rigid method to a **very flexible** one (and local, that is, one that only looks at nearby data).
+
+### Eager and lazy learning
+
+Methods also differ in *when* they do the work (<T id="eager-lazy">eager and lazy</T>):
+
+- **eager** (it gets ahead with the work): the training data are analyzed right away and an **explicit hypothesis** is built (like the linear model, which computes its weights once and for all);
+- **lazy**: the data are memorized and nothing else is done, until a test point arrives; only then is an answer built specially for that point.
+
+### 1-nearest neighbor
+
+The idea is very simple: to classify a new point, look for the most similar example among the memorized ones and copy its answer.
+
+<Callout type="definition" title="1-NN algorithm">
+
+1. Memorize the training data $\langle \mathbf{x}_p, y_p\rangle$, $p = 1,\dots,l$.
+2. Given an input $\mathbf{x}$ (of dimension $n$), find the nearest training example:
+
+   $$
+   i(\mathbf{x}) = \arg\min_p d(\mathbf{x}, \mathbf{x}_p),
+   $$
+
+   that is, the index $p$ of the example that makes the distance $d$ from $\mathbf{x}$ smallest. For example with the Euclidean [distance](#/prerequisiti/lunghezza-e-distanza) (the one “as the crow flies”, computed with Pythagoras) $d(\mathbf{x}, \mathbf{x}_p) = \sqrt{\sum_{t=1}^{n}(x_t - x_{p,t})^2} = \|\mathbf{x} - \mathbf{x}_p\|$.
+3. Return $y_i$, the answer of that example.
+
+</Callout>
+
+1-NN is **very flexible**: on the training set it makes **zero errors** (every training point has itself as its nearest neighbor). The decision boundary is not a straight line and is very irregular, perhaps needlessly “noisy” (for example in scenario 1, where we know that the best solution is almost a straight line). And on the test data?
+
+### K-nearest neighbors
+
+Instead of trusting a single neighbor, it is natural to look at **several neighbors** and average their answers (<T id="k-nn">K-nearest neighbors</T>):
+
+<Formula f={F.knnAvg} />
+
+where $N_k(\mathbf{x})$ is the set of the $k$ patterns nearest to $\mathbf{x}$ according to the distance $d$ (the letter $N$ stands for *neighborhood*). **In plain words**: add up the targets of the $k$ neighbors and divide by $k$.
+
+If around $\mathbf{x}$ one class is clearly the most numerous, it is likely that $\mathbf{x}$ belongs to it too: the classification rule is the **majority vote** among the members of $N_k(\mathbf{x})$. For targets in $\{0,1\}$:
+
+$$
+h(\mathbf{x}) = \begin{cases} 1 & \text{if } \text{avg}_k(\mathbf{x}) > 0.5 \\ 0 & \text{otherwise.} \end{cases}
+$$
+
+Why $0.5$? If the targets are $0$ and $1$, their average is the fraction of neighbors of class 1. With 5 neighbors of which 3 are of class 1, the average is $3/5 = 0.6 > 0.5$: class 1 wins.
+
+For **regression** the average of the targets of the $k$ neighbors is used directly as the answer.
+
+<Figure n="5.16" title="1-NN and 5-NN on the same point">
+  <KnnQuery />
+  <Caption>1-NN returns “+” for $x_q$, 5-NN returns “−”: increasing $k$ “smooths” the decision, which is useful with noisy data. The circle contains the $k$ neighbors that vote; drag $x_q$ and change $k$.</Caption>
+</Figure>
+
+<Figure n="5.17" title="Decision boundaries of 1-NN and k-NN" size="wide">
+  <KnnRegions />
+  <Caption>Decision boundaries of 1-NN (left) and $k$-NN (right, $k = 15$ at the start) on the same problem as figure 5.1. The dots color the predicted class in every area of the plane. The value of $k$ is shared with figures 5.19–5.21.</Caption>
+</Figure>
+
+With $k = 15$ the model is still very flexible, but it makes a few errors on the training set; the boundary is still irregular but less so, and it **adapts to the local densities** of the classes (that is, it follows the areas where a class is denser).
+
+K-NN uses, without saying so, the <T id="voronoi">**Voronoi diagram**</T>. It is a division of the plane into cells, one per pattern: the cell of a pattern contains all the points that are nearer to it than to any other pattern. The sides of the cells are the points at the same distance from two patterns. 1-NN gives every cell the label of its pattern.
+
+<Figure n="5.18" title="The Voronoi diagram" size="wide">
+  <Voronoi />
+  <Caption>Voronoi diagram: the boundary of 1-NN follows the sides of the cells between points of different classes (cells colored in blue for class 1 and in orange for class 0). Drag the point to be classified: its cell is highlighted.</Caption>
+</Figure>
+
+### Behavior as $k$ varies
+
+In K-NN too we find the **trade-off between underfitting and overfitting**: here it is governed by the value of $k$. The test error has the classic **U** shape (high, then low, then high again) going between two extremes:
+
+- $k = 1$: the **extremely flexible** case (zero training error, jagged boundary, risk of overfitting);
+- $k = l$ (all the data): a **very rigid** model. The “neighbors” are always all the examples, so it answers with **a single average for all the data** (for classification, the most frequent class in the training set), whatever the input.
+
+<Figure n="5.19" title="The error of K-NN as k varies" size="wide">
+  <KnnCurves variant="u" />
+  <Caption>Behavior of K-NN: from $k = l$ (rigid, on the left) to $k = 1$ (flexible, on the right) the training error always decreases, the test error is U-shaped, with the minimum circled. Errors computed on the problem of figure 5.1 (test on 4000 new points). Drag the slider to choose $k$.</Caption>
+</Figure>
+
+Where have we already seen this? It is the same behavior as **polynomial fitting** as the degree $M$ grows, and as the plot of the **VC-bound** of SLT ([lesson 4](#/lezione/04/vc-dimension-e-bound-sul-rischio)). Here it is $k$ that acts as the complexity control (read from right to left, that is, as $l/k$: small $k$ means complex model). The intermediate values of $k$ give the best trade-off.
+
+### Variants
+
+**Multi-class**: with more than two classes the most frequent class among the $k$ neighbors is returned:
+
+$$
+h(\mathbf{x}) = \arg\max_v \sum_{\mathbf{x}_i \in N_k(\mathbf{x})} \mathbb{1}_{v, y_i}, \qquad \mathbb{1}_{v, y_i} = \begin{cases} 1 & \text{if } v = y_i \\ 0 & \text{otherwise.} \end{cases}
+$$
+
+In words: the symbol $\mathbb{1}_{v, y_i}$ is 1 if neighbor $i$ is of class $v$, and 0 otherwise. Adding it up over the neighbors counts the votes for class $v$. $\arg\max_v$ means “the class $v$ that got the most votes”.
+
+**Weighted distance**: nearer neighbors count more. Each vote is divided by the square of the distance: a neighbor at twice the distance counts a quarter.
+
+$$
+h(\mathbf{x}) = \arg\max_v \sum_{\mathbf{x}_i \in N_k(\mathbf{x})} \frac{\mathbb{1}_{v, y_i}}{d(\mathbf{x}, \mathbf{x}_i)^2},
+$$
+
+and if $d = 0$ for some $\mathbf{x}_i$ (the point coincides with an example) $y_i$ is returned directly (we cannot divide by zero).
+
+### One extreme of ML
+
+K-NN does not build a global hypothesis, valid for all the instances: **there is no model to train**, but all the examples must be kept in memory. It makes **local** estimates (with locally constant functions: in every small area it gives the same answer) instead of a global linear approximation. It is a lazy method, based on memory, on the instances, on distances.
+
+### K-NN versus the linear model
+
+| | Linear | K-NN |
+|---|---|---|
+| Flexibility | rigid (**low variance**) | flexible (**high variance**) |
+| Timing | eager | lazy |
+| Type | parametric | instance-based |
+| Parameters | $n+1$ (3 in the example) | about $l/k$ “effective parameters” |
+
+“Variance” here means: how much the model changes if the training data change a little. With small $k$ a few different points are enough to change the boundary: flexibility has a price. One might think that K-NN has a single parameter ($k$), but in reality it has about **$l/k$ effective parameters** (Hastie-Tibshirani-Friedman): it is as if it divided the space into $l/k$ regions, each with its own “average”. With $l = 200$ and $k = 10$ that is about 20 regions.
+
+<Figure n="5.20" title="K-NN, linear model and Bayes error" size="wide">
+  <KnnCurves variant="htf" />
+  <Caption>Error curves of K-NN as $k$ varies (top) and as the degrees of freedom $l/k$ vary (bottom): training on 200 points, test on 4000. The small squares are the linear model (3 parameters), the violet line the optimal Bayes error. Drag the slider to choose $k$.</Caption>
+</Figure>
+
+Going from large $k$ to $k = 1$ (that is, increasing $l/k$) we go from **underfitting** to **overfitting**: the training error goes down to zero, the test error has a minimum for intermediate values. It is once again the plot of the SLT bound, with $k$ in the role of complexity control: more flexibility makes it possible to find the best result, **if** complexity is kept under control.
+
+### The Bayes optimal classifier
+
+What is the best possible classifier of all? If we knew exactly how the data are generated, we could compute it.
+
+<Callout type="definition" title="Bayes classifier and Bayes error">
+
+If the density $P(\mathbf{x}, y)$ is known (the probability law that generates the data), the best choice is to assign to every point the most probable class (<T id="bayes">Bayes optimal classifier</T>):
+
+<Formula f={F.bayes} />
+
+**In plain words.** $P(v \mid \mathbf{x})$ is a [conditional probability](#/prerequisiti/probabilità-condizionata): the probability that the class is $v$, *knowing* that the point is $\mathbf{x}$. The formula says: among all the classes $v$, choose the one with the highest probability.
+
+Its error rate, called the **Bayes rate**, is the **minimum achievable error** with that distribution of the data (assuming we know the density that generates them). It is not zero: where the classes overlap, even the most probable choice is sometimes wrong.
+
+</Callout>
+
+K-NN approximates this solution directly: the majority vote in a neighborhood is exactly an estimate of $\arg\max_v P(v \mid \mathbf{x})$. Compared with Bayes it makes two “discounts”:
+
+- the conditional probability **at a point** becomes the conditional probability **in a neighborhood** of the point (local approximation): instead of asking “which is the most probable class exactly here?”, we ask “which is the most frequent class around here?”;
+- the probabilities are not known, so they are estimated with the **proportions** in the training sample (3 neighbors out of 5 of class 1 → estimated probability 60%).
+
+<Figure n="5.21" title="Bayes boundary and K-NN boundary" size="wide">
+  <BayesVsKnn />
+  <Caption>Optimal Bayes boundary (left, dashed in violet), computed knowing the density that generated the data, and boundary of 15-NN (right): 15-NN is very close to the optimum, consistently with the minimum of the test error in the previous figure.</Caption>
+</Figure>
+
+### Inductive bias of K-NN
+
+K-NN too makes assumptions at the start:
+
+1. **The chosen distance** establishes which examples are similar: we assume that the class of a point is similar to that of its neighbors **according to the chosen metric** (“metric” = way of measuring distances). Metrics other than the Euclidean one can be used; symbolic data require purpose-built metrics (e.g. the **Hamming distance** between strings of the same length: the number of positions in which they differ; between “cat” and “cut” it is 1).
+2. **Locality**: the approximation is local, and a local *smoothness* is assumed, that is, that nearby points have similar answers (to be compared later with the bias of deep learning).
+
+The bias tied to the metric is often underestimated in books, but it is crucial.
+
+### Limits of K-NN
+
+#### Scale of the variables and metric
+
+The choice of the scale depends on what is known about the problem. If the variables must all count in the same way, we must be careful about the differences in *range* (the interval of values of each variable). Example: if one variable is height in meters (from 1.5 to 2) and another is salary in euros (from 1000 to 5000), only the salary counts in the distance. **Rescaling the data** (e.g. bringing them to zero mean and unit variance) is equivalent to **changing the metric**. Scaling can completely change which the nearest neighbor is: K-NN is fragile even in the face of an elementary preparation of the data.
+
+<Figure n="5.22" title="Rescaling a variable changes the neighbor">
+  <ScaleNN />
+  <Caption>Rescaling a variable changes the nearest neighbor: with the original scale the neighbor of $x$ is the point at the top (blue); compressing the $x_1$ axis it becomes the point on the right (orange). Move the scale slider.</Caption>
+</Figure>
+
+#### Computational cost
+
+K-NN builds the local approximation **for every new example** to be predicted: the computational cost is **shifted to the prediction phase**. Training costs nothing, but answering does: for every input the distances from all the memorized vectors are computed (the time grows in proportion to the number of patterns). There are search algorithms made specially to go faster, such as the indexing of the patterns or the techniques of **approximate** nearest neighbor search, which give up always finding the exact neighbor in exchange for a much quicker search. The cost in **space** (memory) is high too: all the training data must be kept.
+
+#### Interpretability
+
+K-NN models can be interpreted only a little: the explanation of an answer is subjective and depends on the metric.
+
+#### The curse of dimensionality
+
+K-NN works well if a good number of data points can be found close to every $\mathbf{x}$, that is, if the **sampling is dense**. When there are many input variables (high dimension $n$) it often fails, because of the <T id="curse-of-dimensionality">**curse of dimensionality**</T>. It shows up in many ways; three in particular directly affect generalization.
+
+**1. In high dimension it is hard to find nearby points.** It becomes hard to collect $k$ observations that are “close” (that is, similar) to a query point (the point to be classified). The neighborhoods tend to become large in space, and the estimates are no longer local. We could shrink the neighborhood, but then fewer points fall inside it: this means reducing $k$, and the variance of the estimate increases (overfitting).
+
+Let us do a calculation. Take data spread uniformly in a cube of side 1 (the “unit cube”) and look for a small cube, inside it, that contains a fraction $r$ of the data. Its side must be $r^{1/n}$. Why? The volume of a cube is the side raised to the number of dimensions (volume $=$ side$^n$), and the small cube must have volume $r$: so the side is the $n$-th root of $r$, that is, $r^{1/n}$.
+
+<Figure n="5.23" title="The curse of dimensionality" size="wide">
+  <Curse />
+  <Caption>Curse of dimensionality: side of the subcube needed to capture a fraction $r$ of the volume, as the dimension $n$ varies (on the left the subcube in 3D inside the unit cube). Choose the fraction of data, or fix the side and read the fraction captured.</Caption>
+</Figure>
+
+- To capture 10% of the data: in 2D a side of $0.1^{1/2} \approx 0.32$ is enough (about 30% of the range of each variable); in 10D we need $0.1^{1/10} \approx 0.8$, that is, **80% of the range** of each coordinate! Even for just 1% of the volume, in 10D we need 63% of the range. The neighborhood is no longer “local” and the neighbors are no longer similar.
+- Conversely, let us fix the side at 0.3: in 1D we capture 30% of the data, in 2D 9% ($0.3 \cdot 0.3$), in 3D 2.7%, in 10D about **0.0006%**. That side may not be enough to find $k$ data points, unless we use a small $k$ (and so risk overfitting).
+
+**2. Low sampling density.** The sampling density (how dense the data are along each direction) is proportional to $l^{1/n}$. If 100 points are enough to estimate a function in $\mathbb{R}^1$ (on a line), to get a similar accuracy in $\mathbb{R}^{10}$ we need $100^{10} = 10^{20}$: a 1 followed by twenty zeros.
+
+**3. Irrelevant features** (*curse of noisy*). If the target depends only on a few of the many features (e.g. 2 out of 20), the similarity between patterns can be dominated by the large number of features that have nothing to do with it, and the “neighbor” found is not really similar in the things that matter. The problem grows with the dimensionality. Remedies: **weighting the features** according to how important they are (it is like stretching the axes along some dimensions; the weights can be searched for with an expensive model selection or with other methods), or doing **feature selection** (eliminating some variables, reducing the dimension of the input).
+
+### Design choices of K-NN
+
+- The **metric** $d$ (Euclidean, Hamming, Manhattan, weights on the features…): it is often the key to the success of an application.
+- The value of **$k$**, which controls underfitting and overfitting.
+- Often a **subset of the data** (a set of prototypes, for example found with clustering) and a **subset of the features** must be chosen.
+
+Extensions to other local models: kernel smoothers, local linear regression, prototype methods, case-based reasoning.
+
+<Callout type="abstract" title="General lessons from K-NN">
+
+- A variance that is too low is poor (rigid linear models), one that is too high is dangerous (K-NN).
+- **Smoothing**: in K-NN it is obtained by increasing $k$.
+- **Curse of dimensionality**: the volume of the space grows so fast that the data become sparse.
+- The error curves as $k$ varies are another example of the plot of the SLT bound.
+- The inductive bias of K-NN is tied to the metric.
+
+</Callout>
+
+### What now?
+
+K-NN does not build a real “learned model”: it does not find regularities and does not summarize knowledge, and it does not reach the goal of learning (being able to “forget” the examples after having built the model). In the next lessons we look for models that are **compact** like the LTU (all the knowledge in a few parameters) but **flexible** like K-NN, with good control of complexity: **neural networks**.
+
+The professor suggests looking in advance at the slides of the following lectures, and in particular at the **proof of the Perceptron convergence theorem** ([lesson 6](#/lezione/06)).
+
+<Exam>
+<Q q="Formulate the learning problem for a linear model with LMS, for regression and classification.">
+
+Given $l$ examples $(\mathbf{x}_p, y_p)$ we look for the weights $\mathbf{w}$ that minimize $E(\mathbf{w}) = \sum_p (y_p - \mathbf{x}_p^T\mathbf{w})^2 = \|\mathbf{y} - X\mathbf{w}\|^2$ (with $x_0 = 1$ for the bias), that is, the sum of the squares of the errors. In regression the answer is $h(\mathbf{x}) = \mathbf{x}^T\mathbf{w}$. In classification we train with the same loss applied to the linear output $\mathbf{w}^T\mathbf{x}$ (target $0/1$ or $\pm1$) and then use $h(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^T\mathbf{x})$, evaluating the classification error.
+
+</Q>
+<Q q="Derive the gradient of the squared error and the normal equations.">
+
+$\frac{\partial E}{\partial w_j} = \sum_p 2(y_p - \mathbf{x}_p^T\mathbf{w})\,\frac{\partial(y_p - \mathbf{x}_p^T\mathbf{w})}{\partial w_j} = -2\sum_p \delta_p\,x_{p,j}$, because in the dot product only the piece $x_{p,j}w_j$ depends on $w_j$. Setting the gradient to zero for every $j$ and writing with matrices: $X^T(\mathbf{y} - X\mathbf{w}) = 0$, that is, $(X^TX)\mathbf{w} = X^T\mathbf{y}$. If $X^TX$ is non-singular, $\mathbf{w} = (X^TX)^{-1}X^T\mathbf{y} = X^+\mathbf{y}$; in practice the SVD is used, which gives the minimum-norm solution.
+
+</Q>
+<Q q="Describe the gradient descent algorithm; difference between batch and on-line; role of $\eta$.">
+
+We start from small weights, compute $\Delta\mathbf{w} = -\partial E/\partial\mathbf{w}$, update $\mathbf{w} \leftarrow \mathbf{w} + \eta\Delta\mathbf{w}$ and repeat until convergence. Batch: the gradient is summed over all the patterns, one update per epoch, more precise estimate. On-line (stochastic): one update for every pattern; progress is made at every example but with more noise, and a smaller $\eta$ is needed. $\eta$ governs the speed/stability trade-off: too small is slow, too large oscillates or diverges (it moves away from the minimum); it can be reduced a little at a time.
+
+</Q>
+<Q q="Explain the delta rule as an error-correction rule.">
+
+$\Delta w_j \propto \sum_p \delta_p\,x_{p,j}$ with $\delta_p = y_p - \mathbf{x}_p^T\mathbf{w}$ (the symbol $\propto$ means “proportional to”). If the error is zero there is no correction. With a positive input and an output that is too low ($\delta > 0$) the weight grows and the output rises; with an output that is too high the weight decreases. With a negative input the signs are reversed; with a zero input the weight stays put. The input tells how much each weight is responsible for the error (example of figure 5.10).
+
+</Q>
+<Q q="Why is the squared error on $\mathbf{w}^T\mathbf{x}$ used for classification instead of the 0/1 loss?">
+
+The 0/1 loss on $\operatorname{sign}(\mathbf{w}^T\mathbf{x})$ is piecewise constant (step-shaped): the gradient is zero almost everywhere and does not indicate how to move (the problem becomes combinatorial). The squared error on $\mathbf{w}^T\mathbf{x}$ is smooth and differentiable, and with target $\pm1$ it pushes $\mathbf{w}^T\mathbf{x}$ toward the target, that is, to the right side: the two losses have their minimum in the same region.
+
+</Q>
+<Q q="What is linear separability? Why is XOR not linearly separable?">
+
+Two sets are linearly separable if a hyperplane (a line in the plane) separates them completely. In XOR the positives ($01$, $10$) lie on one diagonal of the square and the negatives ($00$, $11$) on the other. A line that leaves $01$ and $10$ on the same side also leaves on that side the point halfway between them (the center of the square). But the center is also halfway between $00$ and $11$: so at least one of the two negatives ends up on the wrong side. Three non-collinear points, instead, are always separable (VC-dim of lines in the plane = 3).
+
+</Q>
+<Q q="What is linear basis expansion? Pros and cons.">
+
+$h_\mathbf{w}(\mathbf{x}) = \sum_k w_k\phi_k(\mathbf{x})$ with fixed $\phi_k$ (polynomials, log, products, norms, splines): the model is not linear in $\mathbf{x}$ but it is linear in the parameters, so the same LMS algorithm is used. Pros: it is more expressive. Cons: risk of overfitting (complexity control is needed), curse of dimensionality, $\phi$ fixed before seeing the data (alternative: adaptive models such as neural networks and SVMs) and the problem of which $\phi$ to choose.
+
+</Q>
+<Q q="Write the Tikhonov loss, the direct solution and the weight decay rule; role of $\lambda$.">
+
+$\text{Loss}(\mathbf{w}) = \sum_p (y_p - \mathbf{x}_p^T\mathbf{w})^2 + \lambda\|\mathbf{w}\|^2$ (error on the data plus penalty on large weights). Direct solution: $\mathbf{w} = (X^TX + \lambda I)^{-1}X^T\mathbf{y}$, always invertible for $\lambda > 0$. With the gradient: $\mathbf{w}_{new} = \mathbf{w} + \eta\Delta\mathbf{w} - 2\lambda\mathbf{w}$ (weight decay). $\lambda$ is a hyperparameter chosen in model selection: small leads to overfitting, large to underfitting; it controls complexity with a single parameter.
+
+</Q>
+<Q q="Difference between L1 and L2 regularization.">
+
+L2 (ridge) penalizes $w^2$: it makes all the weights smaller, but the gradient $2\lambda w$ weakens near zero and the weights stay nonzero. L1 (lasso) penalizes $|w|$: the sub-gradient $\lambda\operatorname{sign}(w)$ is constant and drives some weights exactly to zero (feature selection), but the loss is not differentiable at zero. Elastic net uses both.
+
+</Q>
+<Q q="Describe K-NN; compare it with the linear model; what is the Bayes classifier?">
+
+K-NN memorizes the training set and classifies a point with the majority vote of the $k$ neighbors (for regression, with their average); $k = 1$ is extremely flexible, $k = l$ extremely rigid. Compared with the linear model: high variance versus low, lazy versus eager, instance-based versus parametric, about $l/k$ effective parameters versus $n+1$. The Bayes classifier chooses $\arg\max_v P(v \mid \mathbf{x})$ knowing the density: its error is the minimum possible, and K-NN approximates it by estimating the probabilities with the proportions in a neighborhood.
+
+</Q>
+<Q q="Explain the curse of dimensionality.">
+
+In high dimension the volume grows so fast that the data become sparse. To capture a fraction $r$ of uniform data in the unit cube a side of $r^{1/n}$ is needed: 10% in 10D requires 80% of the range of each coordinate, so the neighborhoods are no longer local. The sampling density goes as $l^{1/n}$ ($100^{10}$ points are needed in 10D for the same accuracy as 100 points in 1D). Irrelevant features dominate the distances. Remedies: weighting the features or doing feature selection.
+
+</Q>
+</Exam>

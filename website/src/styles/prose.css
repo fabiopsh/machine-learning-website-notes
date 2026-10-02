@@ -427,3 +427,68 @@ hr.section-rule {
     grid-template-columns: 1fr;
   }
 }
+
+/* ------------------------------------------------------------------ versione «spiegata semplice» */
+
+.lesson-head__tag--easy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.easy-box {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px 16px;
+  margin-top: 26px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  font-family: var(--font-sans);
+}
+.easy-box.is-on {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+}
+.easy-box__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.easy-box__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.easy-box__text strong {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.easy-box__text a {
+  color: var(--accent-ink);
+}
+.easy-box .btn {
+  height: 36px;
+}
+:root[data-style='glass'] .easy-box {
+  border-radius: 20px;
+  box-shadow: var(--glass-rim), var(--glass-drop-sm);
+}
+
+@media (max-width: 720px) {
+  .easy-box {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .easy-box .btn {
+    grid-column: 1 / -1;
+  }
+}

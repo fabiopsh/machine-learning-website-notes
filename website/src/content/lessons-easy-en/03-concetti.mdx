@@ -1,0 +1,654 @@
+import * as F from '../formulas/l03'
+import { MLSystem } from '../../widgets/l03/MLSystem'
+import { OneHot } from '../../widgets/l03/OneHot'
+import { StructuredData } from '../../widgets/l03/StructuredData'
+import { Clustering } from '../../widgets/l03/Clustering'
+import { LinearSeparator } from '../../widgets/l03/LinearSeparator'
+import { RegressionExercise } from '../../widgets/l03/RegressionExercise'
+import { HypothesesChoice } from '../../widgets/l03/HypothesesChoice'
+import { HypothesisSearch } from '../../widgets/l03/HypothesisSearch'
+import { BooleanLearner } from '../../widgets/l03/BooleanLearner'
+import { InductiveDeductive } from '../../widgets/l03/InductiveDeductive'
+import { Kanizsa } from '../../widgets/l03/Kanizsa'
+import { MSEFigure } from '../../widgets/l03/MSEFigure'
+import { DensityML } from '../../widgets/l03/DensityML'
+
+<Lead>Lectures 2 and 3 give the **big picture** and the **vocabulary** of Machine Learning, before studying the actual models. We start from the general idea: learning means finding, by looking at examples, a function that we do not know. Then we describe the “ingredients” of an ML system (data, task, model, learning algorithm, validation) and three fundamental ideas: the **inductive bias**, the **loss function** and **generalization**. Many things here are only hinted at: they will be taken up again and explained better in the rest of the course.</Lead>
+
+## Machine Learning in the computational setting
+
+Let us look at ML from the point of view of computation (that is, of what a computer does). ML studies **principles, methods and algorithms for learning and prediction**. The system learns from experience (data we already know) to carry out a task, and it does so by building a **model** (also called a **hypothesis**): something that is then used to make *predictions*, that is, to give answers on new cases.
+
+The most widespread idea, which is also the one of the course, is this: **to derive a model, that is, a function, from a set of examples, in such a way that it is able to generalize**. “Generalizing” means giving right answers also on new data, which the model has never seen.
+
+### When to use ML
+
+ML must be used **when appropriate** (only when it is really needed) and with **awareness** (knowing what it requires and which limits it has). Models that make predictions are useful when:
+
+- there is no theory that explains the phenomenon (or little is known about it);
+- the data are **uncertain, noisy or incomplete** (“noisy” means spoiled by small random errors), and this prevents us from writing an exact solution.
+
+In return, ML asks for two things:
+
+- a **source of experience** for training, that is, *representative* data (data that really resemble the cases the model will meet);
+- a certain **tolerance on precision**: the results will never be guaranteed to be 100% exact.
+
+ML does not replace traditional techniques (mathematical models based on knowledge we already have, algorithms and classical programming, classical AI): it complements them. It is particularly suitable when:
+
+- **knowledge is too hard to write down by hand**: people recognize faces, but cannot explain *how* they do it; the same holds for recognizing speech;
+- **human knowledge is not enough**: for example predicting how strongly a molecule binds to a protein;
+- a **personalized behavior** is needed: filtering emails or web pages according to each user’s tastes, tailor-made interfaces between person and machine.
+
+The great challenges of ML are three: building **intelligent autonomous systems** (robotics, interaction between people and robots, search engines), giving **powerful tools for analyzing data** (the tools of the data scientist) and opening up **new application areas** that touch several disciplines, in an age in which scientific progress is more and more data-driven.
+
+---
+
+## Learning as function approximation
+
+The course uses a precise and very widespread point of view: **learning is the approximation of an unknown function from examples**.
+
+What does that mean? A [function](#/prerequisiti/funzioni) is a rule that associates an output with every input. There is a “right” function (for example the one that associates with every image the digit drawn in it), but we do not know it. We only know some examples: “for this input, the right output is this one”. *Approximating* the function means building one of our own that resembles it as closely as possible.
+
+The advantage is that different tasks (classification, regression… we will see them shortly) are all treated in the same way. In mathematics this framework is that of *function spaces* (Hilbert spaces), which makes it possible to write everything rigorously.
+
+### The running example: digit recognition
+
+Let us go back to the example of the [first lesson](#/lezione/01/quando-serve-il-ml). The input is a set of images of handwritten digits: each image is an $8\times 8$ matrix of values, that is, a table of 8 rows and 8 columns of numbers. The problem is to build a model that, given an image, **predicts** (guesses) the digit. It is a **classification problem** with ten classes: the ten digits.
+
+It is a typical case in which ML works well: it is **hard to write the solution exactly** (everybody writes differently, there are noise and ambiguous cases), while it is **fairly easy to collect labeled examples**, that is, images for which the answer is already known.
+
+<Callout type="definition" title="Machine Learning (extended definition)">
+
+ML studies and proposes methods to build (**infer**, that is, derive by reasoning on the data) dependencies, functions or hypotheses from examples of observed data. These functions must:
+
+- **fit** the known examples: on the examples we know they must give the right answer, or nearly so;
+- be able to **generalize**, with reasonable accuracy, to new data.
+
+All this must happen with **verifiable** results, under statistical and computational conditions and criteria, taking two things into account: the **expressiveness** of the models (how many different functions they are able to represent) and the **algorithmic complexity** (how much computation is needed) of the models and of the learning algorithms.
+
+</Callout>
+
+<Deep title="Fitting or generalizing: why both are needed" kind="intuizione">
+
+The two requirements pull in opposite directions. Think of a student preparing for an exam:
+
+- if they learn by heart the solutions of the exercises seen in class, they “fit” those perfectly, but facing a new exercise they do not know what to do;
+- if they learn a rule that is too simple and rigid, they apply it also where it is wrong.
+
+The whole course revolves around this balance: we will see it as inductive bias in this lesson and as underfitting/overfitting in the [next one](#/lezione/04).
+
+</Deep>
+
+### Examples of pairs $x \to f(x)$
+
+In all the cases below we want to derive a general function starting from known data. The known data form the <T id="training-set">training set</T> (TR for short): a set of pairs $\langle x, f(x)\rangle$, that is, “input $x$, right output $f(x)$”.
+
+| Problem | Input $x$ | Output $f(x)$ |
+|---|---|---|
+| Handwriting recognition | data of the pen movement | letter of the alphabet |
+| Medical diagnosis | properties of the patient (symptoms, tests) | disease or recommended therapy |
+| Face recognition | bitmap of the face (the image, pixel by pixel) | name of the person |
+| Spam detection | email message | spam / not spam |
+| Protein folding | sequence of amino acids (variable-length string) | 3D coordinates of the atoms (sequence of vectors) |
+| Drug design | molecule (graph of atoms and bonds) | binding strength to the HIV protease (real number) |
+
+The last two examples show that input and output are not necessarily simple numbers: they can be **complex data**, such as strings (rows of characters), sequences, graphs (objects connected to one another).
+
+---
+
+## The ingredients of an ML system
+
+An ML system that makes predictions can be described by listing its components. These components are also a **guide to the important choices** to make when designing it.
+
+<Figure n="3.1" title="The ingredients of an ML system">
+  <MLSystem />
+  <Caption>The data (observations of the world) enter the model, which produces the prediction; task, learning algorithm and validation drive the construction of the model. Hover over the boxes for the description of each ingredient.</Caption>
+</Figure>
+
+- **Data**: the observations of the world, that is, the experience we have available.
+- **Task**: the purpose of the application, that is, what we want to obtain.
+- **Model**: the hypothesis that is built or improved by learning from the data.
+- **Learning algorithm**: the procedure that builds the model, adjusting its parameters (its “knobs”) to the problem.
+- **Validation**: the check of how good the resulting model is.
+
+### Data
+
+The data represent the facts we know. The first problem is **representation**: how to turn the objects we study into something a computer can use.
+
+The simplest case is the **flat** one (also called attribute-value language). Every object is described by a **fixed-size vector of properties**: a list of numbers that always has the same length. Each property is called a <T id="feature">feature</T>. The whole set of data (the *dataset*) is then a table: one row per object, one column per property. The properties (*attributes*) can be:
+
+- **categorical/discrete**: chosen from a list (color: yellow, red);
+- **continuous**: any numbers (weight, cost).
+
+There can also be **missing data**, denoted by “?”.
+
+<Callout type="note" title="Terminology on data">
+
+- Every row $\mathbf{x}$ (a vector, written in bold) is an **example**. Other names for the same thing: <T id="pattern">pattern</T>, instance, sample.
+- The **size of the dataset** is the number of examples (of rows) and is denoted by $l$.
+- The **dimension of the input** is the number of features (of columns) and is denoted by $n$.
+- $x_i$ (or $x_j$) is usually the $i$-th feature (attribute, component) of $\mathbf{x}$: the number in position $i$ of the list.
+- $\mathbf{x}_p$ is usually the $p$-th pattern (row) of the dataset.
+- $x_{p,i}$ is attribute $i$ of pattern $p$: the number that sits in row $p$ and column $i$.
+
+</Callout>
+
+<Deep title="Reading the indices: a small table" kind="come-si-legge">
+
+Imagine a dataset with $l = 3$ patients and $n = 2$ features (age, blood pressure). It is a table with 3 rows and 2 columns:
+
+| | age | blood pressure |
+|---|---|---|
+| patient 1 | 54 | 130 |
+| patient 2 | 37 | 118 |
+| patient 3 | 61 | 145 |
+
+$\mathbf{x}_2$ is the second row (the second patient), that is, $(37, 118)$. $x_{2,1}$ is the age of the second patient, that is, $37$. The first index picks the **row** (the pattern), the second the **column** (the feature).
+
+</Deep>
+
+Before being used, the data can be **preprocessed** (prepared): scaling of the variables (bringing them all to similar sizes), encoding, feature selection.
+
+#### Encoding categorical variables
+
+Models work with numbers. A categorical variable (for example a color) is not a number, so it has to be turned into numbers: this transformation is called *encoding*.
+
+- For **two classes** we use $0/1$ or $-1/+1$.
+- For **several classes** we could use $1, 2, 3, \dots$ But beware: this creates a **degree of similarity** that does not really exist. The numbers $1$ and $2$ are closer to each other than $1$ and $3$, so class 1 looks “more similar” to class 2 than to class 3. This encoding is fine only for **ordered categorical** variables, where an order really exists (e.g. small, medium, large).
+- For symbols with no order we use the **1-of-k** encoding (also called <T id="one-hot">**one-hot**</T>): every symbol becomes a vector with a single 1 and all the others 0. For example $A = (1,0,0)$, $B = (0,1,0)$, $C = (0,0,1)$. In this way all the symbols are at the same distance from one another: none is “more similar” to another. It is used both for the input and for the output, and it is useful for the project.
+
+<Figure n="3.2" title="Encodings and distances between symbols">
+  <OneHot />
+  <Caption>The Euclidean distances between the codes. With $1, 2, 3$ the symbol A is at distance 1 from B but 2 from C; with the one-hot encoding all the pairs are at distance $\sqrt{2}$. If the variable is really ordered (small, medium, large), the similarity introduced by $1, 2, 3$ is correct.</Caption>
+</Figure>
+
+#### Structured data
+
+Many data, by their nature, are not fixed-length lists of numbers. They have a *structure*: **sequences** (ordered lists), **trees**, **graphs** (objects connected by links), multi-relational data. Examples: images, time series (values measured over time), strings of a language, DNA and proteins, hierarchical relations, molecules, the network of links between web pages. The problem is to find a natural way to represent them (this will be discussed in the advanced part of the course).
+
+<Figure n="3.3" title="Structured data" size="wide">
+  <StructuredData />
+  <Caption>A sequence of nodes $l_1 \dots l_5$, a molecule represented as a graph and a network of web pages connected by hyperlinks. Hover over the nodes to see their neighbors: the structure is part of the information.</Caption>
+</Figure>
+
+#### Noise, outliers and feature selection
+
+- <T id="rumore">**Noise**</T> is what gets added from outside to the useful signal and spoils it. It comes from the randomness of the measurements, not from the law we want to discover (e.g. Gaussian noise). Think of a scale that each time shows a few grams more or less: the true weight is the signal, the deviation is the noise.
+- <T id="outlier">**Outliers**</T> are strange values, which do not agree with most of the observations (e.g. anomalous measurement errors). They are handled in two ways: by finding and removing them while preparing the data, or by using **robust** methods, that is, methods that are not ruined by a few strange values.
+- <T id="feature-selection">**Feature selection**</T> chooses a small number of informative features (the ones that are really needed), to give the problem the best representation of the input.
+
+### Task
+
+The task defines the purpose of the application: which knowledge we want to obtain, what kind of result we need, which information we have available. We distinguish:
+
+- **predictive tasks** (classification, regression): the point is to approximate a function — they are the main topic of the course;
+- **descriptive tasks** (cluster analysis, association rules): finding subsets or groups in data that have no labels.
+
+#### Supervised learning
+
+“Supervised” means that there is someone (a “teacher”) who tells us the right answer for every example.
+
+<Callout type="definition" title="Supervised learning">
+
+**Data**: training examples in the form $\langle \text{input}, \text{output}\rangle = \langle \mathbf{x}, d\rangle$ (**labeled** examples), for an unknown function $f$ whose value we know only at the points of the examples. The **target** $d$ (also written $t$ or $y$) is the right answer, given by a “teacher” according to $f(\mathbf{x})$.
+
+**Goal**: to find a good approximation of $f$, that is, a **hypothesis** $h$ that can be used to predict on never-seen data $\mathbf{x}'$ — a hypothesis that **generalizes**.
+
+</Callout>
+
+The target can be of two kinds, and depending on the kind the problem has a different name:
+
+- **categorical** (a class chosen from a list) → <T id="classificazione">**classification**</T>: $f(\mathbf{x}) \in \{1, 2, \dots, K\}$. The symbol $\in$ is read “belongs to”: the output is one of the numbers from $1$ to $K$, where $K$ is the number of classes (discrete-valued function);
+- **numerical** (any number) → <T id="regressione">**regression**</T>: $f(\mathbf{x}) \in \mathbb{R}$ or $\mathbb{R}^K$. The symbol $\mathbb{R}$ denotes the [real numbers](#/prerequisiti/insiemi-e-numeri-reali) (all numbers, also those with decimals); $\mathbb{R}^K$ denotes the lists of $K$ real numbers (continuous real-valued function).
+
+Thanks to the idea of function approximation, classification and regression are seen **in the same way**. In the language of statistics, the inputs are called **independent variables** and the outputs **dependent variables** or **responses**.
+
+#### Unsupervised learning
+
+In **unsupervised** learning there is no teacher: the training set contains only **unlabeled** data $\langle \mathbf{x}\rangle$, that is, the inputs without the right answer. What can be learned, then? For example:
+
+- finding **natural groupings** in the data: this is <T id="clustering">**clustering**</T>, that is, dividing the data into groups of elements that are “similar” to one another;
+- performing **dimensionality reduction** (describing the data with fewer numbers), visualization or preprocessing;
+- **modeling the density** of the data (understanding where the data are dense and where they are rare).
+
+<Figure n="3.4" title="Clustering">
+  <Clustering />
+  <Caption>The partition of the data into groups, each represented by its centroid. Drag the two centroids: every point takes the color of the nearest centroid. No label is given at the start.</Caption>
+</Figure>
+
+#### Classification
+
+In classification every pattern belongs to a class, and the goal is to assign the right class to every pattern.
+
+- If there are **two** classes, $f(\mathbf{x})$ is a **Boolean function**, that is, a function that answers in only two ways (true/false, $0/1$, $-1/+1$, negative/positive). We speak of **binary classification** or <T id="concept-learning">**concept learning**</T>.
+- If there are **more than two** classes, the problem is **multi-class**.
+
+Classification can be seen with a drawing: it is like **dividing the input space into decision regions**, one per class. The simplest example is the linear separator in $\mathbb{R}^2$, that is, in the plane: a [line](#/prerequisiti/la-retta) that divides the points of class 1 from those of class 0. With more than two variables, in place of the line there is a *hyperplane*: the same idea (a “straight cut”) in a space with more dimensions.
+
+The separating hyperplane is the set of points $\mathbf{x}$ for which this equality holds:
+
+<Formula f={F.hyperplane} />
+
+**In plain words.** $\mathbf{w}^T\mathbf{x}$ is a [dot product](#/prerequisiti/prodotto-scalare): multiply every number of the input $\mathbf{x}$ by the corresponding number of $\mathbf{w}$ (the *weights*) and add everything up. Then add the number $w_0$. The points where the result is exactly zero lie on the boundary line. On one side of the boundary the result is positive, on the other it is negative.
+
+The classifier uses exactly this sign to decide the class:
+
+<Formula f={F.ltu} />
+
+This model is called the <T id="ltu">**Linear Threshold Unit**</T> (LTU) and will be studied in detail later on. Functions of this kind, which give only $0$ or $1$ as a result, are called **indicator functions**. Every hyperplane divides the points into two groups: a division in two is called a *dichotomy*. The set $H$ of all the dichotomies that can be obtained with hyperplanes is the hypothesis space of this model.
+
+<Figure n="3.5" title="A linear separator, in the plane and in 3D" size="wide">
+  <LinearSeparator />
+  <Caption>A preview of the Linear Threshold Unit. On the left, the input plane $x_1$–$x_2$ with the points of class 1 and 0 and the separating line; in the 3D view the same classification function is a “step” function that is 1 in one region and 0 in the other.</Caption>
+</Figure>
+
+#### Regression
+
+<T id="regressione">**Regression**</T> is the estimation of a function that gives a real number as a result, starting from a finite number of **noisy samples**. That is: we know pairs $(\mathbf{x}, f(\mathbf{x}) + \text{noise})$, where the output is not exactly the true one but the true one plus a small random error. It is a form of curve fitting (“making a curve pass close to the points”): in one dimension in the example below, in $k$ dimensions in general.
+
+<Callout type="example" title="Regression exercise">
+
+Given the points $(1;\,2.1)$, $(2;\,3.9)$, $(3;\,6.1)$, $(4;\,8.4)$, $(5;\,9.8)$, what is $f$? In each pair the first number is the input $x$ and the second is the observed output.
+
+Looking at them, the output is always about twice the input: it comes naturally to propose $f(x) = 2x$. Let us check: for $x = 1$ it gives $2$ (the data point is $2.1$), for $x = 2$ it gives $4$ (the data point is $3.9$), and so on. The errors are small on all the points.
+
+But how did we choose it? And how would a machine do it (for example a neural network)? This is exactly what the learning algorithm must turn into a precise procedure.
+
+</Callout>
+
+<Figure n="3.6" title="The regression exercise">
+  <RegressionExercise />
+  <Caption>Adjust the parameters $w_1$ (slope) and $w_0$ (intercept) of the line: the green segments are the errors on the five points. Choosing $w_1, w_0$ so as to make the overall error small is, on a small scale, what a learning algorithm does.</Caption>
+</Figure>
+
+<Figure n="3.7" title="Among the infinitely many functions compatible with the data, which one to choose?">
+  <HypothesesChoice />
+  <Caption>Three hypotheses for the same points at which we know $f(x)$ (the crosses): a line (in red), a piecewise-linear curve (in green) and a polynomial that passes exactly through all the points (in blue). Hover over the plot to compare their predictions.</Caption>
+</Figure>
+
+The figure poses the key question: among the infinitely many possible functions, which one should we choose?
+
+- The blue curve passes exactly through all the points, but between one point and the next it oscillates in an unnatural way.
+- The red line, $h_\mathbf{w}(x) = w_1 x + w_0 = 0.2x - 0.4$, makes a few small errors on the points, but it is much simpler. Here $w_1 = 0.2$ is the slope of the line and $w_0 = -0.4$ is the point where it crosses the vertical axis.
+
+Is it better to have a function that is perfect on the data but complicated, or a simple one that is slightly off? This dilemma is the heart of the problem of <T id="generalizzazione">**generalization**</T>.
+
+#### Other paradigms
+
+Besides supervised and unsupervised there are other ways of learning.
+
+- **Semi-supervised learning**: it uses labeled and unlabeled examples together.
+- <T id="self-supervised">**Self-supervised learning**</T>: it is supervised learning in which the labels are **created automatically from the very structure of the data**, without a person writing them by hand. The model is first **pre-trained** on huge amounts of unlabeled data, and so it learns general representations; then it is adapted to specific tasks with **fine-tuning** (an additional, shorter training). Current examples, which are at the basis of LLMs (large language models):
+  - the **prediction of the next word** in a text, that is, the **autoregressive** self-supervised learning of the GPT family (*Generative Pre-trained Transformer*, OpenAI);
+  - the reconstruction of **masked words**, that is, hidden ones (BERT, Google);
+  - for images, the **masked autoencoders** (Meta), which reconstruct hidden pieces of the image.
+- <T id="reinforcement-learning">**Reinforcement learning**</T>: learning with a “critic” that only says right/wrong. The algorithm learns a **policy**, that is, a rule on how to act on the basis of what it observes of the world. Every action changes something in the environment, and the environment answers with a signal (feedback). There are no examples showing step by step what to do; the goal is to learn to make decisions (decision-making). It is widely used in modern AI.
+
+<Deep title="Where do the labels come from in self-supervised learning?" kind="esempio">
+
+Take the sentence “the cat sleeps on the sofa”. Without anybody labeling anything, we get ⟨input, target⟩ pairs out of it: “the” → “cat”, “the cat” → “sleeps”, “the cat sleeps” → “on”… The target is simply the word that comes next, already written in the text. This is why huge amounts of unlabeled data can be used: having the text is enough.
+
+</Deep>
+
+### Model
+
+The **model** describes the relations among the data (according to the task) using a certain “language” (numerical, symbolic, …), which depends on the chosen representation. The most important thing is this: **the model defines the class of functions that the machine can implement**. This class is called the <T id="spazio-delle-ipotesi">**hypothesis space**</T>.
+
+An example: the set of functions $h(\mathbf{x}, \mathbf{w})$ as the parameter $\mathbf{w}$ varies. Think of $\mathbf{w}$ as a set of knobs: every position of the knobs gives a different function. The set of all the functions that can be obtained by turning the knobs is the hypothesis space.
+
+<Callout type="definition" title="Basic terminology">
+
+- **Training example** (supervised): a pair $(\mathbf{x}, f(\mathbf{x}) + \text{noise})$, where $\mathbf{x}$ is the vector of features and $d = f(\mathbf{x}) + \text{noise}$ is the **target** (the observed answer).
+- <T id="funzione-target">**Target function**</T> $f$: the true function, which we do not know.
+- <T id="ipotesi">**Hypothesis**</T> $h$: a function that we propose and that we believe is similar to $f$; an expression, written in a certain language, that describes the relations among the data.
+- **Hypothesis space** $H$: the set of all the hypotheses that the learning algorithm can, in principle, produce.
+
+</Callout>
+
+Some examples of different languages for writing the hypotheses:
+
+- **Linear models**: $H$ is a space described by **continuous** parameters (numbers that can change at will), and every choice of $\mathbf{w}$ is a different hypothesis. Examples: the binary classifier $h(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^T\mathbf{x} + w_0)$, where $\operatorname{sign}$ gives $+1$ if the number is positive and $-1$ if it is negative; or simple linear regression $h_\mathbf{w}(x) = w_1 x + w_0$ (e.g. $2x + 150$).
+- **Symbolic rules**: $H$ is **discrete** (the hypotheses can be counted one by one), for example “if $x_1 = 0$ and $x_2 = 1$ then $h(\mathbf{x}) = 1$, otherwise $0$”.
+- **Probabilistic models**: they estimate $p(\mathbf{x}, y)$, that is, the probability of observing the input $\mathbf{x}$ and the output $y$ together.
+- **K-nearest neighbors** (regression): it predicts the average of the values $y$ of the nearest examples (it is a memory-based model: it remembers the examples).
+- **Neural networks**: beyond the inspiration from the brain, they are a computational model able to approximate complex and **nonlinear** relations (not describable with a line) between input and output. They too, once again, define a **class of functions**.
+
+The main paradigms (languages for $H$) are:
+
+| Paradigm | Examples |
+|---|---|
+| **Symbolic / rule-based** (discrete $H$) | conjunctions of literals, decision trees, inductive grammars, evolutionary algorithms, Inductive Logic Programming |
+| **Sub-symbolic** (continuous $H$) | linear discriminant analysis, multiple linear regression, LTU, neural networks, kernel methods (SVM) |
+| **Probabilistic / generative** | traditional parametric models, Bayesian networks, Naïve Bayes, Markov models, HMM |
+| **Instance-based** (based on the examples) | nearest neighbor |
+
+Some models can be written in several different languages.
+
+<Callout type="theorem" title="No Free Lunch Theorem">
+
+The name means that nothing comes for free. There is no learning method that is “the best” in absolute terms (without knowing anything about the problem, for all problems): if an algorithm does better on some problems, it must necessarily do worse on others (Devroye 1982; Wolpert and Macready 1997).
+
+</Callout>
+
+This is why the course gives both a **set of models** and the **critical tools to compare them**. Beware, though: this does *not* mean that all models are the same. They differ a lot in two respects:
+
+- **flexibility**: the ability, in principle, to approximate any functions, not only linear ones;
+- **complexity control**: the ability not to become more complicated than necessary.
+
+Flexible models and principles to control their complexity are the core of ML.
+
+### Learning algorithm
+
+The learning algorithm starts from data, task and model and performs a **(heuristic) search in the hypothesis space $H$** to find the best hypothesis, that is, the one that best approximates the unknown target function. “Heuristic” means that it does not try all the possibilities, but follows a reasonable strategy. It usually looks for the $h$ with **minimum error**: the free parameters of the model are adjusted to the task (the best $\mathbf{w}$ in linear models, the best rules in symbolic models…). In the regression example above, the choice $w_1 = 2$, $w_0 = 0$ (that is, the line $2x$) is the result of this search.
+
+<Figure n="3.8" title="Learning as a search in the hypothesis space" size="wide">
+  <HypothesisSearch />
+  <Caption>The hypothesis space $H$ (chosen a priori): every point is a different function. We start from an initial solution and proceed, typically by local search, toward the one with minimum error, inside the region of the solutions compatible with the training set.</Caption>
+</Figure>
+
+There are two difficulties: $H$ may not contain all the possible functions, and the search cannot try everything (it cannot be *exhaustive*). So **assumptions** made at the start are needed, and this is where the **inductive bias** comes into play.
+
+Depending on the setting, “learning” takes different names: **inference** (statistics), **abduction/induction** (logic), **adaptation** (biology, systems), **optimization** (mathematics), **training** (neural networks), **function approximation** (mathematics), regression, curve fitting. They are all ways of naming the same idea.
+
+After these four ingredients, three concepts remain to be discussed: the **inductive bias**, the **loss** and **generalization**.
+
+---
+
+## Inductive bias
+
+To build a model and a learning algorithm we have to make **assumptions** about what the target function is like, that is, we have to “bet” on something in advance. These assumptions can concern:
+
+- **constraints on the model**, that is, on the hypothesis space $H$ (the set of hypotheses that we are able to write): this is the <T id="language-bias">**language bias**</T>;
+- **constraints or preferences in the learning algorithm**, that is, in the way it searches: this is the <T id="search-bias">**search bias**</T>;
+- both things.
+
+We will see that these assumptions are **indispensable** to get a useful model, that is, one able to generalize. We study this with examples in discrete hypothesis spaces, learning a **concept**, that is, a Boolean function (one that answers only 0 or 1), as in Mitchell’s book, ch. 2. For example: $h_{cat}(\mathbf{x}) = 1$ if the animal $\mathbf{x}$ is a cat, $0$ otherwise.
+
+### Learning Boolean functions: an ill-posed problem
+
+Suppose we want to learn an unknown Boolean function $y = f(x_1, x_2, x_3, x_4)$ starting from 7 examples. The function has four inputs, and each one is either 0 or 1.
+
+It is an **ill-posed (inverse) problem**: this means that the solution may not exist, may not be unique or may not be stable. Let us see why, by [counting](#/prerequisiti/logica-e-conteggi):
+
+1. With 4 binary inputs there are $2^4 = 16$ possible combinations of inputs (from $0000$ to $1111$).
+2. A Boolean function must choose 0 or 1 for **each** of the 16 combinations. The possible functions are therefore $2^{16} = 65536$.
+3. Until we see **all** the 16 input-output pairs, we cannot know which one is right. After 7 examples, 9 combinations are still unseen, and for each of them the output can be 0 or 1: there are still $2^9 = 512$ possible functions, all in agreement with our 7 examples.
+
+In general, for binary inputs and outputs with $n$ inputs:
+
+<Formula f={F.countAll} />
+
+A model that uses this whole space is a <T id="lookup-table">**lookup table**</T>: a rote learner, that is, one that learns by heart. It memorizes the examples and can classify $\mathbf{x}$ only if it is identical to an example already seen (otherwise “no answer”). **No inductive bias → no generalization.**
+
+<Figure n="3.9" title="Learning a Boolean function from 7 examples" size="wide">
+  <BooleanLearner />
+  <Caption>The 16 possible instances of $(x_1, x_2, x_3, x_4)$: the numbered rows are the 7 training examples (Table 1 in Mitchell). For every unseen instance, the bar shows how many hypotheses of the version space answer 1. Without bias the answer is always 50/50; with the “conjunctions only” bias the version space shrinks and the answers become clear-cut.</Caption>
+</Figure>
+
+### Restricting the space: conjunctive rules
+
+Let us try to put in a **language bias**: we decide to consider only **conjunctive rules**. A conjunctive rule is a conjunction (AND) of *literals*; a literal is a variable ($l_i$, “variable $i$ is 1”) or its negation ($\neg l_i$, “variable $i$ is 0”). Examples: $h_1 = l_2$, $h_2 = l_1 \wedge l_2$ (the symbol $\wedge$ means “and”), $h_3 = \text{true}$ (always true), $h_4 = \neg l_1 \wedge l_2$. For example $h_1$ says: “if $x_2 = 1$ then $h(\mathbf{x}) = 1$, otherwise $0$”.
+
+The number of really different hypotheses collapses. Let us count them: for each of the $n$ variables we have three choices — putting it as it is ($l_i$), putting it negated ($\neg l_i$) or leaving it out (“don’t care”). Three choices for $n$ variables give $3^n$ hypotheses. We add 1: all the conjunctions that contain $l_i \wedge \neg l_i$ (a thing and its opposite) can never be true, so they are all the same hypothesis “false”. With $n = 4$ we go from 65536 to $3^4 + 1 = 82$ hypotheses.
+
+<Callout type="definition" title="Consistency and Version Space">
+
+A hypothesis $h$ is **consistent** with the training set TR if it gives the right answer on all the examples: $h(\mathbf{x}) = d(\mathbf{x})$ for every example $\langle \mathbf{x}, d(\mathbf{x})\rangle \in TR$.
+
+The <T id="version-space">**version space**</T> $VS_{H,TR}$ is the set of the hypotheses of $H$ that are consistent with all the training examples: the hypotheses “still in the race” after seeing the data.
+
+</Callout>
+
+In this reduced space there are efficient algorithms (Mitchell ch. 2) that find the version space without having to list all the hypotheses one by one.
+
+<Deep title="Which conjunction is consistent with the 7 examples of the table?" kind="esempio">
+
+The positive examples (those with answer 1) are $0011$ and $1001$.
+
+1. A conjunction is 1 on both only if it uses literals that are true in **both**. The two examples have $x_2 = 0$ and $x_4 = 1$ in common. So the candidates are: $\text{true}$, $\neg x_2$, $x_4$ and $\neg x_2 \wedge x_4$.
+2. Now let us check the negative examples (those with answer 0): a good hypothesis must give 0 on all of them. $\text{true}$ is wrong on all of them (it always says 1); $\neg x_2$ is wrong on $0010$; $x_4$ is wrong on $0101$.
+3. Only $\neg x_2 \wedge x_4$ is left.
+
+The version space has **a single** element, which gives an answer for every unseen instance. You can check it in figure 3.9.
+
+</Deep>
+
+### The unbiased learner
+
+The “conjunctions only” assumption is, however, too narrow: if the target concept is not in $H$, we will never be able to represent it. For example “if $x_1 = 1$ **or** $x_2 = 1$ then 1” is not a conjunction (it uses “or”, not “and”).
+
+So let us try the opposite idea: choosing an $H$ able to express **every teachable concept**, without excluding anything. Such a learner is called *unbiased*. A concept is a subset of the input space $X$ (the set of instances for which the answer is 1), so $H$ must be the set of all the subsets of $X$: the *power set* $\mathcal{P}(X)$ (it is obtained by allowing disjunctions, conjunctions and negations). With $n = 10$ binary inputs: $|X| = 2^{10} = 1024$ instances and $|\mathcal{P}(X)| = 2^{1024} \approx 10^{308}$ concepts — more than the atoms in the universe. (The vertical bars $|\cdot|$ here mean “the number of elements”.)
+
+Now $H$ certainly contains the target concept. But what happens to generalization?
+
+<Callout type="theorem" title="A learner without bias cannot generalize">
+
+With an <T id="unbiased-learner">unbiased learner</T>, the only instances that the version space classifies unambiguously are the training examples themselves: we get a **lookup table** again.
+
+**Proof.** Let $x_i$ be an unseen (test) instance and let $h$ be a hypothesis of the version space ($h \in VS$). Let us build a second hypothesis $h'$, equal to $h$ everywhere except at $x_i$, where it answers the opposite: $h'(x_i) \ne h(x_i)$.
+
+- $H$ contains *all* the functions, so $h'$ too is in $H$.
+- $h$ and $h'$ answer in the same way on the whole training set (they differ only at $x_i$, which is not a training example), so $h'$ too is consistent: $h' \in VS$.
+
+Hence for every hypothesis of the VS that classifies $x_i$ as positive there is another one that classifies it as negative. Every unseen instance gets the answer 1 from exactly half of the hypotheses of the VS and the answer 0 from the other half. The VS cannot give any answer.
+
+</Callout>
+
+<Deep title="The proof in one line, looking at the figure" kind="intuizione">
+
+In figure 3.9, in “no bias” mode, every unseen row always shows “50% say 1 · 50% say 0”, whatever example you add. Adding an example halves the version space, but it halves it **in the same way** for every other instance: there are always half of the hypotheses saying 1 and half saying 0. It is exactly the pair $h, h'$ of the proof, repeated for all the hypotheses.
+
+</Deep>
+
+<Callout type="example" title="Trivial example">
+
+A single binary input $x$. All the possible functions are four: $H = \{x, \neg x, 0, 1\}$ (that is: “answer like $x$”, “answer the opposite of $x$”, “always answer 0”, “always answer 1”).
+
+The training set contains a single example: $x = 0 \mapsto d = 0$ (“when $x$ is 0, the right answer is 0”). Which hypotheses are consistent? Those that are 0 when $x = 0$: they are $x$ and $0$. The version space is $\{x, 0\}$.
+
+Now the test: $x = 1$. The hypothesis $x$ answers 1, the hypothesis $0$ answers 0. One says yes, the other says no. There is no way to decide, unless we use the whole of $X$ as the training set.
+
+</Callout>
+
+<Callout type="tip" title="Futility of bias-free learning">
+
+A learner that makes **no a priori assumption** about what the target concept is **has no rational basis** for classifying the instances it has not seen. The bias (of restriction or of preference) does not only serve to go faster: it is **necessary for generalization**. To learn without bias one would have to show every single instance of $X$ as an example. Beware: the bias, however, does not yet tell us *which* solution generalizes best.
+
+</Callout>
+
+### Equivalent inductive and deductive systems
+
+There is an elegant way to see the role of the bias. Two words are needed:
+
+- *inductive*: from particular cases (the examples) one arrives at a general rule;
+- *deductive*: from given general rules (the *axioms*) one derives consequences, with logic.
+
+An inductive system is a learning algorithm that uses the hypothesis space $H$: it receives the examples and a new instance, and produces a classification or “don’t know”. Well, this system is **equivalent to a deductive system** — a theorem prover — that receives the same examples and the same instance, **plus the inductive bias as an additional axiom**. The inductive bias is therefore exactly the set of assumptions that makes the classification given by the learner “logically deducible”.
+
+<Figure n="3.10" title="Inductive system and equivalent deductive system">
+  <InductiveDeductive />
+  <Caption>The inductive bias makes an inductive system equivalent to a deductive system: added as an axiom, it turns the classification of the learner into a logical consequence.</Caption>
+</Figure>
+
+### Language bias or search bias?
+
+In modern ML the **search bias** is usually preferred. Flexible methods are used, with very expressive hypothesis spaces and with *universal approximation capability* (that is, able, in principle, to approximate any function: neural networks, decision trees). In this way the language bias is avoided and so the target function is **not excluded from the start**. The inductive bias is still there, but it is put into the **search strategy** of the learning algorithm: in practice an **incomplete** search is used, which prefers certain solutions over others.
+
+<Callout type="abstract" title="Conclusions on the inductive bias">
+
+- Learning without bias does not allow us to find regularities in the data: we get a lookup table, with no generalization.
+- **Every state-of-the-art ML method has an inductive bias.**
+- The problem is to understand and describe what the bias of the different models and algorithms is.
+
+</Callout>
+
+<Figure n="3.11" title="The Kanizsa triangle">
+  <Kanizsa />
+  <Caption>An example of perceptual bias of our visual system, which “completes” shapes that are not there: three black “pac-men” and three drawn corners make us perceive a triangle that is not drawn.</Caption>
+</Figure>
+
+---
+
+## Tasks and loss functions
+
+We said we want to find a “good” approximation of $f$. But how do we measure whether it is good? The model, for the input $\mathbf{x}$, produces the answer $h(\mathbf{x})$; we want to measure the “distance” between this answer and the target $d$ (the right answer). To do this we use an (“inner”) <T id="loss">**loss function**</T>, written $L(h_\mathbf{w}(\mathbf{x}), d)$ and computed on a single pattern. The loss is the “cost” of the error. A high value indicates that the approximation is poor; zero indicates a perfect answer.
+
+<Callout type="definition" title="Error (Risk, Loss)">
+
+The **error** is an *expected value* (an average) of the loss $L$: for example its average over the $l$ samples.
+
+<Formula f={F.risk} />
+
+**In plain words.** Compute the loss on every example (from the first, $p = 1$, to the last, $p = l$), add up all the values (this is the symbol $\sum$, the [summation](#/prerequisiti/la-sommatoria)) and divide by the number of examples $l$. It is a perfectly ordinary average.
+
+It serves two purposes: as the **objective function** to be made as small as possible during training, and as a measure to check the error in the test phase. For now Error, Risk and Loss are used as synonyms; the differences will be made precise later on.
+
+</Callout>
+
+The function $L$ changes depending on the task. Let us see the main cases (useful to keep as a future reference).
+
+### Regression: squared error
+
+- **Output**: $d_p = f(\mathbf{x}_p) + e$ (the true value of the function plus a random error $e$).
+- **$H$**: a set of functions that give real numbers as a result.
+- **Loss**: the **squared error** $L(h_\mathbf{w}(\mathbf{x}_p), d_p) = \big(d_p - h_\mathbf{w}(\mathbf{x}_p)\big)^2$. Take the difference between the right answer and the answer of the model and square it. The square does two things: it makes the error always positive (being off by $+2$ or by $-2$ costs the same, that is, $4$) and it makes large errors weigh much more.
+- The average over the dataset is the <T id="mse">**Mean Squared Error**</T> (MSE).
+
+<Formula f={F.mse} />
+
+where $\mathbf{w}$ are the free parameters of the linear model (in the figure the targets are denoted by $y$).
+
+**An example with numbers.** Three examples, with errors (difference between target and answer) $1$, $-2$ and $0$. The squares are $1$, $4$ and $0$. The average is $(1 + 4 + 0)/3 \approx 1.67$: this is the MSE.
+
+<Figure n="3.12" title="The mean squared error">
+  <MSEFigure />
+  <Caption>The MSE is the average of the squares of the green segments, that is, of the vertical distances between the data (in red) and the line $h_w(x) = w_1 x + w_0$ (in blue). Drag the endpoints of the line to change $w_1$ and $w_0$.</Caption>
+</Figure>
+
+### Classification: 0/1 loss
+
+- **Output**: for example $\{0, 1\}$ (two classes).
+- **$H$**: a set of indicator functions (those that answer only 0 or 1).
+- **0/1 loss**: it is $0$ if the predicted class is the right one, $1$ if it is wrong. Nothing in between.
+
+<Formula f={F.zeroOne} />
+
+- The average over the dataset is the **percentage of misclassified patterns**: if 20 patterns out of 100 are wrong, the error is 20%, that is, the <T id="accuratezza">**accuracy**</T> (the percentage of right answers) is 80%. (You can see it computed live in [Figure 3.5](#/lezione/03/fig-3-5).)
+
+### Clustering and vector quantization (preview)
+
+- **Goal**: to divide in the best way an unknown distribution of points in the input space into regions (clusters, that is, groups), and to represent every region with a single point: its **center** or **prototype**.
+- **$H$**: a set of vector quantizers $\mathbf{x} \mapsto c(\mathbf{x})$: functions that associate with every point $\mathbf{x}$ the center $c(\mathbf{x})$ of its group. In this way a continuous space (infinitely many possible points) is reduced to a discrete one (a few centers).
+- **Loss**: the **squared distortion**, which measures how close the pattern is to the centroid of its cluster. It is the [distance](#/prerequisiti/lunghezza-e-distanza) between the point and its center, squared:
+
+<Formula f={F.distortion} />
+
+<Figure n="3.13" title="Distortion as the loss of clustering">
+  <Clustering showLoss />
+  <Caption>The total distortion sums, for every point, the square of its distance from the centroid of its own cluster (the colored segments). Moving every centroid to the center of its group makes it decrease.</Caption>
+</Figure>
+
+### Density estimation (preview)
+
+A *density* describes where the data are more likely: it is high where the data are dense, low where they are rare (like the bell curve of the [first lesson](#/lezione/01/densità-di-probabilità-la-gaussiana)).
+
+- **Goal**: to estimate a density, choosing it within a family fixed at the start (generative, parametric methods).
+- **Output**: a density, for example a normal $p(\mathbf{x} \mid \mu, \sigma^2)$. The vertical bar $\mid$ is read “given”: “the density of $\mathbf{x}$, given $\mu$ and $\sigma^2$”.
+- **$H$**: a set of densities (here $\mu$ and $\sigma^2$, mean and variance, are the two unknown parameters to be found).
+- **Loss**:
+
+<Formula f={F.logLoss} />
+
+**In plain words.** $h(\mathbf{x}_p)$ is the height of the density at the point where the data point lies. If the density there is high (the model “expected” that data point), the [logarithm](#/prerequisiti/esponenziale-e-logaritmo) $\ln$ is large and, with the minus sign in front, the loss is small. If the density there is low (the data point “surprises” the model), the loss is large.
+
+This loss is tied to the **maximization of the (log-)likelihood**. The *likelihood* is the probability of observing exactly the data we have, according to the model: it is computed by multiplying the probabilities of the individual data points. Making the sum of the $-\ln$ terms as small as possible is the same thing as making the product of the probabilities of the observed data as large as possible (because the logarithm turns products into sums).
+
+<Figure n="3.14" title="Density estimation and −ln">
+  <DensityML />
+  <Caption>The orange points are the data; the bars reach the height of the density $h$ at each point. The loss rewards high densities exactly where the data lie: the minimum is obtained with the mean and the standard deviation of the sample.</Caption>
+</Figure>
+
+---
+
+## Generalization and validation
+
+This is the **fundamental concept of the course**.
+
+- **Learning** is the search for a good function within a space of functions, starting from known data, usually by making an error (a loss) as small as possible.
+- “Good” with respect to what? With respect to the **generalization error**: how well the model predicts on **new data** (that is, the loss measured on new data).
+
+<Callout type="warning" title="Generalization is the crucial point">
+
+It is easy to *use* ML tools; it is much harder to use them *well*. The whole difference lies in generalization.
+
+</Callout>
+
+Two phases are distinguished:
+
+1. **Learning phase** (training, fitting): the model is built starting from the known data (the training data, plus the bias).
+2. **Predictive or test phase** (deployment, use of the model in *inference*): the model is applied to new examples. We take new inputs $\mathbf{x}'$, compute the answer of the model and compare it with the target $d'$, which the model **has never seen**. This is how its ability to generalize is evaluated. It is like a test at school: the questions must not be the ones already done in class.
+
+<Callout type="note" title="Performance in ML">
+
+In ML, “performance” means **generalization accuracy** (or predictive accuracy). It is estimated by the error computed on a <T id="test-set">**test set**</T>: a set of data that is held out and never used for training.
+
+</Callout>
+
+**Statistical Learning Theory** (by Vapnik) studies the mathematical conditions under which a model is able to generalize; its basics will be seen in the [next lesson](#/lezione/04).
+
+Evaluating the performance of an ML system means evaluating its predictive accuracy: in a word, **validation! validation! validation!** Validation techniques serve two purposes: to **assess** generalization (*model assessment*) and to **manage** it (*model selection*, the choice of the model). They will be the topic of the next lesson.
+
+<Callout type="note" title="The cost of inference">
+
+Even just using the model (the inference phase, that is, the step input → output) can cost a lot when the requests are millions, as in Google’s services. This is why dedicated chips have been designed, such as the **Tensor Processing Units** (TPU), originally conceived for TensorFlow.
+
+</Callout>
+
+---
+
+<Callout type="abstract" title="Summary">
+
+ML builds a hypothesis $h$ that approximates an unknown function $f$ starting from examples. Its ingredients are:
+
+- the **data** (representation, encoding, noise);
+- the **task** (supervised: classification and regression; unsupervised: clustering, density);
+- the **model** (which defines the hypothesis space $H$);
+- the **learning algorithm** (which searches $H$ for the hypothesis with minimum error);
+- **validation**.
+
+Without **inductive bias** there is no generalization; in modern ML the search bias with very expressive models is preferred. Quality is measured with a **loss** that depends on the task (squared, 0/1, distortion, $-\ln$), but what really matters is the error on **new data**.
+
+</Callout>
+
+<Exam>
+<Q q="What is the inductive bias? What is the difference between language bias and search bias?">
+
+It is the set of **assumptions** about what the target function is like, which the learner uses to choose among the hypotheses. Without these assumptions there is no generalization. The **language bias** puts a limit on the hypothesis space $H$ (on what can be expressed, e.g. conjunctions only): the risk is to exclude the target. The **search bias** leaves $H$ very expressive and puts the bias into the **search strategy** of the algorithm, which prefers certain solutions (incomplete search). In modern ML the search bias is preferred.
+
+</Q>
+<Q q="Prove that an unbiased learner cannot generalize.">
+
+Let $x_i$ be an unseen instance and $h \in VS$. Build $h'$ equal to $h$ everywhere except at $x_i$, where it answers the opposite. $H$ contains all the functions, so $h' \in H$; $h'$ coincides with $h$ on the training set, so $h' \in VS$. Therefore for every hypothesis that classifies $x_i$ as 1 there is one that classifies it as 0: half of the VS votes 1, half votes 0, and the VS gives no answer. The only instances classified unambiguously are the training examples: a lookup table.
+
+</Q>
+<Q q="How many hypotheses are there with $n$ binary inputs without constraints? And with conjunctive rules only?">
+
+Without constraints: $2^{2^n}$ (there are $2^n$ instances, and every function chooses 0 or 1 for each of them); with $n = 4$, $65536$. With conjunctions only: $3^n + 1$ (for every variable three choices: $l_i$, $\neg l_i$ or “don’t care”; plus the hypothesis “false”); with $n = 4$, $82$.
+
+</Q>
+<Q q="What is the version space?">
+
+It is the set $VS_{H,TR}$ of the hypotheses of $H$ that are **consistent** with all the training examples, that is, those for which $h(\mathbf{x}) = d(\mathbf{x})$ on every example. With the 7 examples of the table and the conjunctive bias it contains a single hypothesis, $\neg x_2 \wedge x_4$.
+
+</Q>
+<Q q="Which losses are used for regression, classification, clustering and density estimation?">
+
+Regression: squared error $(d_p - h(\mathbf{x}_p))^2$ (its average is the MSE). Classification: 0/1 loss (its average is the percentage of errors). Clustering / vector quantization: squared distortion $\|\mathbf{x}_p - h(\mathbf{x}_p)\|^2$. Density estimation: $-\ln h(\mathbf{x}_p)$, tied to maximum likelihood.
+
+</Q>
+<Q q="What is meant by generalization and how is it estimated?">
+
+It is the accuracy with which the model predicts on **new data**, never seen during training. It is estimated with the error on a **test set** that is held out. Validation techniques serve both to estimate it (model assessment) and to manage it (model selection). SLT studies its theoretical conditions.
+
+</Q>
+</Exam>

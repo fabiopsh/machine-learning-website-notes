@@ -134,6 +134,17 @@ Decisioni di stile confermate dall'utente:
   al 100% (lezioni 03, 04, 05, 06, 08, 17 con etichette, compiti, grafici e descrizioni accessibili in inglese accademico naturale).
   Tutti i controlli `npm run check:en` e `npm run verify` (`tsc -b && eslint . && node scripts/check-content.mjs`) passano
   con successo su tutte le 21 lezioni.
+- 2026-10-02 — **Versione «spiegata semplice»** delle lezioni 01, 03, 04 e 05 (la 02 è esclusa su richiesta), in italiano
+  e in inglese: stessi titoli, formule, esempi, figure e domande d’esame, con la teoria riscritta in parole facili
+  (`src/content/lessons-easy/`, `lessons-easy-en/`). Si attiva dal riquadro con l’icona del neonato in cima alla
+  lezione o dal pulsante nella barra in alto (`src/lib/mode.ts`, scelta salvata nel browser); cambiando versione si
+  resta sulla sezione che si stava leggendo. Nuova pagina **Prerequisiti** (`#/prerequisiti`, in sidebar, home e
+  ricerca; `src/content/extra/`, `extra-en/`): simboli, funzioni, vettori e matrici, derivate e gradiente, integrali,
+  probabilità, logica e conteggi, con le figure P.1–P.5 (nuovi widget `widgets/pre/LineExplorer.tsx` e
+  `TangentExplorer.tsx`; le altre riusano i widget della lezione 1). Nuovo controllo `npm run check:easy` (anche in
+  `verify`); `shot` e `figs` accettano `--mode easy`, `figs` anche `prerequisiti`. Regole in `docs/GUIDA-SEMPLICE.md`.
+  Deciso con l’utente: **niente screenshot di verifica se non richiesti esplicitamente** (troppi token); questa
+  funzione è stata verificata con `verify`, `check:easy` e `build`, senza guardare screenshot.
 
 ## Immagini degli appunti → figure del sito
 
@@ -391,6 +402,20 @@ oppure motivata qui se non ricostruibile. Formato: `file immagine` → Fig. N.k 
 ## Aggiunte rispetto agli appunti
 
 Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poterlo rivedere).
+
+- **Pagina dei prerequisiti** (richiesta dall’utente): è tutta materiale aggiunto, fuori dagli appunti. Spiega solo
+  le basi date per scontate (lettura dei simboli, sommatoria, insiemi, funzioni, retta, polinomi, esponenziale e
+  logaritmo, vettori, prodotto scalare, norma e distanza, matrici, derivata e regole, massimi e minimi, derivate
+  parziali e gradiente, regola della catena, integrale come area e come media, media/varianza/covarianza,
+  probabilità, valore atteso, normale con la regola 68%–95%, probabilità condizionata e congiunta, AND/OR/NOT/XOR,
+  conteggio delle combinazioni), con esempi numerici inventati.
+- **Versioni «spiegate semplici»** (01, 03, 04, 05): spiegazioni dei termini tra parentesi, «In parole semplici» dopo
+  le formule, conti svolti passo per passo, paragoni (bambino che impara a riconoscere i gatti, studente che impara a
+  memoria, bilancia imprecisa, manopole del modello, discesa in montagna con la nebbia, scala a gradini per la loss
+  0/1, cento persone che lanciano una moneta). Esempi numerici aggiunti: norme di $(3,-4)$ (01); tabella dei tre
+  pazienti e MSE di tre errori (03); matrice di confusione con 100 persone (04); 200 esempi e 30 errori, voto 3 su 5
+  nel K-NN, $l/k$ con 200 e 10, distanza di Hamming tra «casa» e «cosa», altezza e stipendio per la scala delle
+  variabili, 6 classificatori AVA con 4 classi (05).
 
 - 01: esempi svolti (prodotto scalare, gradiente); «tre parole chiave» della definizione; ragionamento
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.

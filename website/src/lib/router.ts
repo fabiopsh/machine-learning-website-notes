@@ -7,7 +7,12 @@ import { useSyncExternalStore } from 'react'
  *   #/lezione/03/bias        lezione, con sezione
  *   #/glossario              glossario
  *   #/glossario/overfitting  glossario, con voce
+ *   #/prerequisiti           prerequisiti (impaginati come una lezione, con id `prerequisiti`)
+ *   #/prerequisiti/derivata  prerequisiti, con sezione
  */
+
+/** Id della pagina dei prerequisiti: è trattata come una lezione fuori dall'elenco. */
+export const PREREQ_ID = 'prerequisiti'
 
 export type Route =
   | { name: 'home' }
@@ -20,11 +25,13 @@ export function parseHash(hash: string): Route {
   const parts = path.split('/').filter(Boolean)
   if (parts.length === 0) return { name: 'home' }
   if (parts[0] === 'lezione' && parts[1]) return { name: 'lesson', id: parts[1], section: parts[2] }
+  if (parts[0] === PREREQ_ID) return { name: 'lesson', id: PREREQ_ID, section: parts[1] }
   if (parts[0] === 'glossario') return { name: 'glossary', term: parts[1] }
   return { name: 'notfound' }
 }
 
 export function lessonHref(id: string, section?: string) {
+  if (id === PREREQ_ID) return section ? `#/${PREREQ_ID}/${encodeURIComponent(section)}` : `#/${PREREQ_ID}`
   return section ? `#/lezione/${id}/${encodeURIComponent(section)}` : `#/lezione/${id}`
 }
 

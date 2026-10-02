@@ -62,8 +62,7 @@ Fonti di una lezione:
 6. Termini nuovi → `website/src/content/glossary.ts` (§5).
 7. Widget → `website/src/widgets/lNN/*.tsx`, stili → `website/src/styles/lNN.css`, importato in
    `website/src/main.tsx` dopo gli altri `lNN.css`.
-8. Verificare (§9): `npm run verify` e screenshot di ogni figura in chiaro,
-   scuro, mobile e tema Liquid Glass. Guardare gli screenshot e correggere.
+8. Verificare (§9): `npm run verify` e `npm run build`. Screenshot solo se l'utente li chiede.
 9. Tradurre la lezione in inglese (`GUIDA-INGLESE.md` §3) e verificare con `npm run check:en -- NN`.
 10. Aggiornare `docs/STATO.md` (riga della lezione, immagini → figure, aggiunte).
 11. Commit e push su `main`: la GitHub Action pubblica il sito (§10).
@@ -412,7 +411,8 @@ Trappole incontrate:
 - niente variabili modificate dentro `.map()` durante il render (il lint lo blocca): calcolare le posizioni con una
   funzione pura fuori dal componente.
 
-Guardare **ogni** screenshot: sovrapposizioni di etichette, testi tagliati, contrasto in scuro/glass,
+**Dal 2026-10-02 gli screenshot si fanno solo se l'utente lo chiede esplicitamente** (consumano troppi token): la verifica
+normale è `npm run verify` + `npm run build` + i controlli `check:*`. Quando sono richiesti, guardare **ogni** screenshot: sovrapposizioni di etichette, testi tagliati, contrasto in scuro/glass,
 figure troppo piccole su mobile, «Prova a…» già spuntati all'apertura.
 
 ---

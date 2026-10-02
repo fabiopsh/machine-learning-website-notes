@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getLesson, partOf } from '../../content/lessons'
+import { getLesson, hasEasy, partOf } from '../../content/lessons'
 import { lang, setLang, tx, type Lang } from '../../lib/i18n'
+import { setMode, useMode } from '../../lib/mode'
 import { clearProgress, useProgress } from '../../lib/progress'
 import { useLook, useTheme } from '../../lib/theme'
 import { lessonHref, type Route } from '../../lib/router'
@@ -64,6 +65,8 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
   const { pct, scrolled } = useScrollState(isLesson)
   const lesson = isLesson ? getLesson(route.id) : undefined
   const part = isLesson ? partOf(route.id) : undefined
+  const mode = useMode()
+  const easyHere = isLesson && hasEasy(route.id)
   const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
   return (
@@ -74,12 +77,16 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
       <div className="topbar__crumbs">
         {lesson ? (
           <>
-            <span className="topbar__part">
-              {part?.roman} · {part?.title}
-            </span>
-            <Icon name="chevronRight" size={14} className="topbar__sep" />
+            {part && (
+              <>
+                <span className="topbar__part">
+                  {part.roman} · {part.title}
+                </span>
+                <Icon name="chevronRight" size={14} className="topbar__sep" />
+              </>
+            )}
             <span className="topbar__lesson">
-              <span className="topbar__num">{lesson.id}</span> {lesson.title}
+              {part && <span className="topbar__num">{lesson.id}</span>} {lesson.title}
             </span>
           </>
         ) : route.name === 'glossary' ? (
@@ -97,6 +104,17 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
         {onToc && (
           <button className="icon-btn topbar__toc" onClick={onToc} aria-label={tx('Indice della lezione', 'Lesson contents')}>
             <Icon name="list" size={19} />
+          </button>
+        )}
+        {easyHere && (
+          <button
+            className={`icon-btn easy-btn${mode === 'easy' ? ' is-on' : ''}`}
+            onClick={() => setMode(mode === 'easy' ? 'full' : 'easy')}
+            aria-pressed={mode === 'easy'}
+            aria-label={mode === 'easy' ? tx('Torna agli appunti completi', 'Back to the full notes') : tx('Passa alla versione «spiegata semplice»', 'Switch to the “explained simply” version')}
+            title={mode === 'easy' ? tx('Appunti completi', 'Full notes') : tx('Versione «spiegata semplice»', '“Explained simply” version')}
+          >
+            <Icon name="baby" size={19} />
           </button>
         )}
         <div className="lang-switch" role="group" aria-label={tx('Lingua', 'Language')}>

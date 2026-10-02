@@ -1798,3 +1798,21 @@ a.index__row:hover .index__go {
     gap: 4px;
   }
 }
+
+/* home: lezioni con la versione «spiegata semplice» e riga dei prerequisiti */
+.index__easy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-3);
+}
+.index--extra {
+  padding-top: 40px;
+}
+.index--extra .index__list {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.index--extra .index__num {
+  display: inline-flex;
+}

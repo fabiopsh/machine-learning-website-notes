@@ -1,0 +1,479 @@
+import * as F from '../formulas/l01'
+import { DigitsFigure } from '../../widgets/l01/Digits'
+import { CourseMap } from '../../widgets/l01/CourseMap'
+import { DotProduct } from '../../widgets/l01/DotProduct'
+import { TensorFigure } from '../../widgets/l01/TensorFigure'
+import { GradientExplorer } from '../../widgets/l01/GradientExplorer'
+import { GaussianExplorer } from '../../widgets/l01/GaussianExplorer'
+
+<Lead>Questa prima lezione fa tre cose. Primo: spiega **che cos’è il Machine Learning** (abbreviato ML, in italiano *apprendimento automatico*) e perché vale la pena studiarlo. Secondo: dà le **informazioni pratiche** sul corso, cioè che cosa bisogna già sapere, come sono ordinate le lezioni, come funziona l’esame e su quali libri si studia. Terzo: ripassa un po’ di **matematica di base** che servirà in tutte le lezioni successive.</Lead>
+
+## Che cos’è il Machine Learning
+
+### L’apprendimento come principio universale
+
+Imparare è una cosa che fanno tutti: gli animali, le persone, i gruppi di persone e, oggi, anche le macchine. Due studiosi, Poggio e Shelton (*AI Magazine*, 1999), dicono che *il problema dell’apprendimento è probabilmente il cuore stesso del problema dell’intelligenza, sia biologica che artificiale*. Detto in modo semplice: se capiamo **come si impara**, capiamo un pezzo importante di **che cosa vuol dire essere intelligenti**.
+
+<Callout type="definition" title="Machine Learning">
+
+Il **Machine Learning** è una parte dell’informatica, fatta sia di teoria sia di applicazioni pratiche. Mette insieme due obiettivi:
+
+- quello dell’intelligenza artificiale, cioè costruire **computer capaci di apprendere**;
+- avere **strumenti adattivi e statistici potenti** (cioè strumenti che si adattano ai dati e che usano la statistica), costruiti su basi rigorose.
+
+In pratica: il Machine Learning è quando un sistema **impara da solo**, partendo dall’**esperienza** (un insieme di esempi), a risolvere un compito.
+
+</Callout>
+
+<Deep title="Le tre parole chiave della definizione" kind="intuizione">
+
+Nella definizione ci sono tre ingredienti. Li ritroveremo in ogni lezione, quindi conviene fissarli subito:
+
+- un **sistema** che apprende: lo chiameremo *modello*;
+- l’**esperienza**, cioè un insieme di esempi: li chiameremo *dati*;
+- un **compito** da risolvere: lo chiameremo *task*.
+
+L’idea importante è questa: **non scriviamo noi la soluzione**. Scriviamo un sistema capace di trovarla da solo, guardando gli esempi. È come con un bambino: non gli spieghi la regola per riconoscere un gatto, gli mostri tanti gatti finché impara.
+
+</Deep>
+
+### Perché far apprendere le macchine: lusso o necessità?
+
+Il ML non è una moda: è una **necessità**. Le ragioni principali sono due.
+
+1. **Abbiamo sempre più dati** e dobbiamo analizzarli. Anche la scienza sta cambiando modo di lavorare: sempre più spesso la conoscenza si ricava direttamente dai dati raccolti (questo modo di lavorare si chiama *data-driven*, cioè «guidato dai dati»). Il ML è lo strumento centrale di questo cambiamento.
+2. **È difficile scrivere a mano un programma «intelligente» e capace di adattarsi.** Lo aveva già capito Alan Turing: per molti compiti, scrivere una per una tutte le regole è impossibile. L’unica strada per avere sistemi che si comportano in modo intelligente è farli **imparare**.
+
+Tre cose insieme hanno aperto una nuova epoca dell’intelligenza artificiale: **grandi quantità di dati**, **computer molto potenti** (HPC, cioè calcolo ad alte prestazioni, e GPU, cioè le schede grafiche usate per fare tanti calcoli insieme) e **modelli di ML flessibili**, cioè capaci di adattarsi a problemi diversi.
+
+### Quando serve il ML
+
+Il ML è la scelta giusta quando valgono due condizioni insieme:
+
+- abbiamo **poca o nessuna conoscenza a priori** sul problema, cioè non sappiamo scrivere le regole della soluzione;
+- è però abbastanza **facile avere esperienza**, cioè dati di cui conosciamo già il risultato corretto.
+
+Esempi classici: decidere se un’email è *spam* (posta indesiderata), riconoscere i caratteri scritti, i volti, la voce.
+
+<Callout type="example" title="Riconoscimento di cifre scritte a mano">
+
+Ogni cifra è un’immagine piccola, di $8 \times 8$ pixel (un pixel è un quadratino colorato dell’immagine: qui sono 8 righe per 8 colonne, quindi 64 quadratini). Scrivere a mano le regole che distinguono un «3» da un «8» per tutti i modi possibili di scrivere è, di fatto, impossibile. Allora si fa così: si raccolgono moltissimi esempi di cifre **già etichettate** (per ognuna qualcuno ha già scritto «questa è un 3», «questa è un 8»…) e si lascia che il sistema **apprenda un classificatore** $f$.
+
+Che cos’è $f$? È una [funzione](#/prerequisiti/funzioni): una «macchinetta» che riceve qualcosa in ingresso e restituisce qualcosa in uscita. Qui riceve un’immagine e restituisce la **classe** corretta, cioè una delle dieci cifre ($0, 1, \dots, 9$).
+
+</Callout>
+
+<Figure n="1.1" title="Riconoscimento di cifre manoscritte">
+  <DigitsFigure />
+  <Caption>Ogni colonna raccoglie varianti della stessa cifra, scritte con calligrafie diverse; il classificatore $f$ mappa ciascuna immagine $8 \times 8$ nella classe di output. Un’immagine è, per la macchina, una tabella di 64 numeri.</Caption>
+</Figure>
+
+### Aree applicative
+
+Il ML oggi si trova dappertutto nei sistemi reali: nell’OCR (i programmi che leggono il testo da un’immagine), nelle interfacce tra persone e macchine, nei motori di ricerca. È il centro di un’area che tocca molte discipline e che, dagli anni ’80, comprende:
+
+- **Pattern Recognition** (riconoscere «schemi» nei dati, per esempio volti e voce), **Computer Vision** (far «vedere» i computer), **Natural Language Processing** (far lavorare i computer con il linguaggio umano: dalla classificazione di testi all’elaborazione del parlato, fino all’AI generativa, quella che produce testi e immagini);
+- **Robotica**, sistemi e filtri adattivi, reti di sensori intelligenti, componenti personalizzati;
+- **Knowledge Discovery e Data Mining** (scoprire conoscenza «scavando» in grandi quantità di dati), Information Retrieval (ritrovare informazioni, come fa un motore di ricerca), analisi di dati complessi (medicina, biologia, chimica, web, marketing), previsioni finanziarie.
+
+In alcuni campi — NLP, Pattern Recognition, Computer Vision — l’effetto è stato rivoluzionario, tanto che si parla di una «nuova AI».
+
+### Alcuni successi recenti
+
+Il professore mostra alcuni risultati famosi.
+
+<Timeline>
+  <Event when="2014" title="Riconoscimento facciale — DeepFace (CVPR)">Mette insieme reti neurali profonde e altre tecniche di ML. È stato addestrato (cioè ha imparato) su quattro milioni di immagini di oltre 4000 persone. Decide se due foto mostrano la stessa persona e ci riesce nel **97,25%** dei casi: appena meno di una persona, che ci riesce nel **97,53%** dei casi.</Event>
+  <Event when="2016" title="AlphaGo (DeepMind)">A marzo batte il campione mondiale di Go, un gioco da tavolo molto difficile.</Event>
+  <Event when="2016–17" title="Traduzione automatica">Google Neural Machine Translation (dal 2016) e DeepL (dal 2017): traduttori basati interamente su reti neurali.</Event>
+  <Event when="2017" title="Medicina">Una rete neurale profonda per riconoscere i tumori della pelle, addestrata su 130.000 casi — più di quanti un medico ne veda «in molte vite» — arriva alla stessa accuratezza dei dermatologi certificati (rivista *Nature*). Al CIML di Pisa, il progetto BrAID usa l’AI per la diagnosi della sindrome di Brugada.</Event>
+  <Event when="2022" title="Large Language Models e AI generativa">ChatGPT (OpenAI, novembre 2022), Bard/LaMDA (Google), modelli open source come Dolly, e sistemi che creano immagini (Stable Diffusion), video, musica.</Event>
+  <Event when="oggi" title="Guida autonoma, sensori, IoT">Analisi dei dati che arrivano dai sensori e sistemi per l’Internet of Things (gli oggetti collegati a Internet).</Event>
+</Timeline>
+
+Il ML è la base, di teoria e di metodo, di quella che viene chiamata *rivoluzione dell’AI*, su cui le aziende investono moltissimo. Viene considerato una **GPT** (*General-Purpose Technology*, cioè «tecnologia di uso generale»): una tecnologia capace di cambiare in profondità l’economia e la società, come hanno fatto in passato l’elettricità o il motore. La figura del «*ML scientist*» (lo scienziato del ML) è tra le più cercate nel mondo del lavoro.
+
+<Callout type="note" title="Premio Turing 2018">
+
+Il 27 marzo 2019 l’ACM (una grande associazione di informatici) ha dato il Premio Turing, che è il «Nobel dell’informatica», a **Yoshua Bengio, Geoffrey Hinton e Yann LeCun** «per le scoperte concettuali e ingegneristiche che hanno reso le reti neurali profonde una componente critica dell’informatica».
+
+</Callout>
+
+<Callout type="note" title="Premi Nobel 2024">
+
+Nel 2024 il ML è arrivato anche ai premi Nobel:
+
+- **Fisica**: a **John Hopfield** e **Geoffrey Hinton**, per le scoperte e le invenzioni fondamentali che permettono il machine learning con le reti neurali artificiali (la rete di Hopfield, che funziona come una memoria associativa, e la macchina di Boltzmann).
+- **Chimica**: a **Demis Hassabis** e **John Jumper** (Google DeepMind) per aver previsto la forma delle proteine con **AlphaFold**, e a **David Baker** per aver progettato proteine al computer. Hassabis: *«Ho sempre pensato che, se riuscissimo a costruire l’AI nel modo giusto, potrebbe essere lo strumento definitivo per aiutare gli scienziati a esplorare l’universo che ci circonda.»*
+
+</Callout>
+
+### Lo scopo ultimo
+
+Tutto ciò che è potente può diventare pericoloso, se usato male. Ma lo scopo finale di AI e ML è **portare benefici alle persone**, risolvendo problemi grandi e piccoli, **accelerare il progresso umano** e dare «intelligenza» a ogni altro campo della scienza: aumentare le nostre capacità, esaltando la nostra umanità (P. Domingos, *Scientific American*, 2018).
+
+---
+
+## Perché studiare il Machine Learning
+
+Nel percorso di laurea magistrale il ML serve a:
+
+- conoscere i **principi di base dei processi di apprendimento**, visti dal lato del calcolo (cioè: come fa, concretamente, un computer a imparare);
+- conoscere **nuovi paradigmi di calcolo** (cioè nuovi modi di far calcolare un computer), come le **reti neurali**. Sono studiate dagli anni ’40 e prendono ispirazione dal cervello. Oggi sono un insieme di modelli potenti per l’**approssimazione di funzioni** (cioè per costruire una funzione che «assomiglia» il più possibile a quella giusta, che non conosciamo) e sono capaci di fare previsioni. Hanno dietro una teoria solida (la *learning theory*, la teoria dell’apprendimento) e sono la base del **Deep Learning**;
+- saper **applicare questi modelli con rigore**, cioè nel modo corretto;
+- avere le basi per tutti i corsi successivi di AI.
+
+### Il ML moderno
+
+Una volta il ML era una **collezione di metodi euristici**: tanti «trucchi» che funzionavano in pratica, presi da biologia, statistica, reti neurali, logica fuzzy… Oggi invece si costruiscono **quadri concettuali generali**, cioè poche idee di fondo che spiegano tutti quei metodi insieme. Abbiamo capito meglio i principi che governano l’apprendimento, e questo ha tre conseguenze importanti:
+
+- scrivere modelli diversi con «linguaggi» matematici o informatici diversi **non cambia i principi**;
+- usare il ML in campi diversi **non cambia i principi**;
+- le nuove tecnologie **non cambiano i principi**.
+
+<Callout type="tip" title="Il filo conduttore del corso">
+
+Il vero «Machine Learning» è il **nucleo di principi e metodi** che servono a costruire, a partire dai dati, modelli flessibili e potenti. I singoli modelli cambiano con il tempo, i principi restano: sono quelli che conviene imparare davvero.
+
+</Callout>
+
+### Tre punti di vista sul ML
+
+<Cards>
+  <Card kicker="1" title="Metodologia di AI">Un modo per costruire **sistemi adattivi e intelligenti**, cioè che si adattano e si comportano in modo intelligente.</Card>
+  <Card kicker="2" title="Apprendimento statistico">Ricavare ipotesi dai dati seguendo principi matematici, per costruire potenti **sistemi predittivi** (che fanno previsioni) per l’analisi intelligente dei dati.</Card>
+  <Card kicker="3" title="Metodo informatico per aree innovative">Usare i modelli come **strumenti** per affrontare problemi complessi, che toccano più discipline.</Card>
+</Cards>
+
+Il corso li considera tutti e tre, con un **approccio critico**: di ogni metodo si discute dove funziona, dove non funziona e quando è giusto usarlo, guardando sempre ai principi che ci stanno sotto. Gli obiettivi pratici sono due: imparare a **sviluppare nuovi modelli** di ML e imparare ad **applicare i metodi migliori disponibili oggi** (lo «stato dell’arte») a problemi di altri campi.
+
+---
+
+## Informazioni sul corso
+
+### Prerequisiti e obiettivi
+
+Nessun corso è strettamente necessario: si parte da zero. Servono però le basi di una laurea triennale scientifica: **analisi matematica** (funzioni, derivate), **notazione e calcolo con le matrici**, **un po’ di probabilità e statistica**, **algoritmi**. Se qualcuna di queste basi ti manca, la pagina dei [prerequisiti](#/prerequisiti) le spiega da capo.
+
+Il corso presenta i principi dei principali modi di far apprendere una macchina dai dati — modelli e algoritmi, con attenzione particolare alle reti neurali — e insegna a guardarli con occhio critico. I concetti arrivano un po’ alla volta, dai metodi più semplici fino ai più avanzati, tutti dentro la stessa idea di fondo del ML moderno: l’**apprendimento di funzioni a partire da esempi**. L’attenzione è su:
+
+- l’analisi critica delle caratteristiche che contano quando si progetta e si usa il ML;
+- la **valutazione sperimentale rigorosa**, cioè misurare bene quanto funziona un modello: c’è una grande differenza tra *usare* gli strumenti di ML e usarli *correttamente*;
+- gli aspetti di calcolo dei sistemi che apprendono.
+
+### Struttura del corso
+
+Il corso ha una struttura precisa: si parte dai modelli semplici e si arriva a quelli più avanzati, e i concetti fondamentali vengono presentati più volte, attraverso modelli diversi. Il consiglio pratico è doppio: (1) studiare i singoli metodi, (2) cercare le **connessioni e i confronti** tra di loro, per capire le idee comuni. Il filo rosso è capire il rapporto tra due cose: la **flessibilità del modello** (quanto il modello riesce ad adattarsi ai dati) e il **controllo della complessità** (non lasciarlo diventare troppo complicato). Da questo equilibrio dipende la capacità di <T id="generalizzazione">generalizzazione</T>, cioè la capacità di rispondere bene anche su dati mai visti prima.
+
+<Figure n="1.2" title="La mappa del corso">
+  <CourseMap />
+  <Caption>I numeri indicano approssimativamente l’ordine delle lezioni; l’area tratteggiata «Teoria» raccoglie le parti teoriche. Le frecce spesse sono il percorso principale; quelle tratteggiate i collegamenti con le estensioni. Clicca un riquadro per vedere a quali lezioni corrisponde.</Caption>
+</Figure>
+
+La mappa non dice solo in che ordine vengono le lezioni: descrive il percorso. Si presentano dei **«mattoni»** — concetti e modelli intermedi — che poi vengono messi insieme per costruire i modelli di ML. Per esempio: le reti neurali si costruiscono a partire dai modelli lineari, e un sistema di ML completo si costruisce usando le tecniche di validazione. Per questo i modelli intermedi vanno visti come i pezzi di un puzzle, che si ricompone alla fine.
+
+<Callout type="note" title="Ordine delle lezioni secondo la mappa">
+
+1. Introduzione (dati, task, modello, algoritmo di apprendimento, validazione) — nel quadro dell’**approssimazione di funzioni**.
+2. Concept learning e bias induttivo (spazio delle ipotesi discreto).
+3. Modelli lineari (LTU, LMS) (spazio delle ipotesi continuo).
+4. K-nearest neighbors.
+5. Reti neurali.
+6. Validazione e Statistical Learning Theory.
+7. Support Vector Machines.
+8. Applicazioni e progetto.
+9. Bias/Varianza.
+10. Deep Learning (e, in estensione, SOM, RNN).
+
+Dall’11 al 14: SOM, RNN, (Reti Bayesiane — rimosse dal programma), argomenti avanzati (dati strutturati).
+
+Non preoccuparti se molte di queste parole ora non ti dicono niente: ognuna verrà spiegata nella sua lezione.
+
+</Callout>
+
+Il corso non ha sempre lo stesso ritmo. L’introduzione è lenta e «morbida». La parte centrale (reti neurali, SVM, validazione) è densa, e ogni argomento si appoggia su quello prima. La parte avanzata è veloce ma meno densa. Il progetto (facoltativo) viene annunciato circa a metà corso.
+
+### Organizzazione pratica
+
+- **Docente**: Prof. Alessio Micheli (Dipartimento di Informatica), professore ordinario, responsabile del gruppo CIML (*Computational Intelligence & Machine Learning*) con oltre 25 anni di ricerca in ML/AI, **presidente della European Neural Network Society** (conferenza annuale ICANN), co-fondatore della IEEE Task Force on Reservoir Computing, associate editor di IEEE TNNLS e *Neural Networks*. Obiettivo del corso: far conoscere in 3 mesi il ML di oggi, ripercorrendone anche le basi e la storia.
+- **Lezioni** (a.a. 2026/27): martedì, mercoledì e giovedì, dalle 16 alle 18, in Aula E. Si inizia puntuali, così c’è tempo per una pausa.
+- **Q&A** (domande e risposte) con il docente: il martedì dopo la lezione (tempo facoltativo, non fa parte della lezione), più alcune lezioni speciali di Q&A. Per le domande personali si scrive una mail con il tag **[ML-26-Q]** nell’oggetto (è obbligatorio).
+- **Comunicazioni**: arrivano tramite Teams e/o le news di Moodle. Le **registrazioni** delle lezioni sono su Teams (scheda *Shared* → *Recordings*). Le lezioni ufficiali sono solo in presenza; lo streaming è informale e non è garantito che si possa interagire.
+- **Recuperi**: il lunedì pomeriggio (annunciati quando servono) e nel periodo di recupero dal 9 al 18 dicembre 2026 (da tenere presente prima di organizzare le vacanze di Natale). Le lezioni del 15–17 settembre 2026 non si sono tenute e saranno recuperate.
+
+<Callout type="note" title="Chi arriva in ritardo al corso">
+
+Tutte le informazioni sono sul **Moodle** del corso (elearning.di.unipi.it; ci si iscrive da soli con l’account Unipi): slide, bibliografia e sezione **FAQ** (le domande più frequenti). Conviene usare anche Teams (news e registrazioni) e gli appunti dei colleghi. Progetto e test di esercizio **non sono obbligatori** per l’esame. Non chiedere al docente quello che è già scritto nelle FAQ o nella prima lezione.
+
+</Callout>
+
+### Esame
+
+<Callout type="warning" title="Regole aggiornate (a.a. 2026/27)">
+
+L’esame è cambiato rispetto agli anni passati: il **progetto non è più obbligatorio** e l’esame si basa su uno **scritto obbligatorio**. L’orale si fa solo se serve.
+
+</Callout>
+
+L’esame è fatto di quattro fasi, in ordine di tempo.
+
+<Steps>
+<Step title="Test di esercizio durante il corso" tag="opzionali" tone="optional">
+
+Alla fine di ogni gruppo di lezioni vengono proposti su Moodle dei test brevi e semplici. Servono per l’**autovalutazione**, cioè per capire da soli a che punto si è: sono come i compiti per casa, con un punteggio che però **non vale per l’esame**. Aiutano a stare al passo con le lezioni e mostrano che si partecipa attivamente. Hanno una scadenza (di solito una settimana), ma se se ne perde qualcuno si può continuare con i successivi. Preparano allo scritto, anche se formato, contenuti e profondità sono diversi. Vengono annunciati solo in aula e con un breve messaggio su Teams.
+
+</Step>
+<Step title="Progetto" tag="opzionale" tone="optional">
+
+Alla fine del corso (dicembre) si può fare un progetto:
+
+- è un lavoro di gruppo di **2 studenti**, senza eccezioni;
+- contenuto: realizzare, applicare e/o analizzare un metodo o una tecnica di ML/reti neurali, con una **valutazione sperimentale** (cioè misurando con esperimenti come funziona); sono possibili progetti coordinati con il corso di CM;
+- formato: si presenta in pubblico un **poster** in aula (in una delle ultime lezioni) e si consegna il materiale sviluppato; c’è un premio per il miglior poster;
+- dopo la presentazione si può fare l’esame in qualunque sessione, ma per discutere il progetto i due membri del gruppo devono fare l’esame **nella stessa sessione**.
+
+Il consiglio è di non iscriversi al progetto prima di aver studiato bene i contenuti del corso. I dettagli verranno dati in una lezione dedicata.
+
+</Step>
+<Step title="Scritto" tag="obbligatorio" tone="required">
+
+Si fa dopo il corso, nelle sessioni d’esame (da gennaio e febbraio):
+
+- è obbligatorio **iscriversi** all’appello su esami.unipi.it entro la scadenza (controllarla con molto anticipo) e cancellare l’iscrizione se si decide di non partecipare;
+- si fa **solo in presenza**, in aula, nel giorno, all’ora e nell’aula indicati su esami.unipi.it; non presentarsi vuol dire ritirarsi da quella sessione;
+- si risponde alle domande su **fogli prestampati**, con lo spazio per la risposta libera; bisogna portare penna o matita;
+- le risposte richiedono **equazioni, disegni e/o parti descrittive** (quiz e domande aperte);
+- non si può usare nessun materiale, né del corso né esterno, e nessun aiuto elettronico (assistenti virtuali, chatbot…): è vietato usare qualunque dispositivo (portatili, smartphone, braccialetti smart, auricolari, occhiali smart…), altrimenti si viene esclusi.
+
+</Step>
+<Step title="Orale e verbalizzazione" tag="solo se necessario">
+
+Per arrivare all’orale serve uno scritto sufficiente (la lista degli ammessi è comunicata su Moodle). L’orale si fa nella stessa sessione dello scritto, in presenza, di solito nello studio del docente: nei giorni dopo la correzione il docente assegna un orario a ogni studente o gruppo. Se serve (dipende da come è andato lo scritto), l’orale è un colloquio su **tutto il programma** e può comprendere la discussione dello scritto e del progetto. Le esigenze particolari (priorità, impossibilità di essere in presenza…) si valutano caso per caso, su richiesta.
+
+</Step>
+</Steps>
+
+<Callout type="abstract" title="Riepilogo delle regole">
+
+Il voto tiene conto di: **risultato dello scritto** + partecipazione attiva (compresi i test durante il corso) + attività extra facoltative (progetto, presentazioni volontarie a fine corso) + eventuale orale completo, se il docente lo richiede.
+
+- Scritto **sufficiente** → pochi giorni dopo, in un orario assegnato: eventuale orale e **proposta di voto** → se la si accetta, il voto viene verbalizzato (registrato).
+- Scritto **insufficiente** o voto non accettato → si ripete in una sessione successiva, scegliendo tra le molte dell’anno.
+
+Completare l’80% dei test online e fare un progetto molto buono possono dare un **piccolo bonus** (se lo scritto è già sufficiente o buono), ma **non sono necessari** né per fare l’esame né per prendere il voto massimo. Quello che conta davvero è la **conoscenza finale del ML e quanto è profonda**.
+
+</Callout>
+
+<Callout type="tip" title="I consigli del professore">
+
+- Seguire le lezioni usando le slide come guida e studiare un po’ alla volta durante il corso; le lezioni di Q&A sono un luogo di discussione: è una classe, non un insieme di registrazioni.
+- Prima **studiare i contenuti** del corso, poi dedicarsi al progetto: così si lavora meglio e in meno tempo.
+- Se qualcosa non è chiaro: niente panico. Chiedere al docente (Q&A), collaborare con i colleghi, usare libri e articoli (bibliografia e ricerca personale) e i supporti del corso. Il ML è un campo che cambia di continuo: va studiato!
+
+</Callout>
+
+### Materiale e bibliografia
+
+Il riferimento principale sono le slide del corso (su Moodle, spesso pubblicate in anticipo; attenzione a usare l’ultima versione dei file `ML-26…-v*`). Le slide però non bastano: vanno completate con i propri appunti — da sole possono non bastare a ricostruire il filo della lezione — e con i libri. Il docente è disponibile a condividere su Moodle gli appunti degli studenti. I libri principali sono:
+
+- S. Haykin, *Neural Networks and Learning Machines*, Prentice Hall, 3ª ed., 2008;
+- T. M. Mitchell, *Machine Learning*, McGraw-Hill, 1997;
+- I. Goodfellow, Y. Bengio, A. Courville, *Deep Learning*, MIT Press, 2016 (gratuito online).
+
+Altri libri utili: Russell–Norvig (*AIMA*), Hastie–Tibshirani–Friedman (*The Elements of Statistical Learning*, copia gratuita online), Cherkassky–Mulier, Bishop (*Pattern Recognition and Machine Learning*, ora **gratuito** dal sito dell’editore; e *Neural Networks for Pattern Recognition*), Duda–Hart–Stork, Shalev-Shwartz–Ben-David (*Understanding Machine Learning*, gratuito online).
+
+Per le **librerie software** (i pezzi di programma già pronti da usare): F. Chollet, *Deep Learning with Python*; A. Géron, *Hands-on Machine Learning with Scikit-Learn, Keras & TensorFlow*; A. Zhang, Z. Lipton, M. Li, A. Smola, *Dive into Deep Learning* (Cambridge University Press, 2023, gratuito online, con esempi in PyTorch, NumPy/MXNet, JAX e TensorFlow). Le librerie principali verranno presentate più avanti dall’assistente del corso. Attenzione: esistono moltissimi libri e blog tecnici, bisogna stare attenti alla qualità scientifica.
+
+<Callout type="note" title="Supporti al corso">
+
+- Un **assistente del corso** che aiuta nello sviluppo del progetto (da confermare).
+- Un **chatbot tutor** (basato su ChatGPT), sperimentale, per il corso ML 2026: serve a chiarire dubbi, approfondire concetti e avere indicazioni su slide, definizioni ed esercizi, sempre sulla base dei materiali ufficiali del corso. Dettagli e link saranno pubblicati nelle news di Moodle.
+
+</Callout>
+
+In parallelo è molto utile il corso di **Computational Mathematics for Learning and Data Analysis** (CM), che dà le basi matematiche profonde dei metodi di apprendimento (non è però obbligatorio per seguire ML).
+
+---
+
+## Richiami matematici
+
+Per seguire il corso servono alcuni concetti di base:
+
+- calcolo in più variabili ([derivate parziali, gradiente](#/prerequisiti/derivate-parziali-e-gradiente));
+- probabilità (densità, [media, varianza](#/prerequisiti/media-varianza-e-deviazione-standard), normale, probabilità condizionate e congiunte);
+- calcolo con le matrici ([prodotto scalare](#/prerequisiti/prodotto-scalare), inversa, norme).
+
+Argomenti come il problema dei minimi quadrati lineari con la SVD e i moltiplicatori di Lagrange possono essere approfonditi in parallelo. Riferimenti consigliati: appendice A di AIMA, capitoli 2–4 del *Deep Learning book*, e *Mathematics for Machine Learning* (2020).
+
+Prima di cominciare, una regola su **come si scrivono le cose** (la «notazione»), che vale per tutto il corso:
+
+- $x$, lettera minuscola normale: uno **scalare**, cioè un numero solo (per esempio $3$ oppure $-0{,}5$);
+- $\mathbf{x}$, lettera minuscola in grassetto: un **vettore**, cioè una lista ordinata di numeri (per esempio $(3, 1)$);
+- $X$, lettera maiuscola: una **matrice**, cioè una tabella di numeri con righe e colonne.
+
+### Prodotto scalare e norme
+
+Il prodotto scalare è un’operazione che prende **due vettori** (due liste di numeri della stessa lunghezza) e restituisce **un numero solo**. Si calcola così: si moltiplicano i numeri che stanno nella stessa posizione e poi si sommano tutti i risultati.
+
+<Callout type="definition" title="Prodotto scalare (inner / dot product)">
+
+<Formula f={F.dot} />
+
+**In parole semplici.** Il primo pezzo, $a_1 b_1 + a_2 b_2 + \dots + a_n b_n$, dice: primo numero di $\mathbf{a}$ per primo numero di $\mathbf{b}$, più secondo per secondo, e così via fino all’ultimo (l’$n$-esimo). Il simbolo $\sum$ ([sommatoria](#/prerequisiti/la-sommatoria)) è solo un modo corto per scrivere la stessa somma. L’ultimo pezzo dice che lo stesso numero si ottiene anche in un altro modo: lunghezza di $\mathbf{a}$ per lunghezza di $\mathbf{b}$ per il coseno dell’angolo $\theta$ tra i due vettori.
+
+Lo stesso prodotto si può trovare scritto in tanti modi, tutti equivalenti: $\mathbf{a}\cdot\mathbf{b} = \mathbf{a}^T\mathbf{b} = \mathbf{a}^t\mathbf{b} = \langle \mathbf{a}, \mathbf{b}\rangle$, e anche solo $\mathbf{ab}$ se si capisce dal contesto.
+
+</Callout>
+
+A che cosa serve? Il pezzo con il coseno ci dà un’immagine: il <T id="prodotto-scalare">prodotto scalare</T> misura **quanto due vettori puntano nella stessa direzione**. Pensa a due frecce che partono dallo stesso punto:
+
+- se puntano dalla stessa parte (sono parallele), il prodotto scalare è il più grande possibile;
+- se formano un angolo retto (sono *ortogonali*, cioè perpendicolari), il prodotto scalare è zero;
+- se puntano in versi opposti, il prodotto scalare è negativo.
+
+Questa idea tornerà di continuo. Per esempio nei modelli lineari, dove $\mathbf{w}^T\mathbf{x}$ misura l’«allineamento» tra l’input $\mathbf{x}$ e i pesi $\mathbf{w}$.
+
+<Deep title="Esempio svolto: due vettori in ℝ²" kind="esempio">
+
+Prendiamo $\mathbf{a} = (3, 1)$ e $\mathbf{b} = (1, 2)$. Sono due vettori con due numeri ciascuno (si dice «in $\mathbb{R}^2$»).
+
+1. Prodotto scalare: primo per primo più secondo per secondo, cioè $\mathbf{a}\cdot\mathbf{b} = 3 \cdot 1 + 1 \cdot 2 = 5$.
+2. Lunghezze: $|\mathbf{a}| = \sqrt{3^2 + 1^2} = \sqrt{10} \approx 3{,}16$ e $|\mathbf{b}| = \sqrt{1^2 + 2^2} = \sqrt{5} \approx 2{,}24$.
+3. Coseno dell’angolo: si divide il prodotto scalare per il prodotto delle lunghezze, $\cos\theta = 5 / \sqrt{50} \approx 0{,}71$. Un coseno di circa $0{,}71$ corrisponde a un angolo di circa $45^\circ$.
+
+Il prodotto è positivo: i due vettori puntano «dalla stessa parte».
+
+</Deep>
+
+La <T id="norma">norma euclidea</T> di un vettore è semplicemente la sua **lunghezza** (si chiama anche *modulo*). Si calcola con il teorema di Pitagora: si eleva al quadrato ogni numero del vettore, si sommano i quadrati e si fa la radice quadrata.
+
+<Formula f={F.norm2} />
+
+Spesso si scrive più semplicemente $\|\mathbf{x}\|$ o $|\mathbf{x}|$. Esistono altri modi di misurare «quanto è grande» un vettore. Due utili sono:
+
+- la **norma $L^1$**, $\|\mathbf{x}\|_1 = \sum_i |x_i|$: si sommano i valori assoluti dei numeri (il valore assoluto $|x_i|$ è il numero senza il segno meno). Per $(3, -4)$ vale $3 + 4 = 7$;
+- la **norma del massimo**, $\|\mathbf{x}\|_\infty = \max_i |x_i|$: si prende il più grande dei valori assoluti. Per $(3, -4)$ vale $4$.
+
+Per confronto, la norma euclidea di $(3, -4)$ è $\sqrt{9 + 16} = 5$.
+
+<Figure n="1.3" title="Prodotto scalare e norme">
+  <DotProduct />
+  <Caption>Trascina le punte dei vettori. A sinistra il prodotto scalare come allineamento (con la proiezione di $\mathbf{b}$ su $\mathbf{a}$); nella scheda «Norme», le tre misure di lunghezza dello stesso vettore.</Caption>
+</Figure>
+
+Il prodotto scalare è il caso più comune di un’idea più generale. Un **prodotto interno** $\langle \cdot,\cdot \rangle$ è una qualunque operazione che prende una coppia di vettori e restituisce uno scalare, rispettando alcune regole: è *simmetrica* (scambiando i due vettori il risultato non cambia) e *bilineare* (si comporta bene con somme e moltiplicazioni per un numero). Con un prodotto interno si può scrivere:
+
+<Formula f={F.inner} />
+
+Vale poi la **disuguaglianza di Cauchy-Schwarz**. Dice una cosa semplice: il prodotto scalare di due vettori non può mai superare (in valore assoluto) il prodotto delle loro lunghezze.
+
+<Formula f={F.cauchy} />
+
+<Callout type="note" title="Tensori">
+
+Un <T id="tensore">tensore</T>, nella versione semplificata che si usa in ML, è un «contenitore» di numeri messi in ordine su una griglia regolare, con un numero qualsiasi di *assi* (direzioni). Un vettore ha un asse (una fila di numeri), una matrice ne ha due (righe e colonne), un tensore può averne tre o più: per esempio $X_{i,j,k}$ ha 3 indici, cioè servono tre numeri ($i$, $j$ e $k$) per dire quale casella vogliamo. In ML si usa soprattutto perché è comodo da scrivere e per ragionare sui calcoli fatti dalle GPU; in matematica i tensori hanno proprietà più ricche (legate ai cambi di base).
+
+</Callout>
+
+<Figure n="1.4" title="Quanti indici servono?">
+  <TensorFigure />
+  <Caption>Scalare, vettore, matrice e tensore differiscono per il numero di assi, cioè di indici necessari a individuare un singolo numero. Passa sopra alle caselle per leggerne l’indice.</Caption>
+</Figure>
+
+### Derivate parziali e gradiente
+
+Partiamo dalla [derivata](#/prerequisiti/la-derivata): per una funzione di una sola variabile, la derivata dice **quanto è ripida** la funzione in un punto, cioè di quanto cambia il risultato se spostiamo di pochissimo l’ingresso.
+
+La **derivata parziale** è la stessa idea per le funzioni che hanno **più variabili** in ingresso. Si fa così: si sceglie una variabile, si fa finta che tutte le altre siano numeri fissi (costanti) e si calcola la derivata normale rispetto a quella sola variabile. Per una funzione $f(x_1, x_2, x_3)$ con tre variabili ci sono quindi tre derivate parziali, una per variabile: $\frac{\partial f}{\partial x_1}$, $\frac{\partial f}{\partial x_2}$, $\frac{\partial f}{\partial x_3}$. Il simbolo $\partial$ si legge «de» e ricorda che è una derivata *parziale*.
+
+<Callout type="definition" title="Gradiente">
+
+Il <T id="gradiente">gradiente</T> di $f$ è il vettore che raccoglie tutte le sue derivate parziali, una dopo l’altra:
+
+<Formula f={F.gradient} />
+
+dove gli $\mathbf{e}_i$ sono i *versori*: frecce lunghe $1$ che indicano le direzioni degli assi (una per ogni variabile), tutte perpendicolari tra loro. Il simbolo $\nabla$ si legge «nabla».
+
+</Callout>
+
+<Deep title="Esempio svolto: calcolare un gradiente" kind="esempio">
+
+Sia $f(x_1, x_2) = x_1^2 + 3x_1x_2$.
+
+1. Deriviamo rispetto a $x_1$, trattando $x_2$ come se fosse un numero fisso. La derivata di $x_1^2$ è $2x_1$; la derivata di $3x_1x_2$ è $3x_2$ (perché $3x_2$ è solo un numero che moltiplica $x_1$). Quindi $\frac{\partial f}{\partial x_1} = 2x_1 + 3x_2$.
+2. Deriviamo rispetto a $x_2$, trattando $x_1$ come un numero fisso. Il pezzo $x_1^2$ non contiene $x_2$, quindi la sua derivata è zero; la derivata di $3x_1x_2$ è $3x_1$. Quindi $\frac{\partial f}{\partial x_2} = 3x_1$.
+3. Mettiamo insieme: $\nabla f = (2x_1 + 3x_2,\; 3x_1)$.
+
+Ad esempio, nel punto $(1, 2)$ basta sostituire $x_1 = 1$ e $x_2 = 2$: $\nabla f(1,2) = (2 \cdot 1 + 3 \cdot 2,\; 3 \cdot 1) = (8, 3)$.
+
+</Deep>
+
+Il significato geometrico è fondamentale per tutto il corso. Immagina la funzione come un paesaggio di montagna, dove l’altezza in ogni punto è il valore della funzione. In un punto, il gradiente è una freccia che **punta nella direzione in cui la salita è più ripida**, e la sua lunghezza (la sua norma) dice **quanto è ripida**. Quindi:
+
+- il gradiente $\nabla f$ indica da che parte la funzione **cresce** più in fretta;
+- il suo opposto, $-\nabla f$, indica da che parte la funzione **decresce** più in fretta.
+
+Questa è esattamente l’idea della <T id="discesa-del-gradiente">discesa del gradiente</T> (*gradient descent*): per trovare il punto più basso di una funzione si fanno tanti piccoli passi in discesa, ogni volta nella direzione $-\nabla f$. La useremo per addestrare i modelli, cioè per rendere il più piccola possibile una funzione che misura l’errore.
+
+Un punto in cui il gradiente è nullo (tutte le derivate parziali valgono zero, cioè il terreno è piatto) si chiama <T id="punto-stazionario">punto stazionario</T>. Può essere di tre tipi:
+
+- un **minimo locale**: il fondo di una conca;
+- un **massimo locale**: la cima di una collina;
+- un **punto di sella**: come il centro di una sella da cavallo, dove in una direzione si sale e nell’altra si scende.
+
+Sapere che il gradiente è nullo, da solo, non basta a dire quale dei tre casi abbiamo davanti.
+
+<Figure n="1.5" title="Gradiente, curve di livello e punti stazionari" size="wide">
+  <GradientExplorer />
+  <Caption>A sinistra la superficie $z = f(x_1, x_2)$ con le curve di livello proiettate sul piano; a destra lo stesso piano visto dall’alto. $\nabla f$ (arancione) punta verso la crescita di $f$, $-\nabla f$ (verde) verso la decrescita; entrambi sono perpendicolari alle curve di livello. Nella «Conca», il punto più basso del paraboloide è un minimo: lì il gradiente è zero.</Caption>
+</Figure>
+
+### Densità di probabilità: la gaussiana
+
+Molte quantità reali (l’altezza delle persone, gli errori di una misura…) si comportano così: la maggior parte dei valori sta vicino a un valore centrale, e i valori molto lontani dal centro sono rari. Il modello matematico di questo comportamento è la **distribuzione normale**. È descritta da due numeri:
+
+- la **media** $\mu$ (lettera greca «mu»): il valore centrale, dove sta il picco;
+- la **varianza** $\sigma^2$ («sigma al quadrato»): dice quanto i valori sono sparpagliati attorno alla media. Più è grande, più la curva è larga e bassa.
+
+La sua *densità di probabilità* è la curva a forma di campana (la «funzione <T id="gaussiana">gaussiana</T>»): dove la curva è alta, i valori sono più probabili.
+
+<Formula f={F.gaussian} />
+
+**In parole semplici.** La formula sembra complicata, ma fa una cosa sola: prende la distanza di $x$ dalla media, $(x - \mu)$, e più questa distanza è grande, più il risultato diventa piccolo. La frazione davanti serve solo a fare in modo che l’area totale sotto la curva valga $1$ (cioè il 100% di probabilità).
+
+Con $\mu = 0$ e $\sigma^2 = 1$ si ottiene la **normale standard**: la campana centrata in zero e con larghezza «di riferimento».
+
+<Figure n="1.6" title="La densità normale">
+  <GaussianExplorer />
+  <Caption>Trascina la soglia sull’asse $x$: l’area colorata a sinistra è la probabilità che la variabile cada sotto la soglia. Per la normale standard, l’area a sinistra di $-1{,}96$ vale il 2,5%.</Caption>
+</Figure>
+
+---
+
+## Sintesi e prossimi passi
+
+<Callout type="abstract" title="Sintesi">
+
+Il ML è far imparare a una macchina un compito partendo da esempi. Serve quando abbiamo tanti dati ma non sappiamo scrivere le regole. Il corso lo studia come **approssimazione di funzioni a partire da esempi**: i modelli si costruiscono un «mattone» dopo l’altro, guardando ai principi (che restano gli stessi anche quando i modelli cambiano) e misurando con rigore quanto funzionano. L’idea chiave di tutto il corso è il compromesso tra **flessibilità del modello** e **controllo della complessità**: da questo dipende la **generalizzazione**, cioè la capacità di funzionare bene su dati nuovi.
+
+</Callout>
+
+Le lezioni successive completano l’introduzione. Nelle [lezioni 2–3](#/lezione/03) si vedono: a che cosa serve il ML, l’apprendimento come approssimazione di funzioni con un esempio guida, e i pezzi che compongono un sistema di ML (task, spazio delle ipotesi, bias induttivo, funzione di loss, generalizzazione). Nella [lezione 4](#/lezione/04) si approfondiscono generalizzazione e validazione.
+
+<Exam>
+<Q q="Perché il ML è una necessità e non un lusso? In quali condizioni è appropriato usarlo?">
+
+Per due ragioni. La prima: ci sono **sempre più dati** da analizzare (la scienza stessa diventa *data-driven*, guidata dai dati). La seconda: è **difficile programmare a mano** un comportamento intelligente e adattivo, perché per molti compiti le regole non le sappiamo scrivere. È giusto usarlo quando c’è **poca o nessuna conoscenza a priori** sulla soluzione ma è **facile avere esempi** con il risultato corretto (spam, riconoscimento di caratteri, volti, voce).
+
+</Q>
+<Q q="Che cos’è il gradiente e perché $-\nabla f$ indica la direzione di massima decrescita?">
+
+È il vettore delle derivate parziali, $\nabla f = (\partial f/\partial x_1, \dots, \partial f/\partial x_n)$. In ogni punto punta nella direzione di **massima pendenza** (la salita più ripida) e la sua lunghezza dice quanto è ripida. Perché? Se facciamo un piccolo passo $\Delta\mathbf{x}$, la funzione cambia di circa $\nabla f \cdot \Delta\mathbf{x}$ (un prodotto scalare). A parità di lunghezza del passo, questo prodotto è il più grande possibile quando il passo ha la stessa direzione di $\nabla f$, ed è il più negativo possibile quando il passo va nel verso opposto, cioè lungo $-\nabla f$. È l’idea della discesa del gradiente.
+
+</Q>
+<Q q="Che cos’è un punto stazionario? È sempre un minimo?">
+
+È un punto in cui il gradiente è nullo (il «terreno» è piatto). **Non** è sempre un minimo: può essere un minimo locale, un massimo locale o un punto di sella. Il solo fatto che il gradiente sia nullo non basta a distinguere i tre casi (si vede bene nella figura 1.5, confrontando «Conca», «Cupola» e «Sella»).
+
+</Q>
+</Exam>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { glossary } from '../../content/glossary'
-import { availableLessons, lessonIndex } from '../../content/lessons'
+import { availableLessons, lessonIndex, prereq } from '../../content/lessons'
 import { tx } from '../../lib/i18n'
 import { glossaryHref, lessonHref, navigate } from '../../lib/router'
 import { Rich } from '../prose/Tex'
@@ -29,12 +29,13 @@ export function normalize(s: string) {
 
 function buildIndex(): Item[] {
   const items: Item[] = []
-  for (const l of availableLessons) {
-    items.push({ kind: 'lesson', title: l.title, sub: `${l.id} · ${l.eyebrow ?? ''}`, href: lessonHref(l.id), hay: '' })
+  // i prerequisiti si cercano come una lezione (senza numero)
+  for (const l of [...availableLessons, prereq]) {
+    items.push({ kind: 'lesson', title: l.title, sub: l === prereq ? (l.eyebrow ?? '') : `${l.id} · ${l.eyebrow ?? ''}`, href: lessonHref(l.id), hay: '' })
     const idx = lessonIndex[l.id]
     if (!idx) continue
     for (const h of idx.headings) {
-      items.push({ kind: 'section', title: h.text, sub: `${l.id} · ${l.title}`, href: lessonHref(l.id, h.slug), hay: '' })
+      items.push({ kind: 'section', title: h.text, sub: l === prereq ? l.title : `${l.id} · ${l.title}`, href: lessonHref(l.id, h.slug), hay: '' })
     }
     for (const f of idx.figures) {
       items.push({

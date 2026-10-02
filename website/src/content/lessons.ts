@@ -1,6 +1,8 @@
 import type { MDXContent } from 'mdx/types'
 import allIndex from 'virtual:lesson-index'
-import { isEn } from '../lib/i18n'
+import { isEn, tx } from '../lib/i18n'
+import type { Mode } from '../lib/mode'
+import { PREREQ_ID } from '../lib/router'
 import { lessonsEn, partsEn } from './lessons.en'
 
 export type LessonMeta = {
@@ -11,6 +13,8 @@ export type LessonMeta = {
   /** una riga per la home */
   summary?: string
   load?: () => Promise<{ default: MDXContent }>
+  /** la versione «spiegata semplice», se la lezione ce l'ha */
+  loadEasy?: () => Promise<{ default: MDXContent }>
 }
 
 export type LessonPart = { roman: string; title: string; lessons: LessonMeta[] }
@@ -25,10 +29,20 @@ function loaderFor(id: string) {
   return key ? loaders[key] : undefined
 }
 
+// versione «spiegata semplice»: stesso nome di file in `lessons-easy/` (italiano) e `lessons-easy-en/` (inglese)
+const loadersEasy = import.meta.glob<{ default: MDXContent }>('./lessons-easy/*.mdx')
+const loadersEasyEn = import.meta.glob<{ default: MDXContent }>('./lessons-easy-en/*.mdx')
+function easyLoaderFor(id: string) {
+  const en = isEn ? Object.keys(loadersEasyEn).find((k) => k.startsWith(`./lessons-easy-en/${id}-`)) : undefined
+  if (en) return loadersEasyEn[en]
+  const key = Object.keys(loadersEasy).find((k) => k.startsWith(`./lessons-easy/${id}-`))
+  return key ? loadersEasy[key] : undefined
+}
+
 function L(id: string, title: string, extra: Omit<LessonMeta, 'id' | 'title' | 'load'> = {}): LessonMeta {
   const en = isEn ? lessonsEn[id] : undefined
   // in inglese l'etichetta («Lecture 1») c'è solo dove c'è anche in italiano
-  return { id, title: en?.title ?? title, ...extra, ...(en && { eyebrow: en.eyebrow, summary: en.summary }), load: loaderFor(id) }
+  return { id, title: en?.title ?? title, ...extra, ...(en && { eyebrow: en.eyebrow, summary: en.summary }), load: loaderFor(id), loadEasy: easyLoaderFor(id) }
 }
 
 // i titoli e i riassunti qui sotto sono quelli italiani (li legge anche plugins/site-meta.ts): l'inglese è in lessons.en.ts
@@ -140,8 +154,28 @@ const lessonIndex = isEn ? { ...allIndex.it, ...allIndex.en } : allIndex.it
 export const lessons: LessonMeta[] = parts.flatMap((p) => p.lessons)
 export const availableLessons = lessons.filter((l) => l.load)
 
+/** La pagina dei prerequisiti: impaginata come una lezione, ma fuori dall'elenco delle lezioni. */
+export const prereq: LessonMeta = {
+  id: PREREQ_ID,
+  title: tx('Prerequisiti', 'Prerequisites'),
+  eyebrow: tx('Da sapere prima', 'Before you start'),
+  summary: tx(
+    'Le cose che gli appunti danno per scontate, spiegate da zero: simboli, funzioni, vettori e matrici, derivate e gradiente, probabilità.',
+    'The things the notes take for granted, explained from scratch: symbols, functions, vectors and matrices, derivatives and the gradient, probability.',
+  ),
+  load: isEn ? () => import('./extra-en/prerequisiti.mdx') : () => import('./extra/prerequisiti.mdx'),
+}
+
 export function getLesson(id: string) {
-  return lessons.find((l) => l.id === id)
+  return id === PREREQ_ID ? prereq : lessons.find((l) => l.id === id)
+}
+
+/** Indice della versione «spiegata semplice» nella lingua corrente. */
+const easyIndex = isEn ? { ...allIndex.easy, ...allIndex.easyEn } : allIndex.easy
+
+/** La lezione ha la versione «spiegata semplice»? */
+export function hasEasy(id: string) {
+  return Boolean(getLesson(id)?.loadEasy)
 }
 
 export function partOf(id: string) {
@@ -153,8 +187,8 @@ export function neighbours(id: string) {
   return { prev: i > 0 ? availableLessons[i - 1] : undefined, next: i >= 0 ? availableLessons[i + 1] : undefined }
 }
 
-export function lessonStats(id: string) {
-  const entry = lessonIndex[id]
+export function lessonStats(id: string, mode: Mode = 'full') {
+  const entry = (mode === 'easy' && easyIndex[id]) || lessonIndex[id]
   if (!entry) return undefined
   return {
     minutes: Math.max(3, Math.round(entry.words / 190)),
