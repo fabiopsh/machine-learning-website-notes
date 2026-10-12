@@ -1,6 +1,6 @@
 # Guida: la versione «spiegata semplice» e i prerequisiti
 
-Alcune lezioni (oggi 01, 03, 04, 05) hanno una seconda versione di lettura, pensata per chi fa fatica con il
+Alcune lezioni (oggi 01 e 03–08) hanno una seconda versione di lettura, pensata per chi fa fatica con il
 linguaggio degli appunti: stessi argomenti, stesse formule, stessi esempi e stesse figure, ma con il testo riscritto
 con parole facili, un passo alla volta, senza dare nulla per scontato. In più c'è una pagina di **prerequisiti**
 (`#/prerequisiti`) che spiega da zero la matematica di base.

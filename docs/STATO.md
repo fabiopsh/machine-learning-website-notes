@@ -146,6 +146,12 @@ Decisioni di stile confermate dall'utente:
   `verify`); `shot` e `figs` accettano `--mode easy`, `figs` anche `prerequisiti`. Regole in `docs/GUIDA-SEMPLICE.md`.
   Deciso con l’utente: **niente screenshot di verifica se non richiesti esplicitamente** (troppi token); questa
   funzione è stata verificata con `verify`, `check:easy` e `build`, senza guardare screenshot.
+- 2026-10-12 — **Versione «spiegata semplice» delle lezioni 06, 07 e 08** (reti neurali 1, backpropagation, reti
+  neurali 2), in italiano e in inglese (`lessons-easy/`, `lessons-easy-en/`), con le stesse regole delle prime
+  (`docs/GUIDA-SEMPLICE.md`): stessi import, titoli, figure, formule, riquadri e domande d’esame; teoria riscritta
+  con parole facili, «In parole semplici» dopo ogni `<Formula>`, rimandi ai prerequisiti. Nessun widget nuovo e
+  nessuna modifica alle lezioni originali. Verificate con `check:easy` (nessun errore né avviso sulle tre lezioni),
+  `verify` e `build`, senza screenshot.
 
 ## Immagini degli appunti → figure del sito
 
@@ -417,6 +423,17 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   pazienti e MSE di tre errori (03); matrice di confusione con 100 persone (04); 200 esempi e 30 errori, voto 3 su 5
   nel K-NN, $l/k$ con 200 e 10, distanza di Hamming tra «casa» e «cosa», altezza e stipendio per la scala delle
   variabili, 6 classificatori AVA con 4 classi (05).
+- **Versioni «spiegate semplici» 06, 07, 08**: stesso tipo di aggiunte (termini spiegati tra parentesi, «In parole
+  semplici», elenchi al posto di periodi lunghi, passaggi dei conti resi espliciti). Paragoni: squadra che perde e
+  colpa dei singoli giocatori (credit assignment), curva costruita con tanti scalini (approssimazione universale),
+  prezzo della farina → pane → conto della spesa (regola della catena), discesa da una montagna, sentiero tra colline
+  e valli, mazzo di carte mescolato (shuffling), palla pesante che rotola (momentum), sella del cavallo, «multa» sui
+  pesi grandi (weight decay). Esempi numerici aggiunti: $net_i = 0{,}3$ con due input, verifica di AND/OR/NOT caso
+  per caso, pattern con $\mathbf{w}^T\mathbf{x} = 5$ ed errore quadratico 16 per l’LMS, derivata della logistica in
+  zero $= 0{,}25$ (06); $E_p = 0{,}065$ con due uscite, $\sigma' \approx 0{,}235$ nell’esempio numerico (07);
+  $l = 1000$ e $mb = 100$ → 10 aggiornamenti per epoca, $1/(1-0{,}9) = 10$ e $1/1{,}9 \approx 0{,}53$ per il
+  momentum, learning rate a metà strada $= $ media di $\eta_0$ e $\eta_\tau$, 17 input del MONK come somma dei
+  valori delle variabili (08).
 
 - 01: esempi svolti (prodotto scalare, gradiente); «tre parole chiave» della definizione; ragionamento
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.

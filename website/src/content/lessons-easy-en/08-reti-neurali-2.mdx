@@ -1,0 +1,585 @@
+import * as F from '../formulas/l08'
+import { CourseZoom, Monk2Mse, Monk2Acc, Monk3 } from '../../widgets/l08/Practice'
+import { SgdBatch, MiniBatch, EtaCurves, MomentumCanyon } from '../../widgets/l08/Descent2'
+import { EarlyStopping, WeightDecayClassifier, RegRegression, WeightsViz } from '../../widgets/l08/Regularization'
+import { CascadeCorrelation } from '../../widgets/l08/Cascade'
+
+<Lead>With backpropagation ([lesson 7](#/lezione/07)) we know how to compute the gradient for every weight of the network. This lesson deals with all the practical issues that are needed to actually train an MLP: how to choose the initial weights, what to do about multiple minima, the on-line/batch/mini-batch versions, the learning rate and momentum, when to stop, overfitting and regularization, how many units to use (with Cascade Correlation), how to represent input and output. At the end there are a summary of strengths and weaknesses of neural networks and the first pieces of advice for the project (MONK benchmark).</Lead>
+
+<Figure n="8.1" title="Where we are in the neural networks block" size="wide">
+  <CourseZoom />
+  <Caption>Zoom on the “neural networks” block of the course: from the Perceptron and Adaline (one unit) to the feedforward MLP, to learning with backpropagation, to the heuristics for BP (we are here), to regularization, to Cascade Correlation and then to the applications (CNN) and the recent paradigms (deep, random). Click a block to go to its section.</Caption>
+</Figure>
+
+## Philosophy
+
+ML started as a collection of heuristic tricks (practical rules found by trial and error) and has arrived at general conceptual frameworks. For this reason the professor prefers not to introduce too many heuristic details. Many of the techniques that follow can be explored with experiments in the project; some have a theoretical foundation (regularization) and hold in a more general framework. Those marked with **(!)** are very common and **must be used** in the project.
+
+<Callout type="warning" title="Be wary of “rules of thumb”">
+
+Avoid the rules of thumb (that is, little practical rules) found on blogs, unless they are proved in scientific papers or their advantage has been verified with experiments.
+
+</Callout>
+
+<Callout type="tip" title="A useful interpretation">
+
+Backpropagation is a **path in weight space** (on the surface of the loss), like a trail on a landscape of hills and valleys. The path depends on: the data, the model, the **starting point** (initial weights), the **speed of convergence** (how fast we go down) and the **end point** (stopping rule). All these choices form a **control of the search** in the hypothesis space.
+
+</Callout>
+
+The basic algorithm is still gradient descent:
+
+1. start from small initial weights;
+2. compute $\Delta\mathbf{w} = -\partial E/\partial\mathbf{w}$ with backprop: forward phase up to the outputs, then backward phase for the deltas;
+3. update, $\mathbf{w}_{new} = \mathbf{w} + \eta\,\Delta\mathbf{w}$;
+4. repeat.
+
+The model is often **over-parameterized** (it has more parameters than necessary) and the optimization is **non-convex** (the surface has many valleys, not just one) and potentially unstable: hence the issues that follow. The **<T id="iperparametri">hyperparameters</T>** are the values that must be set by hand in order to run the training (for example $\eta$): the network does not learn them by itself.
+
+---
+
+## Initial values of the weights
+
+<Callout type="tip" title="(!) Initialization">
+
+Initialize the weights with **random values close to zero**, for example in the interval $[-0.7;\ +0.7]$ (for standardized data, that is, data brought to mean 0 and standard deviation 1).
+
+</Callout>
+
+To be avoided:
+
+- **all zero**: the deltas of the hidden units would all be zero (they depend on the weights toward the output) and the network would not learn;
+- **high values**: the sigmoids start **saturated** (in the flat region of the curve), with derivatives that are almost zero and extremely slow learning;
+- **all equal**: the hidden units stay **symmetric**, that is, identical to each other (they receive the same updates and all compute the same thing). Randomness serves to **break the symmetry**: it makes every unit start from a different point, so each one learns a different thing.
+
+<Deep title="Why the network does not learn with all weights at zero" kind="intuizione">
+
+From [backpropagation](#/lezione/07/sintesi-delle-formule), $\delta_j = \left(\sum_k \delta_k w_{kj}\right) f'_j(net_j)$: if all the $w_{kj}$ are zero, the sum is zero, so every $\delta_j$ is zero and the weights $w_{ji}$ never change. The weights toward the output, instead, are updated ($\Delta w_{kj} = \eta\,\delta_k\,o_j$). But all the hidden units compute the same output and receive the same update: even when the $w_{kj}$ become different from zero, they stay equal to each other, and the deltas with them. The hidden units behave like a single unit: it is the extreme case of the symmetry problem.
+
+</Deep>
+
+We can take into account the **fan-in** (the number of inputs of a unit), for example with an interval equal to $\text{range}\cdot 2/\text{fan-in}$: the more inputs a unit has, the smaller the initial weights. But this is not advisable if the fan-in is too large, and not for the output units (otherwise the deltas start close to zero). Very popular is the **Glorot and Bengio** initialization (2010): biases at 0 and weights drawn at random, with the same probability for all the values (uniform distribution), in $[-1/a, +1/a]$ with $a = \sqrt{\text{fan-in}}$ (or, in later results, $a$ depending also on the fan-out, the number of outputs of the unit).
+
+<Callout type="note" title="(!) For the project">
+
+A very small network (very few units) can depend strongly on the initialization.
+
+</Callout>
+
+## Multiple minima
+
+The loss **is not convex**: there are many local minima (different valleys, not all equally deep), and the result depends on the initial weights, that is, on where we start. Therefore:
+
+<Callout type="tip" title="(!) Several initializations">
+
+Try several random initial configurations (for example 5–10 or more *trials*, that is, attempts). To evaluate the model we report the **mean** of the results (mean of the errors) and the **variance** (how much the results change from one trial to another). If a single answer is wanted, we can choose the solution with the lowest validation error (or the median, the one in the middle of the ranking). Or we exploit all the end points with a **committee** answer: we take the mean of the outputs of the various networks, or let them vote. Later we will see why *ensembles* (groups of models) are advantageous in general.
+
+</Callout>
+
+Stopping in a local minimum with too high an error is not a big problem: we see the final error and can start again. Often a **“good” local minimum is enough**.
+
+### Do we really need the global minimum?
+
+The global minimum is the lowest point of all. Two fundamental remarks:
+
+1. In ML **we look for neither the local nor the global minimum of $R_{emp}$** (the error on the training data), but for the minimum of $R$ (the error on future data), which we cannot compute. We often stop at a point that does not even have zero gradient, that is, that is not even the bottom of a valley.
+2. The network is a **hypothesis space of variable size**: during training the VC-dim grows, the training error goes down toward zero (or toward the global minimum) while the network becomes too complex. We must stop **before** this condition of *overtraining* (too much training, which leads to overfitting), regardless of the local/global minima issue.
+
+---
+
+## On-line, batch and mini-batch
+
+Let us recall (see [linear models](#/lezione/05/batch-e-on-line)):
+
+- **Batch**: we add up the gradients of all the patterns of an <T id="epoca">**epoch**</T> (one full pass over the whole training set) and only then update the weights.
+- **On-line/stochastic**: we update $\mathbf{w}$ after every pattern $p$ with $\Delta_p\mathbf{w}$, without waiting for the sum. It makes progress at every example and can be faster, but it requires a smaller $\eta$.
+
+In formulas, for the weight $w_{tu}$:
+
+$$
+\text{batch: } -\frac{\partial E}{\partial w_{tu}} = -\sum_{p=1}^{l}\frac{\partial E_p}{\partial w_{tu}} = \sum_{p=1}^{l}\delta_{p,t}\,o_{p,u}, \qquad \text{on-line: } -\frac{\partial E_p}{\partial w_{tu}} = \delta_{p,t}\,o_{p,u}.
+$$
+
+That is: in batch we add up the product “delta times input” over all the patterns; in on-line we use the product of a single pattern.
+
+<Callout type="abstract" title="Batch and on-line compared">
+
+**Batch** — 1) set $\mathbf{w}_{init}$ and $\eta$; 2) compute $\Delta\mathbf{w}$ on the whole training set (the sum over $p$ is inside this step); 3) $\mathbf{w}_{new} = \mathbf{w} + \eta\,\Delta\mathbf{w}$; 4) repeat until convergence.
+
+**On-line** — 1) set $\mathbf{w}_{init}$ and $\eta$; for every pattern $p$: 2) compute $\Delta_p\mathbf{w}$; 3) $\mathbf{w}_{new} = \mathbf{w} + \eta\,\Delta_p\mathbf{w}$; 4) repeat (epoch after epoch) until convergence.
+
+</Callout>
+
+Batch gives a **more accurate** estimate of the gradient, because it uses all the data. In on-line the gradient of a single pattern is a **noisy** approximation (imprecise, a little different every time) of the overall gradient. Hence the name *stochastic gradient descent* (that is, with a part of chance). The descent proceeds in a zig-zag, and this **can help to escape local minima**: a random push can get us out of a shallow valley.
+
+<Callout type="tip" title="(!) Shuffling">
+
+In the on-line version the patterns must be presented in a **different order** at every epoch (usually by **mixing them at random**, like a deck of cards: <T id="shuffling">shuffling</T>), to avoid a systematic drift in the descent, that is, a shift always in the same direction due to the order.
+
+</Callout>
+
+<Figure n="8.2" title="Batch and stochastic descent" size="wide">
+  <SgdBatch />
+  <Caption>Batch and stochastic gradient descent on the contour lines of the error surface of a linear regression with two parameters $(\theta_0, \theta_1)$ and 40 examples: the batch path is smooth, the stochastic one proceeds in a zig-zag, the wider the higher $\eta$ is. Change $\eta$, the epochs and the random order of the patterns.</Caption>
+</Figure>
+
+### Mini-batch
+
+<T id="mini-batch">**Mini-batch**</T> is a middle way. Every epoch is divided into parts: we add up the gradients of $mb$ patterns ($1 < mb < l$, that is, more than one but fewer than all) before updating the weights, and repeat until all the data of the epoch have been used. So the update happens at every mini-batch, instead of at every pattern (on-line) or at every epoch (batch). Example: with $l = 1000$ data points and $mb = 100$ we make 10 updates per epoch.
+
+<Figure n="8.3" title="An epoch divided into mini-batches" size="wide">
+  <MiniBatch />
+  <Caption>An epoch of $l$ data points subdivided into mini-batches $mb_1, mb_2, \dots$: after every mini-batch the weights are updated. Choose the mini-batch size and perform one update at a time; the path on the right is on the same problem as figure 8.2.</Caption>
+</Figure>
+
+| On-line | Mini-batch (SGD) | Batch |
+|---|---|---|
+| does not exploit the parallelism across examples (it processes them one at a time) | a compromise; it fits the GPU memory | more accurate estimate of the gradient |
+| can be unstable | | slower (it waits for all the data) |
+| the noise can have a **regularizing effect** (it helps against overfitting) | | |
+
+**Mini-batch SGD** picks the data at random (shuffling) to get an unbiased estimate of the gradient, that is, an estimate that is right on average. With huge training sets or streaming data (which keep arriving) we can even do without epochs. The cost of an update depends on $mb$ and not on $l$: this is why SGD with mini-batches is a key factor in extending learning to datasets of millions of examples.
+
+---
+
+## The learning rate $\eta$
+
+The learning rate $\eta$ (the Greek letter “eta”) is the length of the step in the descent.
+
+- **Batch**: the gradient is more accurate → a higher $\eta$ can be used.
+- **On-line**: faster but more unstable → a smaller $\eta$ is needed.
+- In general: a **high** $\eta$ is fast but can be unstable (steps that are too long jump past the minimum); a **low** $\eta$ is stable but can be too slow. Typically we search in $[0.01;\ 0.5]$ with LMS.
+
+<Callout type="tip" title="(!) Always look at the learning curve">
+
+The learning curve is the plot of the error during training. It allows us to check how the network behaves in the early design phases. Here we assess the **quality** of the curve and the **speed** of convergence (the absolute value of the error also depends on the capacity of the model and on the other hyperparameters).
+
+</Callout>
+
+<Figure n="8.4" title="Effect of the learning rate on the learning curves" size="wide">
+  <EtaCurves />
+  <Caption>Effect of the learning rate on the learning curves (training error): very high diverges, very low stays stuck, low goes down slowly, high goes down quickly but stops early, the good one goes down rapidly and smoothly. In the second view, a very irregular curve to be avoided. Try an $\eta$ of your own as well.</Caption>
+</Figure>
+
+An irregular curve (one that goes up and down in jerks) can be due to batches that are too small or to an $\eta$ that is too high: it must be avoided. We look for a curve that goes down rapidly **and smoothly**. (Here we only look at the “failures” of the optimization on the training set, not at the generalization error.)
+
+### LMS: dividing by $l$
+
+<Callout type="tip" title="(!) Use the mean of the gradients">
+
+It is better to use the **mean** of the gradients over the epoch (sum divided by $l$): this way the step does not depend on how many data points there are (it is least **mean** squares). It is the same thing as using $\eta/l$ with $0 < \eta < 1$.
+
+Careful: when comparing on-line and batch with LMS, on-line requires a **much smaller** $\eta$ (by the same factor $1/l$) to be comparable. For mini-batch (if we divide by $mb$) $\eta$ must be tuned again, or we always divide by $l$.
+
+</Callout>
+
+### Improving the descent
+
+#### Momentum (!)
+
+<Formula f={F.momentum} />
+
+**In plain words.** The new move of the weights is made of two pieces: the usual step along the gradient (downhill), plus a part $\alpha$ of the move made at the previous step. Then the weights move by this amount.
+
+We have $0 < \alpha < 1$ (for example $0.5$–$0.9$; $\alpha$ is the Greek letter “alpha”). Here $\eta$ is already inside $\Delta\mathbf{w}$, and after every step we save $\Delta\mathbf{w}_{old} = \Delta\mathbf{w}_{new}$ (the move just made becomes the “old” one for the next step).
+
+It is the **“heavy ball” method** (<T id="momentum">momentum</T>): at every step we add a fraction of the previous move, as if the weights had inertia. A heavy ball that is rolling neither stops nor changes direction all at once.
+
+- **Faster on plateaus** (the almost flat regions): if the gradient has the same sign in consecutive iterations, momentum increases the step.
+- **It damps oscillations**: in the directions in which the gradient changes sign at every step, the contributions cancel out.
+- **Inertia effect**: it allows higher $\eta$ to be used.
+
+<Deep title="How much does momentum speed things up on a plateau?" kind="esempio">
+
+On a stretch where the gradient is (almost) constant, $g$, the moves accumulate: $\Delta\mathbf{w}_1 = -\eta g$, $\Delta\mathbf{w}_2 = -\eta g(1 + \alpha)$, $\Delta\mathbf{w}_3 = -\eta g(1 + \alpha + \alpha^2)$, … up to the limit value $-\eta g/(1 - \alpha)$. With $\alpha = 0.9$ we have $1/(1 - 0.9) = 10$: the step becomes ten times that of the plain gradient. If instead the gradient changes sign at every step, the alternating sum $1 - \alpha + \alpha^2 - \dots$ tends to $1/(1 + \alpha)$: with $\alpha = 0.9$ it makes $1/1.9 \approx 0.53$, that is, the oscillation is reduced almost by half.
+
+</Deep>
+
+<Figure n="8.5" title="Momentum in a canyon" size="wide">
+  <MomentumCanyon />
+  <Caption>Effect of momentum in a “canyon” of the error surface (ill-conditioned Hessian): the red path with momentum proceeds along the valley toward the minimum, while the black arrows of the plain gradient bounce between the walls. Drag the starting point, change $\eta$ and $\alpha$, try Nesterov momentum.</Caption>
+</Figure>
+
+Momentum was born for batch. In on-line $\Delta\mathbf{w}_{old}$ is that of the **previous pattern**, and momentum becomes a **moving average of the past gradients**: an average that is updated at every step and that smooths the stochastic gradients inside the epoch (the same holds for mini-batch). So the meaning is different from batch, where we combine gradients computed on the same examples in different epochs.
+
+**Nesterov momentum**: it is a variant in three moves. First we apply the momentum ($\mathbf{w} + \alpha\Delta\mathbf{w}_{old}$). Then we compute the gradient at this intermediate point (we “look ahead”). Finally we apply the $\Delta\mathbf{w}$ (momentum plus new gradient) to the original weights. It improves the speed of convergence in batch (not in the stochastic case).
+
+#### Variable learning rate
+
+With mini-batch the gradient **does not tend to zero** close to the minimum (because of the sampling noise: every mini-batch gives a slightly different gradient). With a fixed $\eta$ we would keep hopping around the minimum, so a fixed $\eta$ must be avoided. For example we let it decrease linearly up to iteration $\tau$ (the Greek letter “tau”):
+
+<Formula f={F.lrDecay} />
+
+**In plain words.** $s$ is the number of the step. At the beginning ($s = 0$) the learning rate is $\eta_0$. As $s$ grows, $\eta_0$ weighs less and less and $\eta_\tau$ more and more. At step $s = \tau$ the learning rate is exactly $\eta_\tau$. Halfway ($s = \tau/2$) it is the mean of the two.
+
+After step $\tau$ we use a constant, small $\eta = \eta_\tau$ (for example $\eta_\tau \approx 1\%$ of $\eta_0$, $\tau$ a few hundred steps). $\eta_0$ is chosen by looking for the trade-off between instability (too high) and getting stuck (too low), with preliminary trials or with a grid search (we try the values of a grid).
+
+#### Adaptive learning rates
+
+These are algorithms that change the learning rate by themselves during training, even separately **for every parameter**: **AdaGrad**, **RMSProp**, **Adam** (very popular and often robust with the default values, but to be used with caution). They are combined with momentum. In networks with many layers, $\eta$ can also depend on the layer or on the fan-in.
+
+### Beyond basic SGD
+
+SGD is efficient (the cost is linear in the number of parameters) but it depends on the number of data points and of epochs. There are many heuristics:
+
+- **Quickprop**: it approximates the loss, near the point where we are, with a parabola, and jumps directly to the minimum of that parabola;
+- **R-prop**: it uses only the **sign** of the gradient (the direction), not its value. It is useful when the gradient vanishes (becomes almost zero) in the deep layers.
+
+**Second-order methods** use the Hessian, that is, the table of the second derivatives. The second derivatives give information on the curvature (how curved the surface is) and allow a better descent (Newton’s method). But the Hessian is extremely expensive to compute. There are approximate versions: Gauss-Newton, Levenberg-Marquardt, *Hessian-free* methods such as the **conjugate gradient**, quasi-Newton methods such as **BFGS**.
+
+<Callout type="note" title="Saddle points">
+
+A saddle point has (almost) zero gradient but is not a minimum: like the saddle of a horse, it goes down in one direction and up in another. In high-dimensional spaces the saddle points grow exponentially with respect to the local minima: there are many, many more of them. Newton’s method looks for (and “jumps toward”) the points with zero gradient, so it is more sensitive to saddle points. This may explain why second-order methods have not replaced gradient descent for neural networks. Gradient descent, instead, in practice manages to escape saddle points. In practice we find low values of the loss quickly enough, which are useful above all for generalizing.
+
+</Callout>
+
+<Callout type="tip" title="In practice">
+
+For optimization the basic approaches (those with (!)), if applied correctly, are usually enough. Experience with well-known techniques counts more than sophisticated methods that we do not know how to handle. The optimization technique is important only if there are obstacles to training: **validation counts more than optimization on the training set**, because optimizing on the training data is not our goal. The starting point (also for teaching) is **SGD with momentum** (and regularization).
+
+</Callout>
+
+---
+
+## Stopping criteria
+
+When do we stop?
+
+- The basic criterion uses the error: we stop when the mean error is $< \epsilon$ (below a chosen threshold). It is the best one if the tolerance of the data is known (how much error is acceptable: the expert of the problem knows it), but often this is not the case. Variants: maximum tolerance instead of mean; for classification, the number of errors.
+- “Internal” criteria: weights that no longer change; gradient almost zero (Euclidean norm $< \epsilon$, that is, its [length](#/prerequisiti/lunghezza-e-distanza) is tiny); error that no longer decreases significantly in an epoch (e.g. less than 0.1%). Careful: they can be **premature**, that is, trigger too early (for example with an $\eta$ that is too small, when we advance slowly but are still going down). This is why we observe $k$ epochs before deciding (**patience**).
+- **(!)** Stop anyway after an excessive number of epochs, to escape convergences that are too slow, but **do not** stop at an arbitrary number of epochs fixed a priori.
+- And do not necessarily stop with a very low training error…
+
+---
+
+## Overfitting and regularization
+
+### Stop at the minimum?
+
+Typically we do **not** want the global minimizer of $R_{emp}(\mathbf{w})$, that is, the weights that give the lowest training error of all: it is probably an overfitting solution (it has learned the data by heart). It is a fundamental difference from optimization methods (CM), where finding the minimum is the aim. Our main aim is **complexity control**, to get the best generalization. The tools are regularization (explicit, with a penalty term, or implicit, with early stopping), plus model selection (cross-validation) to find the right trade-off.
+
+### How overfitting arises in a network
+
+- We start with **small random weights** (symmetry breaking).
+- At the beginning the input→output mapping is almost **linear** (the sigmoids work in the central region, where they are almost straight lines): the effective number of free parameters (and the VC-dim) is almost that of a perceptron.
+- As the optimization proceeds, the weights grow and the hidden units tend to **saturate**. So the effective number of parameters and the nonlinearities increase: the VC-dim grows.
+
+It is once again the **hypothesis space of variable size**: the network starts simple and becomes complex while it learns.
+
+<Figure n="8.6" title="Learning curves and early stopping" size="wide">
+  <EarlyStopping />
+  <Caption>Typical behavior of backpropagation, which suggests an empirical criterion for stopping: the error on the training set always decreases, the one on the validation set decreases, reaches a minimum (the good zone for stopping) and then goes back up (overtrained). Here a network with 40 hidden units trained on 12 noisy points, without regularization, with the validation error on 300 new points; epochs on a logarithmic scale. Drag the slider to choose when to stop.</Caption>
+</Figure>
+
+The curve must be read together with the [plot of the VC-bound](#/lezione/04/vc-dimension-e-bound-sul-rischio) (which is its theoretical foundation). How to intervene:
+
+1. <T id="early-stopping">**Early stopping**</T>: use a **validation set** (data set aside, not used for training) to decide when to stop, that is, when the validation error starts to rise. It is a vague criterion: we must observe several epochs before deciding (*patience*) and possibly go back to the best weights (*backtracking*). Since the effective number of parameters grows during training, **stopping earlier is equivalent to limiting the effective complexity**.
+2. **Regularization** of the loss: our main tool.
+3. **Pruning** methods (later).
+
+### Regularization (!)
+
+During training the weights grow. So we can optimize the loss taking into account how large they are. The well-founded approach ([Tikhonov](#/lezione/05/ridge-regression-regolarizzazione-di-tikhonov) again) adds a penalty term:
+
+<Formula f={F.decayLoss} />
+
+**In plain words.** The loss is the sum of two pieces. The first is the error on the data (sum of the squared errors). The second is a “fine” on large weights: $\|\mathbf{w}\|^2$ is the sum of the squares of all the weights, and $\lambda$ (the Greek letter “lambda”) says how severe the fine is. To keep the loss low, the network must make few mistakes **and** keep the weights small.
+
+The effect is <T id="weight-decay">**weight decay**</T>: differentiating the penalty $\lambda w^2$ gives $2\lambda w$, so roughly $2\lambda w$ is added to the gradient of every weight,
+
+$$
+\mathbf{w}_{new} = \mathbf{w} + \eta\,\Delta\mathbf{w} - 2\lambda\mathbf{w}
+$$
+
+(the 2 can be omitted). At every step every weight is shortened by a small fraction of itself: the weights “decay” toward zero, unless the data push them to grow. $\lambda$ is generally very small (e.g. $0.01$) and is chosen in **model selection** (cross-validation). Applied to a linear model it is ridge regression; there are more sophisticated penalties (for example for *weight elimination*).
+
+<Callout type="note" title="Error and Loss">
+
+With a penalty term it is better to distinguish two things. The **Loss** is the objective function used for training (MSE + penalty). The **Error/Risk** is only the term on the data (MSE), which measures how wrong the model is. **(!)** It is the error that must be reported in tables and plots, because it is the measure that is useful for those who use the model.
+
+</Callout>
+
+<Figure n="8.7" title="Weight decay on a classifier" size="wide">
+  <WeightDecayClassifier />
+  <Caption>Effect of weight decay on a network with 10 units, on the two-class problem of [lesson 5](#/lezione/05/il-problema): without weight decay the boundary is very jagged; with weight decay it is smoother and the test error gets close to the Bayes error. The networks are trained live when the page is opened.</Caption>
+</Figure>
+
+<Figure n="8.8" title="Regression with and without regularization" size="wide">
+  <RegRegression />
+  <Caption>Univariate regression on the same 12 points as figure 8.6: the network without regularization ($\lambda = 0$) oscillates following the noise, the regularized one ($\lambda = 0.01$) gives a smooth curve. Choose another $\lambda$ for the network on the right.</Caption>
+</Figure>
+
+<Figure n="8.9" title="The weights with and without regularization" size="wide">
+  <WeightsViz />
+  <Caption>The weights of the two networks of figure 8.8 (one input, 40 hidden units, one output): every connection is colored by sign and intensity. Without regularization (left) many weights are far from zero; with regularization (right) most of the weights are close to zero, so the complexity of the model is lower.</Caption>
+</Figure>
+
+#### Common misconceptions
+
+<Callout type="warning" title="Regularization is not meant to stabilize convergence">
+
+Regularization is **not** a technique for making the learning curve more stable: it serves to **control the complexity** of the model (measured by the VC-dim, related to the number and the value of the weights). If the curve is unstable, the problem lies elsewhere (learning rate, batch…).
+
+</Callout>
+
+<Callout type="question" label="Question" title="Early stopping or regularization: which is better?">
+
+Early stopping is an **empirical** approach (based on observation): it requires a validation set to decide when to stop, and so it sacrifices part of the data. Regularization in the loss is a **well-founded** approach (it has a theory behind it): it allows the validation curve to follow the training one (provided we do not end up underfitting because of a $\lambda$ that is too high). In that case early stopping is not (strictly) needed and we can stop at convergence. Both can also be used: early stopping does not step in if the validation error does not rise.
+
+</Callout>
+
+#### Details
+
+- Often the **bias $w_0$ is excluded** from the regularizer (including it would make the results depend on translations/scalings of the target, that is, on how the right answer is shifted or rescaled), or it has a coefficient of its own.
+- It is typically applied in the batch version. In on-line/mini-batch the penalty is applied at every step, so many times per epoch: for a fair comparison with batch we would use $\lambda\cdot mb/l$. (If $\lambda$ is chosen with model selection, this happens automatically.)
+- Another technique is **dropout** (later).
+
+### Putting it all together: momentum and weight decay
+
+With the regularized loss, the rule with momentum becomes (separating the two terms of the loss and using $\eta$ only for the error term, as already done with linear models):
+
+$$
+\Delta w_{tu} = -\eta\,\frac{\partial\,\text{Loss}}{\partial w_{tu}} + \alpha\,\Delta w_{tu}^{old} \;\doteq\; \eta\,\delta_t\,o_u - \lambda\,w_{tu} + \alpha\,\Delta w_{tu}^{old}, \qquad w_{tu}^{new} = w_{tu} + \Delta w_{tu}.
+$$
+
+The move of a weight has three pieces: the gradient step ($\eta\,\delta_t\,o_u$, from backpropagation), the weight decay ($-\lambda\,w_{tu}$) and the momentum ($\alpha\,\Delta w_{tu}^{old}$). This way $\eta$ does not multiply $\lambda$: changing one does not change the other.
+
+Must the momentum also include the $\lambda$ part? Often yes (Matlab, Caffe…). But to make **all three hyperparameters** $\eta$, $\alpha$, $\lambda$ **independent** we can write:
+
+<Formula f={F.fullRule} />
+
+**In plain words.** First we compute the move: gradient step plus a part of the previous move (momentum). Then we update the weight: old weight, plus the move, minus a small fraction $\lambda$ of the weight itself (weight decay). The weight decay stays outside $\Delta w_{tu}$, so the momentum does not “remember” it.
+
+In this way the weight decay is separated from the memory of the momentum. Only the gradient of $E$ (where the sum over the patterns is) is divided by $l$. It is the rule used by the networks trained live in the figures of this page.
+
+---
+
+## Number of hidden units
+
+The number of units is related to **complexity control**, to the input dimension and to the size of the training set. In general it is a **model selection** problem: the number of units, together with $\lambda$, is chosen with cross-validation.
+
+- Too few units → underfitting (the model is too simple); too many → overfitting (it can happen).
+- The number of units can be higher if adequate regularization is used.
+
+Alternatives to the manual search:
+
+- **constructive approaches**: the algorithm decides the number of units by itself, starting from a small network and adding some;
+- **pruning methods**: we start from large networks and remove weights or units a little at a time.
+
+### Cascade Correlation
+
+Among the constructive approaches (Tower, Tiling, Upstart for classification) the best known is <T id="cascade-correlation">**Cascade Correlation**</T> (CC) by Fahlman and Lebiere (1990), for regression and classification. It learns **both the weights and the topology** (the number of units): the hypothesis space has a flexible size, decided by the algorithm, and at every step a single unit is trained.
+
+<Callout type="abstract" title="Cascade Correlation algorithm">
+
+1. We start from a network $N_0$ **with no hidden units** and train it. If it does not solve the problem, we move on to $N_1$.
+2. In $N_1$ a hidden unit is added. Its weights are trained to **maximize the correlation** between its output and the **residual error** of the network $N_0$ (the error that is left). That is, the new unit learns to “switch on” exactly where the network is wrong.
+3. After training, the input weights of the new unit are **frozen** (they no longer change); the remaining weights (output layer) are retrained.
+4. If the network does not solve the problem other units are added, each connected to **all the inputs and all the previous hidden units** (hence “cascade”).
+5. We continue until the residual error meets the stopping criterion.
+
+</Callout>
+
+<Figure n="8.10" title="Building a Cascade Correlation network" size="wide">
+  <CascadeCorrelation />
+  <Caption>Construction of a Cascade Correlation network: every new unit receives the inputs and the outputs of the previous units; the weights marked with the asterisk are frozen after the training of the candidate. Here on a one-dimensional regression, with a linear output solved by least squares and a pool of candidates for every unit: add the units one at a time and watch the residual error shrink.</Caption>
+</Figure>
+
+The algorithm alternates two phases: the minimization of the total error (LMS, for example backprop on the output layer) and the **maximization of the covariance** $S$ between the output $o_p$ of the candidate (the unit that is about to be added) and the residual error $E_{p,k} = o_{p,k} - d_{p,k}$:
+
+<Formula f={F.ccS} />
+
+**In plain words.** Covariance measures how much two quantities move together. For every pattern $p$ we look at how far the output of the candidate is above or below its [mean](#/prerequisiti/media-varianza-e-deviazione-standard) $\bar o$, and how far the residual error is above or below its mean $\bar E_k$. We multiply the two deviations and sum over the patterns. If the candidate is high exactly where the error is high (or always the opposite), the sum is large in absolute value (the two vertical bars). Finally we sum over all the outputs $k$.
+
+The gradient (with $d|f|/dx = \operatorname{sign}(f)\,df/dx$, the rule for differentiating an absolute value, and neglecting the dependence of the means on $o_p$) is
+
+$$
+\frac{\partial S}{\partial w_j} = \sum_k \operatorname{sgn}(S_k)\sum_p\big(E_{p,k} - \bar{E}_k\big)\,f'(net_{p,h})\,I_{p,j},
+$$
+
+where $h$ is the candidate and $I_{p,j}$ its input $j$. We do gradient **ascent** (we go up instead of down), because $S$ must be maximized.
+
+Notes on CC:
+
+- the role of the hidden units is to **reduce the residual error**: every unit solves a sub-problem and becomes a **permanent feature detector** (it recognizes a certain property of the data forever);
+- **pool of candidates**: the surface of $S$ has many maxima, so a group of candidates is trained (each with different initial weights) and the best one is chosen, avoiding local maxima;
+- it is a **greedy** algorithm (at every step it makes the best choice for the moment, without reconsidering): it converges easily and can find a minimal number of units, but it can overfit (regularization is needed);
+- the loss does not necessarily have to be “max $S$” (for regression LMS can be used).
+
+---
+
+## Input and output
+
+**Input**: pre-processing (preparing the data before training) has a large effect.
+
+- <T id="standardizzazione">**Standardization**</T> (often useful): for every feature we get [mean 0 and standard deviation 1](#/prerequisiti/media-varianza-e-deviazione-standard), with $(v - \text{mean})/\text{std. dev.}$. That is: we subtract the mean and divide by the standard deviation.
+- **Rescaling** to $[0,1]$: $(v - \min)/(\max - \min)$. The smallest value becomes 0, the largest 1.
+- Categorical inputs (categories, not numbers): **1-of-K** encoding ($A \to 100$, $B \to 010$, $C \to 001$). One digit is used for every category: only the right one is 1.
+- Missing data: careful, **0 does not mean “no input”** if 0 is in the range of the values (it is one of the possible values).
+
+**Output**:
+
+- **(!) Regression**: **linear** output units (one or more).
+- **Classification**: one unit (binary) or 1-of-K with several outputs. With the sigmoid we choose the threshold to assign the class (with a possible rejection zone); with 1-of-K the highest output wins. Often **tanh** (symmetric) learns faster. As a target we can use $0.9$ instead of 1 (and $-0.9$ or $0.1$ instead of $-1$ or $0$): the sigmoid reaches 1 only at infinity, so with target 1 the weights would keep growing toward saturation (asymptotic convergence). Obviously the range of the targets must lie inside the range of the outputs.
+- <T id="softmax">**Softmax**</T> for multi-class 0/1 targets: the outputs sum to 1 and can be read as [probabilities](#/prerequisiti/probabilità) $p(\text{class} = k \mid \mathbf{x})$, that is, the probability that the class is $k$ given the input $\mathbf{x}$:
+
+<Formula f={F.softmax} />
+
+**In plain words.** We take the net of every output unit and compute its [exponential](#/prerequisiti/esponenziale-e-logaritmo) (so it becomes positive). Then we divide by the sum of the exponentials of all the outputs. Every output becomes a fraction of the total: they are all between 0 and 1 and together they make 1. The largest net gets the largest fraction.
+
+- <T id="cross-entropy">**Cross-entropy**</T> can be used as an alternative loss (it comes from maximum likelihood estimation); for one unit:
+
+$$
+-\sum_{i \in TR}\big\{d_i\log(out(\mathbf{x}_i)) + (1 - d_i)\log(1 - out(\mathbf{x}_i))\big\}.
+$$
+
+How to read it: for every example of the training set only one piece counts. If the target is $d_i = 1$ what remains is $\log(out)$; if it is $d_i = 0$ what remains is $\log(1 - out)$. The [logarithm](#/prerequisiti/esponenziale-e-logaritmo) of a number close to 1 is almost zero, that of a number close to 0 is very negative. With the minus sign in front: right and confident answer, loss almost zero; wrong and confident answer, very large loss.
+
+<Callout type="question" label="Exercise" title="Exercise for the project">
+
+Reflect on the role of the various hyperparameters and connect them to the theory: for example connect the loss with penalty to the VC-bound, to understand how the number of units, $\lambda$ and the others control underfitting and overfitting. Which are the most important for the project (and for winning the competition)?
+
+</Callout>
+
+---
+
+## Strengths and weaknesses of neural networks
+
+<Callout type="abstract" title="Strengths">
+
+- Flexible method: it extends linear methods to the estimation of any function and builds an **explicit hypothesis**, that is, an actual function (unlike K-NN, which only keeps the data).
+- Expressive power given by number of units, architecture and training.
+- Continuous and rich hypothesis space, differentiable loss → training with gradient descent.
+- Universal approximators; they handle noise and incomplete data with graceful degradation; continuous and discrete data, regression and classification.
+- A broad **paradigm** (also unsupervised learning, associative memories, stochastic approaches).
+- Neural plausibility (they resemble the brain); **distributed representation** of knowledge (it does not sit in a single point, but is spread compactly across the weight matrices); **fault tolerance**; adaptation to non-stationary environments, that is, ones that change over time, with on-line learning (*continual learning*, with the stability-plasticity dilemma: learning the new without forgetting the old).
+
+</Callout>
+
+<Callout type="warning" title="Critical points">
+
+- **Black box problem**: it is hard to interpret the acquired knowledge and to extract it for human experts. The network answers, but it does not explain why. It is related to the current topic of **explainable AI** (XAI). Approaches: projection/clustering of the internal representations, sensitivity analysis, **Layer-wise Relevance Propagation** (LRP, 2015, also for deep networks, which produces heat maps on the parts of the input relevant for the decision), extraction of symbolic rules.
+- **Architecture design**: constructive/pruning methods or different approaches (SVM) are needed.
+- **Dependence on the training process**: the many variants and the many hyperparameters affect the final solution.
+- Not ideal with **missing data** (removal, imputation, that is, filling the gaps with estimated values… are used).
+
+</Callout>
+
+Neural networks are suitable when:
+
+- the input is high-dimensional (discrete or real);
+- the task is classification or regression;
+- the data may be noisy;
+- the training time is not critical;
+- the form of the target function is unknown;
+- the readability of the result is not critical;
+- the computation of the output must be fast.
+
+<Callout type="note" title="Historical notes">
+
+McCulloch and Pitts (1943), Hebb (1949), Minsky (1954, 1969), von Neumann (1956), Rosenblatt (1958), Widrow and Hoff (1960), Kohonen (1972, 1982), Grossberg (ART, 1980), Hopfield (1982), Rumelhart, Hinton, Williams, Werbos, Parker, LeCun (1975–1985, backprop), Poggio and Girosi (RBF theory, 1990), Vapnik (SVM, 1990s), deep learning (Hinton, Bengio, LeCun, since 2007). **Hopfield and Hinton** received the **2024 Nobel Prize in Physics**; Hinton, Bengio and LeCun the 2018 Turing Award.
+
+</Callout>
+
+---
+
+## Toward the project: the MONK benchmark
+
+We are not yet ready for the project (**validation** and the dedicated lecture are missing), but we can start implementing the network (backprop and update rules) or exploring the simulators.
+
+Checking that an implementation is correct is hard: a network often “works” (even if badly) despite small mistakes in the code. The first test is the <T id="monk">**MONK**</T> dataset (UCI), whose results must be reported in the report:
+
+- 3 binary classification tasks, small and artificial, “not hard”: a small network with few units reaches very high accuracies (up to 100%) in a short time;
+- there is a report with earlier results of MLPs and other models, to compare with;
+- **input**: 6 variables with 2, 3 or 4 symbolic values each → **1-of-k** encoding → **17 input units** (the sum of the possible values of all the variables);
+- the test set includes the training set (bad practice, but irrelevant here).
+
+<Callout type="tip" title="Advice for the first trials on MONK">
+
+- One output unit for classification (consistent targets and outputs, $0/1$ or $-1/+1$); **tanh** at the output is suggested.
+- **One-hot encoding of the inputs** (it is the 1-of-k one): a very frequent mistake if forgotten!
+- Batch with the gradient divided by the number of patterns: it converges in a few hundred epochs.
+- Few hidden units (2–5), as in the manual: the test works if the state-of-the-art results are reached with few units.
+- MONK is sensitive to the initialization (few units): try small initial intervals (or ones based on the fan-in).
+- With on-line approaches use **shuffling** (the patterns are sorted by class).
+
+</Callout>
+
+Good results on MONK **do not guarantee** that the simulator is correct; bad results **certainly** indicate that code or settings must be revised. In the plots what counts is the **shape** of the curves (smooth, converging), not the values.
+
+<Figure n="8.11" title="MONK2: mean squared error" size="wide">
+  <Monk2Mse />
+  <Caption>MONK2: training MSE (blue) and test MSE (orange, dashed) with 2 hidden units, $\eta = 0.1$, $\alpha = 0.5$, batch with the gradient divided by the number of patterns (sigmoidal output, 0/1 targets). The network is trained live on the benchmark data; try changing the units, the initialization, or removing the one-hot encoding.</Caption>
+</Figure>
+
+<Figure n="8.12" title="MONK2: accuracy" size="wide">
+  <Monk2Acc />
+  <Caption>MONK2: the accuracy rises in steps up to 100%, on the test set too (an unusual case in general). It is the same network as in figure 8.11.</Caption>
+</Figure>
+
+<Figure n="8.13" title="MONK3 with regularization" size="wide">
+  <Monk3 />
+  <Caption>MONK3 with 4 hidden units and regularization: MONK3 contains noise (here 5% of the training labels are wrong) and can overfit; the test does not reach 100%. Weight decay is applied as $w \leftarrow w - \lambda w$ at every epoch, which is why the values of $\lambda$ do not coincide with those of the slides.</Caption>
+</Figure>
+
+<Callout type="question" label="Question" title="What happens in Fig. 8.13?">
+
+In the final part the training error keeps going down while the test error goes back up slightly: it is the beginning of **overfitting** (MONK3 has noisy labels, that is, some “right” answers are actually wrong, and the network starts learning them by heart). Regularization mitigates it; a $\lambda$ chosen with model selection or early stopping would help.
+
+</Callout>
+
+To check backpropagation we can use a step-by-step example (careful if it omits the biases) or a reliable library as an “oracle”, that is, as a reference with which to compare our own results (Keras, scikit-learn, PyTorch…). Other useful datasets can be found in the UCI Machine Learning Repository.
+
+<Callout type="note" title="Preview of the project (rules for a.y. 2026/27)">
+
+In past years the project was compulsory (groups of 2–3, type A with a simulator implemented from scratch or type B with libraries, ML-CUP competition). From a.y. 2026/27 the project is **optional**: groups of **2 students**, implementation/application/analysis of an ML method with experimental evaluation, presented as a **poster** in one of the last lectures (December). It can give a small bonus but is not necessary for the exam, which is based on the written test (see [lesson 1](#/lezione/01)). The advice on MONK remains valid as a test of any implementation.
+
+</Callout>
+
+<Exam>
+<Q q="How are the weights initialized, and why?">
+
+With small random values, for example in $[-0.7;\ 0.7]$ for standardized data (or taking the fan-in into account; Glorot and Bengio: uniform in $[-1/\sqrt{\text{fan-in}}, +1/\sqrt{\text{fan-in}}]$, biases at 0). Not all zero (the hidden deltas would be zero), not large (saturated sigmoids, derivatives almost zero), not all equal (the units would stay symmetric, that is, identical): randomness breaks the symmetry. Since the loss is not convex we try several initializations and report mean and variance.
+
+</Q>
+<Q q="Differences between on-line, batch and mini-batch.">
+
+Batch: the gradient is summed over the whole epoch and we update once; accurate estimate, higher $\eta$, slower. On-line: we update after every pattern; noisy gradient (zig-zag, it can get out of local minima, regularizing effect), a smaller $\eta$ and shuffling at every epoch are needed. Mini-batch: we update every $mb$ patterns ($1 < mb < l$); it is a compromise that exploits parallelism and the GPU memory, with a cost per update that does not depend on $l$.
+
+</Q>
+<Q q="Role of the learning rate; what is momentum and why does it work?">
+
+$\eta$ sets the speed/stability trade-off: high is fast but unstable or diverging, low is stable but slow. It is chosen by looking at the learning curve (rapid and smooth), dividing the gradient by $l$, and with mini-batch it is better to let it decrease over time. Momentum $\Delta\mathbf{w}_{new} = -\eta\nabla E + \alpha\Delta\mathbf{w}_{old}$ adds a fraction of the previous step (heavy ball): where the gradient keeps its sign the steps add up (up to a factor $1/(1-\alpha)$, faster on plateaus), where it changes sign they cancel out (it damps the oscillations in canyons), and it allows higher $\eta$.
+
+</Q>
+<Q q="Do we need to find the global minimum? Why?">
+
+No. We want to minimize the risk $R$, not $R_{emp}$: the global minimum of $R_{emp}$ is probably overfitting. Moreover the network is a hypothesis space of variable size: during training the effective VC-dim grows, so we must stop before overtraining. Often a good local minimum is enough, and we can stop even where the gradient is not zero.
+
+</Q>
+<Q q="How does overfitting show up in a neural network? What is early stopping?">
+
+We start from small weights (almost linear network, few effective parameters); with training the hidden units saturate and the effective complexity grows: the training error keeps going down while the validation error, after a minimum, goes back up. Early stopping halts training when the error on a validation set starts to rise (with patience and possible backtracking): stopping earlier is equivalent to limiting the effective complexity. It is empirical and sacrifices data for the validation set.
+
+</Q>
+<Q q="Write the loss with weight decay and the update rule with momentum.">
+
+$\text{Loss}(\mathbf{w}) = \sum_p (d_p - o(\mathbf{x}_p))^2 + \lambda\|\mathbf{w}\|^2$ (error on the data plus penalty on large weights; biases often excluded). Rule with independent hyperparameters: $\Delta w_{tu} = \eta\,\delta_t\,o_u + \alpha\,\Delta w^{old}_{tu}$, $w_{tu} \leftarrow w_{tu} + \Delta w_{tu} - \lambda w_{tu}$, with $\eta$ only on the error term (divided by $l$). Small $\lambda$, chosen in model selection; we report the error, not the loss.
+
+</Q>
+<Q q="Does regularization improve the stability of convergence?">
+
+No: regularization controls the complexity of the model (VC-dim, related to the number and the value of the weights), not the stability of the learning curve. An unstable curve is due to something else (learning rate too high, batches too small…).
+
+</Q>
+<Q q="Describe Cascade Correlation.">
+
+Constructive algorithm (Fahlman and Lebiere, 1990) that learns weights and number of units. We start from a network with no hidden units. A unit is added, connected to all the inputs and all the previous units (cascade), trained with gradient ascent to maximize the covariance $S$ between its output and the residual error. Its input weights are frozen and the output layer is retrained. We repeat until the stopping criterion. A pool of candidates is used to avoid local maxima; every unit becomes a permanent feature detector; it is greedy and can overfit.
+
+</Q>
+<Q q="How are input and output represented for regression and classification?">
+
+Input: standardization (mean 0, deviation 1) or rescaling to $[0,1]$; categorical ones with 1-of-K encoding (MONK: 17 inputs); careful with missing data (0 does not mean absent). Output: regression with linear outputs; classification with a sigmoid/tanh and a threshold (possible rejection zone) or 1-of-K, where the highest output wins; targets $0.9$/$0.1$ to avoid saturation; softmax for the class probabilities and cross-entropy as an alternative loss.
+
+</Q>
+</Exam>

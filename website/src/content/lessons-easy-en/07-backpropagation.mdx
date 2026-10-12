@@ -1,0 +1,287 @@
+import * as F from '../formulas/l07'
+import { BpNetwork, NonConvexSurface, Locality, BackpropFlow, NumericExample } from '../../widgets/l07/Backprop'
+
+<Lead>These notes contain the **complete derivation of the backpropagation algorithm** (“propagation backward”): the algorithm that solves the *credit assignment* problem in multi-layer networks, that is, understanding how much blame for the error each hidden unit has, as seen in [lecture 6](#/lezione/06/il-problema-del-credit-assignment). The professor insists on one point: **the derivation must be redone by yourself, not learned by heart**. Only in this way are you able to redo the calculation for different losses, activations or architectures, and this is the real goal. Implementing it in the project (writing it as a program) is the best way to understand it in depth.</Lead>
+
+References: Rumelhart, Hinton, Williams, *Parallel Distributed Processing* (1986), ch. 8; Mitchell, *Machine Learning*, ch. 4; Haykin, *Neural Networks*.
+
+## Tools from differential calculus
+
+Gradient descent requires [derivatives](#/prerequisiti/la-derivata) of composite functions, that is, of functions placed one inside the other. Three rules are needed:
+
+$$
+\frac{\partial f}{\partial x} = \frac{\partial f}{\partial g}\cdot\frac{\partial g}{\partial x} \quad \text{(chain rule)}, \qquad D[f(g(x))] = f'(g(x))\cdot g'(x), \qquad D[f\cdot g] = f'\cdot g + f\cdot g'.
+$$
+
+How to read them:
+
+- the first is the [chain rule](#/prerequisiti/la-regola-della-catena): if $f$ depends on $x$ through an intermediate step $g$, the derivative is the product of the derivatives of the two steps;
+- the second is the same rule written in another way ($D$ means “derivative of”): derivative of the outer function, times the derivative of the inner one;
+- the third is the derivative of a product: derivative of the first times the second, plus the first times the derivative of the second.
+
+The <T id="regola-della-catena">chain rule</T> is useful because it **breaks down** the calculation: it divides it into small pieces, highlights the ones that can be computed right away and does not make us lose the overall thread. A comparison: to know how much the shopping bill changes if the price of flour changes, we look at how much the price of flour changes the price of bread, and how much the price of bread changes the bill. Then we multiply.
+
+## The problem
+
+The basic architecture is a fully connected feedforward network (MLP). Different letters are used for the layers: $i$ for the input, $j$ for the hidden layer, $k$ for the output.
+
+<Figure n="7.1" title="The reference network" size="wide">
+  <BpNetwork />
+  <Caption>The reference network: inputs $i$ (the input patterns), hidden units $j$ (the internal representation units), output units $k$ with outputs $o_1, \dots, o_K$ compared with the targets $d_1, \dots, d_K$. The weights $w_{ji}$ and $w_{kj}$ are highlighted; click the units to choose others.</Caption>
+</Figure>
+
+<Callout type="definition" title="The backpropagation problem">
+
+Estimating the **contribution of the hidden units to the error** at the output, that is, how much of the final error depends on each hidden unit. This is done by computing the <T id="regola-delta-generalizzata">**generalized delta rule**</T>: the delta rule already seen, extended to all the units of the network.
+
+</Callout>
+
+The training set is $TR = \{(\mathbf{x}^1, \mathbf{d}^1), \dots, (\mathbf{x}^l, \mathbf{d}^l)\}$: $l$ pairs made of an input and its right answer (supervised learning). Every input unit $i$ loads the component $x_i$ of the pattern: $o_i = x_i$.
+
+The **total error** of the network on the training set is
+
+<Formula f={F.errP} />
+
+**In plain words.** For a pattern $p$ we look at every output unit $k$: we take the difference between the right answer $d_k$ and the given answer $o_k$, and square it. We add up the squares of all the $K$ outputs and divide by two: that is $E_p$. Then we add up the $E_p$ of all the patterns: that is $E_{tot}$. Example with two outputs: targets $(1, 0)$ and outputs $(0.8;\ 0.3)$ give $E_p = \frac12\,(0.2^2 + 0.3^2) = \frac12 \cdot 0.13 = 0.065$.
+
+Here $E_p$ is the error on pattern $p$ computed over all the $K$ output units. (The factor $\frac{1}{2}$ only serves to simplify the derivative: when we differentiate the square a 2 comes out, which cancels with $\frac12$.) To lighten the writing, from now on the index $p$ is not written: $o_k$ stands for $o_k(\mathbf{x}_p)$ and $d_k$ for $d_{p,k}$.
+
+**Goal**: to find the weights $\mathbf{w}$ that minimize $E_{tot}$ (for now only the term on the data, with no regularization). It is still a least squares (LMS) minimization. **Idea**: go down along the surface of $E_{tot}$ following the [gradient](#/prerequisiti/derivate-parziali-e-gradiente), like someone who walks down a mountain always going in the direction in which the ground drops the most.
+
+<Figure n="7.2" title="A non-convex error landscape" size="wide">
+  <NonConvexSurface />
+  <Caption>A landscape of $E_{tot}$ in the space of two weights: following $-\nabla E$ (green) from the point $Z$ one reaches a minimum $Z_{min}$. Unlike the linear model, the surface is not convex: from different starting points one arrives at different minima. Drag $Z$ and let the point descend.</Caption>
+</Figure>
+
+## The iterative algorithm
+
+“Iterative” means: the same steps are repeated many times. We compute the loss, compute its gradient, update all the weights; we repeat until convergence (when the error no longer goes down) or until another stopping criterion.
+
+<Callout type="abstract" title="Algorithm 1 — Backpropagation">
+
+Initialize all the weights $\mathbf{w}$ of the network and $\eta$.
+Compute the outputs of the units and $E_{tot}$.
+**While** $E_{tot} > \epsilon$ (that is, as long as the error is above a chosen threshold, or another criterion):
+
+- for every $w \in \mathbf{w}$: $\Delta w = -\dfrac{\partial E_{tot}}{\partial w}$ **(step 1)**;
+- $w_{new} = w + \eta\,\Delta w + \dots$ **(step 2)**;
+- recompute the outputs and $E_{tot}$.
+
+</Callout>
+
+There are the stochastic version (on-line: we update after every pattern) and the batch version (we update after seeing all the patterns). Two aspects must be distinguished:
+
+1. the **computation of the gradient** $\partial E_{tot}/\partial w$, for every weight of the network: this is what <T id="backpropagation">backpropagation</T> does;
+2. the **update rule** for the weights, that is, how the gradient is used once it has been computed: standard backprop, Quickprop, R-prop, …
+
+We focus on step 1:
+
+$$
+\Delta w = -\frac{\partial E_{tot}}{\partial w} = -\sum_p \frac{\partial E_p}{\partial w} \overset{def}{=} \sum_p \Delta_p w.
+$$
+
+That is: the total error is a sum over the patterns, so its derivative too is the sum of the derivatives of the single patterns. We call $\Delta_p w$ the contribution of pattern $p$ (the word “def” above the equals sign means “by definition”). So it is enough to know how to do the calculation for one pattern only.
+
+## The derivation
+
+### The gradient for a generic weight
+
+Consider any weight $w_{tu}$: it connects the input coming from a generic unit $u$ (which can be $i$ or $j$) to the generic unit $t$. Let us recall how a unit works:
+
+$$
+net_t = \sum_s w_{ts}\,o_s, \qquad o_t = f_t(net_t),
+$$
+
+that is, first it takes the weighted sum of its inputs (the net), then it passes it through the activation function. The weight $w_{tu}$ acts on the error only through $net_t$. So we apply the chain rule going through $net_t$:
+
+<Formula f={F.generic} />
+
+**In plain words.** The change of the weight is the product of two pieces. The first, $\delta_t$, says how sensitive the error is to the net of unit $t$ (how much “blame” the unit has). The second, $o_u$, is the input that goes through that connection. Large blame and large input: large correction. If the input is zero, that weight did not contribute and is not touched.
+
+Why is the second piece equal to $o_u$? Because $\frac{\partial net_t}{\partial w_{tu}} = \frac{\partial \sum_s w_{ts} o_s}{\partial w_{tu}} = o_u$: all the terms of the sum are constant with respect to $w_{tu}$ (they do not contain it) except the one with $s = u$, which is $w_{tu}\,o_u$ and has derivative $o_u$. (The $o_s$ are the inputs of unit $t$.)
+
+We have defined the <T id="delta-unita">**delta of unit $t$**</T>:
+
+$$
+\delta_t = -\frac{\partial E_p}{\partial net_t}.
+$$
+
+Let us expand it again with the chain rule, this time going through $o_t = f_t(net_t)$. The net changes the output, and the output changes the error:
+
+$$
+\delta_t = -\frac{\partial E_p}{\partial net_t} = -\frac{\partial E_p}{\partial o_t}\cdot\frac{\partial o_t}{\partial net_t} = -\frac{\partial E_p}{\partial o_t}\cdot f'_t(net_t).
+$$
+
+The second factor is simply the derivative of the activation function. What remains is to compute the first one, $-\frac{\partial E_p}{\partial o_t}$, and here two cases are distinguished: $t$ is an **output unit** $k$, or a **hidden unit** $j$.
+
+### Case 1: output unit ($t = k$)
+
+This is the easy case: the output $o_k$ appears directly inside $E_p$.
+
+$$
+-\frac{\partial E_p}{\partial o_k} = -\frac{\partial\,\frac{1}{2}\sum_{r=1}^{K}(d_r - o_r)^2}{\partial o_k} = (d_k - o_k),
+$$
+
+because only the term $r = k$ depends on $o_k$ (the others have derivative zero), and its derivative is $\frac{1}{2}\cdot 2(d_k - o_k)\cdot(-1)$. The $\frac12$ and the 2 cancel; the $-1$ comes from the derivative of $-o_k$ and disappears with the minus sign in front. Hence:
+
+<Formula f={F.deltaOut} />
+
+**In plain words.** The delta of an output unit is the error (right answer minus given answer) multiplied by the derivative of its activation function.
+
+It is exactly the delta already seen for the [single sigmoidal unit](#/lezione/06/lms-con-ununità-sigmoidale): the error can be measured directly because we know the target.
+
+### Case 2: hidden unit ($t = j$)
+
+For a hidden unit there is no target: $o_j$ does not appear directly in $E_p$. However, $o_j$ affects $E_p$ **through all the output units** it is connected to: every $net_k$ depends on $o_j$. When a quantity acts on the error along several paths, the chain rule says to add up the contributions of all the paths. Here the paths are the $K$ output units:
+
+$$
+-\frac{\partial E_p}{\partial o_j} = \sum_{k=1}^{K}\underbrace{-\frac{\partial E_p}{\partial net_k}}_{\delta_k}\cdot\frac{\partial net_k}{\partial o_j} = \sum_{k=1}^{K}\delta_k\, w_{kj},
+$$
+
+since $\frac{\partial net_k}{\partial o_j} = \frac{\partial \sum_s w_{ks}\,o_s}{\partial o_j} = w_{kj}$ (in the sum only the term $w_{kj}\,o_j$ contains $o_j$). Hence:
+
+<Formula f={F.deltaHidden} />
+
+**In plain words.** To find the blame of a hidden unit $j$ we look at the output units to which it sends its signal. We take the delta of each one, multiply it by the weight of the connection that joins them, and add everything up. Then we multiply by the derivative of the activation function of unit $j$.
+
+<Callout type="tip" title="The crucial point">
+
+The term $-\frac{\partial E_p}{\partial net_k}$ **has already been computed**: it is $\delta_k$! The delta of a hidden unit is therefore obtained by **propagating backward** the deltas of the output units, weighted with the same weights $w_{kj}$ used in the forward propagation. Hence the name **back-propagation**: the error “climbs back up” the network, from the output toward the input. This solves credit assignment: the “blame” of a hidden unit is the sum of the blames of the units it contributes to, weighted by how much it contributes.
+
+</Callout>
+
+<Figure n="7.3" title="The graph of the network localizes the computation">
+  <Locality />
+  <Caption>Using the graph of the network to localize the computation: the input unit $i$ is connected with weight $w_{ji}$ to the hidden unit $j$, which produces $o_j$ and is connected with weight $w_{kj}$ to the output unit $k$. Each term involves only adjacent units and weights: choose a computation to see which ones.</Caption>
+</Figure>
+
+Some remarks on case 2:
+
+- it expresses the change of $E_p$ taking into account **all** the output units $o_k$;
+- every $o_k$ (and $net_k$) depends on $o_j$: this is why the sum over $k$ appears;
+- the same result can be obtained directly from the definition of $E_p$ (as an exercise), but this form teaches more because it shows the flow of the partial derivatives **on the network**.
+
+<Deep title="The exercise: case 2 directly from the definition of E_p" kind="dimostrazione">
+
+Write $E_p = \frac12\sum_k \big(d_k - f_k(net_k)\big)^2$ with $net_k = \sum_s w_{ks}\,o_s$. The only place where $o_j$ appears is inside the $net_k$. So we differentiate one term at a time: derivative of the square, times the derivative of $f_k$, times the derivative of $net_k$ with respect to $o_j$ (which is $w_{kj}$):
+
+$$
+\frac{\partial E_p}{\partial o_j} = \sum_k (d_k - o_k)\cdot\big(-f'_k(net_k)\big)\cdot w_{kj} = -\sum_k \underbrace{(d_k - o_k)\,f'_k(net_k)}_{\delta_k}\, w_{kj}.
+$$
+
+Changing sign and multiplying by $f'_j(net_j)$ we find again $\delta_j = \left(\sum_k \delta_k w_{kj}\right)f'_j(net_j)$: same result, but without noticing that $\delta_k$ was already available.
+
+</Deep>
+
+## Summary of the formulas
+
+For two layers we have derived:
+
+$$
+\Delta_p w_{tu} = \delta_t\cdot o_u,
+$$
+
+where $\delta_t$ is the **error signal** available at unit $t$ and $o_u$ is the input that reaches $t$ from $u$ (through the connection $w_{tu}$). In particular:
+
+| Weight | Update | Delta |
+|---|---|---|
+| $w_{kj}$ (hidden → output) | $\Delta_p w_{kj} = \delta_k\cdot o_j$ | $\delta_k = (d_k - o_k)\,f'_k(net_k)$ |
+| $w_{ji}$ (input → hidden) | $\Delta_p w_{ji} = \delta_j\cdot o_i$ | $\delta_j = \left(\sum_{k}\delta_k\,w_{kj}\right) f'_j(net_j)$ |
+
+The form is always the same: delta of the receiving unit, times the input that goes through the connection. Only the way of computing the delta changes.
+
+<Figure n="7.4" title="Backpropagation of the deltas" size="wide">
+  <BackpropFlow />
+  <Caption>Backpropagation of the deltas: the influence of the hidden unit $j$ on $E_{tot}$ is computed from the $\delta_k$ of the upper layer and from the weights $w_{kj}$ (dashed red arrows pointing downward). Here a 2-3-2 network with logistic units and a single pattern: advance phase by phase through the training cycle (values $o$ below the nodes, deltas in the dashed red circles).</Caption>
+</Figure>
+
+### Generalization to $m$ hidden layers
+
+The derivation holds for **any number of hidden layers**. The deltas do not come only from the output layer, but from any upper layer $h$ the unit is connected to. In general, **the deltas come from all the units the current unit is connected to** (its “successors”, that is, the units that receive its signal):
+
+$$
+\delta_j = \left(\sum_{h \in \text{successors}(j)}\delta_h\,w_{hj}\right) f'_j(net_j).
+$$
+
+The update rule for every pattern (without writing $p$) is
+
+<Formula f={F.update} />
+
+**In plain words.** The new weight is the old weight plus a correction. The correction is the product of three numbers: the learning rate $\eta$ (how long the step is), the delta of the receiving unit and the input that goes through the connection.
+
+Using $\Delta_p w$ after every pattern gives the **on-line** version; for the **batch** version the contributions of all the patterns are added up before updating.
+
+## The complete training cycle
+
+1. **Forward computation**: the outputs of all the units are computed, layer by layer, from the input toward the output.
+2. Computation of the **errors and of the deltas in the output layer**.
+3. **Backward propagation** of the deltas from the output layer to the hidden layers.
+4. **Update of the weights**.
+5. Start again, until the stopping criterion.
+
+<Callout type="warning" title="Do not forget the biases">
+
+Computation and update must also be applied to the **biases** of all the units. We use the usual trick: the first component of the input of every unit is 1, and the bias is the weight $w_{t0}$ attached to that input. Hence $\Delta w_{t0} = \delta_t \cdot 1$.
+
+</Callout>
+
+## Properties and interpretation
+
+- **Only local computations**: every unit directly uses only nearby information (the units just below and just above), not distant layers; the rest arrives indirectly through the flow of the deltas. In other words: even though the computation is local, changing a weight has a **global effect** on the network. How much does each $w_{tu}$ affect the global error? This complex effect has been **broken down** into simple pieces through the deltas local to each unit.
+- **View as a diffusion process**: backpropagation is a local propagation in space and time, from the “parents” of the unit to the unit and from the unit to its “children”, like a signal that spreads step after step.
+- **Efficiency — the “magic factorization”**: the delta $\delta_t$ of every unit is computed **only once** and reused for **all** its weights $w_{tu}$ (<T id="fattorizzazione-delta">factorization of the deltas</T>). The cost is therefore proportional to the **number of weights**, not to its square. With models of billions of weights the difference is huge: $10^9$ against $(10^9)^2 = 10^{18}$ operations, which would be infeasible.
+
+<Callout type="tip" title="Three levels of reading of the derivation">
+
+1. The single **mathematical steps**.
+2. The **interpretation** of the local changes of one quantity with respect to the others (the meaning of the partial derivatives: “if I change this a little, how much does that change?”).
+3. The **overall picture**: the decomposition serves to find the delta values of every level, breaking down the error **on the network** in front of us.
+
+</Callout>
+
+<Callout type="warning" title="Correct terminology">
+
+We do not say “backprop network”: the neural network is the **model**. Backpropagation is a **training algorithm** based on the backward propagation of the errors, that is, on the direct computation of the gradient through the network.
+
+</Callout>
+
+<Callout type="example" title="Numerical example (to check understanding)">
+
+Network with one input $x = 1$, one sigmoidal hidden unit and one linear output unit, with no bias; weights $w_{ji} = 0.5$, $w_{kj} = 1$, target $d = 1$, $\eta = 0.1$. Here $\sigma$ is the logistic sigmoid.
+
+- Forward: $net_j = 0.5$ (weight times input: $0.5 \cdot 1$), $o_j = \sigma(0.5) \approx 0.622$; $o_k = 1 \cdot 0.622 = 0.622$ (the output is linear, so it is equal to its net).
+- Output delta (linear, $f' = 1$): $\delta_k = (1 - 0.622)\cdot 1 = 0.378$. It is the error: target minus output.
+- Hidden delta: $\delta_j = (\delta_k w_{kj})\,\sigma'(net_j) = 0.378 \cdot 0.622 \cdot (1 - 0.622) \approx 0.089$. We used $\sigma' = \sigma(1 - \sigma)$, that is, $0.622 \cdot 0.378 \approx 0.235$.
+- Updates: $\Delta w_{kj} = \eta\,\delta_k\,o_j \approx 0.1 \cdot 0.378 \cdot 0.622 \approx 0.0235$; $\Delta w_{ji} = \eta\,\delta_j\,x \approx 0.0089$.
+
+Both weights increase, making the output grow toward the target: the output was $0.622$ and had to be 1, so it had to be raised.
+
+</Callout>
+
+<Figure n="7.5" title="The numerical example, step by step" size="wide">
+  <NumericExample />
+  <Caption>The numerical example of the notes computed live: forward, output delta, hidden delta and updates. Change the values to redo the calculations in other cases, or apply the update several times and watch the output approach the target.</Caption>
+</Figure>
+
+<Exam>
+<Q q="Derive backpropagation for a two-layer MLP with squared error.">
+
+$E_p = \frac12\sum_k (d_k - o_k)^2$. For a generic weight, with the chain rule through $net_t = \sum_s w_{ts}o_s$: $\Delta_p w_{tu} = -\partial E_p/\partial w_{tu} = \delta_t\,o_u$ with $\delta_t = -\partial E_p/\partial net_t = -\frac{\partial E_p}{\partial o_t}f'_t(net_t)$. Output: $-\partial E_p/\partial o_k = d_k - o_k$, hence $\delta_k = (d_k - o_k)f'_k(net_k)$. Hidden: $o_j$ affects all the $net_k$, so we sum over all the outputs, $-\partial E_p/\partial o_j = \sum_k \delta_k w_{kj}$, and $\delta_j = (\sum_k \delta_k w_{kj})f'_j(net_j)$. Update $w_{tu} \leftarrow w_{tu} + \eta\delta_t o_u$ (bias with $o_0 = 1$), on-line or summing over the patterns (batch).
+
+</Q>
+<Q q="What is $\delta_t$? How is it computed for an output unit and for a hidden unit?">
+
+$\delta_t = -\partial E_p/\partial net_t$, the error signal of unit $t$: it says how much the error changes when its net input changes. Output: $\delta_k = (d_k - o_k)f'_k(net_k)$, which can be measured because the target is known. Hidden: $\delta_j = (\sum_k \delta_k w_{kj})f'_j(net_j)$, obtained by propagating backward the deltas of the upper layer with the same weights used forward.
+
+</Q>
+<Q q="Why does backpropagation have a cost linear in the number of weights?">
+
+Because of the factorization of the deltas: every $\delta_t$ is computed only once (with a backward pass that costs as much as the forward one) and is reused for all the incoming weights $w_{tu}$, each of which requires only the product $\delta_t o_u$. The total is $O(\#W)$ instead of $O(\#W^2)$: with $10^9$ weights, $10^9$ operations against $10^{18}$.
+
+</Q>
+<Q q="How does the derivation change with a different loss or with more hidden layers?">
+
+With a different loss only the term $-\partial E_p/\partial o_k$ in the delta of the outputs changes (for the squared error it is $d_k - o_k$); with a different activation $f'$ changes. The rest (the form $\Delta w_{tu} = \delta_t o_u$ and the backward propagation) stays the same. With more hidden layers every unit collects the deltas of all its successors: $\delta_j = (\sum_{h \in \text{succ}(j)} \delta_h w_{hj})f'_j(net_j)$, computed from the output layer downward.
+
+</Q>
+</Exam>

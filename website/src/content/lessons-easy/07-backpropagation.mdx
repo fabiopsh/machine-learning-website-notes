@@ -1,0 +1,287 @@
+import * as F from '../formulas/l07'
+import { BpNetwork, NonConvexSurface, Locality, BackpropFlow, NumericExample } from '../../widgets/l07/Backprop'
+
+<Lead>Queste note contengono la **derivazione completa dell’algoritmo di backpropagation** («propagazione all’indietro»): l’algoritmo che risolve il problema del *credit assignment* nelle reti a più strati, cioè capire quanta colpa dell’errore ha ogni unità nascosta, come visto nella [lezione 6](#/lezione/06/il-problema-del-credit-assignment). Il professore insiste su un punto: **la derivazione va rifatta da sé, non imparata a memoria**. Solo così si è capaci di rifare il calcolo per loss, attivazioni o architetture diverse, ed è questo il vero obiettivo. Implementarla nel progetto (scriverla come programma) è il modo migliore per capirla a fondo.</Lead>
+
+Riferimenti: Rumelhart, Hinton, Williams, *Parallel Distributed Processing* (1986), cap. 8; Mitchell, *Machine Learning*, cap. 4; Haykin, *Neural Networks*.
+
+## Strumenti di calcolo differenziale
+
+La discesa del gradiente richiede [derivate](#/prerequisiti/la-derivata) di funzioni composte, cioè di funzioni messe una dentro l’altra. Servono tre regole:
+
+$$
+\frac{\partial f}{\partial x} = \frac{\partial f}{\partial g}\cdot\frac{\partial g}{\partial x} \quad \text{(regola della catena)}, \qquad D[f(g(x))] = f'(g(x))\cdot g'(x), \qquad D[f\cdot g] = f'\cdot g + f\cdot g'.
+$$
+
+Come si leggono:
+
+- la prima è la [regola della catena](#/prerequisiti/la-regola-della-catena): se $f$ dipende da $x$ attraverso un passaggio intermedio $g$, la derivata è il prodotto delle derivate dei due passaggi;
+- la seconda è la stessa regola scritta in un altro modo ($D$ vuol dire «derivata di»): derivata della funzione esterna, per la derivata di quella interna;
+- la terza è la derivata di un prodotto: derivata del primo per il secondo, più il primo per la derivata del secondo.
+
+La <T id="regola-della-catena">regola della catena</T> è utile perché **scompone** il calcolo: lo divide in pezzi piccoli, mette in evidenza quelli che si possono calcolare subito e non fa perdere il filo generale. Un paragone: per sapere quanto cambia il conto della spesa se cambia il prezzo della farina, si guarda quanto il prezzo della farina cambia il prezzo del pane, e quanto il prezzo del pane cambia il conto. Poi si moltiplica.
+
+## Il problema
+
+L’architettura di base è una rete feedforward completamente connessa (MLP). Si usano lettere diverse per gli strati: $i$ per l’input, $j$ per lo strato nascosto, $k$ per l’uscita.
+
+<Figure n="7.1" title="La rete di riferimento" size="wide">
+  <BpNetwork />
+  <Caption>La rete di riferimento: input $i$ (i pattern in ingresso), unità nascoste $j$ (le unità di rappresentazione interna), unità di uscita $k$ con uscite $o_1, \dots, o_K$ confrontate con i target $d_1, \dots, d_K$. In evidenza i pesi $w_{ji}$ e $w_{kj}$; clicca le unità per sceglierne altre.</Caption>
+</Figure>
+
+<Callout type="definition" title="Il problema della backpropagation">
+
+Stimare il **contributo delle unità nascoste all’errore** in uscita, cioè quanta parte dell’errore finale dipende da ciascuna unità nascosta. Lo si fa calcolando la <T id="regola-delta-generalizzata">**regola delta generalizzata**</T> (*Generalized Delta Rule*): la delta rule già vista, estesa a tutte le unità della rete.
+
+</Callout>
+
+Il training set è $TR = \{(\mathbf{x}^1, \mathbf{d}^1), \dots, (\mathbf{x}^l, \mathbf{d}^l)\}$: $l$ coppie fatte di un input e della sua risposta giusta (apprendimento supervisionato). Ogni unità di input $i$ carica la componente $x_i$ del pattern: $o_i = x_i$.
+
+L’**errore totale** della rete sul training set è
+
+<Formula f={F.errP} />
+
+**In parole semplici.** Per un pattern $p$ si guarda ogni unità di uscita $k$: si fa la differenza tra la risposta giusta $d_k$ e la risposta data $o_k$, e la si eleva al quadrato. Si sommano i quadrati di tutte le $K$ uscite e si divide per due: è $E_p$. Poi si sommano gli $E_p$ di tutti i pattern: è $E_{tot}$. Esempio con due uscite: target $(1, 0)$ e uscite $(0{,}8;\ 0{,}3)$ danno $E_p = \frac12\,(0{,}2^2 + 0{,}3^2) = \frac12 \cdot 0{,}13 = 0{,}065$.
+
+Qui $E_p$ è l’errore sul pattern $p$ calcolato su tutte le $K$ unità di uscita. (Il fattore $\frac{1}{2}$ serve solo a semplificare la derivata: quando si deriva il quadrato esce un 2, che si cancella con $\frac12$.) Per alleggerire la scrittura, d’ora in poi l’indice $p$ non viene scritto: $o_k$ sta per $o_k(\mathbf{x}_p)$ e $d_k$ per $d_{p,k}$.
+
+**Obiettivo**: trovare i pesi $\mathbf{w}$ che rendono minimo $E_{tot}$ (per ora solo il termine sui dati, senza regolarizzazione). È ancora una minimizzazione ai minimi quadrati (LMS). **Idea**: scendere lungo la superficie di $E_{tot}$ seguendo il [gradiente](#/prerequisiti/derivate-parziali-e-gradiente), come chi scende da una montagna andando sempre nella direzione in cui il terreno scende di più.
+
+<Figure n="7.2" title="Un paesaggio d’errore non convesso" size="wide">
+  <NonConvexSurface />
+  <Caption>Un paesaggio di $E_{tot}$ nello spazio di due pesi: seguendo $-\nabla E$ (verde) dal punto $Z$ si raggiunge un minimo $Z_{min}$. A differenza del modello lineare, la superficie non è convessa: da punti di partenza diversi si arriva a minimi diversi. Trascina $Z$ e fai scendere il punto.</Caption>
+</Figure>
+
+## L’algoritmo iterativo
+
+«Iterativo» vuol dire: si ripetono gli stessi passi tante volte. Si calcola la loss, se ne calcola il gradiente, si aggiornano tutti i pesi; si ripete fino a convergenza (quando l’errore non scende più) o fino a un altro criterio di arresto.
+
+<Callout type="abstract" title="Algoritmo 1 — Backpropagation">
+
+Inizializzare tutti i pesi $\mathbf{w}$ della rete e $\eta$.
+Calcolare le uscite delle unità ed $E_{tot}$.
+**Finché** $E_{tot} > \epsilon$ (cioè finché l’errore è sopra una soglia scelta, o altro criterio):
+
+- per ogni $w \in \mathbf{w}$: $\Delta w = -\dfrac{\partial E_{tot}}{\partial w}$ **(passo 1)**;
+- $w_{new} = w + \eta\,\Delta w + \dots$ **(passo 2)**;
+- ricalcolare le uscite ed $E_{tot}$.
+
+</Callout>
+
+Esistono le versioni stocastica (on-line: si aggiorna dopo ogni pattern) e batch (si aggiorna dopo aver visto tutti i pattern). Bisogna distinguere due aspetti:
+
+1. il **calcolo del gradiente** $\partial E_{tot}/\partial w$, per ogni peso della rete: è ciò che fa la <T id="backpropagation">backpropagation</T>;
+2. la **regola di aggiornamento** dei pesi, cioè come si usa il gradiente una volta calcolato: backprop standard, Quickprop, R-prop, …
+
+Ci concentriamo sul passo 1:
+
+$$
+\Delta w = -\frac{\partial E_{tot}}{\partial w} = -\sum_p \frac{\partial E_p}{\partial w} \overset{def}{=} \sum_p \Delta_p w.
+$$
+
+Cioè: l’errore totale è una somma sui pattern, quindi anche la sua derivata è la somma delle derivate dei singoli pattern. Chiamiamo $\Delta_p w$ il contributo del pattern $p$ (la scritta «def» sopra l’uguale vuol dire «per definizione»). Basta quindi saper fare il conto per un pattern solo.
+
+## La derivazione
+
+### Il gradiente per un peso generico
+
+Consideriamo un peso qualsiasi $w_{tu}$: collega l’input che arriva da un’unità generica $u$ (che può essere $i$ o $j$) all’unità generica $t$. Ricordiamo come lavora un’unità:
+
+$$
+net_t = \sum_s w_{ts}\,o_s, \qquad o_t = f_t(net_t),
+$$
+
+cioè prima fa la somma pesata dei suoi input (il net), poi la passa nella funzione di attivazione. Il peso $w_{tu}$ agisce sull’errore solo attraverso $net_t$. Applichiamo quindi la regola della catena passando per $net_t$:
+
+<Formula f={F.generic} />
+
+**In parole semplici.** La variazione del peso è il prodotto di due pezzi. Il primo, $\delta_t$, dice quanto l’errore è sensibile al net dell’unità $t$ (quanta «colpa» ha l’unità). Il secondo, $o_u$, è l’input che passa per quella connessione. Colpa grande e input grande: correzione grande. Se l’input è zero, quel peso non ha contribuito e non viene toccato.
+
+Perché il secondo pezzo vale $o_u$? Perché $\frac{\partial net_t}{\partial w_{tu}} = \frac{\partial \sum_s w_{ts} o_s}{\partial w_{tu}} = o_u$: tutti i termini della somma sono costanti rispetto a $w_{tu}$ (non lo contengono) tranne quello con $s = u$, che è $w_{tu}\,o_u$ e ha derivata $o_u$. (Gli $o_s$ sono gli input dell’unità $t$.)
+
+Abbiamo definito il <T id="delta-unita">**delta dell’unità $t$**</T>:
+
+$$
+\delta_t = -\frac{\partial E_p}{\partial net_t}.
+$$
+
+Espandiamolo ancora con la regola della catena, passando questa volta per $o_t = f_t(net_t)$. Il net cambia l’uscita, e l’uscita cambia l’errore:
+
+$$
+\delta_t = -\frac{\partial E_p}{\partial net_t} = -\frac{\partial E_p}{\partial o_t}\cdot\frac{\partial o_t}{\partial net_t} = -\frac{\partial E_p}{\partial o_t}\cdot f'_t(net_t).
+$$
+
+Il secondo fattore è semplicemente la derivata della funzione di attivazione. Resta da calcolare il primo, $-\frac{\partial E_p}{\partial o_t}$, e qui si distinguono due casi: $t$ è un’**unità di uscita** $k$, oppure un’**unità nascosta** $j$.
+
+### Caso 1: unità di uscita ($t = k$)
+
+È il caso facile: l’uscita $o_k$ compare direttamente dentro $E_p$.
+
+$$
+-\frac{\partial E_p}{\partial o_k} = -\frac{\partial\,\frac{1}{2}\sum_{r=1}^{K}(d_r - o_r)^2}{\partial o_k} = (d_k - o_k),
+$$
+
+perché solo il termine $r = k$ dipende da $o_k$ (gli altri hanno derivata zero), e la sua derivata è $\frac{1}{2}\cdot 2(d_k - o_k)\cdot(-1)$. Il $\frac12$ e il 2 si cancellano; il $-1$ viene dalla derivata di $-o_k$ e sparisce con il segno meno davanti. Quindi:
+
+<Formula f={F.deltaOut} />
+
+**In parole semplici.** Il delta di un’unità di uscita è l’errore (risposta giusta meno risposta data) moltiplicato per la derivata della sua funzione di attivazione.
+
+È esattamente il delta già visto per la [singola unità sigmoidale](#/lezione/06/lms-con-ununità-sigmoidale): l’errore si può misurare direttamente perché conosciamo il target.
+
+### Caso 2: unità nascosta ($t = j$)
+
+Per un’unità nascosta non c’è un target: $o_j$ non compare direttamente in $E_p$. Però $o_j$ influenza $E_p$ **attraverso tutte le unità di uscita** a cui è collegata: ogni $net_k$ dipende da $o_j$. Quando una quantità agisce sull’errore per più strade, la regola della catena dice di sommare i contributi di tutte le strade. Qui le strade sono le $K$ unità di uscita:
+
+$$
+-\frac{\partial E_p}{\partial o_j} = \sum_{k=1}^{K}\underbrace{-\frac{\partial E_p}{\partial net_k}}_{\delta_k}\cdot\frac{\partial net_k}{\partial o_j} = \sum_{k=1}^{K}\delta_k\, w_{kj},
+$$
+
+poiché $\frac{\partial net_k}{\partial o_j} = \frac{\partial \sum_s w_{ks}\,o_s}{\partial o_j} = w_{kj}$ (nella somma solo il termine $w_{kj}\,o_j$ contiene $o_j$). Quindi:
+
+<Formula f={F.deltaHidden} />
+
+**In parole semplici.** Per trovare la colpa di un’unità nascosta $j$ si guardano le unità di uscita a cui manda il suo segnale. Si prende il delta di ciascuna, lo si moltiplica per il peso della connessione che le collega, e si somma tutto. Poi si moltiplica per la derivata della funzione di attivazione dell’unità $j$.
+
+<Callout type="tip" title="Il punto cruciale">
+
+Il termine $-\frac{\partial E_p}{\partial net_k}$ **lo abbiamo già calcolato**: è $\delta_k$! Il delta di un’unità nascosta si ottiene quindi **propagando all’indietro** i delta delle unità di uscita, pesati con gli stessi pesi $w_{kj}$ usati nella propagazione in avanti. Da qui il nome **back-propagation**: l’errore «risale» la rete, dall’uscita verso l’input. Questo risolve il credit assignment: la «colpa» di un’unità nascosta è la somma delle colpe delle unità a cui contribuisce, pesata da quanto contribuisce.
+
+</Callout>
+
+<Figure n="7.3" title="Il grafo della rete localizza il calcolo">
+  <Locality />
+  <Caption>Usare il grafo della rete per localizzare il calcolo: l’unità di input $i$ è collegata con peso $w_{ji}$ all’unità nascosta $j$, che produce $o_j$ e si collega con peso $w_{kj}$ all’unità di uscita $k$. Ogni termine coinvolge solo unità e pesi adiacenti: scegli un calcolo per vedere quali.</Caption>
+</Figure>
+
+Alcune osservazioni sul caso 2:
+
+- esprime la variazione di $E_p$ tenendo conto di **tutte** le unità di uscita $o_k$;
+- ogni $o_k$ (e $net_k$) dipende da $o_j$: per questo compare la somma su $k$;
+- lo stesso risultato si può ottenere direttamente dalla definizione di $E_p$ (per esercizio), ma questa forma insegna di più perché mostra il flusso delle derivate parziali **sulla rete**.
+
+<Deep title="L’esercizio: il caso 2 direttamente dalla definizione di E_p" kind="dimostrazione">
+
+Scriviamo $E_p = \frac12\sum_k \big(d_k - f_k(net_k)\big)^2$ con $net_k = \sum_s w_{ks}\,o_s$. L’unico posto in cui compare $o_j$ è dentro i $net_k$. Deriviamo quindi un termine alla volta: derivata del quadrato, per la derivata di $f_k$, per la derivata di $net_k$ rispetto a $o_j$ (che è $w_{kj}$):
+
+$$
+\frac{\partial E_p}{\partial o_j} = \sum_k (d_k - o_k)\cdot\big(-f'_k(net_k)\big)\cdot w_{kj} = -\sum_k \underbrace{(d_k - o_k)\,f'_k(net_k)}_{\delta_k}\, w_{kj}.
+$$
+
+Cambiando segno e moltiplicando per $f'_j(net_j)$ si ritrova $\delta_j = \left(\sum_k \delta_k w_{kj}\right)f'_j(net_j)$: stesso risultato, ma senza accorgersi che $\delta_k$ era già disponibile.
+
+</Deep>
+
+## Sintesi delle formule
+
+Per due strati abbiamo ricavato:
+
+$$
+\Delta_p w_{tu} = \delta_t\cdot o_u,
+$$
+
+dove $\delta_t$ è il **segnale d’errore** disponibile all’unità $t$ e $o_u$ è l’input che arriva a $t$ da $u$ (attraverso la connessione $w_{tu}$). In particolare:
+
+| Peso | Aggiornamento | Delta |
+|---|---|---|
+| $w_{kj}$ (nascosta → uscita) | $\Delta_p w_{kj} = \delta_k\cdot o_j$ | $\delta_k = (d_k - o_k)\,f'_k(net_k)$ |
+| $w_{ji}$ (input → nascosta) | $\Delta_p w_{ji} = \delta_j\cdot o_i$ | $\delta_j = \left(\sum_{k}\delta_k\,w_{kj}\right) f'_j(net_j)$ |
+
+La forma è sempre la stessa: delta dell’unità che riceve, per input che passa dalla connessione. Cambia solo il modo di calcolare il delta.
+
+<Figure n="7.4" title="Retropropagazione dei delta" size="wide">
+  <BackpropFlow />
+  <Caption>Retropropagazione dei delta: l’influenza dell’unità nascosta $j$ su $E_{tot}$ si calcola dai $\delta_k$ dello strato superiore e dai pesi $w_{kj}$ (frecce rosse tratteggiate verso il basso). Qui una rete 2-3-2 con unità logistiche e un solo pattern: avanza fase per fase nel ciclo di addestramento (valori $o$ sotto i nodi, delta nei cerchi rossi tratteggiati).</Caption>
+</Figure>
+
+### Generalizzazione a $m$ strati nascosti
+
+La derivazione vale per **qualsiasi numero di strati nascosti**. I delta non arrivano solo dallo strato di uscita, ma da qualsiasi strato superiore $h$ a cui l’unità è collegata. In generale, **i delta arrivano da tutte le unità a cui l’unità corrente è connessa** (i suoi «successori», cioè le unità che ricevono il suo segnale):
+
+$$
+\delta_j = \left(\sum_{h \in \text{successori}(j)}\delta_h\,w_{hj}\right) f'_j(net_j).
+$$
+
+La regola di aggiornamento per ogni pattern (senza scrivere $p$) è
+
+<Formula f={F.update} />
+
+**In parole semplici.** Il nuovo peso è il vecchio peso più una correzione. La correzione è il prodotto di tre numeri: il learning rate $\eta$ (quanto è lungo il passo), il delta dell’unità che riceve e l’input che passa dalla connessione.
+
+Usando $\Delta_p w$ dopo ogni pattern si ottiene la versione **on-line**; per la versione **batch** si sommano i contributi di tutti i pattern prima di aggiornare.
+
+## Il ciclo di addestramento completo
+
+1. **Calcolo in avanti** (*forward*): si calcolano le uscite di tutte le unità, strato per strato, dall’input verso l’uscita.
+2. Calcolo degli **errori e dei delta nello strato di uscita**.
+3. **Propagazione all’indietro** dei delta dallo strato di uscita agli strati nascosti.
+4. **Aggiornamento dei pesi**.
+5. Si ricomincia, fino al criterio di arresto.
+
+<Callout type="warning" title="Non dimenticare i bias">
+
+Calcolo e aggiornamento vanno applicati anche ai **bias** di tutte le unità. Si usa il solito trucco: la prima componente dell’input di ogni unità vale 1, e il bias è il peso $w_{t0}$ attaccato a quell’input. Quindi $\Delta w_{t0} = \delta_t \cdot 1$.
+
+</Callout>
+
+## Proprietà e interpretazione
+
+- **Calcoli solo locali**: ogni unità usa direttamente solo informazioni vicine (le unità subito sotto e subito sopra), non strati lontani; il resto arriva indirettamente tramite il flusso dei delta. In altre parole: anche se il calcolo è locale, la modifica di un peso ha un **effetto globale** sulla rete. Quanto influisce ciascun $w_{tu}$ sull’errore globale? Questo effetto complesso è stato **scomposto** in pezzi semplici tramite i delta locali a ogni unità.
+- **Visione come processo di diffusione**: la backpropagation è una propagazione locale nello spazio e nel tempo, dai «genitori» dell’unità all’unità e dall’unità ai suoi «figli», come un segnale che si diffonde passo dopo passo.
+- **Efficienza — la «fattorizzazione magica»**: il delta $\delta_t$ di ogni unità si calcola **una sola volta** e si riusa per **tutti** i suoi pesi $w_{tu}$ (<T id="fattorizzazione-delta">fattorizzazione dei delta</T>). Il costo è quindi proporzionale al **numero di pesi**, non al suo quadrato. Con modelli da miliardi di pesi la differenza è enorme: $10^9$ contro $(10^9)^2 = 10^{18}$ operazioni, che sarebbe infattibile.
+
+<Callout type="tip" title="Tre livelli di lettura della derivazione">
+
+1. I singoli **passaggi matematici**.
+2. L’**interpretazione** delle variazioni locali di una quantità rispetto alle altre (il significato delle derivate parziali: «se cambio un po’ questo, quanto cambia quello?»).
+3. Il **quadro generale**: la scomposizione serve a trovare i valori delta di ogni livello, scomponendo l’errore **sulla rete** che si ha davanti.
+
+</Callout>
+
+<Callout type="warning" title="Terminologia corretta">
+
+Non si dice «rete backprop»: la rete neurale è il **modello**. La backpropagation è un **algoritmo di addestramento** basato sulla retropropagazione degli errori, cioè sul calcolo diretto del gradiente attraverso la rete.
+
+</Callout>
+
+<Callout type="example" title="Esempio numerico (per verificare la comprensione)">
+
+Rete con un input $x = 1$, una unità nascosta sigmoidale e una di uscita lineare, senza bias; pesi $w_{ji} = 0{,}5$, $w_{kj} = 1$, target $d = 1$, $\eta = 0{,}1$. Qui $\sigma$ è la sigmoide logistica.
+
+- Forward (in avanti): $net_j = 0{,}5$ (peso per input: $0{,}5 \cdot 1$), $o_j = \sigma(0{,}5) \approx 0{,}622$; $o_k = 1 \cdot 0{,}622 = 0{,}622$ (l’uscita è lineare, quindi è uguale al suo net).
+- Delta di uscita (lineare, $f' = 1$): $\delta_k = (1 - 0{,}622)\cdot 1 = 0{,}378$. È l’errore: target meno uscita.
+- Delta nascosto: $\delta_j = (\delta_k w_{kj})\,\sigma'(net_j) = 0{,}378 \cdot 0{,}622 \cdot (1 - 0{,}622) \approx 0{,}089$. Si è usato $\sigma' = \sigma(1 - \sigma)$, cioè $0{,}622 \cdot 0{,}378 \approx 0{,}235$.
+- Aggiornamenti: $\Delta w_{kj} = \eta\,\delta_k\,o_j \approx 0{,}1 \cdot 0{,}378 \cdot 0{,}622 \approx 0{,}0235$; $\Delta w_{ji} = \eta\,\delta_j\,x \approx 0{,}0089$.
+
+Entrambi i pesi aumentano, facendo crescere l’uscita verso il target: l’uscita era $0{,}622$ e doveva essere 1, quindi andava alzata.
+
+</Callout>
+
+<Figure n="7.5" title="L’esempio numerico, passo per passo" size="wide">
+  <NumericExample />
+  <Caption>L’esempio numerico degli appunti calcolato dal vivo: forward, delta di uscita, delta nascosto e aggiornamenti. Cambia i valori per rifare i conti in altri casi, oppure applica l’aggiornamento più volte e guarda l’uscita avvicinarsi al target.</Caption>
+</Figure>
+
+<Exam>
+<Q q="Derivare la backpropagation per un MLP a due strati con errore quadratico.">
+
+$E_p = \frac12\sum_k (d_k - o_k)^2$. Per un peso generico, con la regola della catena attraverso $net_t = \sum_s w_{ts}o_s$: $\Delta_p w_{tu} = -\partial E_p/\partial w_{tu} = \delta_t\,o_u$ con $\delta_t = -\partial E_p/\partial net_t = -\frac{\partial E_p}{\partial o_t}f'_t(net_t)$. Uscita: $-\partial E_p/\partial o_k = d_k - o_k$, quindi $\delta_k = (d_k - o_k)f'_k(net_k)$. Nascosta: $o_j$ influenza tutti i $net_k$, quindi si somma su tutte le uscite, $-\partial E_p/\partial o_j = \sum_k \delta_k w_{kj}$, e $\delta_j = (\sum_k \delta_k w_{kj})f'_j(net_j)$. Aggiornamento $w_{tu} \leftarrow w_{tu} + \eta\delta_t o_u$ (bias con $o_0 = 1$), on-line o sommando sui pattern (batch).
+
+</Q>
+<Q q="Cos’è $\delta_t$? Come si calcola per un’unità di uscita e per un’unità nascosta?">
+
+$\delta_t = -\partial E_p/\partial net_t$, il segnale d’errore dell’unità $t$: dice quanto cambia l’errore quando cambia il suo input netto. Uscita: $\delta_k = (d_k - o_k)f'_k(net_k)$, che si può misurare perché il target è noto. Nascosta: $\delta_j = (\sum_k \delta_k w_{kj})f'_j(net_j)$, ottenuto propagando all’indietro i delta dello strato superiore con gli stessi pesi usati in avanti.
+
+</Q>
+<Q q="Perché la backpropagation ha costo lineare nel numero dei pesi?">
+
+Per la fattorizzazione dei delta: ogni $\delta_t$ si calcola una sola volta (con un passaggio all’indietro che costa quanto quello in avanti) e si riusa per tutti i pesi entranti $w_{tu}$, ognuno dei quali richiede solo il prodotto $\delta_t o_u$. Il totale è $O(\#W)$ invece di $O(\#W^2)$: con $10^9$ pesi, $10^9$ operazioni contro $10^{18}$.
+
+</Q>
+<Q q="Come cambia la derivazione con una loss diversa o con più strati nascosti?">
+
+Con una loss diversa cambia solo il termine $-\partial E_p/\partial o_k$ nel delta delle uscite (per l’errore quadratico vale $d_k - o_k$); con un’attivazione diversa cambia $f'$. Il resto (la forma $\Delta w_{tu} = \delta_t o_u$ e la retropropagazione) resta uguale. Con più strati nascosti ogni unità raccoglie i delta di tutti i suoi successori: $\delta_j = (\sum_{h \in \text{succ}(j)} \delta_h w_{hj})f'_j(net_j)$, calcolati dallo strato di uscita verso il basso.
+
+</Q>
+</Exam>
