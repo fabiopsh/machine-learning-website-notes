@@ -1,0 +1,186 @@
+import { ModelsTable, UnitsTable, KnnLoo } from '../../widgets/l11/Choice'
+
+<Lead>L’ultima parte sulla validazione raccoglie consigli pratici sull’uso della cross-validation, gli **errori più frequenti** (soprattutto nei progetti) e alcuni esempi di model selection (scelta del modello), in parte presi dalle slide di Andrew W. Moore (CMU).</Lead>
+
+## Arresto dell’addestramento
+
+### Non fissare un numero arbitrario di epoche
+
+<Callout type="warning" title="Errore frequente">
+
+Evitare di fermare l’addestramento di una rete dopo un **numero fisso e arbitrario di epoche**, cioè un numero di giri sui dati deciso a caso prima di cominciare (ad esempio «mi fermo a 500»).
+
+</Callout>
+
+Perché:
+
+- se il numero è piccolo, ci si può fermare **troppo presto** (underfitting: la rete non ha ancora imparato). In più si favoriscono i learning rate alti, che hanno bisogno di meno epoche, anche se non sono i migliori;
+- se è grande, ci si può fermare **troppo tardi** (overfitting o tempo perso);
+- lo stesso valore non può andare bene per tutte le configurazioni e per tutte le iterazioni di una K-fold CV;
+- e quale numero usare nel riaddestramento finale?
+
+Anche **scegliere il numero di epoche tramite model selection** non è la pratica migliore. È meglio di un numero fisso, ma è ancora impreciso (per i problemi con la K-fold CV e perché esistono criteri migliori). Le soluzioni che funzionano bene con un sistema **ben regolarizzato** sono quelle viste nella [lezione 8](#/lezione/08):
+
+- guardare la convergenza del training, cioè fermarsi quando l’errore o il gradiente scendono sotto una soglia (quando non si migliora quasi più);
+- oppure l’<T id="early-stopping">**early stopping**</T> («fermarsi presto», quando l’errore di validazione smette di scendere), se si può o si vuole usare un validation set.
+
+### Early stopping
+
+<Callout type="warning" title="Early stopping e model selection">
+
+Il criterio di early stopping (ES) fa **parte della model selection** (non va applicato sul TS): decidere quando fermarsi è una scelta, come scegliere un iperparametro. In linea di principio richiede un **VL set ogni volta** che si addestra il modello.
+
+</Callout>
+
+È delicato per tre motivi. Usa una parte dei dati solo per decidere quando fermarsi. Non dà un valore concreto di iperparametro da riusare. E può diventare complicato dentro una CV. Il problema: come scegliere il punto di arresto per il **riaddestramento finale**, se ogni fold della CV ha un punto di arresto diverso?
+
+- Si potrebbe trattare il numero di epoche come un iperparametro e prendere la **media** sui fold. Ma nel riaddestramento la quantità di dati cambia, e con essa può cambiare il punto di arresto migliore. Ad esempio con più dati per epoca ci sono più aggiornamenti per epoca in on-line, quindi servono meno epoche. Si rischia di addestrare troppo poco o troppo.
+- **Molto meglio**: prendere la **media dell’errore di training** nel punto migliore di validazione e usarla come soglia nel riaddestramento. Cioè: in ogni fold si guarda quanto valeva l’errore di training nel momento in cui la validazione era al minimo; si fa la media di questi valori; nel riaddestramento ci si ferma quando l’errore di training arriva a quel valore. Così si raggiunge lo stesso livello di fitting, cioè di adattamento ai dati (evitando di addestrare troppo poco).
+- Altrimenti serve un VL set ogni volta. Ad esempio: CV con ES attivo in ogni fold di validazione (insieme agli altri iperparametri); trovati i migliori iperparametri, si riaddestra sul dataset rimesso insieme, usando ancora una parte dei dati come VL per l’ES.
+
+È una scelta: usare l’ES oppure affidarsi a **modelli regolarizzati** con criteri di arresto standard (es. nessun miglioramento sul training). In ogni caso la regolarizzazione aiuta a evitare un forte sovra-addestramento e fa dipendere meno dall’ES.
+
+<Deep title="Perché la soglia sull’errore di training funziona meglio della media delle epoche" kind="intuizione">
+
+Il numero di epoche non ha lo stesso significato con quantità di dati diverse. Nel riaddestramento ci sono più dati, quindi ogni epoca (in on-line) fa più aggiornamenti e lo stesso numero di epoche porta più avanti l’addestramento. L’errore di training, invece, misura direttamente **quanto** il modello si è adattato ai dati. Fermarsi quando raggiunge il valore medio che aveva nel punto migliore di validazione riproduce lo stesso livello di fitting, qualunque sia il numero di epoche necessario. È come cuocere una torta: conviene guardare se è cotta, non quanti minuti sono passati, perché con un forno diverso i minuti cambiano.
+
+</Deep>
+
+## Inizializzazione casuale e model selection
+
+Inizializzazioni diverse dei pesi (punti di partenza diversi) portano a **modelli diversi**. Come scegliere quello finale (scelta che va scritta nel report)?
+
+- Si calcolano **media e varianza** dell’errore/accuratezza sulle diverse prove: un caso qualsiasi cadrà in quell’intervallo, quindi il rischio è sotto controllo. Questo non vale se la varianza è alta, cioè se i risultati cambiano molto da una prova all’altra (che comunque è un segnale negativo, vedi la lezione su bias e varianza).
+- Si possono usare **tutti** i modelli, con un <T id="ensemble">**ensemble**</T> (un gruppo di modelli che risponde insieme: media delle uscite o voto).
+- Se se ne sceglie **uno**, quella è una **model selection** e serve un VL set. Le possibilità: il **migliore** (errore minimo sul VL), la **mediana** (quello a metà classifica: scelta più prudente), oppure uno **casuale** (in questo caso non serve un VL set).
+- Si possono anche scartare i casi «sfortunati» guardando solo l’errore di training.
+
+## Selezione sequenziale degli iperparametri
+
+<Callout type="warning" title="Errore frequente">
+
+Selezionare gli <T id="iperparametri">iperparametri</T> **uno alla volta**, in sequenza, introduce un <T id="selezione-sequenziale">**bias legato all’ordine**</T>: il risultato dipende dall’ordine in cui li si sceglie. Esempio: scegliere il miglior $\eta$ con 10 unità e poi usarlo anche con 100 unità. Con 100 unità il miglior $\eta$ potrebbe essere un altro.
+
+</Callout>
+
+Il procedimento corretto:
+
+1. prove iniziali per trovare gli **intervalli** giusti dei valori (ad esempio guardando la stabilità del training) e gli iperparametri più **influenti** (ad esempio guardando la varianza dei risultati);
+2. ricerca su una <T id="grid-search">**griglia con tutte le combinazioni**</T> degli iperparametri (più iperparametri e più valori → tabella più grande);
+3. eventuali griglie **annidate**, da grossolane a fini, su intervalli sempre più piccoli, ma considerando **tutti gli iperparametri importanti insieme**, per tenere conto degli effetti incrociati (un iperparametro cambia l’effetto dell’altro).
+
+Ma: bisogna ragionare, scegliere gli aspetti che contano, non affidarsi solo ad approcci automatici sistematici e costosi. I vincoli di tempo del progetto dovrebbero spingere verso schemi semplici e veloci, ma corretti e ragionevoli.
+
+## Cosa fare dopo selezione e valutazione?
+
+<Callout type="question" title="Posso riprogettare il modello in base al risultato sul test?">
+
+No: non è il modo corretto e non è davvero vantaggioso (a meno di avere nuovi dati per un nuovo test set). Ripetendo questo procedimento sugli stessi dati si può ottenere qualunque risultato si voglia, adattando il modello a quel dataset. Il modello può diventare perfetto su di esso e non nell’uso futuro, e **non si sta più stimando il rischio**.
+
+*Non bisogna regolare il predittore (a mano o automaticamente) sulla base dell’errore di test, perché non potremmo farlo sugli esempi futuri.* Nelle competizioni il <T id="blind-test-set">blind test</T> (test cieco, di cui non si vedono le risposte) impedisce proprio questo. La valutazione su un test interno resta comunque utile per **verificare il proprio approccio**.
+
+</Callout>
+
+La tentazione di decidere in base ai risultati è un problema «psicologico», esterno ai metodi di ML. Bisogna almeno esserne consapevoli, oppure meglio:
+
+- per fare un **buon modello** bisogna fare una **buona model selection**;
+- per stimare le **prestazioni reali** bisogna fare una stima **rigorosa** sul test.
+
+## La cross-validation può andare in overfitting
+
+Un uso intensivo della cross-validation può portare a overfitting? **Sì**, e conserva i problemi già visti. Esempio con la <T id="feature-selection">feature selection</T> (la scelta di quali variabili usare):
+
+- dataset con 20–30 record (esempi) e 1000 attributi (variabili);
+- si provano 1000 modelli di regressione lineare, ognuno con un solo attributo;
+- il migliore dei 1000 sembra buono (sul validation set)... ma sarebbe sembrato buono anche con un output **puramente casuale**! Provando 1000 modelli, per caso uno va bene.
+
+Oppure (uso sbagliato): approssimando un target casuale si trova, con una K-fold CV per il test, un errore del 3% invece del vero 50%, dopo aver scelto le feature con la miglior correlazione con i target. **Perché?** La selezione è stata fatta su **tutti** gli esempi, compresi quelli che poi fanno da test (è il [controesempio della parte 1](#/lezione/09/un-controesempio-istruttivo)).
+
+Che cosa fare? Mettere da parte i campioni **prima** di selezionare:
+
+- tenere un **test set aggiuntivo** prima di qualsiasi model selection e controllare che il modello migliore funzioni bene anche su di esso;
+- per la model selection con CV: usare «**CV + test**» o la <T id="double-cv">**double CV**</T> (rifacendo la selezione per ogni fold);
+- per l’assessment con CV: fare la **feature selection dentro ogni fold**, usando solo i dati di training di quel fold. Così si ottiene la stima corretta, circa il 50% per il task casuale.
+
+## Quale cross-validation?
+
+| | Svantaggi | Vantaggi |
+|---|---|---|
+| **Test set (<T id="hold-out">hold-out</T>)** | varianza: stima inaffidabile delle prestazioni future (fortuna/sfortuna) | economico |
+| **<T id="leave-one-out">Leave-one-out</T>** | costoso; ha comportamenti strani | non spreca dati |
+| **10-fold** | spreca il 10% dei dati; 10 volte più costoso del test set | spreca solo il 10%; solo 10 volte più costoso invece di $R$ volte |
+| **3-fold** | spreca più dati del 10-fold; più costoso del test set | leggermente meglio del test set |
+| **R-fold** ($R = l$) | identico al leave-one-out | |
+
+Come si legge: «sprecare» dati vuol dire non usarli per addestrare, perché in quel giro servono per valutare. Nella 10-fold ogni modello è addestrato sul 90% dei dati, quindi se ne «spreca» il 10%. $R$ è il numero di esempi: la leave-one-out richiede un addestramento per ogni esempio.
+
+## Esempi di model selection
+
+### Esempio 1: modelli diversi
+
+<Figure n="11.1" title="Scelta tra sei classi di modelli" size="wide">
+  <ModelsTable />
+  <Caption>Scelta tra sei classi di modelli $f_1, \dots, f_6$ con la 10-fold CV: per ciascuno l’errore di training (blu) e l’errore di 10-fold CV (arancione), cioè di validazione; viene scelto $f_3$, con l’errore di CV minimo. Le barre riproducono le lunghezze della figura delle slide (scala arbitraria). Cambia il criterio di scelta per vedere cosa succede usando l’errore di training.</Caption>
+</Figure>
+
+Si sceglie la classe di modelli con il **miglior punteggio di CV**, la si riaddestra su tutti i dati, e quello è il modello predittivo da usare. La scelta si fa guardando **solo l’errore di validazione**, **non** l’errore di training (e nemmeno una media dei due).
+
+### Esempio 2: numero di unità nascoste
+
+<Figure n="11.2" title="Numero di unità nascoste" size="wide">
+  <UnitsTable />
+  <Caption>Scelta del numero di unità nascoste di una rete con uno strato nascosto, da 0 a 5 unità: l’errore di training diminuisce con il numero di unità, quello di 10-fold CV ha il minimo con 2 unità, che vengono scelte. Barre come nella figura delle slide (scala arbitraria). Cambia il criterio di scelta.</Caption>
+</Figure>
+
+L’errore di training scende sempre quando le unità aumentano (una rete più grande si adatta meglio ai dati). L’errore di CV invece ha un minimo (qui 2 unità): oltre quel punto la rete comincia ad andare in overfitting. Nella pratica la ricerca si fa su valori come 10, 20, 30... (o con altri passi).
+
+### Esempio 3: K-NN
+
+<Figure n="11.3" title="Scelta di K per il K-NN" size="wide">
+  <KnnLoo />
+  <Caption>Scelta di $k$ per il K-NN con leave-one-out CV, calcolata davvero su 40 punti ($\sin(2\pi x)$ con rumore, K-NN per la regressione): l’errore di training è nullo per $K = 1$ e cresce con $K$; l’errore di leave-one-out tra $K = 1$ e $6$ ha il minimo a $K = 4$, che viene scelto. Prova i valori a crescita esponenziale e mostra l’errore per tutti i $K$ fino a 20.</Caption>
+</Figure>
+
+Perché la **leave-one-out** per il K-NN e la 10-fold per le reti? Per ragioni **computazionali**, cioè di costo. Per il K-NN (e gli altri metodi non parametrici) la LOOCV (*leave-one-out CV*) costa quanto una normale predizione: non c’è un modello da addestrare, basta togliere un punto e cercare i suoi vicini tra gli altri.
+
+E perché fermarsi a $K = 6$? Solo perché le cose sembravano peggiorare al crescere di $K$. E non c’è garanzia che un ottimo locale di $K$ rispetto alla LOOCV (un valore migliore dei suoi vicini) sia quello globale (il migliore in assoluto): la relazione può essere molto irregolare. Per esplorare molti valori si possono usare valori a crescita esponenziale ($K = 1, 2, 4, 8, 16, \dots$) o una ricerca *hill-climbing* («scalata della collina»: si parte da un valore iniziale e ci si sposta verso i valori vicini finché si migliora).
+
+## Conclusioni pratiche
+
+- L’**hold-out semplice** è molto usato: a volte il test set è già dato a parte o «preso» da applicazioni precedenti. Attenzione quando i dati sono pochi, e controllare i tassi d’errore su TR e VL.
+- La **5- o 10-fold CV** è raccomandata come buon compromesso (tra bias e varianza della stima) rispetto alla leave-one-out (Hastie et al.).
+
+Nella [prossima lezione](#/lezione/12) si torna alla stima **analitica** dell’errore atteso (con una formula invece che con prove sui dati), con la Structural Risk Minimization e la VC-dimension. Offre spunti interessanti per la selezione e il confronto tra modelli (dove conta la **dimensione relativa** degli errori, cioè quale modello sbaglia meno dell’altro, più del valore esatto), in alternativa alla valutazione puramente empirica.
+
+<Exam>
+<Q q="Perché non bisogna fermare l’addestramento dopo un numero fisso di epoche?">
+
+Un numero piccolo ferma troppo presto (underfitting, e favorisce i learning rate alti che convergono in meno epoche); uno grande ferma troppo tardi (overfitting o tempo perso). Nessun valore va bene per tutte le configurazioni e per tutte le iterazioni di una K-fold CV, e non si sa quale usare nel riaddestramento finale. Anche scegliere le epoche con la model selection è impreciso: con un modello ben regolarizzato è meglio un criterio di convergenza (soglia sulla diminuzione dell’errore o sul gradiente) oppure l’early stopping con un validation set.
+
+</Q>
+<Q q="Come si gestisce l’early stopping con la cross-validation e il riaddestramento finale?">
+
+L’early stopping fa parte della model selection (mai sul TS) e richiede un VL a ogni addestramento. Nella CV ogni fold ha un punto di arresto diverso: la media delle epoche è rischiosa, perché con più dati il punto migliore cambia. Molto meglio usare come soglia del riaddestramento la media dell’errore di training nel punto migliore di validazione, così da ottenere lo stesso livello di fitting. In alternativa si tiene un VL anche nel riaddestramento finale. Oppure si rinuncia all’ES e si usano modelli regolarizzati con criteri di arresto standard.
+
+</Q>
+<Q q="Come scegliere il modello finale con più inizializzazioni casuali?">
+
+Si riportano media e varianza dei risultati sulle prove (un caso qualsiasi cade nell’intervallo; una varianza alta è un segnale negativo). Si possono usare tutti i modelli in un ensemble (media delle uscite o voto). Sceglierne uno è una model selection che richiede un VL: il migliore sul VL, la mediana (più prudente) o uno a caso (senza VL). Si possono scartare i casi sfortunati guardando solo l’errore di training.
+
+</Q>
+<Q q="Cos’è l’errore della selezione sequenziale degli iperparametri?">
+
+Scegliere gli iperparametri uno alla volta, tenendo fissi i precedenti, introduce un bias legato all’ordine e ignora gli effetti incrociati: ad esempio il miglior $\eta$ trovato con 10 unità può non esserlo con 100. Il procedimento corretto: prove iniziali per trovare intervalli e iperparametri influenti, poi una griglia con tutte le combinazioni, eventualmente annidata da grossolana a fine ma sempre su tutti gli iperparametri importanti insieme.
+
+</Q>
+<Q q="La cross-validation può andare in overfitting? Come evitarlo?">
+
+Sì: provando moltissimi modelli (es. 1000 regressioni con un solo attributo su 20–30 record) il migliore sembra buono in validazione anche con un output casuale; e se le feature sono scelte su tutti gli esempi, una K-fold per il test dà il 3% invece del 50% vero. Si evita mettendo da parte i dati prima di selezionare: un test set aggiuntivo prima di ogni model selection; per la selezione con CV lo schema CV + test o la double CV (selezione rifatta per ogni fold); per l’assessment con CV la feature selection dentro ogni fold.
+
+</Q>
+<Q q="Confrontare hold-out, K-fold e leave-one-out.">
+
+L’hold-out è economico ma la stima ha varianza alta (dipende dalla fortuna della divisione). La leave-one-out non spreca dati ma è costosa e può comportarsi in modo strano; per il K-NN costa solo una predizione per esempio ed è quindi conveniente. La 10-fold spreca il 10% dei dati e costa 10 volte l’hold-out invece di $l$ volte; la 3-fold spreca di più ed è di poco meglio dell’hold-out. La 5- o 10-fold è il compromesso raccomandato tra bias e varianza della stima.
+
+</Q>
+</Exam>

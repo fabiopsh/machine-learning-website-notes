@@ -1,0 +1,261 @@
+import * as F from '../formulas/l10'
+import { CvSelection, CvHoldout, DoubleCv, NestedResampling, NestedFlow } from '../../widgets/l10/Schemes'
+
+<Lead>This second part writes down precisely how cross-validation is used correctly for model selection and/or for risk estimation, with a rigorous notation (adapted from the slides of S. Bengio). The concepts are simple, but precise writing avoids ambiguity. It is not a cookbook to be followed blindly: it serves to **rationalize**, that is, to understand a rigorous approach in an orderly way, in order then to be reasonable. The time needed to run the experiments depends above all on the validation choices: we must avoid both an evaluation that is too coarse and an evaluation process that never ends. In case of doubt, these schemes are in any case better than imagination.</Lead>
+
+We talk about selection among configurations of <T id="iperparametri">hyperparameters</T> (denoted by $\theta$, the Greek letter “theta”), but the same schemes hold for choosing among **different models** ($\theta$ can also denote the type of model).
+
+<Callout type="tip" title="Keep the counterexample in mind">
+
+From [part 1](#/lezione/09/un-controesempio-istruttivo): (1) the error estimates on TR and/or VL are **not** good estimates of the risk; (2) using the whole dataset for the selection of features or models **compromises** (spoils) the estimate. In the schemes that follow we see exactly where these mistakes would be made.
+
+</Callout>
+
+## Notation
+
+**Data**: $Z_1, \dots, Z_l$ is a random sample, that is, $l$ examples drawn at random, from an unknown distribution $p(z)$ (the “law” that generates the data, which we do not know). All the $Z_i$ are <T id="iid">**independent and identically distributed**</T> (i.i.d.): each example does not depend on the others, and all come from the same distribution. $D_r = \{z_1, \dots, z_r\}$ is a concrete set of $r$ examples.
+
+**Task**: every example $Z = (X, Y)$ is an input-answer pair.
+
+- Classification: $Z = (X, Y) \in \mathbb{R}^n \times \{-1, +1\}$, that is, the input is made of $n$ [real numbers](#/prerequisiti/insiemi-e-numeri-reali) and the answer is $-1$ or $+1$.
+- Regression: $Z = (X, Y) \in \mathbb{R}^n \times \mathbb{R}$, that is, the answer is a real number.
+
+**Loss** (“inner”): it measures the error on a single example.
+
+- Classification: $L((x,y), h) = 0$ if $h(x) = y$, $1$ otherwise (zero if the answer is right, one if it is wrong).
+- Regression: $L((x,y), h) = (h(x) - y)^2$ (the squared difference).
+
+**Goal**: to minimize the <T id="rischio">**expected risk**</T> (true error) over $H$:
+
+<Formula f={F.risk} />
+
+**In plain words.** The risk $R(h)$ is the mean error of the hypothesis $h$ on **all** the possible data, not only on those we have. The symbol $\mathbb{E}$ is the [expected value](#/prerequisiti/variabili-casuali-e-valore-atteso), that is, the mean. The [integral](#/prerequisiti/integrali) $\int$ takes exactly this mean: it adds up the loss $L(z,h)$ of every possible example $z$, weighted by $p(z)$, that is, by how probable that example is. The second part says that $h^*$ is the hypothesis, among those of $H$, with the smallest risk ($\arg\min$ is read “the value that minimizes”).
+
+The problem: $p(z)$ is unknown and we cannot compute $L(z,h)$ for all the possible $z$. We only have a finite number of examples.
+
+<T id="rischio-empirico">**Empirical risk**</T> on a finite set $D_r$:
+
+<Formula f={F.remp} />
+
+**In plain words.** It is the mean of the loss on the $r$ examples of $D_r$: we add up the errors on the single examples (the symbol $\sum$ is the [summation](#/prerequisiti/la-sommatoria)) and divide by how many there are. Example: if in classification $h$ gets 3 examples out of 20 wrong, $R_{emp} = 3/20 = 0.15$.
+
+<Callout type="warning" title={<>General use of <Tex>{'R_{emp}'}</Tex></>}>
+
+Here $R_{emp}$ is meant in a general sense, as a **surrogate of $R$** (a substitute that can be computed) on a finite set of data. Depending on the partition on which it is computed, it is used for training, for model selection or for assessment. It must not be confused with the $R_{emp}$ of SLT, which is specifically the training error: in this notation that one is $R_{emp}(h, D_{TR})$.
+
+</Callout>
+
+## Methodology: identifying the goal
+
+First of all we must ask ourselves what we want to obtain.
+
+1. To give the **best model** that can be obtained from a dataset? → <T id="model-selection">**model selection**</T> is needed.
+2. To give the **expected performance** of a model obtained by minimizing the empirical risk? → <T id="model-assessment">**model assessment**</T> (risk estimation) is needed.
+3. To give **both**? → both are needed.
+
+The original dataset $D_l$ will be used for these different purposes.
+
+---
+
+## Model selection
+
+### Hold-out
+
+<Callout type="abstract" title="Model selection with hold-out">
+
+- Choose a hypothesis space with hyperparameter $\theta$.
+- Split $D_l$ into $D_{TR} = \{z_1, \dots, z_{tr}\}$ and $D_{VL} = \{z_{tr+1}, \dots, z_{tr+vl}\}$, with $tr + vl = l$ (the first $tr$ examples for training, the other $vl$ for validation).
+- For every value $\theta_m$ [**grid search**]:
+  - $h^*_{\theta_m}(D_{TR}) = \arg\min_{h \in H_{\theta_m}} R_{emp}(h, D_{TR})$ [**training**]: we find the hypothesis with the lowest error on TR;
+  - estimate $R(h^*_{\theta_m})$ with $R_{emp}(h^*_{\theta_m}, D_{VL}) = \frac{1}{vl}\sum_{z_i \in D_{VL}} L(z_i, h^*_{\theta_m}(D_{TR}))$: we measure the mean error of that hypothesis on VL.
+- Choose $\theta^*_m = \arg\min_{\theta_m} R(h^*_{\theta_m})$ [best result on VL].
+- Return $h^*(D_l) = \arg\min_{h \in H_{\theta^*_m}} R_{emp}(h, D_l)$ [**retraining** on all the $l$ data, with the chosen hyperparameter].
+
+</Callout>
+
+The estimate of $R$ on VL is used **only** for model selection and **is not returned** as an estimate of the risk: returning it would be exactly mistake (1) of the counterexample.
+
+### K-fold cross-validation
+
+<Callout type="abstract" title="Model selection with K-fold CV">
+
+- Choose a hypothesis space with hyperparameter $\theta$.
+- Split $D_l$ into $K$ distinct and equal parts $D_1, \dots, D_K$; let $\bar D_k$ be the complement of $D_k$ (all the data except the part $D_k$).
+- For every value $\theta_m$ [**grid search**]:
+  - for every part $D_k$ [**loop over the folds**]:
+    - $h^*_{\theta_m}(\bar D_k) = \arg\min_{h \in H_{\theta_m}} R_{emp}(h, \bar D_k)$ [training]: we train on everything except $D_k$;
+    - estimate $R(h^*_{\theta_m}(\bar D_k))$ with $R_{emp}(h^*_{\theta_m}(\bar D_k), D_k) = \frac{1}{|D_k|}\sum_{z_i \in D_k} L(z_i, h^*_{\theta_m}(\bar D_k))$: we measure the mean error on the part left out ($|D_k|$ is the number of examples of $D_k$);
+  - estimate $R(h^*_{\theta_m}(D_l))$ with the mean $\frac{1}{K}\sum_k R(h^*_{\theta_m}(\bar D_k))$.
+- Choose $\theta^*_m = \arg\min_{\theta_m} R(h^*_{\theta_m}(D_l))$ [best over all the CVs].
+- Return $h^*(D_l) = \arg\min_{h \in H_{\theta^*_m}} R_{emp}(h, D_l)$ [retraining].
+
+</Callout>
+
+So the estimate of every configuration is the mean of the errors over the folds:
+
+<Formula f={F.cvMean} />
+
+**In plain words.** For a value $\theta_m$ of the hyperparameter we do $K$ training runs. Each time we leave out a part $D_k$, train on the rest $\bar D_k$ and measure the error on the part left out. Then we take the mean of the $K$ errors. Example with $K = 3$ and errors $0.10$; $0.20$; $0.15$: the estimate is $0.45/3 = 0.15$.
+
+<Figure n="10.1" title="K-fold CV for model selection" size="wide">
+  <CvSelection />
+  <Caption>K-fold CV for model selection, followed by retraining: in each iteration a different fold (yellow) acts as validation and the rest (brown) as training; once $\theta^*$ has been chosen, the model is retrained on all the data. Here the data are 24 points from $\sin(2\pi x)$ plus noise and $\theta$ is the degree $M$ of the polynomial. Press “Step” to run the algorithm one line at a time: the table fills up with the validation errors on each fold $D_k$ and their means, that is, the estimates of $R$.</Caption>
+</Figure>
+
+<Callout type="warning" title="Mind the order">
+
+Every iteration **starts from scratch**: training and estimate concern only that split. If for example we used a model trained in split 1 to evaluate split 2, we would use as validation of split 2 a part ($D_2$) that in split 1 had been used for training. The model would already have seen it.
+
+</Callout>
+
+---
+
+## Risk estimation (model assessment)
+
+### Hold-out
+
+<Callout type="abstract" title="Model assessment with hold-out">
+
+- Split $D_l$ into $D_{TR}$ and $D_{TS}$, with $tr + ts = l$. **The test set must be separated NOW** (not later): otherwise we make mistake (2) of the counterexample.
+- $h^*(D_{TR}) = \arg\min_{h \in H} R_{emp}(h, D_{TR})$ [training; it can contain an inner model selection on $D_{TR}$].
+- Estimate $R(h^*(D_{TR}))$ with $R_{emp}(h^*(D_{TR}), D_{TS}) = \frac{1}{ts}\sum_{z_i \in D_{TS}} L(z_i, h^*(D_{TR}))$ [**test error**]: the mean error on the test set.
+
+</Callout>
+
+### K-fold cross-validation
+
+<Callout type="abstract" title="Model assessment with K-fold CV">
+
+- Split $D_l$ into $K$ distinct and equal parts.
+- For every part $D_k$ [loop over the folds]:
+  - $h^*(\bar D_k) = \arg\min_{h \in H} R_{emp}(h, \bar D_k)$ [training; it can contain a model selection];
+  - estimate $R(h^*(\bar D_k))$ with $R_{emp}(h^*(\bar D_k), D_k)$ [test error of each iteration].
+- Estimate $R(h^*(D_l))$ with the mean $\frac{1}{K}\sum_k R(h^*(\bar D_k))$.
+
+</Callout>
+
+The scheme is the same as for model selection, but here the part left out acts as **test**, not as validation. With $K = l$ (one fold for every example) we have <T id="leave-one-out">**leave-one-out CV**</T>. The principles are not violated: the test results are never used to train or to choose, in any iteration.
+
+---
+
+## Combining model selection and model assessment
+
+When we want both the best model and its expected risk, the methods must be combined. For example:
+
+- **hold-out** with training–validation–test (three separate sets are needed);
+- **K-fold CV + test**: cross-validation on the training set, then test on a separate set;
+- **outer K-fold CV for the test**, with an inner hold-out for model selection;
+- **double (nested) cross-validation**: for every outer fold, a nested cross-validation on the other $K-1$.
+
+Other aspects: take into account the **different trials** (different initializations of a network) when computing the means on TR, VL, TS. More generally: compare the results with other methods, use **statistical tests** to check that the differences are significant (not due to chance), try the model on several datasets.
+
+### Hold-out training–validation–test
+
+<Callout type="abstract" title="TR–VL–TS scheme">
+
+- Split $D_l$ into $D_{TR}$, $D_{VL}$, $D_{TS}$.
+- For every $\theta_m$: train $h^*_{\theta_m}(D_{TR})$ and compute $R_{emp}(h^*_{\theta_m}(D_{TR}), D_{VL})$.
+- Choose $\theta^*_m$ with the best result on VL.
+- Retrain $h^*(D_{TR} \cup D_{VL})$ with $\theta^*_m$ (the symbol $\cup$ means “union”: TR and VL put together).
+- Estimate $R$ with $\frac{1}{ts}\sum_{z_i \in D_{TS}} L(z_i, h^*(D_{TR} \cup D_{VL}))$, the mean error on the test.
+
+</Callout>
+
+The retraining can use part of the data as VL for <T id="early-stopping">early stopping</T>.
+
+<Callout type="question" title={<>Can one retrain once more on the whole <Tex>{'D_l'}</Tex>?</>}>
+
+Yes. The final retraining on all the data (TR+VL+TS) **does not use** the test results for any choice. The final model will in general have a performance equal to or better than the estimate (it has more data). The estimate remains valid, as a (slightly pessimistic) estimate of the risk of the procedure. What matters is that the test has not influenced any decision.
+
+</Callout>
+
+### K-fold CV for selection + hold-out for the test
+
+<Callout type="abstract" title="CV + test scheme">
+
+- Split $D_l$ into $D_{TR}$ (the <T id="design-set">*design set*</T>) and $D_{TS}$.
+- For every $\theta_m$: estimate $R(h^*_{\theta_m}(D_{TR}))$ with a K-fold CV on $D_{TR}$ (mean validation error over the folds).
+- Choose $\theta^*_m$ with the best estimate.
+- Retrain $h^*(D_{TR})$.
+- Estimate $R$ with the error on $D_{TS}$.
+
+</Callout>
+
+### K-fold CV for the test with an inner hold-out for selection
+
+In every row of the outer K-fold, one fold acts as test. The rest is split (arbitrarily and with shuffling, that is, mixing) into TR and VL for model selection. The description as a meta-algorithm (step by step, as in the boxes above) is left as an exercise.
+
+<Figure n="10.2" title="Outer K-fold for the test, inner hold-out" size="wide">
+  <CvHoldout />
+  <Caption>Outer K-fold CV for the test (fold $D_k$ in green), with an inner TR/VL hold-out for model selection (the retraining is not shown in the diagram). Next to each row: the degree $M$ chosen on the VL and the test error of that row’s model. Click a row to see its data and model; reshuffle TR and VL to see how much the choice depends on the split.</Caption>
+</Figure>
+
+<Callout type="note" title="No single model">
+
+This process **does not provide a final model**: it only gives an estimate of the risk of the **class** of models considered, because every row can select a different model.
+
+</Callout>
+
+### Double (nested) K-fold CV
+
+<Callout type="abstract" title="Double K-fold CV">
+
+- Split $D_l$ into $K$ distinct and equal parts.
+- For every part $D_k$ [**outer loop**]:
+  - choose $h^*(\bar D_k)$ with an **inner K-fold CV** on $\bar D_k$ (with $K'$ possibly different from $K$) [**inner loop**];
+  - estimate $R(h^*(\bar D_k))$ with $R_{emp}(h^*(\bar D_k), D_k)$ [test error for each outer split].
+- Estimate $R(h^*(D_l))$ with the mean over the test folds.
+
+</Callout>
+
+In short: there are two cross-validations, one inside the other. The outer one is for the test. The inner one, done only on the data that are not in the test fold, is for choosing the hyperparameters.
+
+<Figure n="10.3" title="Double K-fold CV" size="wide">
+  <DoubleCv />
+  <Caption>Double K-fold CV: the dataset is split into four outer folds; in each outer split an inner K-fold CV on the rest of the data ($\bar D_k$) selects the best hyperparameters and retrains, before testing on the outer fold $D_k$ (green). Click an outer split to see its inner CV: the mean validation errors for each degree $M$ and the choice.</Caption>
+</Figure>
+
+Here too **we do not get a single final model**, because every outer loop can choose different hyperparameters. We get an estimate of the risk of the class of models/algorithm, together with its **variance** (standard deviation over the folds). If a single final model is needed we do a **separate model selection** (hold-out or K-fold CV) and a possible final retraining.
+
+This does not violate the rules: the test error has already been estimated and the test results are never used for selection. The final model will have an expected error within the estimated interval. This is why it is not simply true that “the test always comes last”: here it happens **before** the last model selection (even if it may seem counterintuitive).
+
+<T id="double-cv">Double CV</T> makes better use of **all** the data for training and evaluation (both for selection and for assessment). The price is a high computational cost: many training runs.
+
+<Figure n="10.4" title="Outer and inner resampling" size="wide">
+  <NestedResampling />
+  <Caption>Another view of double CV: the outer resampling estimates the performance, the inner resampling, on each outer training set, tunes the hyperparameters, which are then used in the outer split. The “test set” of the inner resampling is actually a validation set (yellow). Click a block to read its role, or open the inner resampling of another split.</Caption>
+</Figure>
+
+<Figure n="10.5" title="Nested CV, also with an inner hold-out" size="wide">
+  <NestedFlow />
+  <Caption>Nested CV: the dataset is split into $k_{out}$ folds; in each repetition one fold acts as test and the rest ($\text{Train}_{out}$) is used for model selection, with a hold-out or with an inner CV with $k_{inn}$ folds; the mean of the test results gives the assessment of the model. Choose the inner selection and the number of folds: below, how many training runs are needed with a grid of 9 configurations.</Caption>
+</Figure>
+
+<Callout type="abstract" title="Summary">
+
+First we identify the goal (best model, estimate of the performance, or both), then we choose the scheme. In all the correct schemes: the **test is separated before** any choice, the estimates on **VL are not returned** as estimates of the risk, every CV iteration **starts from scratch**. The most used combined schemes are TR–VL–TS, CV+test and double CV.
+
+</Callout>
+
+<Exam>
+<Q q="Write the algorithm for model selection with K-fold CV.">
+
+We choose the hypothesis space with hyperparameter $\theta$ and split $D_l$ into $K$ equal parts $D_1, \dots, D_K$. For every value $\theta_m$ of the grid and for every part $D_k$: we train from scratch $h^*_{\theta_m}(\bar D_k)$ by minimizing $R_{emp}$ on $\bar D_k$ (everything except $D_k$) and measure its $R_{emp}$ on $D_k$; the estimate for $\theta_m$ is the mean of the $K$ errors. We choose $\theta^*_m$ with the minimum mean and return the model retrained on the whole $D_l$ with $\theta^*_m$. The validation means are not returned as an estimate of the risk.
+
+</Q>
+<Q q="Write the algorithm for model assessment with K-fold CV.">
+
+We split $D_l$ into $K$ equal parts. For every part $D_k$ we get $h^*(\bar D_k)$ by training (possibly with an inner model selection) only on $\bar D_k$, and measure its test error $R_{emp}(h^*(\bar D_k), D_k)$. The estimate of the risk is the mean of the $K$ test errors (with the standard deviation). With $K = l$ it is leave-one-out. The test results are never used to train or to choose.
+
+</Q>
+<Q q="Describe double (nested) CV. Does it return a model?">
+
+We split $D_l$ into $K$ outer folds. For each one, an inner K-fold CV (with $K'$ possibly different) on $\bar D_k$ chooses the hyperparameters, we retrain on $\bar D_k$ and measure the error on $D_k$. The mean (and the variance) of the outer errors estimates the risk. It does not return a single model, because every outer split can choose different hyperparameters: it estimates the risk of the class of models/algorithm. For a final model we do a separate model selection (hold-out or K-fold) and retrain; this does not violate the rules, because the test has not influenced any choice. It makes good use of all the data, but it costs a lot.
+
+</Q>
+<Q q="Connect mistakes (1) and (2) of the counterexample to the formal schemes.">
+
+Mistake (1), using the estimates on TR or VL as an estimate of the risk: in the model selection schemes the estimate on VL (or the CV mean) is used only to choose $\theta^*_m$ and is not returned. Mistake (2), doing the selection on the whole dataset: in the assessment schemes the test set must be separated right away, before any choice (including feature selection), and in the K-fold schemes the selection happens inside every split, only on $\bar D_k$. The order matters too: every iteration starts from scratch, otherwise a validation fold would already have been seen in training.
+
+</Q>
+</Exam>

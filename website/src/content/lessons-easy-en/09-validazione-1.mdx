@@ -1,0 +1,309 @@
+import * as F from '../formulas/l09'
+import { BiasVariance, RandomTarget, GridRandom } from '../../widgets/l09/Validation'
+import { DataSplit } from '../../widgets/l04/DataSplit'
+
+<Lead>Validation (the way to check how much a model is really worth) was introduced in [lesson 4](#/lezione/04/validazione). These lessons go deeper into it, because it is indispensable for the project and for every serious use of ML. The two goals are repeated: model selection (choosing the model) and model assessment (giving a grade to the chosen model). We see a counterexample that shows how easy it is to get wrong estimates. **Grid search** and **K-fold cross-validation** are introduced. Finally we talk about sampling, about what to do with little data and about how to measure the error.</Lead>
+
+## Preliminaries: bias and variance
+
+The **bias-variance** decomposition (which will have a dedicated lesson) is a useful framework for understanding why it is hard to estimate how good a model is. It shows two things. The first is the role of the different **realizations of the training set**: if we collected the data once more, we would get different examples and therefore a different model. The second is, once again, the trade-off between fitting capacity (bias) and flexibility of the model (variance).
+
+<Figure n="9.1" title="The same model on 100 different training sets" size="wide">
+  <BiasVariance />
+  <Caption>Training error (blue) and test error (orange) on 100 different training sets as complexity grows; the thick curves are the means (as in Hastie et al., Fig. 7.1). Here each training set has 20 points drawn from $\sin(2\pi x)$ plus noise, as in lesson 4, and the complexity is the degree $M$ of the polynomial. With a complex model the bias is low but the variance is high: depending on the sample, one can be “lucky” or “unlucky.” Drag the slider to choose the complexity.</Caption>
+</Figure>
+
+The figure shows an important fact: with the same complexity, the test error changes a lot from one training set to another, especially for complex models. A single measurement can be lucky or unlucky. It is like judging a student from a single oral test: they may have got the easy question or the hard one.
+
+## Motivations
+
+We look for the solution with the minimum prediction (test) error, that is, the one that makes the fewest mistakes on new data. To find it we must balance two things: the **fit to the training data** and the **complexity of the model**. The training error is **not a good estimate** of the test error:
+
+- with a model that is too simple there is too much bias (underfitting): the training error is high;
+- with a model that is too complex there is too much variance: the training error is low, but the model is overfitting (it has learned by heart) and makes mistakes on new data.
+
+Suppose we have a hyperparameter $\theta$ (the Greek letter “theta”), implicit or explicit, that controls the complexity of the model: a “knob”, like the degree of the polynomial. We want the value of $\theta$ that minimizes the test error. So we need methods to **estimate the expected error** of a model (or of each model of a class, or of a set of models).
+
+### How to estimate
+
+There are two ways.
+
+- **Analytically**, that is, with a formula: the AIC and BIC criteria (Akaike/Bayesian Information Criterion, which hold only for models that are linear in the parameters), MDL (Minimum Description Length), **SRM** (Structural Risk Minimization) with the VC-dimension (see the lesson on SLT).
+- **Empirically**, that is, with trials on the data, through **resampling**: some data are set aside and the error is measured there (direct estimate of the out-of-sample error, that is, on data not used for training). The methods are **cross-validation** (hold-out, K-fold, …) and the **bootstrap**.
+
+---
+
+## The two goals of validation
+
+<Callout type="warning" title="The most important slide of the course">
+
+After training the models on the training set:
+
+- <T id="model-selection">**Model selection**</T>: estimating the performance (generalization error) of different models in order to **choose the best one**. It includes the search for the best **hyperparameters** (degree of the polynomial, number of units of a network, $\lambda$, $\eta$, …). *It returns a model.*
+- <T id="model-assessment">**Model assessment**</T>: once the final model (or a class of models) has been chosen, **estimating its prediction error** (risk) on new test data. It is the measure of the quality of the chosen model. *It returns an estimate*, that is, a number.
+
+**Golden rule**: keep the goals separate and use **separate data sets** in each phase.
+
+</Callout>
+
+### Hold-out
+
+“Hold-out” means “set aside”. If there is enough data, the dataset is split into three **disjoint** sets (with no examples in common), for example 50% TR, 25% VL, 25% TS (<T id="hold-out">hold-out</T>):
+
+- **TR** (training set): it is used to fit the model, that is, to minimize the $R_{emp}$ of SLT [**training**];
+- **VL** (validation or selection set): it is used to choose the best model among different models and hyperparameter configurations [**model selection**];
+- **TS** (test set): it is used to estimate the generalization error of the final model, that is, to estimate the $R$ of SLT [**model assessment**].
+
+TR and VL together form the **development/design set**, used to build the final model.
+
+A comparison: TR is the exercises you study with, VL is the mock exams with which you decide how to study, TS is the real exam.
+
+<Callout type="note" title="Two clarifications">
+
+1. The estimate made on VL is used **only** for model selection: it is not a good estimate for assessment.
+2. The results on TS **cannot** be used for model selection. If we do so, that is no longer a test set: let us call it a validation set.
+
+</Callout>
+
+### Test or model selection?
+
+What happens if the test set is used in a repeated design loop (I try, I look at the test, I change, I try again)? We are doing **model selection**, not a reliable evaluation. And we could not do the same thing on future examples, which we do not have. The error on a test used this way is an **overly optimistic estimate** of the true error: it looks lower than it is. It is like an exam exercise whose solutions have been seen: it is no longer a test! Hence the concept of <T id="blind-test-set">**blind test set**</T>: a test whose answers are not seen by those who build the model. It is used in ML competitions.
+
+<Figure n="9.2" title="The role of TR, VL and TS" size="wide">
+  <DataSplit />
+  <Caption>The role of TR, VL and TS (taken from figure 4.7): the dataset is split into TR (training of the model), VL (selection of the model) and TS (evaluation of the released model); on the client side, new data are passed to the model for the predictions.</Caption>
+</Figure>
+
+---
+
+## An instructive counterexample
+
+<Callout type="example" title="The random-target counterexample">
+
+- 20–30 examples, **1000 input variables** with random values;
+- **random** 0/1 target (like tossing a coin).
+
+We select a model that uses **a single** input variable: the one that by pure chance “guesses” the target at 99% (or 100%) on any later split into TR, VL and TS. A perfect result? What is wrong?
+
+The 99–100% is **not** a good estimate of the test error. The true one is **50%**: the target is random, so no model can do better than a coin. On a truly new external test set we would get 50%.
+
+</Callout>
+
+There are two mistakes:
+
+1. the estimate of the error on TR and VL **is not** a good estimate of the risk;
+2. using **the whole dataset** for the selection of the features or of the model **compromises the estimate**, that is, spoils it (biased estimate, called <T id="subset-selection-bias">*subset selection bias*</T>). The test set was used **implicitly** (without saying so) at the beginning, in the choice of the variable. The test set must be separated **in advance**, before **any** model selection, including **feature selection** (the choice of which variables to use).
+
+Why does this happen? With 1000 random variables and only 20 patterns, it is almost certain that one variable coincides by chance with the target on most of the patterns. It is like having 1000 people toss a coin 20 times: someone will get almost all heads, but not through skill. The choice is made by looking at **all** the data, so that variable “works” on any later partition. On truly new patterns (TS1, TS2, TS3 in the table of the slide) the same variable has accuracies of 100%, 33%, 66%: pure chance.
+
+<Figure n="9.3" title="The counterexample, live" size="wide">
+  <RandomTarget />
+  <Caption>The counterexample with truly random data: among 1000 variables, the one that coincides most with the target is chosen (in the histogram, its accuracy compared with all the others). Chosen on all the data, it looks excellent on any partition, but on new patterns it behaves like a coin: on the small test sets the result fluctuates by chance, on many new patterns it is close to 50%. By setting the test aside before the choice, the estimate becomes honest again.</Caption>
+</Figure>
+
+<Callout type="warning" title="Warning">
+
+Here we are discussing the **correctness of the estimate**, not the possibility of solving the task. K-fold CV and other techniques do **not** solve the problem if the selection is made before the split (on the contrary, they can confuse things even more).
+
+</Callout>
+
+---
+
+## Grid search
+
+The <T id="iperparametri">**hyperparameters**</T> are parameters that the algorithm does not learn directly from the data: they must be set by us. They are set by searching in the **hyperparameter space** (the set of all the possible values), of course through model selection on a validation set.
+
+Exhaustive <T id="grid-search">**grid search**</T> tries all the candidates of a grid of values. A simple example with two hyperparameters, the number of units and $\lambda$:
+
+| Units \ $\lambda$ | 0.1 | 0.01 | 0.001 |
+|---|---|---|---|
+| 1 unit | Res1 | Res4 | Res7 |
+| 10 units | Res2 | Res5 | Res8 |
+| 100 units | **Res3** | Res6 | Res9 |
+
+Every cell is a trial: the model is trained with those values and we write down the result (Res) obtained on the validation set. If the best result is Res3, the configuration (100 units, $\lambda = 0.1$) wins. The search must be **automated** (done by a program), and it is easy to **parallelize**: the trials are independent, so they can be run at the same time.
+
+The cost can be high. The trials are all the combinations of the values (the Cartesian product), that is
+
+<Formula f={F.gridCost} />
+
+**In plain words.** The number of trials is the number of values tried for each hyperparameter, raised to the number of hyperparameters. Adding one hyperparameter multiplies the trials.
+
+With 3 values for 2 hyperparameters there are $3^2 = 9$ trials; with 5–6 hyperparameters with 10 values each (from a hundred thousand to a million trials) it becomes prohibitive. For this reason:
+
+- some hyperparameters can be fixed in a preliminary experimental phase, if we see that they matter little (with caution, see the mistake of sequential selection in [part 3](#/lezione/11));
+- we use **two (or more) levels of nested grid searches**. First a **coarse** search over all the combinations (for example with exponentially growing values, such as $0.1$; $0.01$; $0.001$) to find the good regions. Then **finer** searches over smaller and smaller intervals, always considering **all** the important hyperparameters together.
+
+### Alternatives to grid search
+
+Grid search is very useful for **observing the behavior** of the model when the hyperparameters change (fundamental for understanding). But it is expensive and scales badly: the cost explodes when the hyperparameters increase. Alternatives:
+
+- <T id="random-search">**random search**</T> (Bergstra and Bengio, 2012): instead of a grid we try combinations chosen at random. This way we do not keep retrying the same values of an important hyperparameter while changing those that do not matter. In addition we can fix the **budget** of trials (how many trials we can afford) without it depending on the number of hyperparameters;
+- **automatic** search: Bayesian and evolutionary approaches, methods for evaluating the configurations (e.g. Hyperband).
+
+Libraries such as Keras Tuner and scikit-learn include many alternatives (toward **AutoML**, ML that tunes itself), but they must not be used without thinking: grid search teaches more at a first approach.
+
+<Figure n="9.4" title="Grid search and random search" size="wide">
+  <GridRandom />
+  <Caption>Grid search and random search with 100 trials each on two hyperparameters $x_1$, $x_2$: the blue contour lines indicate regions with good results, the orange ones poor results. Random search explores many more distinct values of each hyperparameter (green ticks on the axes). Choose the number of trials and make only one hyperparameter matter.</Caption>
+</Figure>
+
+<Callout type="tip" title="Why random search works">
+
+If only one of the two hyperparameters really matters, the 10×10 grid tries only **10 distinct values** of it (the other 90 trials repeat the same values while changing the useless hyperparameter), whereas random search tries **100**: every trial has a different value.
+
+</Callout>
+
+---
+
+## K-fold cross-validation
+
+### How much data is needed?
+
+Hold-out requires enough data to make three partitions that are meaningful. How much? It depends on the complexity of the model and on the signal-to-noise ratio, that is, on how much useful information there is compared with the disturbance (little is needed for a linear model on a linearly separable task with no noise). What can we do if the data are not enough? And how can we avoid depending on the **particular partition** chosen? K-fold CV helps.
+
+<Callout type="note" title="Terminology">
+
+“Cross-validation” denotes two things. In a broad sense, an **approach** to model selection based on the direct estimate of the error through resampling (instead of with a formula). In a narrow sense, the **implementations** that establish how to split the data for selection and for assessment (for example K-fold CV).
+
+</Callout>
+
+### Recap
+
+$D$ is split into $K$ mutually exclusive subsets $D_1,\dots,D_K$ (parts with no examples in common, called *folds*). For every $i$ we train on $D \setminus D_i$ (all of $D$ except the part $D_i$) and evaluate on $D_i$ ([figure 4.8](#/lezione/04/k-fold-cross-validation-anticipazione)). In turn, every part acts as the “exam”. This way all the data are used both for training and for evaluation.
+
+We do not get a **single model** (there is one per fold). In return we also get a **variance** ([standard deviation](#/prerequisiti/media-varianza-e-deviazione-standard)) over the folds for our class of models, that is, a measure of how much the results change from one fold to another. The result is reported as **mean ± standard deviation**. It can be used both for the validation set and for the test set.
+
+Open issues: how many folds (3, 5, 10, …, *leave-one-out*, that is, one fold for every single example)? The computational cost is often high, because we train $K$ times. It can be combined with a validation set, or we can do a double K-fold CV.
+
+### A complete example of selection and assessment
+
+<Steps>
+<Step title="Split the data into TR and TS">
+
+Here with hold-out, but it could be a K-fold. The TS is set aside right away.
+
+</Step>
+<Step title="Model selection on the TR only">
+
+Use a K-fold CV **inside** the TR (which in every fold produces new TR and VL) to find the best hyperparameters with a **grid search**. For every cell of the grid (e.g. $\lambda = 0.1$, 20 units) a whole K-fold CV is run. We choose the configuration with the **best mean validation error** over the folds.
+
+</Step>
+<Step title="Retrain the final model">
+
+On the **whole original TR**, with the chosen hyperparameters.
+
+</Step>
+<Step title="Model assessment">
+
+Evaluate it on the **external TS**, only once.
+
+</Step>
+</Steps>
+
+(Can we then retrain once more on all the data? We will see that in the [next part](#/lezione/10).)
+
+<Deep title="How many training runs does the complete example require?" kind="esempio">
+
+With the 3 × 3 grid of the table above (9 cells) and an inner K-fold with $K = 5$: every cell requires 5 training runs, so $9 \cdot 5 = 45$ for model selection, plus one for the final model on the whole TR. 46 in all. The TS is touched only once, at the end.
+
+</Deep>
+
+---
+
+## Special cases
+
+### Lucky or unlucky sampling
+
+To avoid depending on the particular partition:
+
+- <T id="stratificazione">**Stratification**</T>: grouping the population into homogeneous subgroups before sampling. For classification: in every partition (TR and TS in hold-out or CV) every class is present in roughly the same proportions as in the full dataset. Example: if 30% of the examples in the dataset are positive, in every part too about 30% must be positive.
+- Check the composition of the folds: the **order of the data** might have a meaning (e.g. data sorted by class or by time). Cutting sorted data “into slices”, a fold might contain a single class.
+- **Repeated hold-out or CV**: repeat the split with different random samplings (e.g. repeat the CV 10 times) and average the results. It is useful above all for **comparing different models**.
+
+### Very little data
+
+With very little data it is hard to say whether a sample is representative, that is, whether it resembles the real data. Besides stratification, we must avoid (or take into account in the evaluation):
+
+- classes or features missing from the training data;
+- special classes not sampled in TR or TS;
+- known outliers (anomalous values, very far from the others) that affect the mean of the test results;
+- at the opposite end, the selection of “easy” cases only.
+
+A **blind test set** can be misleading too if:
+
+- it comes from a different distribution (data of another kind);
+- it is measured with different scales or tolerances;
+- it is not cleaned or pre-processed;
+- it requires **extrapolation** (out-of-range data, that is, outside the interval of the values seen in training).
+
+---
+
+## Error measures for the evaluation
+
+**Classification** (see the [first lessons](#/lezione/04/accuratezza-nella-classificazione)): accuracy (or error rate, often in %), confusion matrix, specificity, sensitivity, ROC curve.
+
+**Regression**, with residual $r_i = y_i - o_i$ ($y$ target, $o$ output; the residual is the difference between the right answer and the answer of the model):
+
+- **MSE** $= \text{mean}_i[r_i^2]$ (the mean of the squared residuals) and its square root **RMS** (or $S$);
+- **mean absolute error** (MAE) $= \text{mean}_i[|r_i|]$: the mean of the residuals taken without sign;
+- **maximum absolute error** $= \max_i |r_i|$: the largest residual, that is, the worst case;
+- **correlation coefficient** $R$ (and **coefficient of determination** $R^2$), for example
+
+  <Formula f={F.rCoef} />
+
+  with $S_y^2 = \text{mean}_i[(y_i - \bar y)^2]$ the [variance](#/prerequisiti/media-varianza-e-deviazione-standard) of the target: it measures the degree of linear dependence between $y$ and $o$, in $[0,1]$, where 1 is the best. **In plain words.** We compare the error of the model ($S^2$, that is, the MSE) with how spread out the target is around its mean ($S_y^2$). If the model makes very small errors, the fraction is almost 0 and $R$ is almost 1. If the model does no better than always answering with the mean, the fraction is 1 and $R$ is 0;
+- **outputs versus targets** plots: one point for every example; if the model is good, the points lie close to the diagonal;
+- statistical tests and significance analysis (to understand whether a difference is real or due to chance).
+
+Example with three residuals $1$, $-2$, $3$: MSE $= (1 + 4 + 9)/3 \approx 4.67$; RMS $\approx 2.16$; MAE $= (1 + 2 + 3)/3 = 2$; maximum error $= 3$.
+
+<Callout type="note" title="Bootstrap">
+
+Another approach is the <T id="bootstrap">**bootstrap**</T>: random resampling **with replacement** (we draw an example, put it back in the pile and draw again, so the same example can come out several times), repeated to get different subsets (for validation or for test).
+
+</Callout>
+
+---
+
+<Callout type="abstract" title="The two golden rules">
+
+- The result on **TR** is not a good estimate of the one on VL and TS.
+- The result on **VL** is not a good estimate of the one on TS.
+
+Therefore: **do not use the results of the validation set for the estimate of the risk** (model assessment), and **do not use the results of the test set for model selection**, in any form. In a single rule: *keep the goals separate and use separate sets in each phase.*
+
+</Callout>
+
+<Exam>
+<Q q="The difference between model selection and model assessment; why are separate sets needed?">
+
+Model selection estimates the performance of several models (and hyperparameter configurations) in order to choose one: it returns a model, using the validation set. Model assessment estimates the risk of the final model on new data: it returns an estimate, using the test set. If the same set is used both to choose and to estimate, the choice exploits the random fluctuations of those data and the estimate becomes optimistic: a test used to choose has become a validation set.
+
+</Q>
+<Q q="Describe the random-target counterexample: what are the two mistakes?">
+
+20–30 examples with 1000 random variables and a random 0/1 target: one variable coincides by chance with the target on almost all the examples and, chosen by looking at all the data, gives 99–100% on any later split, while the true error is 50%. Mistakes: (1) the estimate on TR and VL is not a good estimate of the risk; (2) the selection (here of features) made on the whole dataset implicitly uses the test set (subset selection bias): the test must be separated before any selection. K-fold does not solve the problem if the selection is made before the split.
+
+</Q>
+<Q q="What is grid search? How is its cost reduced? Advantages of random search.">
+
+We try all the combinations of a grid of values of the hyperparameters and choose the one with the best validation result; it can be automated and parallelized but it costs $(\#\text{values})^{\#\text{hyperparameters}}$. The cost is reduced by fixing in advance the hyperparameters that matter little (with caution) and with nested grids, first coarse (exponential values) then fine, always on all the important hyperparameters together. Random search, for the same budget, tries many more distinct values of each hyperparameter (100 instead of 10 with 100 trials on 2 hyperparameters) and is useful when only some of them matter; the budget does not depend on the number of hyperparameters.
+
+</Q>
+<Q q="Describe K-fold CV and a complete example of selection and assessment.">
+
+$D$ is split into $K$ disjoint parts; for every $i$ we train on $D \setminus D_i$ and evaluate on $D_i$, reporting mean ± standard deviation over the folds. Complete example: a TS is separated; on the TR we do a grid search in which every configuration is evaluated with an inner K-fold (new TR and VL in every fold) and we choose the one with the best mean validation error; the final model is retrained on the whole TR and evaluated only once on the external TS.
+
+</Q>
+<Q q="What is stratification?">
+
+A sampling that keeps in every partition (TR, TS, folds) the proportions of the subgroups of the dataset; in classification, every class is present in roughly the same percentage it has in the full data. It avoids lucky or unlucky partitions, together with checking the order of the data and repeating hold-out or CV.
+
+</Q>
+<Q q="Which error measures are used for regression?">
+
+With residual $r_i = y_i - o_i$: MSE (mean of the squares) and RMS (its root), mean absolute error (MAE), maximum absolute error, correlation coefficient $R = \sqrt{1 - S^2/S_y^2}$ and coefficient of determination $R^2$ (in $[0,1]$, 1 the best), outputs versus targets plots, statistical significance tests.
+
+</Q>
+</Exam>

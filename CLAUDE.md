@@ -10,7 +10,7 @@ e del sito che li rende interattivi. Rispondere all'utente in italiano.
   GitHub Pages (https://fabiopsh.github.io/machine-learning-website-notes/) da `.github/workflows/deploy.yml`.
 - `docs/GUIDA-LEZIONI.md` — **come si converte una lezione** (regole, procedura, componenti, stile, verifica).
 - `docs/GUIDA-INGLESE.md` — **come funziona e come si aggiorna la versione inglese** (selettore IT | EN, `tx()`, `lessons-en/`).
-- `docs/GUIDA-SEMPLICE.md` — **versione «spiegata semplice»** delle lezioni (oggi 01, 03–08: `lessons-easy/`, `lessons-easy-en/`) e pagina dei **prerequisiti** (`extra/prerequisiti.mdx`).
+- `docs/GUIDA-SEMPLICE.md` — **versione «spiegata semplice»** delle lezioni (oggi 01, 03–11: `lessons-easy/`, `lessons-easy-en/`) e pagina dei **prerequisiti** (`extra/prerequisiti.mdx`).
 - `docs/STATO.md` — lezioni fatte/da fare, immagini → figure, aggiunte rispetto agli appunti.
 
 ## Regole fondamentali (dettagli in docs/GUIDA-LEZIONI.md §1)

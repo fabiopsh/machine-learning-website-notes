@@ -152,6 +152,9 @@ Decisioni di stile confermate dall'utente:
   con parole facili, «In parole semplici» dopo ogni `<Formula>`, rimandi ai prerequisiti. Nessun widget nuovo e
   nessuna modifica alle lezioni originali. Verificate con `check:easy` (nessun errore né avviso sulle tre lezioni),
   `verify` e `build`, senza screenshot.
+- 2026-10-12 — **Versione «spiegata semplice» delle lezioni 09, 10 e 11** (validazione 1, 2 e 3), in italiano e in
+  inglese, con le stesse regole e le stesse verifiche (`check:easy` senza errori né avvisi sulle tre lezioni,
+  `verify`, `build`; nessuno screenshot). Nessun widget nuovo e nessuna modifica alle lezioni originali.
 
 ## Immagini degli appunti → figure del sito
 
@@ -434,6 +437,15 @@ Tutto ciò che non è scritto negli appunti va elencato qui (l'utente deve poter
   $l = 1000$ e $mb = 100$ → 10 aggiornamenti per epoca, $1/(1-0{,}9) = 10$ e $1/1{,}9 \approx 0{,}53$ per il
   momentum, learning rate a metà strada $= $ media di $\eta_0$ e $\eta_\tau$, 17 input del MONK come somma dei
   valori delle variabili (08).
+- **Versioni «spiegate semplici» 09, 10, 11**: stesso tipo di aggiunte. Paragoni: studente giudicato da una sola
+  interrogazione (stima fortunata o sfortunata), esercizi / simulazioni d’esame / esame vero (TR, VL, TS), 1000
+  persone che lanciano una moneta 20 volte (controesempio del target casuale), torta da controllare invece di
+  contare i minuti (soglia sull’errore di training nel riaddestramento). Esempi numerici aggiunti: da centomila a
+  un milione di prove con 5–6 iperparametri da 10 valori, 46 addestramenti in tutto nell’esempio completo, 30% di
+  positivi per la stratificazione, MSE/RMS/MAE/errore massimo di tre residui $1$, $-2$, $3$ (09); $R_{emp} = 3/20$
+  e media di tre errori di fold $0{,}10$, $0{,}20$, $0{,}15$ (10); «mi fermo a 500 epoche», 90% dei dati per
+  l’addestramento nella 10-fold (11). Nella 10 il riquadro «Si può riaddestrare ancora su tutto $D_l$?» ora
+  comincia con un «Sì» esplicito (negli appunti la risposta è implicita).
 
 - 01: esempi svolti (prodotto scalare, gradiente); «tre parole chiave» della definizione; ragionamento
   del gradiente via Δf ≈ ∇f·Δx; tracce di risposta alle domande d'esame.
