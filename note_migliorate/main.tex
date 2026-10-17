@@ -1,0 +1,66 @@
+\documentclass[11pt,a4paper,oneside,openany]{book}
+\input{preambolo.tex}
+\input{dati/valori.tex}
+% include un capitolo solo se il file esiste (comodo durante la stesura)
+\newcommand{\capitolo}[1]{\IfFileExists{capitoli/#1.tex}{\input{capitoli/#1.tex}}{}}
+\hypersetup{pdftitle={Machine Learning --- Note riorganizzate}, pdfauthor={Fabio Piscitelli}}
+
+\begin{document}
+
+% ------------------------------------------------------------------ frontespizio
+\begin{titlepage}
+\sffamily
+\vspace*{3.5cm}
+{\color{grigio}\large Corso di Machine Learning (654AA) --- Università di Pisa\par}
+\vspace{0.6cm}
+{\Huge\bfseries Machine Learning\par}
+\vspace{0.3cm}
+{\LARGE Note riorganizzate per lo studio\par}
+\vspace{0.6cm}
+{\color{inchiostro}\rule{\linewidth}{0.8pt}\par}
+\vspace{0.6cm}
+{\large Fabio Piscitelli\par}
+\vspace{0.2cm}
+{\normalsize Dal corso del Prof.\ Alessio Micheli, a.a.\ 2026/27\par}
+\vfill
+{\normalsize\color{grigio}\today\par}
+\end{titlepage}
+
+\frontmatter
+\tableofcontents
+\capitolo{00-guida}
+
+\mainmatter
+
+\part{Fondamenti}
+\capitolo{01-matematica}
+\capitolo{02-problema}
+\capitolo{03-bias-induttivo}
+
+\part{Primi modelli}
+\capitolo{04-lineari}
+\capitolo{05-regolarizzazione}
+\capitolo{06-knn}
+
+\part{Generalizzazione: teoria e stima}
+\capitolo{07-slt}
+\capitolo{08-bias-varianza}
+\capitolo{09-validazione}
+
+\part{Reti neurali}
+\capitolo{10-perceptron}
+\capitolo{11-mlp-backprop}
+\capitolo{12-addestramento}
+
+\part{Support Vector Machines}
+\capitolo{13-svm}
+
+\part{Modelli avanzati}
+\capitolo{14-cnn}
+\capitolo{15-deep}
+\capitolo{16-randomizzate}
+\capitolo{17-non-supervisionato}
+\capitolo{18-rnn}
+\capitolo{19-grafi}
+
+\end{document}

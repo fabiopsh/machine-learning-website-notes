@@ -1,0 +1,135 @@
+\chapter{Reti neurali randomizzate}
+\label{cap:random}
+
+\begin{inbreve}
+E se lo strato nascosto di una rete non venisse addestrato affatto? Il capitolo mostra come la casualità sia una
+componente utile del ML e descrive le reti a pesi casuali, in cui si addestra solo lo strato di uscita con un metodo
+lineare. Il loro funzionamento si spiega con concetti già visti: espansione in basi, teorema di Cover,
+regolarizzazione.
+\end{inbreve}
+
+\section{La casualità nel Machine Learning}
+
+Un approccio \termine{randomizzato} usa un certo grado di casualità come parte della sua strategia costruttiva. La
+casualità compare a diversi livelli:
+\begin{itemize}
+  \item \textbf{elaborazione dei dati}: suddivisione (hold-out, K-fold CV), generazione di dati (bootstrap, boosting,
+        bilanciamento delle classi);
+  \item \textbf{apprendimento}: ordine degli esempi (shuffling), inizializzazione casuale dei pesi;
+  \item \textbf{selezione degli iperparametri} (random search);
+  \item \textbf{ensemble}: differenziazione casuale dei modelli (inizializzazioni diverse, campionamento dei training
+        set nel bagging);
+  \item \textbf{nel cuore del modello}: neuroni stocastici (\ingl{Restricted Boltzmann Machine}), il dropout, e le
+        \textbf{Random Forest} (o \ingl{Extremely Randomized Trees}): ensemble di alberi di decisione, ciascuno costruito
+        su un campione casuale del training set e con una scelta casuale delle variabili su cui dividere i nodi, che
+        uniscono i vantaggi degli ensemble e della casualità.
+\end{itemize}
+
+\section{Reti a pesi casuali}
+
+La domanda è se si possano sfruttare le architetture MLP (o ricorrenti) \textbf{senza lunghi cicli di addestramento}
+degli strati nascosti. Esiste una lunga tradizione di reti randomizzate (già nel Perceptron originale un'area di
+``proiezione'' era connessa casualmente all'input e solo le risposte finali venivano apprese), oggi note con nomi
+come \textbf{RVFL} (\ingl{Random Vector Functional Link}) ed \textbf{ELM} (\ingl{Extreme Learning Machine}).
+
+\begin{definizione}[Rete randomizzata]
+\begin{itemize}
+  \item Uno (o più) \textbf{strati nascosti connessi casualmente}: i pesi sono \textbf{fissati dopo l'inizializzazione
+        casuale} e non vengono addestrati.
+  \item Si addestra \textbf{solo lo strato di uscita} (\termine{readout}), un modello lineare, con la pseudoinversa o
+        la ridge regression.
+\end{itemize}
+\end{definizione}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1.15cm, y=0.62cm]
+\foreach \i in {1,...,3} \node[neur] (x\i) at (0,4-1.5*\i) {$x_\i$};
+\foreach \j in {1,...,8} \node[neurp, minimum size=5mm] (h\j) at (2.6,5.25-\j*1.05) {};
+\foreach \k in {1,2} \node[neur] (o\k) at (5.2,2.4-1.6*\k) {$o_\k$};
+\foreach \i in {1,...,3} \foreach \j in {1,...,8} \draw[grigio!70] (x\i) -- (h\j);
+\foreach \j in {1,...,8} \foreach \k in {1,2} \draw[rosso!80] (h\j) -- (o\k);
+\node[font=\footnotesize, align=center] at (1.3,-5.0) {$\mathbf{W}$ casuale\\(non addestrata)};
+\node[font=\footnotesize, align=center, rosso] at (3.9,-5.0) {$\mathbf{W}^{\mathit{out}}$\\(addestrata)};
+\node[font=\footnotesize, align=center] at (2.6,5.3) {molte unità: $\h = f(\mathbf W\x)$};
+\end{tikzpicture}
+\caption{Rete feedforward randomizzata: lo strato nascosto, ampio e con pesi casuali fissi, realizza una grande
+espansione in basi casuale; solo il readout lineare (rosso) viene addestrato.}
+\label{fig:rete-random}
+\end{figure}
+
+Lo strato nascosto non addestrato immerge in modo \textbf{non lineare} l'input in uno \textbf{spazio delle feature ad alta
+dimensione}, dove il problema ha più probabilità di essere risolvibile linearmente: è una \textbf{LBE} con basi casuali,
+giustificata dal teorema di Cover (\rif{sec:kernel}), la stessa proprietà sfruttata dai kernel. Il readout combina le
+feature con un modello lineare (\figrif{fig:rete-random}).
+
+\begin{algoritmo}[Rete feedforward randomizzata]
+\begin{enumerate}
+  \item \textbf{Costruzione}: riempire la matrice dei pesi nascosti $\mathbf W$ con valori casuali (ad esempio rumore
+        gaussiano), usando \textbf{molte unità}.
+  \item \textbf{Apprendimento} del readout: dati $l$ esempi $(\x_p,\dd_p)$, con $\mathbf H = f(\mathbf W\mathbf X)$
+        (le attivazioni nascoste di tutti gli esempi), si minimizza l'errore quadratico con il metodo diretto
+        (\rif{sec:equazioni-normali}):
+        \[
+        \mathbf W^{\mathit{out}} = \mathbf H^+\dd ,
+        \]
+        spesso con \textbf{regolarizzazione $L^2$}, utile per l'alto numero di unità (\rif{sec:tikhonov}):
+        \[
+        \mathbf W^{\mathit{out}} = (\mathbf H\T\mathbf H + \lambda\mathbf I)^{-1}\mathbf H\T\dd ,
+        \]
+        oppure con $L^1$.
+  \item \textbf{Uso}: si calcolano le attivazioni nascoste e poi le uscite
+        $\mathbf o(\x) = \mathbf W^{\mathit{out}}f(\mathbf W\x)$, applicando eventualmente una soglia o una funzione
+        non lineare per la classificazione.
+\end{enumerate}
+\end{algoritmo}
+
+I modelli di riferimento sono la RVFL, l'ELM e le reti RBF con centri casuali.
+
+\begin{idea}[Perché funziona]
+In una rete normale lo strato nascosto è un'espansione in basi \textbf{adattiva} $\phi_j(\x,\w)$, con pesi appresi;
+qui è un'espansione in basi \textbf{casuale} ma molto \textbf{ampia}. Se le basi sono abbastanza numerose, il problema
+diventa (quasi) linearmente separabile nello spazio nascosto, e basta un modello lineare in uscita, addestrabile in un
+solo passo: il costo è quello di una regressione lineare regolarizzata.
+\end{idea}
+
+\subsection{Pro e contro}
+
+\begin{itemize}
+  \item Un numero elevato di unità può fornire un'espansione in basi \textbf{sufficiente} per il task, con basi
+        teoriche (anche teoremi di approssimazione universale).
+  \item Sono \textbf{estremamente efficienti}, perché l'addestramento è limitato all'ultimo strato.
+  \item Esistono molte varianti: apprendimento incrementale aggiungendo neuroni (come il Cascade Correlation), pruning.
+  \item Modelli con meno unità adattive, addestrate sul task, restano \textbf{più eleganti}: il dibattito tra
+        \textbf{feature casuali} e \textbf{feature apprese} è aperto, e vale la pena conoscere entrambi gli approcci.
+  \item Si estendono alle reti ricorrenti: le \textbf{Echo State Network} (\rif{sec:esn}).
+\end{itemize}
+
+Sono utili con i \textbf{big data}, per implementazioni minuscole su dispositivi con risorse limitate (sistemi
+embedded, reti di sensori, edge computing), nel \textbf{deep learning}, dove l'addestramento è particolarmente oneroso
+(reti profonde randomizzate come pile di moduli RVFL/ELM, CNN randomizzate), e nelle \textbf{reti ricorrenti}, dove
+l'addestramento è ancora più oneroso e il bias introdotto dalla dinamica ha solide basi teoriche.
+
+\begin{idea}[Conclusione]
+La casualità non è un nemico: è un'alleata, se la si controlla. Ritornano gli stessi concetti: teorema di Cover,
+espansione in basi lineare, regolarizzazione, rappresentazione delle feature.
+\end{idea}
+
+\begin{puntichiave}
+\begin{itemize}
+  \item La casualità compare nei dati, nell'apprendimento, nella selezione degli iperparametri, negli ensemble, nei
+        modelli stessi.
+  \item Rete randomizzata: strato nascosto ampio con pesi casuali fissi, readout lineare
+        $\mathbf W^{\mathit{out}} = (\mathbf H\T\mathbf H+\lambda\mathbf I)^{-1}\mathbf H\T\dd$.
+  \item Funziona per il teorema di Cover: una LBE casuale molto ampia rende il problema quasi linearmente separabile.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item A quali livelli compare la casualità nel ML?
+  \item Descrivere una rete feedforward randomizzata: costruzione, addestramento del readout, uso.
+  \item Enunciare il teorema di Cover e spiegarne il legame con le reti randomizzate e con i kernel.
+  \item Pro e contro delle feature casuali rispetto alle feature apprese.
+\end{enumerate}
+\end{domande}

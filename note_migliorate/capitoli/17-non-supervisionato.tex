@@ -1,0 +1,329 @@
+\chapter{Apprendimento non supervisionato: K-means e SOM}
+\label{cap:nonsup}
+
+\begin{inbreve}
+Il capitolo introduce l'apprendimento non supervisionato dal punto di vista del clustering come quantizzazione
+vettoriale. Si ricava il K-means (versione on-line e batch) come discesa del gradiente sull'errore di quantizzazione e
+si arriva alle Self-Organizing Map di Kohonen, che al clustering aggiungono la preservazione della topologia e quindi
+la visualizzazione dei dati.
+\end{inbreve}
+
+\section{Apprendimento non supervisionato}
+
+Nell'apprendimento non supervisionato il training set contiene solo dati \textbf{non etichettati} $\langle\x\rangle$
+(\rif{sec:task}). I task principali sono il \textbf{clustering}, la \textbf{riduzione di dimensionalità} (con
+visualizzazione e pre-elaborazione: PCA, Multi-Dimensional Scaling, Independent Component Analysis, \dots) e la
+modellazione della densità (non trattata). Un motivo pratico della sua importanza è che i \textbf{dati non etichettati
+costano molto meno} di quelli etichettati.
+
+\begin{definizione}[Clustering]
+Il \termine{clustering} partiziona i dati in \textbf{cluster}, sottoinsiemi di dati simili: gli esempi di un cluster
+sono più simili tra loro che agli esempi di un altro cluster. Ogni cluster è rappresentato da un \termine{centroide}
+(prototipo, vettore di riferimento, \ingl{codevector}); l'insieme dei centroidi è il \termine{codebook}.
+\end{definizione}
+
+\begin{attenzione}[La metrica domina]
+Come nel K-NN, è la \textbf{distanza assunta} a stabilire quali esempi sono simili, e i raggruppamenti dipendono da
+quella metrica. La distanza euclidea è popolare ma è \textbf{solo una scelta}, con implicazioni profonde (ad esempio si
+possono pesare di meno gli outlier usando $1$ meno una gaussiana centrata sul prototipo).
+\end{attenzione}
+
+\section{Quantizzazione vettoriale}
+
+\begin{definizione}[Vector Quantization]
+La \termine{quantizzazione vettoriale} (VQ) codifica una varietà di dati $V\subseteq\R^n$ usando un insieme finito
+di vettori di riferimento (il codebook) $\w = (\w_1,\dots,\w_K)$, $\w_i\in\R^n$. Un vettore $\x\in V$ è descritto dal
+vettore di riferimento \textbf{vincente} (\ingl{best matching}) $\w_{i^*(\x)}$, quello con distorsione
+$d(\x,\w_{i^*(\x)})$ minima.
+\end{definizione}
+
+La VQ divide la varietà nei \textbf{poliedri di Voronoi} (\rif{sec:knn-algoritmo}, \figrif{fig:voronoi})
+\[
+V_i = \{\x\in V : \norm{\x-\w_i}\le\norm{\x-\w_j}\ \forall j\},
+\]
+e ogni $\x$ è descritto dal vettore di riferimento della sua cella. Il problema è l'inverso di quello del K-NN:
+\textbf{dato il dataset, trovare i centri} che minimizzano la loss. In generale è difficile: trovare il codebook ottimo è
+\textbf{NP-completo}.
+
+\begin{esempio}[Quantizzazione in una dimensione]
+Nell'elaborazione dei segnali la quantizzazione approssima un intervallo continuo di valori con un piccolo insieme di
+simboli discreti, commettendo un errore di quantizzazione (distorsione): ogni valore è sostituito dal centroide del suo
+intervallo.
+\begin{center}
+\begin{tikzpicture}[x=1.2cm]
+\draw[->] (0,0) -- (9.3,0);
+\foreach \t in {1.5,3.2,4.6,6.4,8.0} \draw (\t,-0.15) -- (\t,0.15);
+\foreach \c in {0.75,2.35,3.9,5.5,7.2,8.65} \fill[blu] (\c,0) circle (2.2pt);
+\node[font=\scriptsize, grigio] at (2.35,-0.4) {cella};
+\node[font=\scriptsize, blu] at (2.35,0.35) {centroide};
+\end{tikzpicture}
+\end{center}
+\end{esempio}
+
+Il clustering ha un obiettivo più generale (trovare raggruppamenti \emph{interessanti}, spesso definiti implicitamente
+dalla procedura stessa e non dall'errore di quantizzazione minimo), ma la VQ fornisce un quadro utile e i suoi algoritmi
+sono molto usati per il clustering partizionale.
+
+\subsection{L'errore di quantizzazione}
+
+L'obiettivo è partizionare in modo ottimo una distribuzione sconosciuta in regioni approssimate da prototipi, cioè
+trovare un quantizzatore $\x\mapsto c(\x) = \w_{i^*(\x)}$ da uno spazio continuo a uno discreto. Con la distorsione
+quadratica $d(\x,c(\x)) = \norm{\x-c(\x)}^2$ (\rif{sec:loss}), la loss è la distorsione attesa (errore di
+ricostruzione o di quantizzazione):
+\[
+E = \int\norm{\x-\w_{i^*(\x)}}^2\,p(\x)\,d\x ,
+\]
+dove $p(\x)$ è la distribuzione degli input. In versione discreta, su $l$ dati e $K$ prototipi,
+\begin{equation}\label{eq:errore-quantizzazione}
+E = \sum_{i=1}^{l}\sum_{j=1}^{K}\norm{\x_i-\w_j}^2\,\delta_{\mathit{winner}}(i,j),\qquad
+\delta_{\mathit{winner}}(i,j) = \begin{cases}1 & \text{se } j \text{ è il vincitore per } \x_i\\ 0 & \text{altrimenti.}\end{cases}
+\end{equation}
+Minimizzare $E$ rispetto ai $\w$ è il problema della VQ. L'integrando \textbf{non è differenziabile con continuità},
+perché il vincitore cambia in modo discreto al variare di $\x$; le derivate si calcolano però \textbf{localmente},
+fissando $\x$ dentro una cella di Voronoi.
+
+\section{K-means}
+
+\subsection{Versione on-line}
+
+\begin{proprieta}{Regola del K-means on-line}
+La discesa del gradiente stocastica su \eqref{eq:errore-quantizzazione} dà, per ogni esempio $\x_i$,
+\[
+\Delta\w_{i^*} = \eta\,\delta_{\mathit{winner}}(i,i^*)\,(\x_i-\w_{i^*}) :
+\]
+si sposta \textbf{solo il prototipo vincitore}, verso $\x_i$.
+\end{proprieta}
+\begin{proof}
+Per un esempio $\x_i$ fissato, il termine di $E$ che dipende da $\w_j$ è $\norm{\x_i-\w_j}^2\delta_{\mathit{winner}}(i,j)$.
+Poiché $\norm{\x_i-\w_j}^2 = \sum_t(x_{i,t}-w_{j,t})^2$, la derivata rispetto a $\w_j$ è
+$-2(\x_i-\w_j)\,\delta_{\mathit{winner}}(i,j)$: è nulla per tutti i prototipi tranne il vincitore. Muovendosi nel verso
+opposto al gradiente (e assorbendo il 2 in $\eta$) si ottiene la regola.
+\end{proof}
+
+È l'algoritmo \termine{K-means} nella versione on-line: una discesa del gradiente stocastica, quindi soggetta a
+\textbf{minimi locali} e dipendente dall'\textbf{inizializzazione}; il \textbf{numero di cluster} va fornito in
+anticipo.
+
+\subsection{Versione batch}
+
+\begin{algoritmo}[K-means batch]
+\begin{enumerate}
+  \item Scegliere $K$ centri: $K$ esempi estratti a caso, o $K$ punti casuali nella regione che contiene i dati.
+  \item Assegnare ogni esempio al centro più vicino (il \textbf{vincitore}):
+        \[
+        i^*(\x) = \argmin_i\norm{\x-\w_i}^2,\qquad \norm{\x-\w_i}^2 = \sum_{j=1}^{n}(x_j-w_{ij})^2 .
+        \]
+  \item Ricalcolare ogni centro come \textbf{media} (centroide) dei membri del suo cluster:
+        \[
+        \w_i = \frac{1}{\abs{\mathrm{cluster}_i}}\sum_{\x_j\in\mathrm{cluster}_i}\x_j .
+        \]
+  \item Se il criterio di convergenza non è soddisfatto (nessuna o minima riassegnazione, minima diminuzione dell'errore
+        quadratico), tornare al passo 2.
+\end{enumerate}
+\end{algoritmo}
+
+\begin{proof}[Dalla versione on-line alla batch]
+Sommando su tutti gli esempi $\x$ di un cluster $C$ il passo on-line con $\eta=1$ e mediando:
+\[
+\w_{\mathit{new}} = \w_{\mathit{old}} + \frac{1}{\abs{C}}\sum_{\x\in C}(\x-\w_{\mathit{old}}) = \w_{\mathit{old}} + \frac{1}{\abs C}\sum_{\x\in C}\x - \w_{\mathit{old}} = \frac{1}{\abs C}\sum_{\x\in C}\x ,
+\]
+cioè la media del cluster, il passo 3 dell'algoritmo batch.
+\end{proof}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=4 by 1, horizontal sep=0.25cm}, scatola, width=4.3cm, height=4.3cm,
+  xmin=0, xmax=4, ymin=0, ymax=4, xtick=\empty, ytick=\empty]
+\nextgroupplot[title={\footnotesize 1. inizializzazione}]
+\addplot[only marks, mark=*, mark size=1pt, grigio] table {dati/km_punti.dat};
+\addplot[only marks, mark=x, mark size=4pt, very thick, inchiostro] table {dati/km_centri0.dat};
+\nextgroupplot[title={\footnotesize 2. assegnazione}]
+\addplot[only marks, mark=*, mark size=1pt, rosso] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/km_ass0.dat};
+\addplot[only marks, mark=*, mark size=1pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/km_ass0.dat};
+\addplot[only marks, mark=*, mark size=1pt, verde] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{2:2}] {dati/km_ass0.dat};
+\addplot[only marks, mark=x, mark size=4pt, very thick, inchiostro] table {dati/km_centri0.dat};
+\nextgroupplot[title={\footnotesize 3. nuovi centri}]
+\addplot[only marks, mark=*, mark size=1pt, rosso] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/km_ass0.dat};
+\addplot[only marks, mark=*, mark size=1pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/km_ass0.dat};
+\addplot[only marks, mark=*, mark size=1pt, verde] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{2:2}] {dati/km_ass0.dat};
+\addplot[only marks, mark=x, mark size=4pt, very thick, inchiostro] table {dati/km_centri1.dat};
+\nextgroupplot[title={\footnotesize 4. nuova assegnazione}]
+\addplot[only marks, mark=*, mark size=1pt, rosso] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/km_ass1.dat};
+\addplot[only marks, mark=*, mark size=1pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/km_ass1.dat};
+\addplot[only marks, mark=*, mark size=1pt, verde] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{2:2}] {dati/km_ass1.dat};
+\addplot[only marks, mark=x, mark size=4pt, very thick, inchiostro] table {dati/km_centri1.dat};
+\end{groupplot}
+\end{tikzpicture}
+\caption{K-means batch con $K=3$ (calcolato): inizializzazione dei centri ($\times$), assegnazione degli esempi al centro
+più vicino, ricalcolo dei centri come medie, nuova assegnazione.}
+\label{fig:kmeans}
+\end{figure}
+
+\subsection{Pregi e difetti}
+
+\begin{itemize}
+  \item È l'algoritmo più semplice e usato con un criterio d'errore quadratico: facile da implementare ed efficiente.
+  \item Il numero $K$ di cluster va fornito.
+  \item I minimi locali di $E$ rendono il risultato dipendente dall'inizializzazione, con prototipi solo sub-ottimi.
+  \item Funziona molto bene per cluster \textbf{compatti e ipersferici}; con cluster di altre forme (ad esempio due
+        spirali intrecciate) fallisce.
+  \item \textbf{Nessuna visualizzazione}: non proietta i dati in uno spazio a dimensione minore, e l'indicizzazione dei
+        prototipi è arbitraria, quindi la mappatura non è ordinata.
+\end{itemize}
+
+Per ridurre il problema dei minimi locali si usa una regola \textbf{soft-max}: si modificano \textbf{tutti} i centri,
+con un passo che decresce con la loro distanza da $\x$ (ad esempio il \ingl{maximum-entropy clustering}). Le SOM sono
+un'istanza di questa strategia, in cui però la vicinanza tra prototipi è definita su una \textbf{mappa ordinata}.
+
+\section{Self-Organizing Map}
+
+Le \termine{Self-Organizing Map} (SOM, mappe di Kohonen) sono reti di neuroni disposti su una \textbf{griglia regolare
+a bassa dimensione} (di solito 2D): ogni unità è identificata dalle sue \textbf{coordinate} $\vv r_i$ sulla mappa,
+riceve \textbf{lo stesso input} $\x$ e ha un vettore di pesi $\w_i$ della stessa dimensione $n$ dell'input
+(\figrif{fig:som-griglia}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm]
+\pgfmathsetseed{4}
+\foreach \k in {1,...,40} \fill[grigio] ({0.4+2.2*rnd},{0.4+2.2*rnd}) circle (1.1pt);
+\draw[grigio] (0,0) rectangle (3,3);
+\node[font=\footnotesize] at (1.5,-0.35) {spazio di input ($\R^n$)};
+\fill[rosso] (1.9,2.1) circle (2pt) node[above, font=\scriptsize] {$\x$};
+\begin{scope}[xshift=5.5cm, yshift=0.2cm]
+\foreach \i in {0,...,5} \foreach \j in {0,...,4} \node[circle, draw, inner sep=0pt, minimum size=3.2mm] (u\i\j) at (\i*0.5,\j*0.55) {};
+\foreach \i in {0,...,5} \foreach \j in {0,...,3} { \pgfmathtruncatemacro{\jj}{\j+1} \draw[grigio] (u\i\j) -- (u\i\jj); }
+\foreach \i in {0,...,4} \foreach \j in {0,...,4} { \pgfmathtruncatemacro{\ii}{\i+1} \draw[grigio] (u\i\j) -- (u\ii\j); }
+\fill[rosso] (u32) circle (1.6mm);
+\foreach \a/\b in {2/2,4/2,3/1,3/3} \fill[rosso!40] (u\a\b) circle (1.6mm);
+\node[font=\footnotesize, align=center] at (1.25,-0.6) {mappa 2D di unità};
+\end{scope}
+\draw[->, rosso, thick] (2.0,2.2) to[bend left=15] node[above, font=\scriptsize] {vincitore} (6.9,1.35);
+\end{tikzpicture}
+\caption{Una SOM: ogni unità della griglia ha un vettore di pesi nello spazio di input. Il vincitore è l'unità con i pesi
+più vicini all'input; i suoi vicini sulla mappa (rosa) vengono aggiornati con lui.}
+\label{fig:som-griglia}
+\end{figure}
+
+La SOM apprende una mappa dallo spazio di input alla griglia che \textbf{preserva la topologia}: unità vicine sulla
+mappa rispondono a input simili, e punti vicini nello spazio di input vengono mappati sulla stessa unità o su unità
+vicine. Si usa per il \textbf{clustering} (i cluster si individuano sulla mappa), per la \textbf{VQ} (l'input diventa il
+vettore dei pesi del vincitore), per la \textbf{compressione} (l'input diventa l'indice del vincitore) e per la
+\textbf{proiezione ed esplorazione} dei dati in due dimensioni.
+
+L'apprendimento è \termine{competitivo}: i neuroni competono per ogni input, il vincitore apprende di più, e
+gradualmente le unità si specializzano su insiemi diversi di input. Un analogo biologico è la corteccia
+somatosensoriale, in cui una mappa topologicamente ordinata del corpo associa neuroni adiacenti a parti del corpo
+vicine.
+
+\begin{algoritmo}[SOM]
+\begin{enumerate}
+  \item Inizializzare casualmente i pesi della mappa.
+  \item Estrarre un input $\x$.
+  \item \textbf{Fase competitiva}: trovare il vincitore, l'unità con $\w$ più simile a $\x$ (\ingl{winner-take-all}):
+        \[
+        i^*(\x) = \argmin_i\norm{\x-\w_i}.
+        \]
+  \item \textbf{Fase cooperativa}: aggiornare i pesi del vincitore \textbf{e delle unità a lui vicine sulla mappa}:
+        \begin{equation}\label{eq:som}
+        \w_i(t+1) = \w_i(t) + \eta(t)\,h_{i,i^*(\x)}(t)\,\big[\x-\w_i(t)\big].
+        \end{equation}
+  \item Ripetere fino a convergenza.
+\end{enumerate}
+\end{algoritmo}
+
+La fase cooperativa è un aggiornamento hebbiano (i pesi si avvicinano all'input) modulato dalla \termine{funzione di
+vicinato} $h$, che decresce con la distanza \textbf{sulla mappa} tra l'unità $i$ e il vincitore, ad esempio una
+gaussiana
+\[
+h_{i,i^*}(t) = \exp\left(-\frac{\norm{\vv r_i-\vv r_{i^*}}^2}{2\sigma^2(t)}\right),
+\]
+con $\sigma(t)$ larghezza del vicinato (in pratica si usano anche vicinati di forma geometrica, rettangolare o
+esagonale, con un numero finito di unità). Il \textbf{learning rate} $\eta$ e il \textbf{raggio} $\sigma$ diminuiscono
+con le iterazioni: il vicinato è \textbf{ampio all'inizio} (ordinamento globale della mappa) e si restringe lentamente
+(convergenza e raffinamento locale).
+
+\begin{idea}[L'emergere dell'ordine topologico]
+I pesi non sono modificati indipendentemente ma \textbf{per sottoinsiemi topologicamente legati}: il vincitore e i suoi
+vicini sulla griglia ricevono aggiornamenti simili e quindi, dopo l'apprendimento, rispondono a input simili. Così
+l'informazione topologica viene trasmessa alla mappa (\figrif{fig:som-training}). Una dimostrazione formale
+dell'ordinamento è però difficile.
+\end{idea}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=6 by 1, horizontal sep=0.18cm}, scatola, width=3.45cm, height=3.45cm,
+  xmin=-0.05, xmax=1.05, ymin=-0.05, ymax=1.05, xtick=\empty, ytick=\empty]
+\nextgroupplot[title={\scriptsize $t=0$}]
+\addplot[thin, blu] table {dati/som_0.dat};
+\nextgroupplot[title={\scriptsize $t=20$}]
+\addplot[thin, blu] table {dati/som_20.dat};
+\nextgroupplot[title={\scriptsize $t=100$}]
+\addplot[thin, blu] table {dati/som_100.dat};
+\nextgroupplot[title={\scriptsize $t=1000$}]
+\addplot[thin, blu] table {dati/som_1000.dat};
+\nextgroupplot[title={\scriptsize $t=5000$}]
+\addplot[thin, blu] table {dati/som_5000.dat};
+\nextgroupplot[title={\scriptsize $t=20000$}]
+\addplot[thin, blu] table {dati/som_20000.dat};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Addestramento di una SOM $10\times10$ su dati uniformi nel quadrato (calcolato): i vettori dei pesi, collegati
+secondo la griglia, partono concentrati al centro e si distendono progressivamente sulla distribuzione.}
+\label{fig:som-training}
+\end{figure}
+
+\begin{table}[ht]
+\centering\small
+\caption{K-means e SOM a confronto.}
+\begin{tabularx}{0.95\linewidth}{XX}
+\toprule
+K-means & SOM \\
+\midrule
+aggiorna solo il vincitore & aggiorna il vincitore e i suoi vicini sulla griglia, con un vicinato che si restringe \\
+prototipi senza alcun ordine & prototipi su una mappa ordinata che preserva la topologia \\
+nessuna visualizzazione & visualizzazione 2D dei dati \\
+sensibile ai minimi locali & il vicinato ampio iniziale aiuta a evitarli \\
+\bottomrule
+\end{tabularx}
+\end{table}
+Con un vicinato di raggio zero la SOM si riduce al K-means on-line.
+
+\subsection{Visualizzazione}
+
+Sulla mappa si possono visualizzare la \textbf{densità} dei vettori di riferimento (colore proporzionale al numero di
+esempi assegnati a ogni unità) e le \textbf{distanze} tra i pesi di unità vicine, con la \termine{U-matrix}: colori scuri
+indicano grandi distanze tra unità adiacenti (confini tra cluster), colori chiari piccole distanze (unità dello stesso
+cluster). Questo rende la SOM facilmente interpretabile. Ad esempio, addestrando una mappa $13\times9$ su 39 indicatori
+di benessere di 77 paesi, le zone chiare della U-matrix raggruppano paesi simili e le zone scure separano i gruppi,
+senza alcuna ipotesi a priori sulla forma dei cluster.
+
+\section{Valutare un clustering}
+
+La valutazione è spesso \textbf{soggettiva}: esistono pochi riferimenti oggettivi, tranne in sotto-domini ben definiti.
+Esistono misure \textbf{oggettive} come l'errore di quantizzazione, che però dipende dal numero di centroidi. Non si usa
+semplicemente l'etichetta di un task di classificazione sottostante (la \emph{purity}): se si hanno le etichette, tanto
+vale usare un classificatore. Va distinta la qualità del clustering in sé dalla qualità dei risultati per il dominio.
+Altri metodi non supervisionati sono il clustering gerarchico (dendrogrammi), l'analisi delle componenti principali, le
+regole di associazione, ICA, Multidimensional Scaling, t-SNE.
+
+\begin{puntichiave}
+\begin{itemize}
+  \item VQ: codifica i dati con un codebook; loss = errore di quantizzazione $\sum\norm{\x_i-\w_{i^*}}^2$.
+  \item K-means on-line: $\Delta\w_{i^*} = \eta(\x-\w_{i^*})$ solo per il vincitore; batch: assegnazione e media.
+  \item SOM: griglia di unità; fase competitiva (vincitore) e cooperativa (vincitore e vicini sulla mappa, con vicinato
+        gaussiano che si restringe); preserva la topologia e permette la visualizzazione (U-matrix).
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Definire clustering e quantizzazione vettoriale. Cos'è l'errore di quantizzazione?
+  \item Derivare la regola on-line del K-means e passare alla versione batch. Pregi e difetti del K-means.
+  \item Descrivere la SOM: architettura, fase competitiva, fase cooperativa, funzione di vicinato.
+  \item Perché la SOM preserva la topologia? Differenze tra K-means e SOM.
+  \item Come si visualizza una SOM?
+\end{enumerate}
+\end{domande}

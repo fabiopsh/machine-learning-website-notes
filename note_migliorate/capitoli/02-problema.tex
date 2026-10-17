@@ -1,0 +1,589 @@
+\chapter{Il problema dell'apprendimento}
+\label{cap:problema}
+
+\begin{inbreve}
+Questo capitolo formula il problema che tutto il corso affronta: inferire una funzione sconosciuta a partire da
+esempi, in modo che il risultato sia accurato su dati nuovi. Si descrivono gli ingredienti di un sistema di ML
+(dati, task, modello, algoritmo di apprendimento, validazione), le funzioni di loss associate ai diversi task e
+il ciclo di progettazione di un'applicazione.
+\end{inbreve}
+
+\section{Apprendere funzioni da esempi}
+
+\begin{definizione}[Machine Learning]
+Il \termine{Machine Learning} (ML, apprendimento automatico) studia e propone metodi per costruire
+(\termine{inferire}) dipendenze, funzioni o ipotesi a partire da esempi di dati osservati, in modo che esse
+\begin{itemize}
+  \item si \textbf{adattino} agli esempi noti (\ingl{fit});
+  \item siano in grado di \textbf{generalizzare}, cioè di dare risposte con accuratezza ragionevole su dati nuovi;
+\end{itemize}
+secondo risultati \textbf{verificabili}, sotto condizioni e criteri statistici e computazionali, tenendo conto
+dell'\textbf{espressività} e della \textbf{complessità algoritmica} dei modelli e degli algoritmi.
+\end{definizione}
+
+Operativamente il sistema apprende dall'\textbf{esperienza} (un insieme di esempi di cui si conosce il
+risultato) per risolvere un compito computazionale, costruendo un \termine{modello} (o \termine{ipotesi}) da
+usare per fare predizioni. Il corso adotta il quadro dell'\textbf{apprendimento come approssimazione di una
+funzione sconosciuta a partire da esempi}. Il vantaggio è che task diversi (classificazione, regressione, \dots)
+vengono trattati in modo uniforme --- matematicamente, nel quadro degli spazi di funzioni (spazi di Hilbert) ---
+e quindi con una formulazione rigorosa.
+
+\subsection{Quando serve il ML}
+
+Il ML va usato con \textbf{opportunità} (quando serve davvero) e \textbf{consapevolezza} (dei suoi requisiti e
+limiti). È la scelta giusta quando:
+\begin{itemize}
+  \item c'è \textbf{poca o nessuna conoscenza a priori}: non esiste una teoria del fenomeno, oppure la conoscenza
+        è \textbf{troppo difficile da formalizzare} a mano (le persone riconoscono i volti o il parlato, ma non
+        sanno descrivere \emph{come} lo fanno), oppure la conoscenza umana \textbf{non basta} (prevedere la forza
+        di legame di una molecola con una proteina);
+  \item i dati sono \textbf{incerti, rumorosi o incompleti}, e questo ostacola una soluzione esatta;
+  \item serve un \textbf{comportamento personalizzato} (filtrare email o pagine web secondo le preferenze di un
+        utente);
+  \item ed è relativamente \textbf{facile disporre di esperienza}, cioè di dati di cui si conosce la risposta
+        corretta.
+\end{itemize}
+In cambio il ML richiede una \textbf{fonte di esperienza rappresentativa} per l'addestramento e una certa
+\textbf{tolleranza sulla precisione}: i risultati non sono mai garantiti esatti.
+
+\begin{esempio}[Riconoscimento di cifre scritte a mano]
+Ogni cifra è un'immagine di $8\times 8$ pixel. Scrivere a mano le regole che distinguono un ``3'' da un ``8''
+per tutte le possibili calligrafie è di fatto impossibile, mentre è facile raccogliere molti esempi di cifre già
+etichettate. Si lascia allora che il sistema \textbf{apprenda un classificatore} $f$ che associa a ogni immagine
+la classe corretta $0,1,\dots,9$: un problema di classificazione con dieci classi.
+\end{esempio}
+
+In tutti i casi seguenti si vuole inferire una funzione generale a partire da un \termine{training set} (TR) di
+coppie $\langle x, f(x)\rangle$ note. Gli ultimi due esempi mostrano che input e output possono essere anche
+\textbf{dati complessi}: stringhe, sequenze, grafi.
+
+\begin{table}[ht]
+\centering\small
+\caption{Esempi di funzioni da apprendere.}
+\label{tab:esempi-funzioni}
+\begin{tabularx}{0.95\linewidth}{>{\raggedright\arraybackslash}p{3.3cm}XX}
+\toprule
+Problema & Input $x$ & Output $f(x)$ \\
+\midrule
+Riconoscimento della scrittura & dati del movimento della penna & lettera dell'alfabeto \\
+Diagnosi medica & proprietà del paziente (sintomi, esami) & malattia o terapia consigliata \\
+Riconoscimento facciale & bitmap del volto & nome della persona \\
+Rilevamento di spam & messaggio email & spam / non spam \\
+\ingl{Protein folding} & sequenza di amminoacidi (stringa di lunghezza variabile) & coordinate 3D degli atomi (sequenza di vettori) \\
+\ingl{Drug design} & molecola (grafo di atomi e legami) & forza di legame con la proteasi dell'HIV (numero reale) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Gli ingredienti di un sistema di ML}
+
+Un sistema di ML predittivo si descrive attraverso cinque componenti, che sono anche una guida alle scelte di
+progetto (\figrif{fig:sistema-ml}):
+\begin{itemize}
+  \item \textbf{dati}: le osservazioni del mondo, cioè l'esperienza disponibile;
+  \item \textbf{task}: lo scopo dell'applicazione, cioè cosa si vuole ottenere;
+  \item \textbf{modello}: l'ipotesi che viene costruita o migliorata apprendendo dai dati;
+  \item \textbf{algoritmo di apprendimento}: guida la costruzione del modello regolandone i parametri sul
+        problema;
+  \item \textbf{validazione}: valuta la qualità del modello ottenuto.
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[node distance=1.2cm]
+\node[blocco, minimum width=2.3cm] (dati) {\textbf{Dati}\\[-1pt]{\footnotesize osservazioni del mondo}};
+\node[blocco, right=1.4cm of dati, minimum width=2.3cm, line width=1pt] (mod) {\textbf{Modello}\\[-1pt]{\footnotesize ipotesi $h$}};
+\node[right=1.4cm of mod, font=\small, align=center] (pred) {Predizione\\$h(\x)$};
+\node[blocco, above=0.9cm of mod, xshift=-2.6cm] (task) {Task};
+\node[blocco, above=0.9cm of mod] (alg) {Algoritmo di\\apprendimento};
+\node[blocco, above=0.9cm of mod, xshift=2.6cm] (val) {Validazione};
+\draw[freccia] (dati) -- (mod);
+\draw[freccia] (mod) -- (pred);
+\draw[->, grigio] (task.south) -- (mod.north west);
+\draw[->, grigio] (alg) -- (mod);
+\draw[->, grigio] (val.south) -- (mod.north east);
+\end{tikzpicture}
+\caption{Gli ingredienti di un sistema di ML predittivo: il modello è costruito dai dati in base al task,
+all'algoritmo di apprendimento e alla validazione.}
+\label{fig:sistema-ml}
+\end{figure}
+
+\subsection{Dati}
+\label{sec:dati}
+
+Il primo problema è la \textbf{rappresentazione}: come catturare la struttura degli oggetti analizzati. Nel
+caso \termine{piatto} (\ingl{flat}, linguaggio attributo-valore) ogni oggetto è un \textbf{vettore di dimensione
+fissa} di proprietà (\termine{feature}) e il dataset è una tabella. Gli attributi possono essere
+\textbf{categorici} o discreti (colore: giallo, rosso) o \textbf{continui} (peso, costo), e possono esserci
+\textbf{dati mancanti} (indicati con ``?'').
+
+\begin{definizione}[Notazione sui dati]
+I dati sono organizzati in una matrice $X$ di dimensione $l\times n$: $l$ righe, gli \termine{esempi}
+($p = 1,\dots,l$), e $n$ colonne, le feature ($i = 1,\dots,n$).
+\begin{itemize}
+  \item $\x$ è un generico esempio (\ingl{pattern}, istanza, campione), cioè una riga della tabella;
+        $l$ è la \textbf{dimensione del dataset}, $n$ la \textbf{dimensione dell'input};
+  \item $x_i$ (o $x_j$) è la componente $i$ di un esempio $\x$ (omettendo l'indice dell'esempio);
+  \item $\x_p$ è il $p$-esimo esempio e $x_{p,i}$, scritto anche $(\x_p)_i$, la sua componente $i$;
+  \item il target dell'esempio $p$ si indica con $d_p$ (anche $y_p$ o $t_p$).
+\end{itemize}
+Quando il contesto è chiaro alcuni indici vengono omessi.
+\end{definizione}
+
+I dati possono essere \textbf{pre-elaborati}: scalatura delle variabili, codifica, selezione delle feature.
+
+\subsubsection{Codifica delle variabili categoriche}
+Per usare variabili categoriche in modelli numerici bisogna codificarle.
+\begin{itemize}
+  \item Con \textbf{due classi} si usa $0/1$ oppure $-1/+1$.
+  \item Con \textbf{più classi} si può usare $1,2,3,\dots$, ma questa codifica introduce una somiglianza
+        artificiale (la classe 1 risulta ``più vicina'' alla 2 che alla 3). È adatta solo a variabili
+        \textbf{categoriche ordinate} (piccolo, medio, grande).
+  \item Per simboli senza ordine si usa la codifica \termine{1-of-$k$} o \termine{one-hot}: ogni simbolo diventa
+        un vettore con un solo 1, ad esempio $A=(1,0,0)$, $B=(0,1,0)$, $C=(0,0,1)$. Tutti i simboli risultano
+        equidistanti (a distanza $\sqrt2$). Si usa sia per l'input sia per l'output.
+\end{itemize}
+
+\subsubsection{Dati strutturati}
+Molti dati non sono naturalmente vettori: \textbf{sequenze}, \textbf{alberi}, \textbf{grafi}, dati
+multi-relazionali (immagini, serie temporali, stringhe, DNA e proteine, molecole, la rete dei link tra pagine
+web; \figrif{fig:dati-strutturati}). Il loro trattamento diretto è l'argomento dei capitoli~\ref{cap:rnn}
+e~\ref{cap:grafi}.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[nd/.style={circle, draw, minimum size=5.5mm, inner sep=0pt, font=\scriptsize}]
+\foreach \i in {1,...,5} \node[nd] (s\i) at (\i*0.85,0) {$l_\i$};
+\foreach \i [evaluate=\i as \j using int(\i+1)] in {1,...,4} \draw[->] (s\i) -- (s\j);
+\node[font=\footnotesize, grigio] at (2.55,-0.75) {sequenza};
+\begin{scope}[xshift=6.3cm, yshift=0.2cm]
+\foreach \k/\a in {1/90,2/150,3/210,4/270,5/330,6/30} \node[nd] (m\k) at (\a:0.75) {C};
+\draw (m1)--(m2)--(m3)--(m4)--(m5)--(m6)--(m1);
+\node[nd] (o) at (90:1.55) {O}; \draw (m1)--(o);
+\node[nd] (n) at (330:1.6) {N}; \draw (m5)--(n);
+\node[font=\footnotesize, grigio] at (0,-1.35) {molecola (grafo)};
+\end{scope}
+\begin{scope}[xshift=10.2cm]
+\node[nd] (a) at (0,0.7) {}; \node[nd] (b) at (1.1,0.9) {}; \node[nd] (c) at (0.5,-0.2) {};
+\node[nd] (d) at (1.6,-0.1) {}; \node[nd] (e) at (2.2,0.8) {};
+\draw[->] (a)--(b); \draw[->] (b)--(c); \draw[->] (c)--(a); \draw[->] (b)--(d); \draw[->] (d)--(e); \draw[->] (e)--(b);
+\node[font=\footnotesize, grigio] at (1.1,-1.15) {pagine web e link};
+\end{scope}
+\end{tikzpicture}
+\caption{Dati strutturati: una sequenza, una molecola rappresentata come grafo, una rete di pagine web.}
+\label{fig:dati-strutturati}
+\end{figure}
+
+\subsubsection{Rumore, outlier, feature selection}
+\begin{itemize}
+  \item Il \termine{rumore} è l'aggiunta di fattori esterni al segnale informativo, dovuta alla casualità delle
+        misure e non alla legge sottostante (ad esempio rumore gaussiano).
+  \item Gli \termine{outlier} sono valori insoliti, incoerenti con la maggior parte delle osservazioni (ad esempio
+        errori di misura anomali). Si gestiscono rilevandoli e rimuovendoli in pre-elaborazione, oppure usando
+        metodi di modellazione \textbf{robusti}.
+  \item La \termine{feature selection} seleziona un piccolo numero di feature informative, per ottenere una
+        rappresentazione dell'input adatta al problema (\rif{sec:feature-selection}).
+\end{itemize}
+
+\subsection{Task}
+\label{sec:task}
+
+Il task definisce quale conoscenza si vuole ottenere e quali informazioni sono disponibili. Si distinguono
+\textbf{task predittivi} (classificazione, regressione: approssimazione di funzioni, il fuoco del corso) e
+\textbf{task descrittivi} (cluster analysis, regole di associazione: trovare gruppi in dati non classificati).
+
+\begin{definizione}[Apprendimento supervisionato]
+\textbf{Dati}: esempi di training nella forma $\langle\text{input},\text{output}\rangle = \langle\x, d\rangle$
+(esempi \termine{etichettati}) di una funzione sconosciuta $f$, nota solo nei punti degli esempi. Il
+\termine{target} $d$ (indicato anche con $t$ o $y$) è fornito da un ``insegnante'' secondo $f(\x)$.\\
+\textbf{Obiettivo}: trovare una buona approssimazione di $f$, cioè un'\textbf{ipotesi} $h$ utilizzabile per
+predire su dati mai visti $\x'$: un'ipotesi che \textbf{generalizzi}.
+\end{definizione}
+
+Il target può essere
+\begin{itemize}
+  \item \textbf{categorico} $\Rightarrow$ \termine{classificazione}: $f(\x)\in\{1,2,\dots,K\}$ (funzione a valori
+        discreti);
+  \item \textbf{numerico} $\Rightarrow$ \termine{regressione}: $f(\x)\in\R$ o $\R^K$ (funzione a valori reali).
+\end{itemize}
+Il formalismo dell'approssimazione di funzioni dà ai due casi una \textbf{visione unificata}. In terminologia
+statistica gli input sono le \termine{variabili indipendenti}, gli output le \termine{variabili dipendenti} o
+risposte.
+
+\begin{definizione}[Apprendimento non supervisionato]
+Non c'è insegnante: il training set contiene solo dati \textbf{non etichettati} $\langle\x\rangle$. Gli
+obiettivi tipici sono il \termine{clustering} (partizionare i dati in sottoinsiemi di elementi ``simili'',
+\figrif{fig:clustering}), la \textbf{riduzione di dimensionalità}, la visualizzazione o la pre-elaborazione, la
+\textbf{modellazione della densità} dei dati.
+\end{definizione}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=0.9]
+\pgfmathsetseed{3}
+\foreach \i in {1,...,22} \fill[blu] ({1.2+0.55*rand},{1.1+0.45*rand}) circle (1.3pt);
+\foreach \i in {1,...,22} \fill[rosso] ({4.2+0.55*rand},{2.0+0.5*rand}) circle (1.3pt);
+\draw[blu, thick] (1.2,1.1) ellipse (0.95 and 0.8);
+\draw[rosso, thick] (4.2,2.0) ellipse (0.95 and 0.85);
+\draw[thick] (1.2,1.1) node {$\times$} node[below right, font=\footnotesize] {};
+\draw[thick] (4.2,2.0) node {$\times$};
+\node[font=\footnotesize] at (1.2,-0.05) {cluster 1};
+\node[font=\footnotesize] at (4.2,0.85) {cluster 2};
+\draw[->, grigio] (-0.2,-0.3) -- (5.8,-0.3) node[right, black] {$x_1$};
+\draw[->, grigio] (-0.2,-0.3) -- (-0.2,3.1) node[above, black] {$x_2$};
+\end{tikzpicture}
+\caption{Clustering: i dati sono partizionati in gruppi, ciascuno rappresentato dal suo centroide ($\times$).}
+\label{fig:clustering}
+\end{figure}
+
+\subsubsection{Classificazione}
+I pattern sono visti come membri di una classe e l'obiettivo è assegnare a ciascuno la classe corretta. Con
+\textbf{due} classi $f(\x)$ è una funzione booleana: si parla di \termine{classificazione binaria} o
+\termine{concept learning} (vero/falso, $0/1$, $-1/+1$, negativo/positivo); con più classi il problema è
+\termine{multi-classe}. Geometricamente, classificare significa \textbf{suddividere lo spazio degli input in
+regioni di decisione}. L'esempio più semplice è il separatore lineare in $\R^2$ (\figrif{fig:separatore}): una
+retta, in generale un iperpiano, che divide i punti delle due classi. L'iperpiano è l'insieme dei punti $\x$ con
+\[
+\w\T\x + w_0 = w_1x_1 + w_2x_2 + w_0 = 0,
+\]
+e il classificatore corrispondente è
+\[
+h(\x) = \begin{cases} 1 & \text{se } \w\T\x+w_0\ge 0\\ 0 & \text{altrimenti}\end{cases}
+\qquad\text{oppure}\qquad h(\x) = \sign(\w\T\x+w_0).
+\]
+Questo modello si chiama \termine{Linear Threshold Unit} (LTU) ed è studiato nel capitolo~\ref{cap:lineari}.
+Funzioni a valori in $\{0,1\}$ come questa si dicono \termine{funzioni indicatrici}; l'insieme $H$ di tutte le
+\termine{dicotomie} (divisioni in due classi) indotte dagli iperpiani è lo spazio delle ipotesi della LTU.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=0.85]
+\fill[grigiochiaro] (0,0) -- (0,3.3) -- (2.2,3.3) -- (4.0,0) -- cycle;
+\draw[->, grigio] (0,0) -- (5.6,0) node[right, black] {$x_1$};
+\draw[->, grigio] (0,0) -- (0,3.6) node[above, black] {$x_2$};
+\draw[thick, rosso] (2.2,3.3) -- (4.0,0) node[below, font=\footnotesize] {$\w\T\x+w_0=0$};
+\foreach \p in {(0.6,0.7),(1.1,2.2),(1.6,1.2),(0.5,2.8),(2.2,0.5),(1.9,2.6),(2.7,1.2)} \node[font=\small] at \p {1};
+\foreach \p in {(4.3,1.4),(3.7,2.6),(4.9,0.6),(4.6,2.9),(3.3,3.1),(5.1,2.1)} \node[font=\small] at \p {0};
+\node[font=\footnotesize, align=center] at (1.4,3.65) {$h(\x)=1$};
+\node[font=\footnotesize] at (4.6,3.65) {$h(\x)=0$};
+\end{tikzpicture}
+\caption{Un separatore lineare nel piano: la retta divide lo spazio degli input in due regioni di decisione.}
+\label{fig:separatore}
+\end{figure}
+
+\subsubsection{Regressione}
+La \termine{regressione} è la stima di una funzione a valori reali sulla base di un insieme finito di
+\textbf{campioni rumorosi}: si conoscono coppie $(\x, f(\x) + \text{rumore})$. È una forma di \ingl{curve
+fitting}.
+
+\begin{esempio}[Quale funzione?]
+Dati i punti $(1;\,2{,}1)$, $(2;\,3{,}9)$, $(3;\,6{,}1)$, $(4;\,8{,}4)$, $(5;\,9{,}8)$, viene spontaneo ipotizzare
+$f(x) = 2x$, che ha errori piccoli su tutti i punti. Ma come si è scelta questa funzione, e come lo farebbe una
+macchina? È esattamente ciò che l'algoritmo di apprendimento deve formalizzare (la soluzione sistematica è nel
+\rif{sec:lms-univariata}).
+\end{esempio}
+
+Tra le infinite funzioni compatibili con un insieme di punti, quale scegliere (\figrif{fig:quale-funzione})? Una
+curva che passa esattamente per tutti i punti può oscillare in modo innaturale; una retta commette piccoli errori
+ma è molto più semplice. Questo dilemma è il cuore del problema della \textbf{generalizzazione}.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=8.6cm, height=5cm, xmin=0, xmax=5.6, ymin=-0.6, ymax=5, xlabel={$x$}, ylabel={$f(x)$},
+  xtick=\empty, ytick=\empty, legend pos=north west, domain=0.4:5.15]
+\addplot[thick, rosso] {0.633841*x+0.771926}; \addlegendentry{retta}
+\addplot[thick, verde, densely dashed] {0.036831*x^3-0.2989*x^2+1.296982*x+0.431163}; \addlegendentry{curva liscia}
+\addplot[thick, blu, samples=200] {-0.083421*x^6+1.496965*x^5-10.469951*x^4+35.917388*x^3-62.201763*x^2+50.235718*x-12.448197}; \addlegendentry{interpolante}
+\addplot[only marks, mark=*, mark size=2pt, inchiostro] coordinates {(0.5,1.0)(1.3,1.9)(2.0,1.6)(2.8,2.9)(3.5,3.1)(4.3,3.0)(5.0,4.2)};
+\end{axis}
+\end{tikzpicture}
+\caption{Tre ipotesi compatibili con gli stessi punti: la retta (rosso), una curva liscia (verde) e il polinomio
+di grado 6 che li interpola esattamente (blu).}
+\label{fig:quale-funzione}
+\end{figure}
+
+\subsubsection{Altri paradigmi}
+\begin{itemize}
+  \item \termine{Semi-supervised learning}: combina esempi etichettati e non etichettati.
+  \item \termine{Self-supervised learning}: apprendimento supervisionato in cui le etichette sono \textbf{generate
+        automaticamente dalla struttura stessa dei dati}, senza etichettatura manuale. Il modello è
+        \textbf{pre-addestrato} su grandi quantità di dati non etichettati, imparando rappresentazioni generali,
+        poi adattate a task specifici con il \termine{fine-tuning}. Esempi alla base dei grandi modelli
+        linguistici: la predizione della \textbf{parola successiva} (apprendimento \textbf{autoregressivo} della
+        famiglia GPT, \ingl{Generative Pre-trained Transformer}), la ricostruzione di \textbf{parole mascherate}
+        (BERT) e, per le immagini, i \textbf{masked autoencoder}, che ricostruiscono porzioni nascoste
+        dell'immagine.
+  \item \termine{Reinforcement learning}: apprendimento con un ``critico'' che dice giusto o sbagliato.
+        L'algoritmo apprende una \textbf{politica} su come agire date le osservazioni del mondo; ogni azione ha un
+        impatto sull'ambiente, che restituisce un feedback. Non ci sono esempi passo per passo: l'obiettivo è il
+        \ingl{decision-making}.
+\end{itemize}
+
+\subsection{Modello}
+\label{sec:modello}
+
+Il modello cattura le relazioni tra i dati attraverso un ``linguaggio'' (numerico, simbolico, \dots) e
+soprattutto \textbf{definisce la classe di funzioni che la macchina può implementare}.
+
+\begin{definizione}[Terminologia di base]
+\begin{itemize}
+  \item \termine{Esempio di training} (supervisionato): coppia $(\x, f(\x)+\text{rumore})$, con $\x$ vettore delle
+        feature e $d = f(\x)+\text{rumore}$ target.
+  \item \termine{Funzione target} $f$: la vera funzione, sconosciuta.
+  \item \termine{Ipotesi} $h$: una funzione proposta, che si ritiene simile a $f$; un'espressione in un dato
+        linguaggio che descrive le relazioni tra i dati.
+  \item \termine{Spazio delle ipotesi} $H$: l'insieme di tutte le ipotesi che l'algoritmo di apprendimento può, in
+        linea di principio, produrre; ad esempio l'insieme delle funzioni $h(\x,\w)$ al variare del parametro
+        $\w$.
+\end{itemize}
+\end{definizione}
+
+Esempi di rappresentazioni diverse:
+\begin{itemize}
+  \item \textbf{modelli lineari}: $H$ è parametrizzato in modo \textbf{continuo} e ogni valore di $\w$ è
+        un'ipotesi diversa, ad esempio $h(\x) = \sign(\w\T\x+w_0)$ o $h_\w(x) = w_1x+w_0$ (come $2x+150$);
+  \item \textbf{regole simboliche}: $H$ è \textbf{discreto}, ad esempio ``se $x_1=0$ e $x_2=1$ allora
+        $h(\x)=1$, altrimenti $0$'';
+  \item \textbf{modelli probabilistici}: stimano $p(\x,y)$;
+  \item \textbf{K-nearest neighbors}: (in regressione) predice la media dei target dei vicini più prossimi, un
+        modello basato sulla memoria;
+  \item \textbf{reti neurali}: modelli computazionali capaci di approssimare relazioni complesse e \textbf{non
+        lineari} tra input e output; anch'esse definiscono una classe di funzioni.
+\end{itemize}
+
+\begin{table}[ht]
+\centering\small
+\caption{I principali paradigmi (linguaggi per $H$). Alcuni modelli si possono esprimere in più linguaggi.}
+\label{tab:paradigmi}
+\begin{tabularx}{0.95\linewidth}{>{\raggedright\arraybackslash}p{4.1cm}X}
+\toprule
+Paradigma & Esempi \\
+\midrule
+Simbolici / a regole ($H$ discreto) & congiunzioni di letterali, alberi di decisione, grammatiche induttive, algoritmi evolutivi, Inductive Logic Programming \\
+Sub-simbolici ($H$ continuo) & analisi discriminante lineare, regressione lineare multipla, LTU, reti neurali, metodi kernel (SVM) \\
+Probabilistici / generativi & modelli parametrici tradizionali, reti bayesiane, Naïve Bayes, modelli di Markov, HMM \\
+Instance-based & nearest neighbor \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{teorema}[No Free Lunch]
+Non esiste un metodo di apprendimento universalmente migliore (senza alcuna conoscenza, su tutti i problemi): se
+un algoritmo ottiene risultati superiori su alcuni problemi, deve pagarlo con risultati inferiori su altri.
+\end{teorema}
+
+Per questo servono sia un \textbf{insieme di modelli} sia \textbf{strumenti critici per confrontarli}. I modelli
+però non sono tutti equivalenti: differiscono per \textbf{flessibilità} (capacità di approssimare funzioni
+arbitrarie, non solo lineari) e per gli strumenti di \textbf{controllo della complessità}.
+
+\begin{idea}[Il filo conduttore del corso]
+Modelli \textbf{flessibili} e principi per \textbf{controllarne la complessità}: dal compromesso tra i due
+dipende la capacità di \textbf{generalizzazione}. Lo stesso compromesso si ritrova, in forme diverse, in tutti i
+capitoli.
+\end{idea}
+
+\subsection{Algoritmo di apprendimento}
+
+Sulla base di dati, task e modello, l'algoritmo di apprendimento esegue una \textbf{ricerca (euristica) nello
+spazio delle ipotesi} $H$ della migliore approssimazione della funzione target: tipicamente l'ipotesi con
+\textbf{errore minimo} sui dati. In pratica adatta i \textbf{parametri liberi} del modello al task (il miglior
+$\w$ nei modelli lineari, le migliori regole nei modelli simbolici, \dots). Nell'esempio di regressione, la
+scelta $w_1=2$, $w_0=0$ è il risultato di questa ricerca (\figrif{fig:ricerca-h}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=0.9]
+\draw[thick, fill=grigiochiaro] plot[smooth cycle, tension=0.8] coordinates {(0,0) (2.5,-0.6) (5.8,-0.2) (6.6,1.6) (4.8,3.0) (1.6,2.8) (-0.4,1.6)};
+\draw[thick, rosso, fill=rosso!8] plot[smooth cycle, tension=0.9] coordinates {(4.2,1.1) (5.4,0.8) (5.8,1.8) (4.9,2.3) (4.1,1.9)};
+\node[font=\small] at (0.6,2.3) {$H$};
+\node[font=\footnotesize, rosso, align=center] at (5.0,2.65) {ipotesi compatibili\\con il training set};
+\coordinate (a) at (0.7,0.6); \coordinate (b) at (1.6,1.2); \coordinate (c) at (2.4,0.7); \coordinate (d) at (3.3,1.4);
+\coordinate (e) at (4.1,1.2); \coordinate (f) at (4.9,1.55);
+\draw[->, thick] (a) -- (b); \draw[->, thick] (b) -- (c); \draw[->, thick] (c) -- (d); \draw[->, thick] (d) -- (e); \draw[->, thick] (e) -- (f);
+\foreach \p in {a,b,c,d,e} \fill (\p) circle (1.5pt);
+\fill[rosso] (f) circle (2pt);
+\node[below, font=\footnotesize] at (a) {iniziale};
+\node[right, font=\footnotesize] at (f) {$h^*$};
+\end{tikzpicture}
+\caption{L'apprendimento come ricerca nello spazio delle ipotesi: ogni punto è una funzione diversa; si parte da
+un'ipotesi iniziale e si procede, tipicamente con una ricerca locale, verso quella a errore minimo.}
+\label{fig:ricerca-h}
+\end{figure}
+
+A seconda della disciplina, ``apprendimento'' prende nomi diversi: \textbf{inferenza} (statistica),
+\textbf{abduzione/induzione} (logica), \textbf{adattamento} (biologia, sistemi), \textbf{ottimizzazione}
+(matematica), \textbf{addestramento} o \ingl{training} (reti neurali), \textbf{approssimazione di funzioni},
+regressione, \ingl{curve fitting}. Poiché $H$ può non contenere tutte le funzioni possibili e la ricerca non può
+essere esaustiva, servono delle \textbf{assunzioni}: è il ruolo del bias induttivo (capitolo~\ref{cap:bias}).
+
+\section{Funzioni di loss ed errore}
+\label{sec:loss}
+
+Per dire che un'approssimazione è ``buona'' serve una misura. Il modello produce $h(\x)$ e si misura la
+``distanza'' tra $h(\x)$ e il target $d$ con una \termine{funzione di loss} $L\big(h_\w(\x), d\big)$, calcolata
+sul singolo esempio: un valore alto indica un'approssimazione scarsa.
+
+\begin{definizione}[Errore, rischio, loss]
+L'\termine{errore} è un valore atteso della loss, ad esempio la sua media sugli $l$ esempi:
+\begin{equation}\label{eq:errore-medio}
+E(\w) = \frac1l\sum_{p=1}^{l} L\big(h_\w(\x_p), d_p\big).
+\end{equation}
+Serve come \textbf{funzione obiettivo} da minimizzare durante il training e come misura dell'errore in fase di
+test. Per ora errore, rischio e loss sono sinonimi; dal capitolo~\ref{cap:regolarizzazione} \emph{loss}
+indicherà la funzione obiettivo complessiva (errore più eventuale penalità) ed \emph{errore} solo il termine
+sui dati.
+\end{definizione}
+
+La loss dipende dal task. I quattro casi del corso sono i seguenti.
+
+\subsubsection{Regressione: errore quadratico}
+Il target è $d_p = f(\x_p)+e$ (funzione reale più errore casuale), $H$ è un insieme di funzioni a valori reali e
+la loss è l'\termine{errore quadratico}
+\[
+L\big(h_\w(\x_p),d_p\big) = \big(d_p-h_\w(\x_p)\big)^2 .
+\]
+La sua media sul dataset è il \termine{Mean Squared Error} (MSE), cioè la media dei quadrati delle distanze
+verticali tra i dati e il modello (\figrif{fig:mse}):
+\[
+E(\w) = \frac1l\sum_{p=1}^{l}\big(d_p-h_\w(\x_p)\big)^2 .
+\]
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=7cm, height=4.6cm, xmin=0, xmax=6, ymin=0, ymax=5, xtick=\empty, ytick=\empty,
+  xlabel={$x$}, ylabel={$y$}]
+\addplot[thick, blu, domain=0.2:5.8] {0.6*x+0.9} node[pos=0.95, above left, font=\footnotesize] {$h_\w(x)=w_1x+w_0$};
+\foreach \xx/\yy in {0.8/2.0, 1.6/1.4, 2.4/3.0, 3.2/2.2, 4.0/4.2, 4.8/3.1, 5.4/4.6} {
+  \edef\tmp{\noexpand\draw[verde, thick] (axis cs:\xx,\yy) -- (axis cs:\xx,{0.6*\xx+0.9});}\tmp
+  \edef\tmp{\noexpand\fill[rosso] (axis cs:\xx,\yy) circle (1.8pt);}\tmp
+}
+\end{axis}
+\end{tikzpicture}
+\caption{L'MSE è la media dei quadrati dei segmenti verdi: le distanze verticali tra i dati (rosso) e la retta
+$h_\w(x)$ (blu).}
+\label{fig:mse}
+\end{figure}
+
+\subsubsection{Classificazione: loss 0/1}
+Gli output sono ad esempio $\{0,1\}$, $H$ è un insieme di funzioni indicatrici e la loss è
+\[
+L\big(h_\w(\x_p),d_p\big) = \begin{cases} 0 & \text{se } h_\w(\x_p) = d_p\\ 1 & \text{altrimenti.}\end{cases}
+\]
+La sua media è la \textbf{percentuale di esempi classificati male}: con 20 errori su 100 esempi si ha un errore
+del 20\%, cioè un'\termine{accuratezza} dell'80\%.
+
+\subsubsection{Clustering e quantizzazione vettoriale}
+L'obiettivo è partizionare in modo ottimo una distribuzione sconosciuta in regioni (cluster), ciascuna
+approssimata da un \textbf{centro} o \textbf{prototipo}. $H$ è un insieme di \ingl{vector quantizer}
+$\x\mapsto c(\x)$, che mappano lo spazio continuo in uno discreto, e la loss è la \termine{distorsione
+quadratica}, la distanza al quadrato del pattern dal centroide del suo cluster:
+\[
+L\big(h(\x_p)\big) = \big(\x_p - h(\x_p)\big)\T\big(\x_p - h(\x_p)\big) = \norm{\x_p - h(\x_p)}^2 .
+\]
+Il caso è sviluppato nel capitolo~\ref{cap:nonsup}.
+
+\subsubsection{Stima di densità}
+L'obiettivo è stimare una densità all'interno di una classe assunta (metodi generativi, parametrici), ad esempio
+una normale $p(\x\mid\mu,\sigma^2)$ con $\mu$ e $\sigma^2$ parametri sconosciuti. La loss è
+$L\big(h(\x_p)\big) = -\ln h(\x_p)$: minimizzare la somma dei $-\ln$ equivale a \textbf{massimizzare la
+(log-)verosimiglianza}, cioè il prodotto delle probabilità dei dati osservati, perché
+$-\sum_p\ln h(\x_p) = -\ln\prod_p h(\x_p)$ e il logaritmo è crescente.
+
+\section{Generalizzazione}
+\label{sec:generalizzazione-intro}
+
+Questo è il \textbf{concetto fondamentale del corso}. L'apprendimento è la ricerca di una buona funzione in uno
+spazio di funzioni a partire da dati noti, tipicamente minimizzando un errore; ma ``buona'' va inteso rispetto
+all'\termine{errore di generalizzazione}, cioè a quanto accuratamente il modello predice su \textbf{dati nuovi}.
+Si distinguono due fasi:
+\begin{enumerate}
+  \item \textbf{fase di apprendimento} (\ingl{training}, \ingl{fitting}): si costruisce il modello dai dati noti
+        (i dati di training più il bias);
+  \item \textbf{fase predittiva o di test} (\ingl{deployment}, inferenza): si applica il modello a nuovi esempi
+        $\x'$ e si confronta la risposta con il target $d'$, che il modello \textbf{non ha mai visto}.
+\end{enumerate}
+
+\begin{idea}[Prestazione nel ML]
+Nel ML ``prestazione'' significa \textbf{accuratezza di generalizzazione}, stimata dall'errore su un
+\textbf{test set} tenuto da parte (\ingl{hold out}). È facile \emph{usare} strumenti di ML; è molto più
+difficile usarli \emph{bene}: la differenza sta tutta nella generalizzazione. La teoria (capitoli~\ref{cap:slt}
+e~\ref{cap:biasvar}) ne studia le condizioni, la validazione (capitolo~\ref{cap:validazione}) la stima e la
+gestisce.
+\end{idea}
+
+\section{Il ciclo di progettazione}
+\label{sec:ciclo}
+
+Un'applicazione di ML si sviluppa con un processo iterativo, guidato dalla conoscenza a priori del dominio
+(\figrif{fig:ciclo}).
+\begin{enumerate}
+  \item \textbf{Raccolta dei dati}: selezione, integrazione, pulizia. Serve un insieme di esempi abbastanza
+        \textbf{grande e rappresentativo} per training e test.
+  \item \textbf{Rappresentazione dei dati}: dipende dal dominio e sfrutta la conoscenza dell'esperto;
+        comprende feature selection, rilevamento degli outlier, scalatura delle variabili, gestione dei dati
+        mancanti. \uline{Spesso è la fase più critica per il successo complessivo.}
+  \item \textbf{Scelta del modello}: formulazione del problema e delle ipotesi; bisogna conoscere i
+        \textbf{limiti di applicabilità} del modello e controllarne la complessità.
+  \item \textbf{Costruzione del modello} (il cuore del ML): l'algoritmo di apprendimento sui dati di training.
+  \item \textbf{Valutazione}: la prestazione è l'accuratezza predittiva; si aggiungono l'interpretazione dei
+        risultati e l'estrazione di conoscenza.
+  \item \textbf{Deployment}.
+\end{enumerate}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[node distance=0.45cm]
+\node[blocco, minimum width=3.4cm] (a) {Raccolta dei dati};
+\node[blocco, minimum width=3.4cm, below=of a] (b) {Rappresentazione\\e scelta delle feature};
+\node[blocco, minimum width=3.4cm, below=of b] (c) {Scelta del modello};
+\node[blocco, minimum width=3.4cm, below=of c] (d) {Training del modello};
+\node[blocco, minimum width=3.4cm, below=of d] (e) {Valutazione};
+\foreach \u/\v in {a/b,b/c,c/d,d/e} \draw[freccia] (\u) -- (\v);
+\draw[->, thick] (e.west) -- ++(-0.7,0) |- (a.west);
+\node[blocco, dashed, right=1.2cm of c, text width=2.6cm] (k) {Conoscenza a priori};
+\draw[->, grigio] (k.west) -- (b.east);
+\draw[->, grigio] (k.west) -- (c.east);
+\draw[->, grigio] (k.west) -- (d.east);
+\end{tikzpicture}
+\caption{Il ciclo di progettazione: i risultati della valutazione possono richiedere di tornare alle fasi
+precedenti; la conoscenza a priori guida le fasi centrali.}
+\label{fig:ciclo}
+\end{figure}
+
+\subsection{Errori di interpretazione}
+
+Per ogni modello statistico, ML compreso:
+\begin{itemize}
+  \item si assume (spesso) una relazione tra input e output e serve un dataset \textbf{rappresentativo} del
+        fenomeno: il ML non funziona con variabili scorrelate o fenomeni casuali (lotterie), e input non
+        informativi portano a modelli scadenti;
+  \item \textbf{la causalità non si può inferire dalla sola analisi dei dati}: una dipendenza statistica può
+        avere ragioni esterne ai dati (in Florida l'età media è più alta che negli altri stati USA, ma non è il
+        clima a far vivere più a lungo: ci si trasferisce lì da pensionati).
+\end{itemize}
+Specifico del ML: \textbf{modelli potenti aumentano il rischio}, perché si adattano anche a dati privi di
+significato, e risultati \textbf{non validati bene} portano a predizioni e interpretazioni fuorvianti.
+
+\begin{puntichiave}
+\begin{itemize}
+  \item Apprendere = inferire un'ipotesi $h\in H$ che approssimi la funzione sconosciuta $f$ e
+        \textbf{generalizzi}.
+  \item Ingredienti: dati (rappresentazione, codifica one-hot, rumore), task (supervisionato: classificazione e
+        regressione; non supervisionato), modello ($H$), algoritmo (ricerca in $H$), validazione.
+  \item Loss: quadratica (regressione), 0/1 (classificazione), distorsione (clustering), $-\ln$ (densità).
+  \item Conta l'errore su dati nuovi, non quello sui dati di training.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item In quali condizioni è appropriato usare il ML? Che cosa richiede in cambio?
+  \item Differenza tra classificazione e regressione; tra apprendimento supervisionato e non supervisionato.
+  \item Perché la codifica $1,2,3,\dots$ di una variabile categorica può essere inadatta? Che cos'è la codifica
+        one-hot?
+  \item Quali loss si usano per regressione, classificazione, clustering e stima di densità?
+  \item Cosa si intende per generalizzazione e come si stima?
+\end{enumerate}
+\end{domande}

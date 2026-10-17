@@ -1,0 +1,420 @@
+\chapter{Overfitting e regolarizzazione}
+\label{cap:regolarizzazione}
+
+\begin{inbreve}
+Un modello che si adatta perfettamente ai dati di training può predire male i dati nuovi. Il capitolo definisce
+l'overfitting, lo osserva in un caso di studio (il fitting di polinomi, che è una espansione in basi lineare) e
+introduce lo strumento principale per controllare la complessità di un modello: la regolarizzazione di
+Tikhonov (\emph{ridge regression}, \emph{weight decay}), con le varianti $L^1$ ed \emph{elastic net}.
+\end{inbreve}
+
+\section{Generalizzazione e overfitting}
+\label{sec:overfitting}
+
+\begin{definizione}[Ipotesi dell'apprendimento induttivo]
+\emph{Qualsiasi ipotesi $h$ che approssima bene $f$ sugli esempi di training approssimerà bene $f$ anche sulle
+istanze nuove, mai viste.}
+\end{definizione}
+
+\uline{Questa ipotesi non è sempre vera}, ed è proprio qui che nasce l'overfitting.
+
+\begin{definizione}[Overfitting]
+Un learner fa \termine{overfitting} se restituisce un'ipotesi $h\in H$ con errore vero (di generalizzazione,
+\emph{rischio}) $R$ ed errore empirico (di training) $E$, quando esiste un'altra $h'\in H$ con
+\[
+E' > E \qquad\text{ma}\qquad R' < R :
+\]
+$h'$ si adatta \emph{peggio} ai dati di training ma è \emph{migliore} sui dati nuovi. L'\termine{underfitting} è
+la situazione opposta: il modello è troppo semplice per cogliere l'andamento della funzione target, e
+l'errore è alto già sul training.
+\end{definizione}
+
+Il punto critico diventa quindi la \textbf{stima dell'accuratezza}, che si affronta in modo \textbf{teorico}
+(Statistical Learning Theory, capitolo~\ref{cap:slt}) o \textbf{empirico} (errori su training e test,
+cross-validation, capitolo~\ref{cap:validazione}).
+
+\section{Un caso di studio: il fitting polinomiale}
+\label{sec:polinomi}
+
+Si usa un problema di regressione con un modello parametrico: lo spazio delle ipotesi sono i
+\textbf{polinomi di grado $M$} (una LBE con $\phi_j(x) = x^j$, \rif{sec:lbe})
+\[
+h_\w(x) = w_0 + w_1x + w_2x^2 + \dots + w_Mx^M = \sum_{j=0}^{M}w_jx^j ,
+\]
+la cui complessità cresce con $M$. La funzione target è $\sin(2\pi x)$ e i target dei $l=10$ esempi contengono
+\textbf{rumore gaussiano}, per cui i campioni non stanno esattamente sulla curva vera. Il task è artificiale e
+irrealistico (una sola variabile, funzione target nota) e serve solo a visualizzare i concetti. I parametri si
+trovano minimizzando la somma degli errori quadratici
+\[
+E(\w) = \sum_{p=1}^{l}\big(y_p - h_\w(x_p)\big)^2 ,
+\]
+con le equazioni normali del \rif{sec:equazioni-normali} applicate alle feature $(1,x,x^2,\dots,x^M)$.
+
+\subsection{Effetto del grado del polinomio}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=4 by 1, horizontal sep=0.35cm}, scatola, width=4.35cm, height=3.7cm,
+  xmin=-0.05, xmax=1.05, ymin=-1.6, ymax=1.6, xtick={0,1}, ytick={-1,0,1}, yticklabels={,,}, xlabel={$x$}]
+\nextgroupplot[title={\small $M=0$}, yticklabels={$-1$,$0$,$1$}]
+\addplot[thick, verde] table {dati/poly_vera.dat};
+\addplot[thick, rosso] table {dati/poly_M0.dat};
+\addplot[only marks, mark=o, mark size=1.6pt, blu, thick] table {dati/poly_tr10.dat};
+\nextgroupplot[title={\small $M=1$}]
+\addplot[thick, verde] table {dati/poly_vera.dat};
+\addplot[thick, rosso] table {dati/poly_M1.dat};
+\addplot[only marks, mark=o, mark size=1.6pt, blu, thick] table {dati/poly_tr10.dat};
+\nextgroupplot[title={\small $M=3$}]
+\addplot[thick, verde] table {dati/poly_vera.dat};
+\addplot[thick, rosso] table {dati/poly_M3.dat};
+\addplot[only marks, mark=o, mark size=1.6pt, blu, thick] table {dati/poly_tr10.dat};
+\nextgroupplot[title={\small $M=9$}]
+\addplot[thick, verde] table {dati/poly_vera.dat};
+\addplot[thick, rosso] table {dati/poly_M9.dat};
+\addplot[only marks, mark=o, mark size=1.6pt, blu, thick] table {dati/poly_tr10.dat};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Fitting con polinomi di grado $M = 0,1,3,9$ (rosso) dei 10 campioni rumorosi (blu) della funzione vera
+$\sin(2\pi x)$ (verde).}
+\label{fig:polinomi}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{$M=0$} (costante) e \textbf{$M=1$} (retta): il modello è troppo semplice e non coglie l'andamento
+        della funzione target: \textbf{underfitting}.
+  \item \textbf{$M=3$}: la flessibilità in più è utile e la curva approssima bene il seno.
+  \item \textbf{$M=9$}: con 10 punti e 10 parametri il polinomio passa \textbf{esattamente} per tutti i dati,
+        $E(\w)=0$ sul training. Ma oscilla violentemente tra i punti e rappresenta malissimo la funzione vera: il
+        modello è troppo complesso e \textbf{impara anche il rumore}: \textbf{overfitting}.
+\end{itemize}
+
+\subsection{Errore di training e di test al variare di $M$}
+
+Per confrontare modelli e dataset si usa il \termine{Root-Mean-Square error}
+\[
+E_{RMS} = \sqrt{\frac1l\sum_{p=1}^{l}\big(y_p - h_{\w^*}(x_p)\big)^2}
+\]
+dove $\w^*$ sono i pesi del modello addestrato (equivale a $\sqrt{2E(\w^*)/l}$ se $E$ è definito con un fattore
+$\tfrac12$ davanti alla somma). La divisione per $l$ permette di confrontare dataset di dimensione diversa, la
+radice riporta l'errore sulla scala del target.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=8cm, height=5cm, xmin=-0.3, xmax=9.4, ymin=0, ymax=1.25, xlabel={$M$}, ylabel={$E_{RMS}$},
+  xtick={0,3,6,9}, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$}, legend pos=north east]
+\addplot[thick, blu, mark=o, mark size=1.6pt] table[x=M, y=train] {dati/poly_rms_M.dat}; \addlegendentry{training}
+\addplot[thick, rosso, mark=o, mark size=1.6pt, restrict y to domain=0:1.25] table[x=M, y=test] {dati/poly_rms_M.dat}; \addlegendentry{test}
+\end{axis}
+\end{tikzpicture}
+\caption{$E_{RMS}$ di training e di test (1000 punti nuovi) al variare del grado $M$: a sinistra underfitting, a
+destra overfitting (per $M=9$ l'errore di test esce dal grafico).}
+\label{fig:rms-M}
+\end{figure}
+
+L'errore di training \textbf{decresce sempre} all'aumentare di $M$, perché un modello più flessibile può
+adattarsi meglio ai dati. L'errore di test prima decresce, poi resta stabile e infine \textbf{esplode} per
+$M=9$: è la firma dell'overfitting. Anche i coefficienti ottimi $\w^*$ sono rivelatori
+(Tabella~\ref{tab:coeff-M}, dall'esempio originale di questo esperimento).
+
+\begin{table}[ht]
+\centering\small
+\caption{Coefficienti ottimi $\w^*$ dei polinomi di grado $M$.}
+\label{tab:coeff-M}
+\begin{tabular}{lrrrr}
+\toprule
+ & $M=0$ & $M=1$ & $M=3$ & $M=9$ \\
+\midrule
+$w_0^*$ & $0{,}19$ & $0{,}82$ & $0{,}31$ & $0{,}35$ \\
+$w_1^*$ & & $-1{,}27$ & $7{,}99$ & $232{,}37$ \\
+$w_2^*$ & & & $-25{,}43$ & $-5321{,}83$ \\
+$w_3^*$ & & & $17{,}37$ & $48568{,}31$ \\
+$w_4^*$ & & & & $-231639{,}30$ \\
+$w_5^*$ & & & & $640042{,}26$ \\
+$w_6^*$ & & & & $-1061800{,}52$ \\
+$w_7^*$ & & & & $1042400{,}18$ \\
+$w_8^*$ & & & & $-557682{,}99$ \\
+$w_9^*$ & & & & $125201{,}43$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{idea}[Pesi enormi = overfitting]
+Nel polinomio di grado 9 i coefficienti diventano \textbf{enormi} e di segno alterno: si compensano a vicenda
+per far passare la curva esattamente per ogni punto, producendo oscillazioni fortissime. Penalizzare i pesi
+grandi è quindi un modo per controllare la complessità: è la regolarizzazione (\rif{sec:tikhonov}).
+\end{idea}
+
+\subsection{Effetto della quantità di dati}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=2 by 1, horizontal sep=0.5cm}, scatola, width=6cm, height=4.2cm,
+  xmin=-0.05, xmax=1.05, ymin=-1.7, ymax=1.7, xtick={0,1}, ytick={-1,0,1}, xlabel={$x$}]
+\nextgroupplot[title={\small $M=9$, $l=15$}]
+\addplot[thick, verde] table {dati/poly_vera.dat};
+\addplot[thick, rosso] table {dati/poly9_l15.dat};
+\addplot[only marks, mark=o, mark size=1.5pt, blu] table {dati/poly9_l15_pts.dat};
+\nextgroupplot[title={\small $M=9$, $l=100$}, yticklabels={,,}]
+\addplot[thick, verde] table {dati/poly_vera.dat};
+\addplot[only marks, mark=o, mark size=1.1pt, blu] table {dati/poly9_l100_pts.dat};
+\addplot[thick, rosso] table {dati/poly9_l100.dat};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Polinomio di grado 9 addestrato su $l=15$ e $l=100$ esempi: con più dati l'overfitting si riduce.}
+\label{fig:poly-dati}
+\end{figure}
+
+A parità di modello ($M=9$), con 15 esempi il polinomio oscilla ancora ma molto meno, e con 100 esempi segue
+quasi perfettamente il seno (\figrif{fig:poly-dati}). \textbf{Con più dati si possono usare modelli più
+complessi} senza cadere nell'overfitting.
+
+\begin{idea}[Cosa mostra l'esempio]
+La capacità di generalizzazione (misurata come rischio o errore di test) va studiata in relazione a
+\textbf{errore di training}, \textbf{complessità del modello} e \textbf{numero di dati}. In generale, al crescere
+della complessità l'errore di training decresce sempre, mentre quello di test decresce e poi risale
+(\figrif{fig:curva-complessita}). La teoria che lega i tre elementi è la Statistical Learning Theory
+(capitolo~\ref{cap:slt}).
+\end{idea}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=8cm, height=4.8cm, domain=0.3:9.7, xmin=0, xmax=10, ymin=0, ymax=1.1, xtick=\empty, ytick=\empty,
+  xlabel={complessità del modello}, ylabel={errore}, legend pos=north east]
+\addplot[thick, blu] {0.05+0.9*exp(-x/2.3)}; \addlegendentry{training}
+\addplot[thick, rosso] {0.2+0.75*exp(-x/2.0)+0.006*x^2}; \addlegendentry{test}
+\draw[densely dashed, grigio] (axis cs:4.6,0) -- (axis cs:4.6,1.0);
+\node[font=\footnotesize, grigio] at (axis cs:2.2,0.98) {underfitting};
+\node[font=\footnotesize, grigio] at (axis cs:7.4,0.55) {overfitting};
+\end{axis}
+\end{tikzpicture}
+\caption{Andamento tipico (qualitativo) degli errori di training e di test al crescere della complessità del
+modello.}
+\label{fig:curva-complessita}
+\end{figure}
+
+\begin{esempio}[Rumore o complessità?]
+Il rumore è la causa dell'overfitting, o lo è il compromesso di complessità? Si può avere overfitting anche con
+dati perfettamente puliti: un polinomio di grado molto alto che interpola pochi punti di una funzione liscia può
+oscillare molto tra un punto e l'altro. Il problema è la \textbf{complessità eccessiva rispetto ai dati
+disponibili}. Per lo stesso motivo un errore di training nullo non implica una buona soluzione.
+\end{esempio}
+
+\section{Regolarizzazione di Tikhonov}
+\label{sec:tikhonov}
+
+Tra i molti modi di controllare la complessità c'è il \ingl{coefficient shrinkage}, il ``restringimento'' dei
+coefficienti. La \termine{ridge regression} (\termine{regolarizzazione di Tikhonov}) aggiunge all'errore un
+termine che \textbf{penalizza i pesi grandi}:
+\begin{equation}\label{eq:ridge}
+\boxed{\;\mathrm{Loss}(\w) = \underbrace{\sum_{p=1}^{l}\big(y_p - \x_p\T\w\big)^2}_{\text{termine d'errore }(\Remp)}
++ \underbrace{\lambda\,\norm{\w}^2}_{\text{penalità}},\qquad \norm{\w}^2 = \sum_j w_j^2 .\;}
+\end{equation}
+$\lambda>0$ è l'\termine{iperparametro di regolarizzazione}, scelto in fase di \textbf{model selection}
+(capitolo~\ref{cap:validazione}). Il modello risultante è più ``liscio'' (\ingl{smooth}): si favoriscono
+modelli con pesi piccoli o nulli, che usano di fatto meno termini, cioè meno complessi.
+
+\begin{attenzione}[Loss ed errore non sono più sinonimi]
+Da qui in poi \textbf{loss} indica la funzione obiettivo usata per l'addestramento (errore più penalità) ed
+\textbf{errore} $E$ il solo termine sui dati, che misura la qualità del modello. Nei risultati si riporta
+l'errore, perché è la misura utile per chi usa il modello.
+\end{attenzione}
+
+\begin{idea}[Cambia l'obiettivo dell'apprendimento]
+Non si cerca più \emph{solo} il modello che si adatta meglio ai dati, ma \textbf{il modello più semplice che si
+adatta bene ai dati}. La loss è una bilancia tra due piatti:
+\begin{itemize}
+  \item \textbf{adattamento ai dati} (errore di training): spinge a seguire i dati e minimizzare i residui;
+  \item \textbf{semplicità del modello} (penalità $\norm{\w}^2$): punisce i pesi grandi, rendendo il modello più
+        liscio e più capace di generalizzare;
+\end{itemize}
+e $\lambda$ decide quanto pesa la penalità.
+\end{idea}
+
+\subsection{Soluzione}
+
+\begin{proprieta}{Soluzione diretta della ridge regression}
+\[
+\w = (X\T X + \lambda I)^{-1}X\T\y ,
+\]
+e per $\lambda>0$ la matrice $X\T X+\lambda I$ è \textbf{sempre invertibile}.
+\end{proprieta}
+\begin{proof}
+In forma matriciale $\mathrm{Loss}(\w) = \norm{\y - X\w}^2 + \lambda\,\w\T\w$. Il gradiente del primo termine è
+$-2X\T(\y-X\w)$ (\rif{sec:equazioni-normali}); quello del secondo è $2\lambda\w$, perché
+$\partial(\lambda\sum_jw_j^2)/\partial w_j = 2\lambda w_j$. Imponendo il gradiente nullo:
+\[
+-2X\T\y + 2X\T X\w + 2\lambda\w = \vv0 \iff (X\T X + \lambda I)\w = X\T\y .
+\]
+Per ogni $\vv v\neq\vv0$ vale $\vv v\T(X\T X+\lambda I)\vv v = \norm{X\vv v}^2 + \lambda\norm{\vv v}^2 > 0$: la
+matrice è definita positiva, quindi invertibile. È anche un vantaggio numerico rispetto alle equazioni normali
+semplici.
+\end{proof}
+
+Con la \textbf{discesa del gradiente} si segue ancora il gradiente negativo della loss. Poiché la derivata della
+penalità rispetto a $w_j$ è $2\lambda w_j$, la regola diventa
+\begin{equation}\label{eq:weight-decay}
+\boxed{\;\w_{\mathit{new}} = \w + \eta\,\Delta\w - 2\lambda\w\;}
+\end{equation}
+dove $\eta\,\Delta\w$ è il passo sul solo termine d'errore e la penalità è moltiplicata direttamente per
+$\lambda$. È la tecnica del \termine{weight decay}: anche con gradiente d'errore nullo, a ogni passo ogni peso si
+riduce di una frazione del suo valore.
+
+\subsection{Il compromesso governato da $\lambda$}
+
+\begin{itemize}
+  \item \textbf{$\lambda$ piccolo}: conta soprattutto il termine d'errore; il modello resta troppo complesso
+        (pesi di norma alta), con rischio di \textbf{overfitting}.
+  \item \textbf{$\lambda$ grande}: conta soprattutto la penalità; l'errore sui dati può crescere troppo, verso
+        l'\textbf{underfitting}.
+\end{itemize}
+Il vantaggio è una \textbf{realizzazione concreta del controllo della complessità}, facile da implementare e di
+applicabilità generale (la stessa penalità si usa nelle reti neurali, \rif{sec:reg-reti}). Spingendo i pesi
+verso valori piccoli si ottiene un modello con VC-dimension più bassa (\rif{sec:srm}), e il compromesso è regolato
+da \textbf{un solo parametro}.
+
+\subsection{Effetto sul polinomio di grado 9}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=2 by 1, horizontal sep=0.5cm}, scatola, width=6cm, height=4.2cm,
+  xmin=-0.05, xmax=1.05, ymin=-1.6, ymax=1.6, xtick={0,1}, ytick={-1,0,1}, xlabel={$x$}]
+\nextgroupplot[title={\small $\ln\lambda = -18$}]
+\addplot[thick, verde] table {dati/poly_vera.dat};
+\addplot[thick, rosso] table {dati/poly9_reg-18.dat};
+\addplot[only marks, mark=o, mark size=1.6pt, blu, thick] table {dati/poly_tr10.dat};
+\nextgroupplot[title={\small $\ln\lambda = 0$}, yticklabels={,,}]
+\addplot[thick, verde] table {dati/poly_vera.dat};
+\addplot[thick, rosso] table {dati/poly9_reg0.dat};
+\addplot[only marks, mark=o, mark size=1.6pt, blu, thick] table {dati/poly_tr10.dat};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Polinomio di grado 9 regolarizzato sugli stessi 10 punti della \figrif{fig:polinomi}: con
+$\ln\lambda=-18$ la curva è liscia e segue la funzione vera; con $\ln\lambda=0$ è troppo piatta.}
+\label{fig:poly-reg}
+\end{figure}
+
+Senza regolarizzazione ($\lambda=0$) il polinomio di grado 9 aveva errore di training nullo e overfitting
+fortissimo. Con un $\lambda$ adatto ($\ln\lambda = -18$, cioè $\lambda\approx1{,}5\cdot10^{-8}$) il modello è
+\textbf{peggiore sul training} ma molto migliore sui dati nuovi; con $\lambda$ troppo alto ($\ln\lambda=0$,
+$\lambda=1$) si finisce in underfitting (\figrif{fig:poly-reg} e \figrif{fig:rms-lambda}). I coefficienti
+(Tabella~\ref{tab:coeff-lambda}) mostrano come la penalità ``doma'' i pesi enormi del caso non regolarizzato.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=8cm, height=4.8cm, xmin=-38, xmax=0.5, ymin=0, ymax=1.05, xlabel={$\ln\lambda$}, ylabel={$E_{RMS}$},
+  xtick={-35,-30,-25,-20,-15,-10,-5,0}, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$}, legend pos=north west]
+\addplot[thick, blu] table[x=lnl, y=train] {dati/poly_rms_lambda.dat}; \addlegendentry{training}
+\addplot[thick, rosso, restrict y to domain=0:1.05] table[x=lnl, y=test] {dati/poly_rms_lambda.dat}; \addlegendentry{test}
+\end{axis}
+\end{tikzpicture}
+\caption{$E_{RMS}$ di training e di test del polinomio di grado 9 al variare di $\ln\lambda$: a sinistra
+(regolarizzazione debole) overfitting, a destra underfitting, al centro il buon compromesso.}
+\label{fig:rms-lambda}
+\end{figure}
+
+\begin{table}[ht]
+\centering\small
+\caption{Coefficienti del polinomio di grado 9 per tre valori di $\lambda$ (esempio originale).}
+\label{tab:coeff-lambda}
+\begin{tabular}{lrrr}
+\toprule
+ & $\ln\lambda=-\infty$ ($\lambda=0$) & $\ln\lambda=-18$ & $\ln\lambda=0$ \\
+\midrule
+$w_0^*$ & $0{,}35$ & $0{,}35$ & $0{,}13$\\
+$w_1^*$ & $232{,}37$ & $4{,}74$ & $-0{,}05$\\
+$w_2^*$ & $-5321{,}83$ & $-0{,}77$ & $-0{,}06$\\
+$w_3^*$ & $48568{,}31$ & $-31{,}97$ & $-0{,}05$\\
+$w_4^*$ & $-231639{,}30$ & $-3{,}89$ & $-0{,}03$\\
+$w_5^*$ & $640042{,}26$ & $55{,}28$ & $-0{,}02$\\
+$w_6^*$ & $-1061800{,}52$ & $41{,}32$ & $-0{,}01$\\
+$w_7^*$ & $1042400{,}18$ & $-45{,}95$ & $-0{,}00$\\
+$w_8^*$ & $-557682{,}99$ & $-91{,}53$ & $0{,}00$\\
+$w_9^*$ & $125201{,}43$ & $72{,}68$ & $0{,}01$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Altre forme di regolarizzazione}
+\label{sec:l1}
+
+\begin{itemize}
+  \item \textbf{Ridge} (norma $\norm{\cdot}_2$): penalizza il quadrato dei pesi e tende a rendere \textbf{tutti} i
+        pesi più piccoli.
+  \item \termine{Lasso} (norma $\norm{\cdot}_1$, penalità $\lambda\sum_j\abs{w_j}$): tende a portare \textbf{alcuni
+        pesi esattamente a zero}, lasciandone altri grandi: è una forma di \textbf{feature selection} e produce
+        modelli più semplici. Il valore assoluto rende però la loss non differenziabile in zero, e servono
+        tecniche di ottimizzazione non differenziabile (sub-gradiente, approssimazioni lisce della norma).
+  \item \termine{Elastic net}: usa entrambe le norme.
+\end{itemize}
+
+\begin{idea}[Perché $L^1$ azzera i pesi e $L^2$ no]
+Il gradiente di $\lambda w^2$ è $2\lambda w$: diventa piccolissimo quando $w$ è vicino a zero, quindi la spinta
+verso zero si attenua e il peso resta piccolo ma non nullo. Il (sub-)gradiente di $\lambda\abs{w}$ è invece
+$\lambda\sign(w)$: una spinta \textbf{costante} verso zero, anche per pesi già piccoli, che li porta
+esattamente a zero se il termine d'errore non li ``difende''. Geometricamente (\figrif{fig:l1-l2}) le curve di
+livello della norma $L^1$ hanno \textbf{spigoli sugli assi}, dove una coordinata è nulla: la soluzione del
+problema vincolato cade tipicamente su uno spigolo.
+\end{idea}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.05]
+\draw[->, grigio] (-1.7,0) -- (2.2,0) node[right, black, font=\small] {$w_1$};
+\draw[->, grigio] (0,-1.5) -- (0,2.1) node[above, black, font=\small] {$w_2$};
+\draw[thick, fill=grigiochiaro] (1,0) -- (0,1) -- (-1,0) -- (0,-1) -- cycle;
+\draw[thick, rosso] (-0.6,1.75) -- (2.1,-0.2);
+\draw[thick, rosso, densely dashed] (-0.85,1.32) -- (1.6,-0.45);
+\fill[blu] (0,1) circle (1.8pt) node[left, font=\footnotesize] {$w_1=0$};
+\node[font=\small] at (0,-1.9) {$L^1$: $\abs{w_1}+\abs{w_2}\le c$};
+\begin{scope}[xshift=5.4cm]
+\draw[->, grigio] (-1.7,0) -- (2.2,0) node[right, black, font=\small] {$w_1$};
+\draw[->, grigio] (0,-1.5) -- (0,2.1) node[above, black, font=\small] {$w_2$};
+\draw[thick, fill=grigiochiaro] (0,0) circle (1);
+\draw[thick, rosso] (-0.6,1.75) -- (2.1,-0.2);
+\draw[thick, rosso, densely dashed] (-0.25,1.32) -- (1.85,-0.2);
+\fill[blu] (0.586,0.81) circle (1.8pt);
+\node[font=\small] at (0,-1.9) {$L^2$: $w_1^2+w_2^2\le c$};
+\end{scope}
+\end{tikzpicture}
+\caption{Perché $L^1$ produce soluzioni sparse. In rosso le curve di livello del termine d'errore: la soluzione
+regolarizzata è il punto in cui la curva di livello più bassa raggiungibile tocca la regione ammessa (grigia).
+Con $L^1$ il contatto avviene su un vertice del rombo ($w_1=0$); con $L^2$ in un punto generico del cerchio.}
+\label{fig:l1-l2}
+\end{figure}
+
+Altri miglioramenti (opzionali):
+\begin{itemize}
+  \item \termine{data augmentation}: aggiungere rumore agli input insegna al modello a ignorare variazioni
+        irrilevanti (robustezza e regolarizzazione); l'\emph{oversampling} aiuta con dataset sbilanciati;
+  \item \textbf{input derivati}: si usa un piccolo numero di nuove variabili, combinazioni lineari degli input
+        (\ingl{Principal Component Regression}, \ingl{Partial Least Squares}).
+\end{itemize}
+
+\begin{puntichiave}
+\begin{itemize}
+  \item Overfitting: esiste $h'$ con errore di training maggiore ma rischio minore.
+  \item Nel fitting polinomiale l'errore di training cala sempre con $M$, quello di test ha forma a U; più dati
+        permettono modelli più complessi.
+  \item Ridge: $\mathrm{Loss} = \norm{\y-X\w}^2 + \lambda\norm{\w}^2$; soluzione $(X\T X+\lambda I)^{-1}X\T\y$;
+        weight decay $\w\leftarrow\w+\eta\Delta\w-2\lambda\w$.
+  \item $\lambda$ piccolo $\to$ overfitting, $\lambda$ grande $\to$ underfitting; si sceglie con la model
+        selection.
+  \item $L^1$ azzera alcuni pesi (sparsità), $L^2$ li riduce tutti.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Definire formalmente l'overfitting.
+  \item Descrivere l'esempio del fitting polinomiale: cosa succede al variare di $M$ e di $l$?
+  \item Perché un errore di training nullo non implica una buona soluzione?
+  \item Scrivere la loss di Tikhonov, la soluzione diretta e la regola di weight decay; ruolo di $\lambda$.
+  \item Differenza tra regolarizzazione $L^1$ e $L^2$.
+\end{enumerate}
+\end{domande}

@@ -1,0 +1,365 @@
+\chapter{K-nearest neighbors}
+\label{cap:knn}
+
+\begin{inbreve}
+Il K-nearest neighbors (K-NN) è l'estremo opposto del modello lineare: non costruisce un'ipotesi globale ma
+risponde, per ogni nuovo punto, con una stima locale basata sugli esempi più vicini. Il capitolo ne descrive
+l'algoritmo, il compromesso tra underfitting e overfitting governato da $k$, il legame con il classificatore
+ottimo di Bayes, il bias induttivo e i limiti, in particolare la maledizione della dimensionalità.
+\end{inbreve}
+
+\section{Apprendimento eager e lazy}
+
+Rispetto al momento in cui avviene l'apprendimento si distinguono due approcci:
+\begin{itemize}
+  \item \termine{eager} (``avido''): si analizzano i dati di training e si costruisce un'\textbf{ipotesi
+        esplicita}, come nel modello lineare;
+  \item \termine{lazy} (``pigro''): si memorizzano i dati e si aspetta un punto di test; solo allora si costruisce
+        un'ipotesi ad hoc per classificare quel punto.
+\end{itemize}
+
+\section{L'algoritmo}
+\label{sec:knn-algoritmo}
+
+\begin{algoritmo}[1-nearest neighbor]
+\begin{enumerate}
+  \item Memorizzare i dati di training $\langle\x_p,y_p\rangle$, $p=1,\dots,l$.
+  \item Dato un input $\x$, trovare l'esempio di training più vicino
+        \[
+        i(\x) = \argmin_p d(\x,\x_p),
+        \]
+        ad esempio con la distanza euclidea $d(\x,\x_p) = \sqrt{\sum_{t=1}^n(x_t-x_{p,t})^2} = \norm{\x-\x_p}$.
+  \item Restituire $y_{i(\x)}$.
+\end{enumerate}
+\end{algoritmo}
+
+Il 1-NN è \textbf{molto flessibile}: sul training set commette \textbf{zero errori}, perché ogni punto è il
+vicino più prossimo di se stesso. Il confine di decisione non è lineare ed è molto irregolare, forse inutilmente
+rumoroso.
+
+Il 1-NN usa implicitamente il \termine{diagramma di Voronoi}: ogni cella contiene i punti dello spazio più vicini
+a un certo esempio che a qualsiasi altro, e i lati delle celle sono i punti equidistanti da due esempi. Il 1-NN
+assegna a ogni cella l'etichetta del suo esempio, quindi il suo confine di decisione è formato dai lati che
+separano celle di classi diverse (\figrif{fig:voronoi}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[nudo, width=6.4cm, height=6.4cm, xmin=0, xmax=1, ymin=0, ymax=1, axis equal image]
+\draw[grigio] (axis cs:0,0) rectangle (axis cs:1,1);
+\addplot[grigio!80, thin] table {dati/vor_celle.dat};
+\addplot[inchiostro, very thick] table {dati/vor_confine.dat};
+\addplot[only marks, mark=*, mark size=1.7pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/vor_punti.dat};
+\addplot[only marks, mark=o, mark size=1.9pt, rosso, thick] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/vor_punti.dat};
+\end{axis}
+\end{tikzpicture}
+\caption{Diagramma di Voronoi di 22 esempi di due classi: in grigio i lati tra celle della stessa classe, in nero
+quelli tra celle di classi diverse, che formano il confine di decisione del 1-NN.}
+\label{fig:voronoi}
+\end{figure}
+
+\subsection{K vicini}
+
+Un modo naturale di classificare un nuovo punto è guardare i suoi $k$ vicini e farne la media:
+\[
+\mathrm{avg}_k(\x) = \frac1k\sum_{\x_i\in N_k(\x)}y_i ,
+\]
+dove $N_k(\x)$ è l'insieme dei $k$ esempi più vicini a $\x$ secondo la distanza $d$. Se nell'intorno di $\x$ una
+classe domina chiaramente, è probabile che anche $\x$ vi appartenga: la regola di classificazione è il
+\textbf{voto a maggioranza} tra i membri di $N_k(\x)$. Con target in $\{0,1\}$
+\[
+h(\x) = \begin{cases}1 & \text{se } \mathrm{avg}_k(\x) > 0{,}5\\ 0 & \text{altrimenti;}\end{cases}
+\]
+per la \textbf{regressione} si usa direttamente la media dei target dei $k$ vicini. Aumentare $k$ ``liscia'' la
+decisione, il che è utile con dati rumorosi (\figrif{fig:knn-query}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.1]
+\draw[grigio, densely dashed] (0,0) circle (1.05);
+\node[font=\small] at (0,0) {$\x_q$};
+\node[font=\small] at (0.35,0.28) {$+$};
+\foreach \p in {(-0.55,0.55),(0.75,-0.35),(-0.65,-0.5),(0.15,-0.85)} \node[font=\small] at \p {$-$};
+\foreach \p in {(1.5,0.9),(-1.4,1.1),(1.7,-0.6),(-1.6,-0.4),(0.4,1.5)} \node[font=\small] at \p {$+$};
+\foreach \p in {(-1.1,-1.3),(1.2,-1.3)} \node[font=\small] at \p {$-$};
+\end{tikzpicture}
+\caption{Il vicino più prossimo di $\x_q$ è positivo, quindi il 1-NN risponde ``$+$''; tra i 5 vicini (nel
+cerchio) prevalgono i negativi, quindi il 5-NN risponde ``$-$''.}
+\label{fig:knn-query}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=2 by 1, horizontal sep=0.45cm}, scatola, width=6.4cm, height=5.8cm,
+  xmin=-3, xmax=3.8, ymin=-2.6, ymax=3.4, xtick=\empty, ytick=\empty]
+\nextgroupplot[title={\small 1-NN}]
+\addplot[only marks, mark=o, mark size=1.4pt, rosso!80!black, thin] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/htf_punti.dat};
+\addplot[only marks, mark=*, mark size=1.2pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/htf_punti.dat};
+\addplot[thick, inchiostro] table {dati/htf_knn1.dat};
+\nextgroupplot[title={\small 15-NN}]
+\addplot[only marks, mark=o, mark size=1.4pt, rosso!80!black, thin] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/htf_punti.dat};
+\addplot[only marks, mark=*, mark size=1.2pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/htf_punti.dat};
+\addplot[thick, inchiostro] table {dati/htf_knn15.dat};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Confini di decisione del 1-NN e del 15-NN sul problema a due classi del \rif{sec:due-classi}.}
+\label{fig:knn-confini}
+\end{figure}
+
+Con $k=15$ il modello è ancora molto flessibile ma commette qualche errore sul training; il confine è meno
+irregolare e si \textbf{adatta alle densità locali} delle classi (\figrif{fig:knn-confini}).
+
+\subsection{Varianti}
+
+\textbf{Multi-classe}: si restituisce la classe più frequente tra i $k$ vicini,
+\[
+h(\x) = \argmax_v\sum_{\x_i\in N_k(\x)}\mathbb{1}_{v,y_i},\qquad
+\mathbb{1}_{v,y_i} = \begin{cases}1 & \text{se } v=y_i\\ 0 & \text{altrimenti.}\end{cases}
+\]
+\textbf{Distanza pesata}: i vicini più vicini contano di più,
+\[
+h(\x) = \argmax_v\sum_{\x_i\in N_k(\x)}\frac{\mathbb{1}_{v,y_i}}{d(\x,\x_i)^2},
+\]
+e se $d(\x,\x_i)=0$ per qualche $\x_i$ si restituisce direttamente $y_i$.
+
+\section{Il comportamento al variare di $k$}
+
+Anche nel K-NN ritroviamo il \textbf{compromesso tra underfitting e overfitting}, governato da $k$, tra due
+estremi:
+\begin{itemize}
+  \item $k=1$: il caso \textbf{estremamente flessibile} (errore di training nullo, confine frastagliato, rischio
+        di overfitting);
+  \item $k=l$ (tutti i dati): un modello \textbf{rigidissimo}, che risponde con un'unica media per tutti gli
+        input (in classificazione, la classe più frequente nel training set).
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=8.4cm, height=5.2cm, xmode=log, x dir=reverse, xmin=0.85, xmax=230, ymin=0, ymax=0.55,
+  xlabel={$k$ (scala logaritmica, decrescente verso destra)}, ylabel={errore di classificazione},
+  xtick={200,101,45,21,9,3,1}, xticklabels={$200$,$101$,$45$,$21$,$9$,$3$,$1$},
+  ytick={0,0.1,0.2,0.3,0.4,0.5}, yticklabels={$0$,$0{,}1$,$0{,}2$,$0{,}3$,$0{,}4$,$0{,}5$}, legend pos=outer north east]
+\addplot[thick, verde, mark=o, mark size=1.3pt] table[x=k, y=train] {dati/knn_errori.dat}; \addlegendentry{training}
+\addplot[thick, rosso, mark=o, mark size=1.3pt] table[x=k, y=test] {dati/knn_errori.dat}; \addlegendentry{test}
+\addplot[thick, viola, densely dashed, domain=0.85:230] {0.216}; \addlegendentry{errore di Bayes}
+\addplot[only marks, mark=square*, mark size=2pt, inchiostro] coordinates {(66.7,0.205)}; \addlegendentry{lineare (training)}
+\addplot[only marks, mark=square, mark size=2pt, inchiostro, thick] coordinates {(66.7,0.246)}; \addlegendentry{lineare (test)}
+\end{axis}
+\end{tikzpicture}
+\caption{Errore di training e di test del K-NN sul problema a due classi (200 esempi di training, 10\,000 di
+test). Da $k=l$ (rigido, a sinistra) a $k=1$ (flessibile, a destra) l'errore di training scende fino a zero,
+quello di test ha forma a U, con il minimo per $k=\valknnBestK$. I quadratini sono il modello lineare (posto in
+corrispondenza dei suoi 3 parametri, $l/k\approx3$), la linea tratteggiata l'errore di Bayes ($\valbayesErr$).}
+\label{fig:knn-errori}
+\end{figure}
+
+È lo stesso andamento del fitting polinomiale al crescere del grado (\figrif{fig:rms-M}) e del bound della
+SLT (\figrif{fig:vc-bound}): qui è $k$, letto da destra verso sinistra (cioè $l/k$), a fare da controllo della
+complessità, e i valori intermedi danno il miglior compromesso (\figrif{fig:knn-errori}). Si potrebbe pensare che
+il K-NN abbia un solo parametro ($k$), ma realisticamente ha circa \textbf{$l/k$ parametri effettivi}: è come se
+dividesse lo spazio in $l/k$ regioni, ognuna con la sua media.
+
+\section{K-NN contro modello lineare}
+
+\begin{table}[ht]
+\centering\small
+\caption{I due estremi a confronto.}
+\begin{tabular}{lll}
+\toprule
+ & Lineare & K-NN \\
+\midrule
+Flessibilità & rigido (\textbf{bassa varianza}) & flessibile (\textbf{alta varianza}) \\
+Timing & eager & lazy \\
+Tipo & parametrico & instance-based \\
+Parametri & $n+1$ (3 nell'esempio) & circa $l/k$ parametri effettivi \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Il K-NN non costruisce un'ipotesi globale valida per tutte le istanze: \textbf{non c'è un modello da
+addestrare}, ma bisogna memorizzare gli esempi. Fa stime \textbf{locali}, con funzioni localmente costanti,
+invece di un'approssimazione lineare globale: è un metodo lazy, basato sulla memoria, sulle istanze e sulle
+distanze. Con $k$ piccolo bastano pochi punti per cambiare il confine: la flessibilità si paga.
+
+\section{Il classificatore ottimo di Bayes}
+\label{sec:bayes}
+
+\begin{definizione}[Classificatore ed errore di Bayes]
+Se si conosce la densità $P(\x,y)$, la scelta ottima è assegnare la classe più probabile:
+\[
+h(\x) = \argmax_v P(v\mid\x),\qquad v\in\{C_1,\dots,C_K\}.
+\]
+Il suo tasso d'errore, il \termine{Bayes rate}, è il \textbf{minimo errore raggiungibile} data la distribuzione
+dei dati.
+\end{definizione}
+
+Il K-NN approssima direttamente questa soluzione: il voto a maggioranza in un intorno è una stima di
+$\argmax_vP(v\mid\x)$ con due rilassamenti:
+\begin{enumerate}
+  \item la probabilità condizionata \textbf{in un punto} diventa la probabilità condizionata \textbf{in un
+        intorno} del punto (approssimazione locale);
+  \item le probabilità sono stimate con le \textbf{proporzioni} nel campione di training.
+\end{enumerate}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=2 by 1, horizontal sep=0.45cm}, scatola, width=6.4cm, height=5.8cm,
+  xmin=-3, xmax=3.8, ymin=-2.6, ymax=3.4, xtick=\empty, ytick=\empty]
+\nextgroupplot[title={\small classificatore di Bayes}]
+\addplot[only marks, mark=o, mark size=1.4pt, rosso!80!black, thin] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/htf_punti.dat};
+\addplot[only marks, mark=*, mark size=1.2pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/htf_punti.dat};
+\addplot[thick, viola] table {dati/htf_bayes.dat};
+\nextgroupplot[title={\small 15-NN}]
+\addplot[only marks, mark=o, mark size=1.4pt, rosso!80!black, thin] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/htf_punti.dat};
+\addplot[only marks, mark=*, mark size=1.2pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/htf_punti.dat};
+\addplot[thick, viola, densely dashed] table {dati/htf_bayes.dat};
+\addplot[thick, inchiostro] table {dati/htf_knn15.dat};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Il confine ottimo di Bayes (viola), calcolato conoscendo la densità generatrice, e il confine del 15-NN
+(nero): il secondo è vicino al primo, coerentemente con il minimo dell'errore di test della
+\figrif{fig:knn-errori}.}
+\label{fig:bayes}
+\end{figure}
+
+\section{Bias induttivo e limiti del K-NN}
+
+\subsection{Il bias induttivo}
+\begin{enumerate}
+  \item \textbf{La distanza assunta} stabilisce quali esempi sono simili: si assume che la classificazione di un
+        punto sia simile a quella dei vicini \emph{secondo la metrica scelta}. Si possono usare metriche diverse
+        dall'euclidea; dati simbolici richiedono metriche ad hoc, come la \termine{distanza di Hamming} tra
+        stringhe della stessa lunghezza (il numero di posizioni in cui differiscono). Questo bias è spesso
+        sottovalutato, ma è cruciale.
+  \item \textbf{Località}: approssimazione locale, con un'assunzione di \ingl{smoothness} locale (da confrontare
+        con il bias del deep learning, \rif{sec:bias-deep}).
+\end{enumerate}
+
+\subsection{Scala delle variabili}
+La scelta della scala dipende dalla conoscenza del dominio. Se le variabili devono contribuire allo stesso modo
+bisogna fare attenzione ai loro range: \textbf{riscalare i dati} (ad esempio a media zero e varianza unitaria)
+\textbf{equivale a cambiare la metrica}, e può cambiare del tutto quale sia il vicino più prossimo
+(\figrif{fig:scala}). Il K-NN è fragile anche rispetto a un pre-processing elementare.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=0.95]
+\draw[->, grigio] (0,0) -- (3.4,0) node[right, black, font=\small] {$x_1$};
+\draw[->, grigio] (0,0) -- (0,2.6) node[above, black, font=\small] {$x_2$};
+\node[font=\small] (q) at (1.0,1.0) {$\times$}; \node[font=\footnotesize, below] at (1.0,0.9) {$\x$};
+\fill[inchiostro] (1.2,2.0) circle (2pt); \fill[rosso] (2.6,1.05) circle (2pt);
+\draw[densely dashed] (1.0,1.0) -- (1.2,2.0);
+\node[font=\footnotesize, align=center] at (1.7,-0.55) {vicino più prossimo:\\punto nero};
+\begin{scope}[xshift=5cm]
+\draw[->, grigio] (0,0) -- (2.2,0) node[right, black, font=\small] {$x_1$ riscalato};
+\draw[->, grigio] (0,0) -- (0,2.6) node[above, black, font=\small] {$x_2$};
+\node[font=\small] at (0.5,1.0) {$\times$}; \node[font=\footnotesize, below] at (0.5,0.9) {$\x$};
+\fill[inchiostro] (0.6,2.0) circle (2pt); \fill[rosso] (1.3,1.05) circle (2pt);
+\draw[densely dashed] (0.5,1.0) -- (1.3,1.05);
+\node[font=\footnotesize, align=center] at (1.0,-0.55) {vicino più prossimo:\\punto rosso};
+\end{scope}
+\end{tikzpicture}
+\caption{Dimezzando la scala di $x_1$ cambia il vicino più prossimo di $\x$.}
+\label{fig:scala}
+\end{figure}
+
+\subsection{Costo computazionale e interpretabilità}
+Il K-NN costruisce l'approssimazione locale \textbf{per ogni nuovo esempio}: il costo è \textbf{spostato nella
+fase di predizione}. Per ogni input si calcolano le distanze da tutti gli esempi memorizzati (tempo
+proporzionale a $l$), anche se esistono algoritmi di ricerca di prossimità ad hoc, come l'indicizzazione degli
+esempi o la ricerca \textbf{approssimata} dei vicini, che rinuncia a trovare sempre il vicino esatto in cambio
+di una ricerca molto più veloce. Anche il costo in \textbf{spazio} è alto (tutto il training set). I modelli
+K-NN offrono infine poca interpretazione, soggettiva e dipendente dalla metrica.
+
+\subsection{La maledizione della dimensionalità}
+\label{sec:curse}
+
+Il K-NN funziona bene se per ogni $\x$ si trova un insieme significativo di dati vicini, cioè con un
+\textbf{campionamento denso}. Con molte variabili di input fallisce spesso per la \termine{curse of
+dimensionality}, che ha tre manifestazioni rilevanti per la generalizzazione.
+
+\textbf{1. In alta dimensione è difficile trovare punti vicini.} Si considerino dati uniformi nel cubo unitario
+di $\R^n$ e un sottocubo che contenga una frazione $r$ dei dati. Poiché il volume è $\text{lato}^n$, il lato
+deve essere
+\[
+\text{lato} = r^{1/n}.
+\]
+\begin{itemize}
+  \item Per catturare il 10\% dei dati: in 2D basta un lato $0{,}1^{1/2}\approx0{,}32$ (il 32\% del range di
+        ogni variabile); in 10D serve $0{,}1^{1/10}\approx0{,}8$, l'\textbf{80\% del range} di ogni coordinata.
+        Anche per l'1\% del volume in 10D serve il 63\% del range: l'intorno non è più ``locale'' e i vicini non
+        sono più simili.
+  \item Viceversa, fissato il lato a $0{,}3$: si cattura il 30\% dei dati in 1D, il 9\% in 2D, il 2,7\% in 3D,
+        circa lo 0,0006\% in 10D. Quel lato può non bastare a trovare $k$ dati, a meno di usare $k$ piccolo
+        (e quindi rischiare overfitting: la varianza della stima aumenta).
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=7.4cm, height=5.2cm, domain=0.0001:0.6, samples=200, xmin=0, xmax=0.62, ymin=0, ymax=1.08,
+  xlabel={frazione di volume $r$}, ylabel={lato necessario $r^{1/n}$}, xtick={0,0.2,0.4,0.6},
+  xticklabels={$0$,$0{,}2$,$0{,}4$,$0{,}6$}, ytick={0,0.2,0.4,0.6,0.8,1}, yticklabels={$0$,$0{,}2$,$0{,}4$,$0{,}6$,$0{,}8$,$1$}]
+\addplot[thick, blu] {x} node[pos=0.95, below right, font=\footnotesize] {$n=1$};
+\addplot[thick, verde] {x^(1/2)} node[pos=0.95, below right, font=\footnotesize] {$n=2$};
+\addplot[thick, arancio] {x^(1/3)} node[pos=0.95, right, font=\footnotesize] {$n=3$};
+\addplot[thick, rosso] {x^(1/10)} node[pos=0.95, above right, font=\footnotesize] {$n=10$};
+\draw[densely dashed, grigio] (axis cs:0.1,0) -- (axis cs:0.1,0.794) -- (axis cs:0,0.794);
+\end{axis}
+\end{tikzpicture}
+\caption{Lato del sottocubo necessario per catturare una frazione $r$ del volume del cubo unitario, al variare
+della dimensione $n$: in 10 dimensioni il 10\% del volume richiede un lato di circa $0{,}8$.}
+\label{fig:curse}
+\end{figure}
+
+\textbf{2. Bassa densità di campionamento.} La densità di campionamento è proporzionale a $l^{1/n}$: se 100 punti
+bastano a stimare una funzione in $\R^1$, per un'accuratezza simile in $\R^{10}$ ne servono $100^{10}=10^{20}$.
+
+\textbf{3. Feature irrilevanti.} Se il target dipende solo da poche delle molte feature (ad esempio 2 su 20), la
+somiglianza tra esempi può essere dominata dalle feature irrilevanti, e il ``vicino'' trovato non è davvero
+simile. Il problema cresce con la dimensione. Rimedi: \textbf{pesare le feature} secondo la loro rilevanza
+(allungando gli assi lungo alcune dimensioni; i pesi si cercano con una costosa model selection o con altri
+metodi) oppure fare \textbf{feature selection}, riducendo la dimensione dell'input.
+
+\section{Scelte di progetto}
+
+\begin{itemize}
+  \item La \textbf{metrica} $d$ (euclidea, Hamming, Manhattan, pesi sulle feature, \dots): spesso è la chiave del
+        successo di un'applicazione.
+  \item Il valore di \textbf{$k$}, che controlla underfitting e overfitting.
+  \item Spesso conviene selezionare un \textbf{sottoinsieme dei dati} (un insieme di prototipi, ad esempio con un
+        clustering) e un \textbf{sottoinsieme delle feature}.
+\end{itemize}
+Estensioni ad altri modelli locali: \ingl{kernel smoothers}, regressione lineare locale, metodi a prototipi,
+\ingl{case-based reasoning}.
+
+\begin{idea}[Cosa manca al K-NN]
+Il K-NN non costruisce un vero modello: non estrae regolarità né sintetizza conoscenza, e non permette di
+``dimenticare'' gli esempi dopo l'apprendimento. L'obiettivo dei capitoli successivi sono modelli
+\textbf{compatti} come la LTU (tutta la conoscenza in pochi parametri) ma \textbf{flessibili} come il K-NN, con
+un adeguato controllo della complessità: le reti neurali e le SVM.
+\end{idea}
+
+\begin{puntichiave}
+\begin{itemize}
+  \item K-NN: voto a maggioranza (o media) dei $k$ esempi più vicini; metodo lazy, locale, basato sulla memoria.
+  \item $k=1$: errore di training nullo, alta varianza; $k=l$: una sola media, rigido. Circa $l/k$ parametri
+        effettivi; errore di test a U in $k$.
+  \item Il K-NN approssima il classificatore di Bayes, $\argmax_vP(v\mid\x)$, in un intorno.
+  \item Bias induttivo: metrica e località. Limiti: scala delle variabili, costo in predizione, maledizione della
+        dimensionalità.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Descrivere il K-NN e confrontarlo con il modello lineare.
+  \item Come cambiano errore di training e di test al variare di $k$?
+  \item Che cos'è il classificatore ottimo di Bayes e che legame ha con il K-NN?
+  \item Qual è il bias induttivo del K-NN?
+  \item Spiegare la maledizione della dimensionalità.
+\end{enumerate}
+\end{domande}

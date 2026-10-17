@@ -1,0 +1,620 @@
+\chapter{Modelli lineari}
+\label{cap:lineari}
+
+\begin{inbreve}
+Il modello lineare è il primo modello con uno spazio delle ipotesi \emph{continuo}, parametrizzato da numeri
+reali. Il capitolo ricava i parametri ottimi ai minimi quadrati in due modi --- in forma chiusa (equazioni normali)
+e iterativamente (discesa del gradiente, \emph{delta rule}) --- prima per la regressione, poi per la
+classificazione. Si chiude con i limiti del modello (separabilità lineare, XOR) e con la sua estensione tramite
+espansione in basi.
+\end{inbreve}
+
+\section{Regressione lineare univariata}
+\label{sec:lms-univariata}
+
+Nel caso univariato (una variabile di input $x$, una di output $y$) si assume il modello
+\[
+h_\w(x) = w_1x + w_0 ,
+\]
+dove $w_0,w_1\in\R$ sono i \termine{pesi} (\ingl{weights}), cioè i parametri liberi: si adatta ai dati una
+retta. Lo spazio delle ipotesi è infinito, perché $\w$ varia con continuità.
+
+\subsection{Il criterio dei minimi quadrati}
+
+Addestrare significa trovare il $\w$ che \textbf{minimizza l'errore empirico} sui dati di training (il controllo
+della complessità è l'argomento del capitolo~\ref{cap:regolarizzazione}). Dati $l$ esempi $(x_p,y_p)$, si cerca
+la retta che minimizza la \textbf{somma dei quadrati dei residui}:
+\begin{equation}\label{eq:lms-univariata}
+E(\w) = \sum_{p=1}^{l}\big(y_p - h_\w(x_p)\big)^2 = \sum_{p=1}^{l}\big(y_p - (w_1x_p+w_0)\big)^2 .
+\end{equation}
+Dividendo per $l$ si ottiene la media. È il metodo dei \termine{minimi quadrati} (\ingl{Least (Mean) Squares},
+LMS): $\argmin_\w E(\w)$ in norma $L^2$.
+
+\begin{idea}[Perché i minimi quadrati]
+Ogni retta candidata produce dei \textbf{residui}, le distanze verticali tra i punti $(x_p,y_p)$ e la retta
+(\figrif{fig:mse}). Minimizzare la somma dei loro quadrati è un modo naturale di trovare la retta che meglio
+approssima i dati. In generale, i minimi quadrati sono il metodo standard per risolvere in modo approssimato i
+\textbf{sistemi sovradeterminati}, con più equazioni (gli esempi) che incognite (i parametri).
+\end{idea}
+
+\subsection{Soluzione in forma chiusa}
+
+Un minimo è un punto stazionario, dove il gradiente è nullo. Poiché $E$ è \textbf{convessa} nei parametri (un
+paraboloide), non ci sono minimi locali spuri e basta imporre
+$\partial E/\partial w_0 = 0$ e $\partial E/\partial w_1 = 0$.
+
+\begin{teorema}[Retta ai minimi quadrati]
+Il minimo di \eqref{eq:lms-univariata} si ha per
+\begin{equation}\label{eq:retta-lms}
+w_1 = \frac{\sum_p x_py_p - \frac1l\sum_p x_p\sum_p y_p}{\sum_p x_p^2 - \frac1l\big(\sum_p x_p\big)^2}
+= \frac{\Cov[x,y]}{\Var[x]}, \qquad w_0 = \bar y - w_1\bar x ,
+\end{equation}
+con $\bar x = \frac1l\sum_p x_p$ e $\bar y = \frac1l\sum_py_p$.
+\end{teorema}
+\begin{proof}
+Si deriva ogni termine con la regola $\partial f^2/\partial w = 2f\,\partial f/\partial w$
+(\rif{sec:regole-derivazione}).
+\begin{enumerate}
+  \item \textbf{Derivata rispetto a $w_0$}: $\dfrac{\partial E}{\partial w_0} = -2\sum_p\big(y_p - w_1x_p-w_0\big)
+        = 0 \iff \sum_py_p - w_1\sum_px_p - l\,w_0 = 0$. Dividendo per $l$:
+        $\boxed{w_0 = \bar y - w_1\bar x}$.
+  \item \textbf{Derivata rispetto a $w_1$}: $\dfrac{\partial E}{\partial w_1} = -2\sum_p\big(y_p - w_1x_p-w_0\big)x_p
+        = 0 \iff \sum_px_py_p - w_1\sum_px_p^2 - w_0\sum_px_p = 0$.
+  \item \textbf{Sostituzione} di $w_0$ dal passo 1:
+        $\sum_px_py_p - w_1\sum_px_p^2 - (\bar y - w_1\bar x)\sum_px_p = 0$, cioè
+        \[
+        \sum_px_py_p - \bar y\sum_px_p = w_1\Big(\sum_px_p^2 - \bar x\sum_px_p\Big).
+        \]
+  \item Poiché $\bar y\sum_px_p = \frac1l\sum_px_p\sum_py_p$ e $\bar x\sum_px_p = \frac1l(\sum_px_p)^2$, si ottiene
+        la prima forma di $w_1$ in \eqref{eq:retta-lms}.
+  \item Dividendo numeratore e denominatore per $l$: il numeratore diventa
+        $\frac1l\sum_px_py_p - \bar x\bar y = \Cov[x,y]$ e il denominatore $\frac1l\sum_px_p^2-\bar x^2 = \Var[x]$
+        (lemma della varianza, \rif{sec:probabilita}). \qedhere
+\end{enumerate}
+\end{proof}
+
+\begin{attenzione}
+La formula non va memorizzata: serve sapere che la soluzione esiste in forma chiusa (grazie alla convessità) e
+saperla \textbf{ricavare} imponendo il gradiente nullo, come sopra.
+\end{attenzione}
+
+\begin{esempio}[Esercizio svolto]
+Con i dati $(1;2{,}1)$, $(2;3{,}9)$, $(3;6{,}1)$, $(4;8{,}4)$, $(5;9{,}8)$: $l=5$, $\bar x = 3$,
+$\bar y = 6{,}06$, $\sum_px_py_p = 2{,}1+7{,}8+18{,}3+33{,}6+49 = 110{,}8$, $\sum_px_p^2 = 55$. Quindi
+\[
+w_1 = \frac{110{,}8 - 5\cdot3\cdot6{,}06}{55-5\cdot3^2} = \frac{110{,}8-90{,}9}{10} = 1{,}99, \qquad
+w_0 = 6{,}06 - 1{,}99\cdot3 = 0{,}09 .
+\]
+La retta $h(x)\approx1{,}99x+0{,}09$ conferma l'intuizione $h(x)=2x$.
+\end{esempio}
+
+\subsection{Il gradiente su un singolo esempio}
+
+Per un solo esempio $(x,y)$, con $E = (y-h_\w(x))^2$:
+\[
+\frac{\partial E}{\partial w_i} = 2\big(y-h_\w(x)\big)\frac{\partial\big(y-(w_1x+w_0)\big)}{\partial w_i}
+\quad\Longrightarrow\quad
+\frac{\partial E}{\partial w_0} = -2\big(y-h_\w(x)\big),\quad \frac{\partial E}{\partial w_1} = -2\big(y-h_\w(x)\big)\,x .
+\]
+La quantità $\delta = y-h(x)$, l'errore sull'esempio, si chiama \termine{delta}. Con $l$ esempi basta sommare.
+
+\section{Input multidimensionali}
+
+Con $\x,\w$ vettori colonna il modello lineare è
+\[
+\w\T\x + w_0 = w_0 + w_1x_1 + \dots + w_nx_n = w_0 + \sum_{i=1}^n w_ix_i ,
+\]
+dove $w_0$ si chiama \termine{intercetta}, soglia, \termine{bias} o offset. Conviene aggiungere all'input una
+componente costante $x_0=1$:
+\begin{equation}\label{eq:bias-incluso}
+\x\T = [1,x_1,\dots,x_n],\qquad \w\T = [w_0,w_1,\dots,w_n],\qquad
+h(\x_p) = \x_p\T\w = \sum_{i=0}^{n}x_{p,i}\,w_i .
+\end{equation}
+Il modello lineare è quindi un \textbf{prodotto scalare} tra input e pesi. Da qui in poi, salvo avviso, il bias è
+incluso in $\w$ in questo modo.
+
+\section{Soluzione diretta: le equazioni normali}
+\label{sec:equazioni-normali}
+
+Con $X$ la matrice $l\times(n+1)$ che ha per righe gli $\x_p\T$ e $\y$ il vettore dei target, l'errore
+quadratico è
+\[
+E(\w) = \sum_{p=1}^{l}\big(y_p-\x_p\T\w\big)^2 = \norm{\y - X\w}^2 .
+\]
+
+\subsubsection{Il gradiente}
+Derivando rispetto a una componente $w_j$:
+\[
+\frac{\partial E(\w)}{\partial w_j} = \sum_{p=1}^{l}2\big(y_p-\x_p\T\w\big)\frac{\partial\big(y_p-\x_p\T\w\big)}{\partial w_j}.
+\]
+Nel prodotto scalare $\x_p\T\w = x_{p,0}w_0 + x_{p,1}w_1+\dots$ l'unico termine che dipende da $w_j$ è
+$x_{p,j}w_j$, la cui derivata è $x_{p,j}$. Quindi
+\begin{equation}\label{eq:gradiente-lms}
+\boxed{\;\frac{\partial E(\w)}{\partial w_j} = -2\sum_{p=1}^{l}\big(y_p-\x_p\T\w\big)\,x_{p,j} = -2\sum_{p=1}^{l}\delta_p\,x_{p,j}\;}
+\qquad \delta_p = y_p - \x_p\T\w .
+\end{equation}
+Questa forma (errore dell'esempio per input del peso) tornerà identica nelle reti neurali. In forma vettoriale,
+raccogliendo le componenti: $\nabla E(\w) = -2X\T(\y - X\w)$.
+
+\subsubsection{Le equazioni normali}
+Imponendo $\nabla E(\w) = \vv0$: $X\T\y - X\T X\w = \vv0$, cioè
+\begin{equation}\label{eq:normali}
+\boxed{\;(X\T X)\,\w = X\T\y\;}
+\end{equation}
+
+\begin{teorema}[Soluzione ai minimi quadrati]
+Se $X\T X$ è non singolare la soluzione è unica:
+\[
+\w = (X\T X)^{-1}X\T\y = X^+\y ,
+\]
+dove $X^+$ è la \termine{pseudoinversa di Moore-Penrose} (definita anche quando $X$ non è invertibile). Se
+$X\T X$ è singolare le soluzioni sono infinite, e si può scegliere quella a \textbf{norma minima} di $\w$.
+\end{teorema}
+
+In pratica si usa la \termine{decomposizione ai valori singolari} (SVD): $X = U\Sigma V\T$ implica
+$X^+ = V\Sigma^+U\T$, dove $\Sigma^+$ si ottiene sostituendo ogni elemento diagonale non nullo di $\Sigma$ con il
+suo reciproco (e trasponendo). Calcolare $\w = X^+\y$ tramite SVD dà direttamente la soluzione a norma minima:
+\textbf{è questo l'algoritmo di apprendimento} dell'approccio diretto, presente in tutte le librerie numeriche
+con varianti per efficienza e stabilità.
+
+\section{Soluzione iterativa: la discesa del gradiente}
+\label{sec:discesa}
+
+Esistendo una soluzione diretta, perché cercarne una iterativa? Perché permette di ottenere
+\begin{itemize}
+  \item soluzioni \textbf{più efficienti} (quella diretta ha costo cubico nella dimensione della matrice);
+  \item la \textbf{regolarizzazione} (capitolo~\ref{cap:regolarizzazione});
+  \item una migliore approssimazione con dati rumorosi, fermando la ricerca \textbf{prima del minimo};
+  \item soprattutto, un metodo applicabile ai \textbf{modelli non lineari}: è la base dell'addestramento delle
+        reti neurali.
+\end{itemize}
+
+\subsection{L'idea}
+
+Il gradiente \eqref{eq:gradiente-lms} indica la direzione di \emph{salita} dell'errore. Muovendosi nel verso
+opposto, $\Delta\w = -\nabla E(\w)$, si scende verso il minimo (\rif{sec:gradiente}). È una \textbf{ricerca
+locale} (\ingl{steepest descent}): si parte da un vettore di pesi iniziale e lo si modifica iterativamente per
+diminuire l'errore (\figrif{fig:discesa}). In generale
+\[
+\Delta\w = -\frac{\partial E(\w)}{\partial\w} = \left(-\frac{\partial E}{\partial w_0},\,-\frac{\partial E}{\partial w_1},\dots,-\frac{\partial E}{\partial w_n}\right)\T ,
+\]
+con una componente per ogni peso: si lavora in spazi di qualsiasi dimensione senza doverli visualizzare. Con
+due pesi la superficie d'errore $E([w_0,w_1]\T)$ è un paraboloide (una funzione quadratica convessa), e ogni punto
+del piano $(w_0,w_1)$ è un'ipotesi.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=6.6cm, height=5cm, domain=-0.4:4.4, xmin=-0.5, xmax=4.6, ymin=0, ymax=5.4,
+  xtick=\empty, ytick=\empty, xlabel={$w$}, ylabel={$E(w)$}]
+\addplot[thick, inchiostro] {0.45*(x-3)^2+0.4};
+\addplot[only marks, mark=*, mark size=1.7pt, inchiostro] coordinates {(0,4.45) (1.2,1.858) (2.06,0.798) (2.58,0.479)};
+\draw[->, rosso, thick] (axis cs:0.05,4.3) -- (axis cs:1.15,1.95);
+\draw[->, rosso, thick] (axis cs:1.25,1.75) -- (axis cs:2.0,0.85);
+\draw[->, rosso, thick] (axis cs:2.11,0.76) -- (axis cs:2.53,0.5);
+\node[above right, font=\footnotesize] at (axis cs:0,4.45) {$w_0$};
+\node[above right, font=\footnotesize] at (axis cs:1.2,1.858) {$w_1$};
+\node[above right, font=\footnotesize] at (axis cs:2.06,0.798) {$w_2$};
+\node[above, font=\footnotesize] at (axis cs:2.62,0.55) {$w_3$};
+\fill[blu] (axis cs:3,0.4) circle (1.8pt) node[below right, font=\footnotesize] {minimo};
+\end{axis}
+\end{tikzpicture}\hspace{0.4cm}
+\begin{tikzpicture}[scale=0.95]
+\foreach \c in {0.45,0.9,1.35,1.8,2.25} \draw[grigio] (0,0) ellipse ({1.5*\c} and {0.75*\c});
+\fill[inchiostro] (0,0) circle (1.5pt);
+\draw[->, thick, blu] (-3.1,1.25) .. controls (-2.0,0.65) and (-0.9,0.2) .. (-0.05,0.02);
+\draw[->, thick, rosso] (-3.1,1.25) -- (-2.6,0.6) -- (-2.3,1.0) -- (-1.7,0.35) -- (-1.5,0.75) -- (-0.9,0.15) -- (-0.75,0.45) -- (-0.25,-0.1) -- (-0.05,0.08);
+\node[font=\footnotesize, blu] at (-1.2,1.35) {batch};
+\node[font=\footnotesize, rosso] at (-2.4,-0.35) {on-line};
+\node[font=\small] at (2.7,1.5) {$(w_0,w_1)$};
+\end{tikzpicture}
+\caption{A sinistra la discesa del gradiente in una dimensione: a ogni passo il peso si sposta nel verso opposto
+alla pendenza. A destra le curve di livello di un errore quadratico con due pesi: la discesa batch (blu) procede in
+modo regolare, quella on-line (rosso) a zig-zag.}
+\label{fig:discesa}
+\end{figure}
+
+\subsection{La regola di apprendimento}
+
+Ci si muove iterativamente con la regola
+\begin{equation}\label{eq:regola-gd}
+\boxed{\;\w_{\mathit{new}} = \w + \eta\,\Delta\w\;}
+\end{equation}
+dove $\eta$ è il \termine{learning rate} (\ingl{step size}), che regola l'ampiezza dei passi.
+
+\begin{algoritmo}[Discesa del gradiente]
+\begin{enumerate}
+  \item Inizializzare $\w$ con valori piccoli; fissare $0<\eta<1$.
+  \item Calcolare $\Delta\w = -\partial E(\w)/\partial\w$.
+  \item Aggiornare $\w_{\mathit{new}} = \w + \eta\,\Delta\w$.
+  \item Ripetere dal passo 2 fino a convergenza, o finché $E(\w)$ è abbastanza piccolo.
+\end{enumerate}
+\end{algoritmo}
+
+\begin{itemize}
+  \item Usare $\Delta\w/l$ (gradiente medio) corrisponde al \ingl{least mean squares}; dividere per $l$ è il caso
+        standard.
+  \item $\eta$ regola un compromesso \textbf{velocità/stabilità}; può essere ridotto gradualmente verso zero per
+        garantire la convergenza evitando oscillazioni attorno al minimo (varianti nel \rif{sec:learning-rate}).
+\end{itemize}
+
+\subsection{Batch e on-line}
+\label{sec:batch-online}
+
+\begin{itemize}
+  \item \textbf{Batch}: il gradiente è la somma su \textbf{tutti} gli $l$ esempi e i pesi si aggiornano dopo aver
+        visto tutto il training set, cioè dopo un'\termine{epoca}. La stima del gradiente è più precisa.
+  \item \textbf{On-line} (o \textbf{stocastica}, SGD): i pesi si aggiornano dopo \textbf{ogni} esempio, con il
+        gradiente del singolo esempio
+        \[
+        \frac{\partial E_p(\w)}{\partial w_j} = -2\big(y_p-\x_p\T\w\big)\,x_{p,j} = -\Delta_pw_j .
+        \]
+        L'uscita sul secondo esempio è calcolata con i pesi già aggiornati dal primo, e così via. Fa progressi a
+        ogni esempio e può essere più veloce, ma richiede un $\eta$ più piccolo.
+\end{itemize}
+I casi intermedi (\ingl{mini-batch}) sono trattati nel \rif{sec:minibatch}.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=8.5cm, height=4.6cm, domain=0:100, samples=200, xmin=0, xmax=104, ymin=0, ymax=1.15,
+  xtick=\empty, ytick=\empty, xlabel={iterazioni (epoche)}, ylabel={errore}, legend pos=north east]
+\addplot[thick, verde] {0.25+0.75*exp(-x/120)}; \addlegendentry{$\eta$ troppo piccolo}
+\addplot[thick, rosso] {0.12+0.88*exp(-x/9)}; \addlegendentry{buona}
+\addplot[thick, blu] {0.2+0.8*exp(-x/14)+0.12*abs(sin(deg(x*0.9)))*exp(-x/60)+0.06*(sin(deg(x*2.3)))^2}; \addlegendentry{$\eta$ troppo grande}
+\end{axis}
+\end{tikzpicture}
+\caption{Curve di apprendimento (errore in funzione delle iterazioni): una curva che scende molto lentamente
+indica un learning rate troppo piccolo, una con picchi e oscillazioni un learning rate troppo grande; la curva
+buona scende rapidamente e si stabilizza (andamenti qualitativi).}
+\label{fig:curve-eta}
+\end{figure}
+
+\subsection{Interpretazione: la delta rule}
+
+Ricapitolando, nella versione batch
+\begin{equation}\label{eq:delta-rule}
+\Delta w_j = 2\sum_{p=1}^{l}\underbrace{\big(y_p-\x_p\T\w\big)}_{\delta_p}\,x_{p,j}, \qquad \w_{\mathit{new}} = \w + \eta\,\Delta\w
+\end{equation}
+(la costante 2 si può assorbire in $\eta$). È una regola di \textbf{correzione dell'errore}, detta
+\termine{regola di Widrow-Hoff} o \termine{delta rule}: ogni $w_j$ cambia \textbf{in proporzione all'errore}
+(target meno output).
+\begin{itemize}
+  \item Se l'errore è 0, non c'è correzione.
+  \item Con input $x_j>0$ e errore positivo (output troppo basso): $\delta>0$, $w_j$ aumenta, l'output aumenta,
+        l'errore diminuisce.
+  \item Con input $x_j>0$ e errore negativo (output troppo alto): $\delta<0$, $w_j$ diminuisce, l'output
+        diminuisce, l'errore diminuisce.
+  \item Con input negativo i segni si invertono; con input nullo il peso non cambia. L'input ``decide'' quanto e
+        in che verso ogni peso è responsabile dell'errore.
+\end{itemize}
+
+\begin{esempio}[La delta rule all'opera]
+Input $\x = (1,0,1)$, pesi $(w_1,w_2,w_3) = (-0{,}2;\ 0{,}5;\ -0{,}2)$, $w_0=0$: $\w\T\x = -0{,}4$, quindi
+l'uscita (con soglia) è $-1$, ma il target è $+1$. Il delta è positivo: $w_1$ e $w_3$ (input pari a 1) aumentano,
+$w_2$ (input 0) resta invariato. Dopo la correzione, con $w_1=w_3=+0{,}1$, si ha $\w\T\x = 0{,}2>0$ e l'uscita è
+corretta.
+\end{esempio}
+
+\begin{idea}[Perché la discesa del gradiente è così importante]
+È un metodo di ricerca locale semplice ed efficace che esplora uno spazio delle ipotesi \textbf{infinito e
+continuo}. Si applica ogni volta che $H$ è continuo e la loss è differenziabile, \textbf{non solo ai modelli
+lineari}: è la base dell'addestramento di reti neurali e deep learning. Esistono molti miglioramenti (metodi di
+Newton e quasi-Newton, gradiente coniugato, \dots).
+\end{idea}
+
+\section{Classificazione con modelli lineari}
+\label{sec:classificazione-lineare}
+
+\subsection{Iperpiani e regioni di decisione}
+
+Gli stessi modelli si usano per la classificazione, con target categorici ($0/1$ o $-1/+1$). L'equazione
+$\w\T\x + w_0 = 0$ definisce un \termine{iperpiano}; poiché $\w\T\x+w_0$ è positivo da un lato e negativo
+dall'altro, il segno decide la classe. In due dimensioni $w_0+w_1x_1+w_2x_2 = 0$ è una retta: il
+\termine{confine di decisione} (\ingl{decision boundary}). Applicando una funzione soglia si ottiene la
+\termine{Linear Threshold Unit} (LTU):
+\begin{equation}\label{eq:ltu}
+h(\x) = \begin{cases}1 & \text{se } \w\T\x+w_0\ge 0\\ 0 & \text{altrimenti}\end{cases}
+\qquad\text{oppure}\qquad h(\x) = \sign(\w\T\x+w_0) \in\{-1,+1\},
+\end{equation}
+e, con il bias incluso in $\w$, $h(\x_p) = \sign(\x_p\T\w) = \sign\big(\sum_{i=0}^n x_{p,i}w_i\big)$.
+
+Dire $\w\T\x+w_0\ge0$ equivale a dire $\w\T\x\ge -w_0$: le due forme individuano la stessa regione, ma la seconda
+mostra il ruolo del bias. $-w_0$ è il \textbf{valore di soglia} che la combinazione pesata degli input deve
+superare per ``attivare'' l'uscita $+1$.
+
+\subsubsection{Proprietà dell'iperpiano}
+\begin{itemize}
+  \item Se $w_0=0$ l'iperpiano passa per l'\textbf{origine}; se $n>2$ è un iperpiano di dimensione $n-1$.
+  \item \textbf{Libertà di scala}: moltiplicando $\w$ (bias compreso) per una costante $K>0$ il confine non cambia.
+  \item \textbf{$\w$ è ortogonale all'iperpiano}. Presi due punti $\x_a,\x_b$ sull'iperpiano,
+        $\w\T\x_a+w_0=0$ e $\w\T\x_b+w_0=0$; sottraendo, $\w\T(\x_a-\x_b)=0$: $\w$ è ortogonale a ogni vettore
+        che giace sull'iperpiano.
+  \item Se esiste un iperpiano separatore, \textbf{ne esistono infiniti}, e quindi anche molti algoritmi per
+        trovarli.
+  \item In 2D l'equazione si riscrive $x_2 = -x_1\,w_1/w_2 - w_0/w_2$ (esercizio utile: disegnarla per diversi
+        valori di $\w$).
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=0.95]
+\fill[grigiochiaro] (-0.5,3.6) -- (3.9,-0.6) -- (5.6,-0.6) -- (5.6,3.6) -- cycle;
+\draw[->, grigio] (-0.6,-0.6) -- (5.8,-0.6) node[right, black] {$x_1$};
+\draw[->, grigio] (-0.6,-0.6) -- (-0.6,3.8) node[above, black] {$x_2$};
+\draw[thick, rosso] (-0.5,3.6) -- (3.9,-0.6) node[pos=0.06, right, font=\footnotesize] {$\w\T\x+w_0=0$};
+\coordinate (P) at (1.7,1.5);
+\draw[->, very thick, inchiostro] (P) -- ++(0.95,0.995) node[right, font=\small] {$\w$};
+\draw[grigio] ($(P)+(0.14,0.147)$) -- ++(0.147,-0.14) -- ++(-0.14,-0.147);
+\node[font=\small] at (4.4,2.8) {$\w\T\x+w_0>0$};
+\node[font=\small] at (0.6,0.2) {$\w\T\x+w_0<0$};
+\foreach \p in {(3.6,1.1),(4.6,1.9),(3.1,2.6),(4.9,0.4),(2.6,3.3)} \node[cpos] at \p {};
+\foreach \p in {(0.2,1.3),(0.9,0.6),(1.4,-0.1),(-0.1,2.5),(0.5,-0.3)} \node[cneg] at \p {};
+\draw[densely dashed, grigio] (0.1,3.5) -- (4.2,-0.5);
+\draw[densely dashed, grigio] (-0.4,3.0) -- (4.6,-0.1);
+\end{tikzpicture}
+\caption{Un problema linearmente separabile: l'iperpiano $\w\T\x+w_0=0$ (rosso) separa i positivi (pieni) dai
+negativi (vuoti), $\w$ è ortogonale all'iperpiano e punta verso la regione positiva; anche altri iperpiani
+(tratteggiati) separano correttamente i dati.}
+\label{fig:iperpiano}
+\end{figure}
+
+\begin{esempio}[Terremoti o esplosioni nucleari?]
+Dati sismici: $x_1$ è la magnitudo delle onde di volume, $x_2$ quella delle onde di superficie. Un algoritmo di
+apprendimento trova il confine $-4{,}9+1{,}7x_1-x_2=0$. Per un nuovo evento $(6,3)$:
+\[
+h(6,3) = \sign(-4{,}9 + 1{,}7\cdot6 - 1\cdot3) = \sign(2{,}3) = +1 \;\Rightarrow\;\text{esplosione nucleare}.
+\]
+\vspace{-1.2ex}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[stile, width=6.2cm, height=4.4cm, xmin=4.5, xmax=7, ymin=2, ymax=7, xlabel={$x_1$}, ylabel={$x_2$},
+  xtick={5,6,7}, ytick={3,5,7}, domain=4.5:6.9]
+\addplot[thick, rosso, name path=l] {1.7*x-4.9};
+\path[name path=b] (axis cs:4.5,2) -- (axis cs:7,2);
+\addplot[grigiochiaro] fill between[of=l and b, soft clip={domain=4.1:7}];
+\addplot[only marks, mark=star, mark size=3pt, inchiostro] coordinates {(6,3)} node[right, font=\footnotesize] {$(6,3)$};
+\node[font=\footnotesize] at (axis cs:6.4,4.4) {esplosioni};
+\node[font=\footnotesize] at (axis cs:5.0,5.6) {terremoti};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\end{esempio}
+
+\begin{esempio}[Filtro antispam]
+Si vuole $h(\text{mail})=+1$ per lo spam e $-1$ altrimenti. Le feature $\phi_k(\text{mail})$ sono ad esempio la
+presenza (0/1) di parole o frasi (``free money'') o la lunghezza del messaggio: è la rappresentazione \ingl{bag of
+words}. Ogni peso $w_k$ esprime il contributo della sua feature: positivo per ``free money'', negativo per
+``.edu''. La regola è $h_\w(\x) = \sign\big(\sum_k w_k\phi_k(\x)\big)$: se la combinazione pesata è positiva, è
+spam.
+\end{esempio}
+
+\subsection{Il problema di apprendimento per la classificazione}
+
+Dati $l$ esempi $(\x_p,y_p)$ con $y_p\in\{0,1\}$ o $\{-1,+1\}$, si cerca $\w$ che minimizzi
+\[
+\Remp = \frac1l\sum_{p=1}^{l}L\big(h(\x_p),y_p\big).
+\]
+Usare direttamente la loss 0/1 su $\sign(\w\T\x)$ rende il problema difficile: la funzione è \textbf{costante a
+tratti}, quindi il gradiente è nullo quasi ovunque e non indica dove muoversi; si finisce in problemi
+combinatori.
+
+\begin{idea}[Sostituire la loss con una funzione liscia]
+Si minimizza invece l'errore quadratico applicato all'\textbf{uscita lineare} $\w\T\x$ (non a $h(\x)$, che
+contiene il segno):
+\[
+E(\w) = \sum_{p=1}^{l}\big(y_p-\x_p\T\w\big)^2 = \norm{\y-X\w}^2 .
+\]
+Con target $y_p=1$, minimizzare $(1-\x_p\T\w)^2$ spinge $\x_p\T\w$ verso $1$, quindi a valori positivi: nessun
+errore di classificazione. Con $y_p=-1$ lo spinge verso $-1$. Le due loss sono minimizzate nella stessa zona
+(\figrif{fig:loss-liscia}). La funzione è quadratica, quindi un minimo esiste sempre (non necessariamente unico).
+\end{idea}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=7.6cm, height=4.6cm, xmin=-2.3, xmax=3.3, ymin=0, ymax=3.3, xlabel={$\w\T\x$},
+  ylabel={loss}, xtick={-2,-1,0,1,2,3}, ytick={1,2,3}, legend pos=north east]
+\addplot[very thick, rosso, domain=-2.2:3.2] {(1-x)^2}; \addlegendentry{quadratica $(1-\w\T\x)^2$}
+\addplot[very thick, blu, const plot] coordinates {(-2.2,1) (0,1) (0,0) (3.2,0)}; \addlegendentry{0/1 su $\sign(\w\T\x)$}
+\end{axis}
+\end{tikzpicture}
+\caption{Loss 0/1 e loss quadratica per un esempio con target $y=1$: entrambe sono minime nella zona
+$\w\T\x>0$, ma solo la seconda ha un gradiente utile.}
+\label{fig:loss-liscia}
+\end{figure}
+
+Lo stesso approccio vale identico per la regressione, quindi entrambi gli algoritmi visti --- equazioni normali e
+discesa del gradiente --- si applicano senza modifiche. In sintesi:
+\begin{itemize}
+  \item il modello si \textbf{addestra} sul TR con LMS applicato a $\w\T\x$;
+  \item si \textbf{usa} per classificare applicando la soglia: $h(\x) = \sign(\w\T\x)$;
+  \item si \textbf{valuta} con l'errore di classificazione (loss 0/1), non solo con l'MSE:
+        \[
+        \text{errore medio} = \frac1l\sum_{p=1}^{l}L\big(h(\x_p),d_p\big) = \frac{\#\text{errori}}{l},\qquad
+        \text{accuratezza} = \frac{l-\#\text{errori}}{l}.
+        \]
+\end{itemize}
+
+\subsection{Un esempio: due classi nel piano}
+\label{sec:due-classi}
+
+Si considerino 200 punti in $\R^2$, 100 per ciascuna di due classi, generati da una distribuzione sconosciuta
+(\figrif{fig:htf-lineare}). Codificando le classi come $0$ e $1$ e addestrando con LMS, il confine
+$\{\x\mid\x\T\w = 0{,}5\}$ è lineare e lascia molti punti dal lato sbagliato. È una cattiva soluzione? Dipende da
+come sono stati generati i dati:
+\begin{itemize}
+  \item \textbf{scenario 1}: ogni classe è generata da una gaussiana con componenti scorrelate, stessa varianza e
+        medie diverse. La regola lineare è \textbf{quasi ottima}: la sovrapposizione tra le classi è
+        inevitabile, dovuta al rumore;
+  \item \textbf{scenario 2}: ogni classe è una miscela di 10 gaussiane strette. Il modello lineare è
+        \textbf{troppo rigido} e servono modelli più flessibili.
+\end{itemize}
+I dati della figura (usati in tutto il resto delle note) sono generati come nello scenario 2.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[scatola, width=7cm, height=6.2cm, xmin=-3, xmax=3.8, ymin=-2.6, ymax=3.4, xtick=\empty, ytick=\empty,
+  xlabel={$x_1$}, ylabel={$x_2$}]
+\addplot[only marks, mark=o, mark size=1.5pt, rosso!80!black, thin] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{0:0}] {dati/htf_punti.dat};
+\addplot[only marks, mark=*, mark size=1.3pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/htf_punti.dat};
+\addplot[very thick, inchiostro] table {dati/htf_lineare.dat};
+\end{axis}
+\end{tikzpicture}
+\caption{Il problema a due classi (classe 1 piena, classe 0 vuota) e il confine lineare ai minimi quadrati
+$\x\T\w=0{,}5$. Su questi dati l'errore di classificazione è $\vallinTrain$ sul training e $\vallinTest$ su un
+test set di 10\,000 punti.}
+\label{fig:htf-lineare}
+\end{figure}
+
+\begin{proprieta}{Minimi quadrati e verosimiglianza}
+I minimi quadrati corrispondono al criterio di \textbf{massima verosimiglianza} se gli errori sperimentali hanno
+distribuzione normale.
+\end{proprieta}
+
+\subsection{Il bias induttivo del modello lineare}
+
+\begin{itemize}
+  \item \textbf{Language bias}: $H$ è l'insieme delle funzioni lineari, che può essere molto restrittivo.
+  \item \textbf{Search bias}: ricerca ordinata, guidata dalla minimizzazione dei minimi quadrati. Un metodo
+        diverso, ad esempio uno che restringa i valori dei parametri, darebbe soluzioni con proprietà diverse
+        (in particolare rispetto alla generalizzazione: è la regolarizzazione).
+\end{itemize}
+
+\subsection{Classificazione multi-classe}
+
+Con $K>2$ classi gli approcci semplici sono:
+\begin{itemize}
+  \item codifica \textbf{1-of-$K$} delle classi e un modello lineare per ciascuna componente;
+  \item \termine{OVA} (\ingl{one-vs-all}): $K$ classificatori binari, ciascuno distingue una classe da tutte le
+        altre; vince la classe del classificatore con l'uscita più alta;
+  \item \termine{AVA} (\ingl{all-vs-all}, \ingl{one-vs-one}): un classificatore per ogni coppia di classi,
+        $K(K-1)/2$ in tutto, ciascuno addestrato su meno dati; vince la classe con la massima somma di uscite o
+        con più voti.
+\end{itemize}
+Con molte classi può verificarsi il \textbf{mascheramento} (una classe ``nascosta'' dalle altre). Esistono
+modelli con uscite multiple native e altri classificatori lineari noti, come la \textbf{Linear Discriminant
+Analysis} e la \textbf{regressione logistica} (che modella direttamente $P(y\mid\x)$).
+
+\section{Limiti: la separabilità lineare}
+\label{sec:separabilita}
+
+Se la funzione target di una regressione non è lineare, una retta è una soluzione troppo povera (il caso $M=1$
+del \rif{sec:polinomi}). Per la classificazione il limite ha un nome preciso.
+
+\begin{definizione}[Separabilità lineare]
+Due insiemi di punti in $\R^n$ sono \termine{linearmente separabili} se esiste un iperpiano (di dimensione
+$n-1$) che li separa completamente; nel piano, una singola retta.
+\end{definizione}
+
+Il confine di decisione lineare dà soluzioni esatte \textbf{solo} per insiemi linearmente separabili. Il modello
+lineare può rappresentare ad esempio le \textbf{congiunzioni}: $x_1\wedge x_2\wedge x_4$ si realizza con
+$1\cdot x_1+1\cdot x_2+0\cdot x_3+1\cdot x_4\ge 2{,}5$ (vero solo se i tre input valgono 1), l'AND di due
+variabili con $x_1+x_2\ge1{,}5$. Ma non tutto è separabile (\figrif{fig:separabilita}):
+\begin{itemize}
+  \item \textbf{3 punti}: per ogni assegnazione delle etichette esiste un iperpiano separatore, \textbf{se non
+        sono allineati}. Se sono allineati, l'etichettatura con il punto centrale di classe diversa non è
+        separabile;
+  \item \textbf{4 punti}: esiste un'etichettatura che nessun classificatore lineare separa, lo \termine{XOR}
+        ($00\mapsto0$, $01\mapsto1$, $10\mapsto1$, $11\mapsto0$), con i positivi su una diagonale e i negativi
+        sull'altra.
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.25]
+\draw[->, grigio] (-0.3,0) -- (1.5,0) node[right, black, font=\footnotesize] {$x_1$};
+\draw[->, grigio] (0,-0.3) -- (0,1.5) node[above, black, font=\footnotesize] {$x_2$};
+\node[cneg] at (0,0) {}; \node[cneg] at (1,0) {}; \node[cneg] at (0,1) {}; \node[cpos] at (1,1) {};
+\draw[thick, rosso] (0.25,1.35) -- (1.35,0.25);
+\node[font=\footnotesize] at (0.7,-0.55) {AND: separabile};
+\begin{scope}[xshift=2.6cm]
+\draw[->, grigio] (-0.3,0) -- (1.5,0) node[right, black, font=\footnotesize] {$x_1$};
+\draw[->, grigio] (0,-0.3) -- (0,1.5) node[above, black, font=\footnotesize] {$x_2$};
+\node[cneg] at (0,0) {}; \node[cpos] at (1,0) {}; \node[cpos] at (0,1) {}; \node[cneg] at (1,1) {};
+\node[font=\footnotesize] at (0.7,-0.55) {XOR: non separabile};
+\end{scope}
+\begin{scope}[xshift=5.3cm]
+\node[cpos] at (0,0.5) {}; \node[cneg] at (0.6,0.5) {}; \node[cpos] at (1.2,0.5) {};
+\draw[grigio, densely dashed] (-0.2,0.5) -- (1.4,0.5);
+\node[font=\footnotesize, align=center] at (0.6,-0.4) {3 punti allineati:\\non separabile};
+\end{scope}
+\begin{scope}[xshift=7.6cm]
+\node[cpos] at (0,0) {}; \node[cneg] at (1.1,0.3) {}; \node[cpos] at (0.4,1.1) {};
+\draw[thick, rosso] (0.3,-0.3) -- (1.0,1.2);
+\node[font=\footnotesize, align=center] at (0.6,-0.6) {3 punti non allineati:\\separabili};
+\end{scope}
+\end{tikzpicture}
+\caption{Limiti della separazione lineare (pieno = classe 1, vuoto = classe 0).}
+\label{fig:separabilita}
+\end{figure}
+
+Contare quante etichettature di un insieme di punti un modello riesce a separare è esattamente l'idea della
+VC-dimension (capitolo~\ref{cap:slt}): una retta nel piano separa tutte le etichettature di 3 punti non
+allineati, ma non di 4.
+
+\section{Espansione in basi lineare}
+\label{sec:lbe}
+
+Nei modelli parametrici \textbf{``lineare'' si riferisce al modo in cui compaiono i coefficienti $\w$}, non alla
+forma della funzione. Si possono usare input trasformati come $x, x^2, x^3,\dots$ per modellare relazioni non
+lineari mantenendo \textbf{la stessa macchina di apprendimento} (i minimi quadrati), come nella regressione
+polinomiale
+\[
+h_\w(x) = w_0 + w_1x + w_2x^2+\dots+w_Mx^M = \sum_{j=0}^{M}w_jx^j .
+\]
+
+\begin{definizione}[Linear Basis Expansion]
+Un'\termine{espansione in basi lineare} (LBE) è un modello
+\[
+h_\w(\x) = \sum_{k=0}^{K}w_k\,\phi_k(\x),
+\]
+dove le $\phi_k:\R^n\to\R$ sono trasformazioni \textbf{fissate} dell'input: il vettore di input viene aumentato
+con nuove variabili derivate da $\x$.
+\end{definizione}
+
+Esempi di $\phi$: rappresentazioni \textbf{polinomiali} ($\phi(\x)=x_j^2$, $\phi(\x)=x_jx_i$, \dots);
+trasformazioni non lineari di singoli input ($\log x_j$, $\sqrt{x_j}$); trasformazioni di più input
+($\phi(\x) = \norm{\x}$); spline. Ad esempio
+$h(\x) = w_1x_1+w_2x_2+w_3\log x_2+w_4\log x_3+w_5\,x_2x_3+w_0$. Tipicamente il numero di parametri diventa
+$K>n$. Il modello è lineare nei parametri (e nelle $\phi$), non in $\x$: lo stesso algoritmo vale per la
+regressione e per la classificazione (applicando la soglia a $\sum_kw_k\phi_k(\x)$).
+
+\begin{attenzione}[Pro e contro della LBE]
+\textbf{Pro}: il modello diventa più espressivo e rappresenta relazioni più complesse.\\
+\textbf{Contro}:
+\begin{itemize}
+  \item con molte funzioni di base si rischia facilmente l'\textbf{overfitting}: servono metodi di controllo
+        della complessità, intesa come flessibilità e non come costo computazionale
+        (capitolo~\ref{cap:regolarizzazione});
+  \item la \textbf{maledizione della dimensionalità}: il volume dello spazio cresce così in fretta che i dati
+        diventano sparsi e non bastano più a sostenere la complessità del modello (\rif{sec:curse});
+  \item le $\phi$ sono \textbf{fissate prima} di vedere i dati, e resta aperta la domanda su quali scegliere.
+        L'alternativa sono modelli adattivi, non lineari nei parametri, che imparano le $\phi$ (le reti neurali,
+        \rif{sec:lbe-adattiva}), o che le gestiscono in modo efficiente (le SVM con i kernel, \rif{sec:kernel}).
+\end{itemize}
+\end{attenzione}
+
+\begin{puntichiave}
+\begin{itemize}
+  \item LMS: $E(\w)=\norm{\y-X\w}^2$, gradiente $\partial E/\partial w_j = -2\sum_p\delta_px_{p,j}$.
+  \item Soluzione diretta: $(X\T X)\w = X\T\y$, cioè $\w=X^+\y$ (SVD). Soluzione iterativa:
+        $\w\leftarrow\w+\eta\Delta\w$ (delta rule), batch o on-line.
+  \item Classificazione: si addestra con LMS su $\w\T\x$, si classifica con $\sign(\w\T\x)$.
+  \item Solo problemi linearmente separabili hanno una soluzione esatta; lo XOR non lo è.
+  \item LBE: lineare nei parametri, non nell'input; più flessibilità, ma rischio di overfitting.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Formulare il problema di apprendimento per un modello lineare con LMS, per regressione e classificazione.
+  \item Ricavare la retta ai minimi quadrati nel caso univariato; derivare il gradiente e le equazioni normali.
+  \item Descrivere la discesa del gradiente; differenza tra batch e on-line; ruolo di $\eta$.
+  \item Spiegare la delta rule come regola di correzione dell'errore.
+  \item Perché per la classificazione si usa l'errore quadratico su $\w\T\x$ invece della loss 0/1?
+  \item Cos'è la separabilità lineare? Perché lo XOR non è linearmente separabile?
+  \item Cos'è la linear basis expansion? Pro e contro.
+\end{enumerate}
+\end{domande}

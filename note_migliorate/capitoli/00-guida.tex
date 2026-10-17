@@ -1,0 +1,72 @@
+\chapter{Guida alla lettura}
+
+\section*{Organizzazione}
+
+Le note seguono il programma del corso, ma gli argomenti sono disposti in modo che ogni concetto venga
+\textbf{definito una sola volta}, nel punto in cui serve per la prima volta, e poi soltanto richiamato.
+
+\begin{itemize}
+  \item \textbf{Parte I --- Fondamenti.} Strumenti matematici, formulazione del problema dell'apprendimento
+        (dati, task, modello, algoritmo, loss) e ruolo del bias induttivo.
+  \item \textbf{Parte II --- Primi modelli.} Modelli lineari (con la discesa del gradiente), overfitting e
+        regolarizzazione, K-nearest neighbors: i due estremi \emph{rigido} e \emph{flessibile}.
+  \item \textbf{Parte III --- Generalizzazione.} La teoria (VC-dimension, bound, SRM), la decomposizione
+        bias-varianza con gli ensemble, e la stima empirica dell'errore (validazione).
+  \item \textbf{Parte IV --- Reti neurali.} Perceptron, MLP, backpropagation e addestramento in pratica.
+  \item \textbf{Parte V --- SVM.} Margine massimo, soft margin, kernel, regressione, metodi kernel.
+  \item \textbf{Parte VI --- Modelli avanzati.} CNN, deep learning, reti randomizzate, apprendimento non
+        supervisionato, reti ricorrenti, grafi.
+\end{itemize}
+
+Ogni capitolo si apre con un breve riquadro che ne descrive il contenuto e si chiude con i \emph{punti chiave}
+e alcune \emph{domande di verifica} (tratte dalle domande d'esame indicate nel corso).
+
+\section*{Convenzioni grafiche}
+
+\begin{definizione}[nome]
+Definizioni formali dei concetti.
+\end{definizione}
+\begin{teorema}[nome]
+Enunciati di teoremi e risultati; la dimostrazione, quando prevista, segue subito dopo il riquadro.
+\end{teorema}
+\begin{algoritmo}[nome]
+Procedure passo per passo.
+\end{algoritmo}
+\begin{idea}
+Il concetto che bisogna aver capito di una sezione.
+\end{idea}
+\begin{attenzione}
+Errori frequenti e affermazioni da non fraintendere. È l'unico riquadro colorato.
+\end{attenzione}
+\begin{esempio}
+Esempi ed esercizi svolti.
+\end{esempio}
+
+Nel testo il \textbf{grassetto} segnala un termine definito per la prima volta, il \ingl{corsivo} i termini
+inglesi e le enfasi, il \uline{sottolineato} le poche affermazioni da ricordare alla lettera. Le formule
+riquadrate sono quelle da saper scrivere a memoria.
+
+\section*{Notazione}
+
+\begin{center}
+\small
+\begin{tabularx}{0.92\linewidth}{>{\raggedright\arraybackslash}p{3.2cm}X}
+\toprule
+Simbolo & Significato \\
+\midrule
+$x$, $\x$, $X$ & scalare, vettore (colonna, in grassetto), matrice \\
+$\x\T\vv{y}$ & prodotto scalare; $\T$ indica la trasposta \\
+$l$ & numero di esempi del dataset (nel capitolo sulle SVM: $N$) \\
+$n$ & dimensione dell'input, cioè numero di feature (nel capitolo sulle SVM: $m$) \\
+$\x_p$, $x_{p,i}$ & $p$-esimo esempio (riga del dataset), sua componente $i$ \\
+$d_p$ (o $y_p$, $t_p$) & target dell'esempio $p$ \\
+$h$, $H$ & ipotesi, spazio delle ipotesi \\
+$f$ & funzione target (sconosciuta); nelle reti: funzione di attivazione \\
+$\w$, $w_0$ & pesi (parametri liberi), bias (indicato anche con $b$) \\
+$L$, $E$ & loss sul singolo esempio, errore (media o somma delle loss) \\
+$R$, $\Remp$ & rischio (errore vero), rischio empirico \\
+$\eta$, $\lambda$, $\alpha$ & learning rate, coefficiente di regolarizzazione, momentum \\
+TR, VL, TS & training set, validation set, test set \\
+\bottomrule
+\end{tabularx}
+\end{center}

@@ -1,0 +1,201 @@
+\chapter{Spazio delle ipotesi e bias induttivo}
+\label{cap:bias}
+
+\begin{inbreve}
+Inferire una funzione da un numero finito di esempi è un problema mal posto: senza assunzioni sulla funzione
+cercata, gli esempi non dicono nulla sui casi non visti. Il capitolo lo mostra in uno spazio di ipotesi
+discreto (funzioni booleane), dimostra che un learner senza bias non può generalizzare e distingue i due modi di
+introdurre un bias: vincolare il linguaggio delle ipotesi o vincolare la strategia di ricerca.
+\end{inbreve}
+
+\section{Un problema mal posto}
+
+Inferire funzioni generali da dati noti è un \termine{problema (inverso) mal posto}: la soluzione può violare
+\textbf{esistenza}, \textbf{unicità} o \textbf{stabilità}. In linea di principio la soluzione non è unica, e con
+dati finiti non ci si può aspettare di trovare quella esatta. Per questo si lavora con uno spazio delle ipotesi
+\textbf{ristretto}, e lo studio di ogni modello ruota attorno a due domande:
+\begin{itemize}
+  \item \textbf{cosa si può rappresentare?} Una funzione non rappresentabile in $H$ non può nemmeno essere appresa;
+  \item \textbf{cosa si può apprendere?} Domanda che viene dopo la prima.
+\end{itemize}
+
+Per costruire un modello e un algoritmo bisogna fare \textbf{assunzioni} sulla natura della funzione target.
+
+\begin{definizione}[Bias induttivo]
+Il \termine{bias induttivo} è l'insieme delle assunzioni fatte sulla funzione target per poter generalizzare.
+Può riguardare
+\begin{itemize}
+  \item i \textbf{vincoli sul modello}, cioè su quali ipotesi $H$ può esprimere: \termine{language bias};
+  \item i \textbf{vincoli o le preferenze dell'algoritmo}, cioè la strategia di ricerca in $H$: \termine{search
+        bias};
+  \item entrambi.
+\end{itemize}
+\end{definizione}
+
+Il ruolo del bias si vede con chiarezza imparando un \textbf{concetto}, cioè una funzione booleana (ad esempio
+$h_{\mathit{gatto}}(\x)=1$ se l'animale descritto da $\x$ è un gatto, $0$ altrimenti).
+
+\section{Imparare una funzione booleana}
+
+Si vuole imparare una funzione booleana sconosciuta $y = f(x_1,x_2,x_3,x_4)$ dai 7 esempi della
+Tabella~\ref{tab:booleana}.
+
+\begin{table}[ht]
+\centering\small
+\caption{Sette esempi di una funzione booleana sconosciuta di quattro variabili.}
+\label{tab:booleana}
+\begin{tabular}{ccccc|c}
+\toprule
+Esempio & $x_1$ & $x_2$ & $x_3$ & $x_4$ & $y$ \\
+\midrule
+1 & 0 & 0 & 1 & 0 & 0\\
+2 & 0 & 1 & 0 & 0 & 0\\
+3 & 0 & 0 & 1 & 1 & 1\\
+4 & 1 & 0 & 0 & 1 & 1\\
+5 & 0 & 1 & 1 & 0 & 0\\
+6 & 1 & 1 & 0 & 0 & 0\\
+7 & 0 & 1 & 0 & 1 & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Quante sono le ipotesi possibili}
+Con 4 input binari esistono $2^4=16$ istanze di input distinte. Una funzione booleana assegna a ciascuna un output
+in $\{0,1\}$, quindi le funzioni possibili sono $2^{16}=65\,536$. Sapere quale sia quella corretta richiede di
+vedere \textbf{tutte} le coppie input-output: dopo 7 esempi le 9 istanze non viste possono avere output
+qualsiasi, e restano $2^9 = 512$ funzioni compatibili con i dati. In generale, con input e output binari e
+dimensione dell'input $n$:
+\begin{equation}\label{eq:numero-booleane}
+\abs{H} = 2^{\#\text{istanze di input}} = 2^{2^n}.
+\end{equation}
+
+Un modello che usa tutto questo spazio è una \termine{lookup table}: un \ingl{rote learner} che memorizza gli
+esempi e classifica $\x$ solo se coincide con un esempio già visto (altrimenti non risponde).
+\uline{Nessun bias induttivo, nessuna generalizzazione.}
+
+\section{Restringere lo spazio: le regole congiuntive}
+
+Si introduce un \textbf{language bias}: si considerano solo \termine{regole congiuntive}, cioè congiunzioni
+(AND) di letterali, come $h_1 = l_2$, $h_2 = l_1\wedge l_2$, $h_3 = \mathit{true}$, $h_4 = \neg l_1\wedge l_2$.
+Ad esempio $h_1$ significa ``se $x_2=1$ allora $h(\x)=1$, altrimenti $0$''.
+
+\begin{proprieta}{Numero di regole congiuntive}
+Con $n$ variabili binarie le ipotesi congiuntive semanticamente distinte sono $3^n + 1$.
+\end{proprieta}
+\begin{proof}
+In una congiunzione, per ciascuna delle $n$ variabili ci sono tre possibilità: compare come $l_i$, compare come
+$\neg l_i$, oppure non compare (``non importa''). Le scelte sono indipendenti, quindi si ottengono $3^n$
+congiunzioni. Tutte le congiunzioni che contengono una coppia $l_i\wedge\neg l_i$ valgono sempre 0: sono
+equivalenti tra loro e alla funzione $\mathit{false}$, che va aggiunta come una sola ipotesi in più. Totale
+$3^n+1$.
+\end{proof}
+
+Con $n=4$ si passa da $65\,536$ a $3^4+1 = 82$ ipotesi.
+
+\begin{definizione}[Consistenza e version space]
+Un'ipotesi $h$ è \termine{consistente} con il training set TR se $h(\x) = d(\x)$ per ogni esempio
+$\langle\x, d(\x)\rangle\in TR$. Il \termine{version space} $VS_{H,TR}$ è il sottoinsieme delle ipotesi di $H$
+consistenti con tutti gli esempi di training.
+\end{definizione}
+
+In questo spazio ridotto esistono algoritmi efficienti che trovano il version space senza enumerare tutte le
+ipotesi. Ma l'assunzione congiuntiva è \textbf{troppo restrittiva}: se il concetto target non è in $H$ non può
+essere rappresentato. ``Se $x_1=1$ \emph{oppure} $x_2=1$ allora 1'' non è una congiunzione.
+
+\section{L'unbiased learner}
+
+L'idea opposta è scegliere un $H$ capace di esprimere \textbf{ogni concetto insegnabile}: l'insieme di tutti i
+sottoinsiemi dello spazio degli input $X$, cioè l'insieme delle parti $\mathcal{P}(X)$ (disgiunzioni,
+congiunzioni, negazioni). Con $n=10$ input binari, $\abs{X} = 2^{10} = 1024$ e
+$\abs{\mathcal{P}(X)} = 2^{1024}\approx 10^{308}$ concetti. $H$ contiene sicuramente il concetto target. Che
+cosa succede alla generalizzazione?
+
+\begin{teorema}[Un learner senza bias non può generalizzare]
+Con un \ingl{unbiased learner} le uniche istanze classificate in modo non ambiguo dal version space sono gli
+esempi di training stessi: si ottiene di nuovo una lookup table.
+\end{teorema}
+\begin{proof}
+Sia $x_i$ un'istanza non presente nel training set e sia $h\in VS$.
+\begin{enumerate}
+  \item Si consideri la funzione $h'$ identica a $h$ ovunque tranne che in $x_i$, dove $h'(x_i)\neq h(x_i)$.
+  \item Poiché $H$ contiene \emph{tutte} le funzioni su $X$, anche $h'\in H$.
+  \item $h$ e $h'$ coincidono su tutti gli esempi di training ($x_i$ non è tra questi), quindi anche $h'$ è
+        consistente: $h'\in VS$.
+  \item La corrispondenza $h\mapsto h'$ accoppia ogni ipotesi del VS che classifica $x_i$ come positivo con una che
+        lo classifica negativo, e viceversa.
+\end{enumerate}
+Quindi ogni istanza non vista è classificata 1 da esattamente metà delle ipotesi del VS e 0 dall'altra metà:
+il version space non può dare alcuna risposta su $x_i$.
+\end{proof}
+
+\begin{esempio}[Un solo input]
+Con un input binario $x$, le funzioni possibili sono $H=\{x,\ \neg x,\ 0,\ 1\}$. Il TR contiene solo $x=0\mapsto
+d=0$. Il version space è $\{x, 0\}$: entrambe valgono 0 in $x=0$. Sull'istanza di test $x=1$, però, $x$ risponde
+1 e $0$ risponde 0. Non c'è modo di decidere, a meno di usare tutto $X$ come training set.
+\end{esempio}
+
+\begin{idea}[Futilità dell'apprendimento senza bias]
+Un learner che non fa \textbf{alcuna assunzione a priori} sull'identità del concetto target \textbf{non ha alcuna
+base razionale} per classificare istanze non viste: dovrebbe vedere come esempio ogni singola istanza di $X$. Il
+bias, di restrizione o di preferenza, non serve solo all'efficienza: \uline{è necessario per la
+generalizzazione}. Il bias però non dice ancora \emph{quale} soluzione generalizza meglio.
+\end{idea}
+
+\section{Sistemi induttivi e deduttivi equivalenti}
+
+Un sistema induttivo (un algoritmo di apprendimento che, usando lo spazio $H$, riceve gli esempi e una nuova
+istanza e produce una classificazione o ``non so'') è \textbf{equivalente a un sistema deduttivo}, cioè a un
+dimostratore di teoremi che riceve gli stessi esempi e la stessa istanza \textbf{più il bias induttivo come
+assioma aggiuntivo} (\figrif{fig:induttivo-deduttivo}). Il bias induttivo è quindi esattamente l'insieme di
+assunzioni che rende \emph{logicamente deducibile} la classificazione prodotta dal learner.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[node distance=0.4cm]
+\node[font=\small, align=right, anchor=east] (e1) at (0,0.3) {esempi di training};
+\node[font=\small, align=right, anchor=east] (n1) at (0,-0.3) {nuova istanza};
+\node[blocco, minimum width=4.2cm, minimum height=1.3cm] (s1) at (3.2,0) {Algoritmo di apprendimento\\che usa lo spazio $H$};
+\node[font=\small, align=left, anchor=west] (o1) at (6.2,0) {classificazione\\o ``non so''};
+\draw[->] (e1.east) -- (s1.west|-e1.east); \draw[->] (n1.east) -- (s1.west|-n1.east); \draw[->] (s1) -- (o1);
+\node[font=\footnotesize, grigio, anchor=south west] at (s1.north west) {sistema induttivo};
+\begin{scope}[yshift=-2.4cm]
+\node[font=\small, align=right, anchor=east] (e2) at (0,0.45) {esempi di training};
+\node[font=\small, align=right, anchor=east] (n2) at (0,0) {nuova istanza};
+\node[font=\small, align=right, anchor=east] (b2) at (0,-0.45) {\textbf{bias induttivo}};
+\node[blocco, minimum width=4.2cm, minimum height=1.3cm] (s2) at (3.2,0) {Dimostratore\\di teoremi};
+\node[font=\small, align=left, anchor=west] (o2) at (6.2,0) {classificazione\\o ``non so''};
+\draw[->] (e2.east) -- (s2.west|-e2.east); \draw[->] (n2.east) -- (s2.west|-n2.east); \draw[->] (b2.east) -- (s2.west|-b2.east); \draw[->] (s2) -- (o2);
+\node[font=\footnotesize, grigio, anchor=south west] at (s2.north west) {sistema deduttivo equivalente};
+\end{scope}
+\end{tikzpicture}
+\caption{Il bias induttivo rende un sistema induttivo equivalente a un sistema deduttivo.}
+\label{fig:induttivo-deduttivo}
+\end{figure}
+
+\section{Language bias o search bias?}
+
+Nel ML moderno si preferisce in genere il \textbf{search bias}. Si usano modelli flessibili, con spazi di
+ipotesi molto espressivi e capacità di approssimazione universale (reti neurali, alberi di decisione), evitando
+il language bias e quindi \textbf{senza escludere a priori} la funzione target. Il bias induttivo resta, ma è
+affidato alla \textbf{strategia di ricerca}, cioè a una ricerca \textbf{incompleta} che privilegia certe
+soluzioni rispetto ad altre.
+
+\begin{puntichiave}
+\begin{itemize}
+  \item Con $n$ input binari le funzioni booleane sono $2^{2^n}$; le congiunzioni di letterali $3^n+1$.
+  \item Il version space contiene le ipotesi consistenti con tutti gli esempi.
+  \item Senza bias induttivo il version space non classifica nessuna istanza nuova: lookup table.
+  \item Language bias = vincoli su $H$; search bias = preferenze della ricerca. Il ML moderno usa $H$ molto
+        espressivi e search bias. \textbf{Ogni approccio di ML ha un bias induttivo}; il problema è
+        caratterizzarlo per ciascun modello.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Che cos'è il bias induttivo? Differenza tra language bias e search bias.
+  \item Dimostrare che un \ingl{unbiased learner} non può generalizzare.
+  \item Quante sono le ipotesi con $n$ input binari senza vincoli? E con sole regole congiuntive?
+  \item Che cos'è il version space?
+\end{enumerate}
+\end{domande}

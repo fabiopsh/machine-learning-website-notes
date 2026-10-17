@@ -1,0 +1,305 @@
+\chapter{Reti convoluzionali}
+\label{cap:cnn}
+
+\begin{inbreve}
+Le reti convoluzionali (CNN) mostrano come si progetta una rete feedforward \emph{non} completamente connessa per
+un problema specifico, inserendo nell'architettura conoscenza a priori sui dati (le immagini). Il capitolo
+presenta la convoluzione come unità che scorre sull'input con pesi condivisi, il pooling, l'architettura
+complessiva con i suoi vantaggi, e i risultati che hanno fatto delle CNN il primo esempio di rete profonda.
+\end{inbreve}
+
+\section{Il problema e l'idea}
+
+Nel riconoscimento di caratteri scritti a mano (ad esempio immagini $16\times16$ in scala di grigi) un primo approccio
+è un MLP standard con 256 input, uno per pixel: si ottiene un errore del 5--20\%, con molti errori dovuti alla
+\textbf{mancanza di invarianza} a traslazioni, rotazioni e deformazioni. Una rete completamente connessa tratta ogni
+pixel come un input indipendente: non ``sa'' che pixel vicini sono correlati né che uno stesso tratto può comparire
+in posizioni diverse.
+
+\begin{idea}[Conoscenza a priori nell'architettura]
+\begin{itemize}
+  \item \textbf{Connessioni locali} (campi recettivi locali): ogni unità vede solo una piccola zona dell'immagine ed
+        estrae \textbf{feature locali}.
+  \item \textbf{Condivisione dei pesi} (\ingl{weight sharing}) tra unità diverse: la \textbf{stessa operazione} è
+        applicata a parti diverse dell'input, perché le feature di un carattere possono comparire ovunque
+        nell'immagine. Si riduce il numero di parametri liberi pur mantenendo una connettività complessa.
+\end{itemize}
+\end{idea}
+
+\section{La convoluzione}
+
+Il nome viene dall'\termine{operatore di convoluzione}, una media pesata di una funzione $f$ con pesi dati da
+un'altra funzione $g$ che scorre:
+\[
+(f*g)(t) = \int_{-\infty}^{\infty}f(\tau)\,g(t-\tau)\,d\tau .
+\]
+$g$ è non nulla solo su un intervallo limitato e agisce come una \textbf{finestra scorrevole}.
+
+\subsection{Convoluzione 1D}
+\label{sec:conv1d}
+
+Un'unità con tre pesi che scorre su una sequenza di input calcola
+\[
+\out_t = \sum_{i=1}^{3}w_i\,x_{t+i-2};
+\]
+ad esempio $o_2 = w_1x_1+w_2x_2+w_3x_3$ e $o_3 = w_1x_2+w_2x_3+w_3x_4$ (\figrif{fig:conv1d}). I pesi sono
+\textbf{condivisi} tra le copie dell'unità e si apprendono come al solito: l'unità è un \textbf{filtro adattivo}, e
+più unità diverse formano un \textbf{banco di filtri}. Questa rete si chiama anche \ingl{Time-Delay Neural Network}.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1.2cm, y=1cm]
+\foreach \i in {1,...,5} \node[neur] (x\i) at (\i,0) {$x_\i$};
+\foreach \t in {2,3,4} \node[neurp] (o\t) at (\t,1.6) {$o_\t$};
+\foreach \t/\c in {2/blu,3/rosso,4/verde} {
+  \pgfmathtruncatemacro{\a}{\t-1} \pgfmathtruncatemacro{\b}{\t+1}
+  \draw[->, \c, thick] (x\a) -- (o\t); \draw[->, \c, thick] (x\t) -- (o\t); \draw[->, \c, thick] (x\b) -- (o\t);
+}
+\node[font=\scriptsize, blu] at (1.25,0.85) {$w_1$}; \node[font=\scriptsize, blu] at (1.82,0.85) {$w_2$}; \node[font=\scriptsize, blu] at (2.75,0.55) {$w_3$};
+\node[font=\footnotesize, align=left, anchor=west] at (5.6,0.8) {stessa unità, stessi pesi\\$(w_1,w_2,w_3)$, spostata\\di un passo alla volta};
+\end{tikzpicture}
+\caption{Convoluzione 1D: la stessa unità (stessi pesi) scorre sulla sequenza di input.}
+\label{fig:conv1d}
+\end{figure}
+
+\subsection{Convoluzione 2D}
+
+Su un'immagine si usa un \termine{kernel} 2D, ad esempio $3\times3$ (il \textbf{campo recettivo locale}
+dell'unità), che si sposta di un pixel alla volta (\termine{stride} 1); il \termine{padding} gestisce i bordi. Il
+kernel scorre sull'immagine e produce una \termine{feature map}, le feature estratte da quel filtro. In termini di reti
+neurali: si percorre l'immagine con \textbf{lo stesso neurone}, che usa connessioni locali (\figrif{fig:conv2d}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=0.75cm, y=0.75cm]
+\foreach \r/\riga in {0/{a,b,c,d}, 1/{e,f,g,h}, 2/{i,j,k,l}} {
+  \foreach \v [count=\c from 0] in \riga {
+    \draw (\c,-\r) rectangle ++(1,1); \node[font=\small] at (\c+0.5,-\r+0.5) {$\v$};
+  }
+}
+\draw[ultra thick, blu] (0,-1) rectangle (2,1);
+\node[font=\footnotesize] at (2,-2.6) {input $3\times4$};
+\begin{scope}[xshift=5.2cm]
+\foreach \v [count=\c from 0] in {w,x} { \draw (\c,0) rectangle ++(1,1); \node[font=\small] at (\c+0.5,0.5) {$\v$}; }
+\foreach \v [count=\c from 0] in {y,z} { \draw (\c,-1) rectangle ++(1,1); \node[font=\small] at (\c+0.5,-0.5) {$\v$}; }
+\node[font=\footnotesize] at (1,-2.6) {kernel $2\times2$};
+\end{scope}
+\begin{scope}[xshift=8.4cm]
+\node[draw, fill=blu!10, minimum width=2.6cm, minimum height=0.75cm, font=\scriptsize] at (1.7,0.5) {$aw+bx+ey+fz$};
+\node[draw, minimum width=2.6cm, minimum height=0.75cm, font=\scriptsize] at (5.2,0.5) {$bw+cx+fy+gz$};
+\node[draw, minimum width=2.6cm, minimum height=0.75cm, font=\scriptsize] at (8.7,0.5) {$cw+dx+gy+hz$};
+\node[draw, minimum width=2.6cm, minimum height=0.75cm, font=\scriptsize] at (1.7,-0.5) {$ew+fx+iy+jz$};
+\node[draw, minimum width=2.6cm, minimum height=0.75cm, font=\scriptsize] at (5.2,-0.5) {$fw+gx+jy+kz$};
+\node[draw, minimum width=2.6cm, minimum height=0.75cm, font=\scriptsize] at (8.7,-0.5) {$gw+hx+ky+lz$};
+\node[font=\footnotesize] at (5.2,-2.6) {feature map $2\times3$};
+\end{scope}
+\end{tikzpicture}
+\caption{Convoluzione 2D di un input $3\times4$ con un kernel $2\times2$ (stride 1, senza padding): ogni elemento
+della feature map è la somma dei prodotti del kernel con una porzione $2\times2$ dell'input; in blu la prima
+posizione.}
+\label{fig:conv2d}
+\end{figure}
+
+\begin{attenzione}[Convoluzione o cross-correlazione]
+La convoluzione 2D di un'immagine $I$ con un kernel $K$ è $S(i,j) = (I*K)(i,j) = \sum_m\sum_nI(m,n)\,K(i-m,j-n)$.
+Molte librerie implementano in realtà la \textbf{cross-correlazione}, $S(i,j) = \sum_m\sum_nI(i+m,j+n)\,K(m,n)$,
+come nella \figrif{fig:conv2d} (i dettagli non sono richiesti).
+\end{attenzione}
+
+Con \textbf{stride} maggiore di 1 il kernel ``salta'' pixel (ad esempio due alla volta): è un
+\textbf{sotto-campionamento} e produce una feature map più piccola.
+
+\subsection{Una rete di filtri}
+
+I pesi di un'unità sono un \textbf{filtro addestrato} a rilevare certe feature dell'immagine. Il progetto
+dell'architettura prevede:
+\begin{itemize}
+  \item un \textbf{campo recettivo piccolo e locale}: i filtri appresi rispondono al massimo a pattern
+        \textbf{spazialmente locali};
+  \item \textbf{lo stesso filtro su tutta l'immagine}: le feature sono rilevate indipendentemente dalla posizione, e
+        si ottiene l'\textbf{invarianza per traslazione};
+  \item \textbf{filtri appresi}: i filtri che nell'elaborazione delle immagini tradizionale erano progettati a mano
+        vengono appresi, senza dipendere da conoscenza a priori e sforzo umano;
+  \item \textbf{molti strati impilati}: le unità delle feature map rappresentano aree via via più grandi
+        dell'immagine originale (\figrif{fig:campo-recettivo}).
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=0.75cm, y=1.05cm]
+\foreach \l in {0,1,2,3} {
+  \pgfmathtruncatemacro{\n}{11-2*\l}
+  \foreach \i in {1,...,\n} \node[circle, draw, inner sep=0pt, minimum size=4mm] (n\l-\i) at (\i+\l,\l) {};
+}
+\fill[rosso] (n3-3) circle (2.2mm);
+\foreach \i in {3,4,5} \draw[rosso, thick] (n3-3) -- (n2-\i);
+\foreach \i in {3,4,5} \fill[rosso!55] (n2-\i) circle (1.6mm);
+\foreach \i in {3,...,7} \fill[rosso!35] (n1-\i) circle (1.6mm);
+\foreach \i in {3,...,9} \fill[rosso!20] (n0-\i) circle (1.6mm);
+\draw[rosso, densely dashed] (n3-3) -- (n0-3.south west);
+\draw[rosso, densely dashed] (n3-3) -- (n0-9.south east);
+\node[font=\footnotesize, anchor=west] at (12.2,0) {input};
+\node[font=\footnotesize, anchor=west] at (12.2,1) {strato 1};
+\node[font=\footnotesize, anchor=west] at (12.2,2) {strato 2};
+\node[font=\footnotesize, anchor=west] at (12.2,3) {strato 3};
+\end{tikzpicture}
+\caption{Crescita del campo recettivo con la profondità (caso 1D, kernel di ampiezza 3): un'unità dello strato 3 vede
+3 unità dello strato 2 ma, indirettamente, 7 input.}
+\label{fig:campo-recettivo}
+\end{figure}
+
+\section{Pooling}
+
+Il \termine{pooling} riduce la feature map producendo un valore per un insieme rettangolare di posizioni invece che
+per ogni posizione: con un sotto-campionamento (stride $>1$), con una \textbf{media} (semplice o pesata) o, più
+comunemente, con il \termine{max pooling} (\figrif{fig:maxpool}). Il pooling rende la rappresentazione
+\textbf{approssimativamente invariante a piccole traslazioni}: il massimo (o la media) di una zona cambia poco se
+l'input si sposta di poco.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=0.7cm, y=0.7cm]
+\foreach \r/\riga in {0/{1,1,2,4}, 1/{5,6,7,8}, 2/{3,2,1,0}, 3/{1,2,3,4}} {
+  \foreach \v [count=\c from 0] in \riga {
+    \pgfmathtruncatemacro{\q}{(\c>1)+2*(\r>1)}
+    \ifcase\q \def\col{blu!15}\or \def\col{rosso!15}\or \def\col{verde!18}\or \def\col{arancio!20}\fi
+    \fill[\col] (\c,-\r) rectangle ++(1,1); \draw (\c,-\r) rectangle ++(1,1);
+    \node[font=\small] at (\c+0.5,-\r+0.5) {\v};
+  }
+}
+\draw[->, thick] (4.4,-1) -- (6.2,-1) node[midway, above, font=\scriptsize, align=center] {max pooling\\$2\times2$, stride 2};
+\foreach \v/\c/\r/\col in {6/0/0/blu!15, 8/1/0/rosso!15, 3/0/1/verde!18, 4/1/1/arancio!20} {
+  \fill[\col] (6.8+\c,-0.5-\r) rectangle ++(1,1); \draw (6.8+\c,-0.5-\r) rectangle ++(1,1);
+  \node[font=\small] at (7.3+\c,-\r) {\v};
+}
+\end{tikzpicture}
+\caption{Max pooling con filtro $2\times2$ e stride 2: ogni blocco viene sostituito dal suo massimo.}
+\label{fig:maxpool}
+\end{figure}
+
+\section{La CNN nel complesso}
+
+Una CNN realizza con la condivisione dei pesi una finestra scorrevole di campi locali sul segnale, estesa alle
+immagini 2D e ripetuta su molti strati di feature map, alternata a operazioni di pooling; in cima ci sono di solito
+alcuni strati completamente connessi (con softmax per la classificazione). Il numero di filtri può crescere negli
+strati più alti; per un'immagine a colori (RGB) l'input ha tre canali, e la ``profondità'' del volume di ogni strato è
+il suo numero di feature map (\figrif{fig:cnn}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm]
+\newcommand{\pila}[5]{% x, larghezza, altezza, numero, etichetta
+  \foreach \k in {1,...,#4} \draw[fill=white] (#1+0.12*\k, 0.12*\k) rectangle ++(#2,#3);
+  \node[font=\scriptsize, align=center, anchor=north] at (#1+0.06*#4+#2/2, -0.1) {#5};}
+\pila{0}{1.6}{1.6}{1}{input}
+\pila{2.3}{1.3}{1.3}{4}{convoluzione\\(+ReLU)}
+\pila{4.6}{0.75}{0.75}{4}{pooling}
+\pila{6.4}{0.6}{0.6}{7}{convoluzione}
+\pila{8.4}{0.32}{0.32}{7}{pooling}
+\foreach \y in {0.2,0.5,...,1.4} \fill (10.2,\y) circle (1.5pt);
+\node[font=\scriptsize, anchor=north, align=center] at (10.2,-0.1) {strati\\densi};
+\foreach \y in {0.5,0.8,1.1} \draw (11.2,\y) circle (2.5pt);
+\node[font=\scriptsize, anchor=north, align=center] at (11.2,-0.1) {uscita\\(softmax)};
+\draw[decorate, decoration={brace, amplitude=5pt}] (2.3,2.4) -- (9.4,2.4) node[midway, above=5pt, font=\footnotesize] {feature learning};
+\draw[decorate, decoration={brace, amplitude=5pt}] (9.9,2.4) -- (11.5,2.4) node[midway, above=5pt, font=\footnotesize] {classificazione};
+\end{tikzpicture}
+\caption{Schema di una CNN: convoluzioni e pooling alternati (estrazione delle feature) seguiti da strati completamente
+connessi (classificazione). Le feature map si rimpiccioliscono e aumentano di numero salendo.}
+\label{fig:cnn}
+\end{figure}
+
+\begin{idea}[I quattro ingredienti e i loro vantaggi]
+\begin{enumerate}
+  \item \textbf{Connessioni locali} e
+  \item \textbf{pesi condivisi}: rilevano pattern locali in modo \textbf{invariante alla traslazione} e
+        \textbf{riducono il numero di parametri liberi} pur mantenendo le connessioni, il che è una forma di
+        \textbf{regolarizzazione}.
+  \item \textbf{Pooling}: riduce la dimensione della rappresentazione a ogni strato (una ``piramide'' di strati) e
+        aiuta l'invarianza a piccoli spostamenti e distorsioni.
+  \item \textbf{Molti strati}: le operazioni 1 e 2 applicate a tutte le feature map producono un'\textbf{astrazione
+        progressiva}, che compone primitive di basso livello (apprese una volta sola) nelle combinazioni utili agli
+        strati successivi. Le unità degli ultimi strati hanno un campo recettivo che copre gran parte dell'immagine.
+\end{enumerate}
+\end{idea}
+
+L'addestramento avviene con la \textbf{backpropagation}, con le euristiche note e qualche specializzazione (per i pesi
+condivisi, il pooling, \dots). Vista la dimensione tipica delle reti e dei dati, molti iperparametri si fissano
+\textbf{per esperienza}, perché una cross-validation su grandi spazi di iperparametri sarebbe troppo costosa.
+
+\section{Risultati}
+
+\subsection{Pesi condivisi e connessioni locali}
+
+Su un problema di cifre manoscritte (circa 300 immagini di training) LeCun confrontò cinque reti: Net-1 senza strati
+nascosti, Net-2 completamente connessa con uno strato nascosto, Net-3 con connessioni locali $3\times3$, Net-4 e Net-5
+con connessioni locali e pesi condivisi.
+
+\begin{table}[ht]
+\centering\small
+\caption{Connessioni e pesi delle cinque reti.}
+\begin{tabular}{lrr}
+\toprule
+Rete & Connessioni & Pesi \\
+\midrule
+Net-1 & 2570 & 2570 \\
+Net-2 & 3214 & 3214 \\
+Net-3 & 1226 & 1226 \\
+Net-4 & 2266 & 1132 \\
+Net-5 & 5194 & 1060 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Con i pesi condivisi il numero di \textbf{connessioni} può crescere mentre il numero di \textbf{pesi} (parametri liberi)
+resta basso. L'errore di training è nullo per tutte le reti, mentre l'accuratezza di test va da circa il 72\% (Net-1)
+e l'88\% (Net-2, Net-3) fino al 98\% (Net-4) e quasi al 99\% (Net-5, errore dell'1,6\%).
+
+\subsection{Altri risultati}
+
+\begin{itemize}
+  \item Sul dataset MNIST (60\,000 immagini di training, 10\,000 di test) le reti profonde, convoluzionali e no,
+        sono arrivate a errori di pochi decimi di punto percentuale. Anche un semplice MLP con molti strati e molte
+        unità ottiene risultati di questo livello se si controlla la complessità generando \textbf{molte immagini
+        deformate} per il training (\ingl{data augmentation}).
+  \item AlexNet, una CNN profonda (cinque strati convoluzionali, alcuni seguiti da max pooling, e strati
+        completamente connessi con softmax a 1000 classi, circa 60 milioni di parametri), migliorò nettamente lo
+        stato dell'arte nella classificazione di immagini (ImageNet). Per velocizzare l'addestramento usava unità
+        \textbf{non saturanti} (ReLU) e le GPU; per ridurre l'overfitting negli strati densi usava il
+        \textbf{dropout} (\rif{sec:dropout}).
+\end{itemize}
+
+\begin{attenzione}[Un test set usato troppe volte]
+Il test set di MNIST è stato usato così tante volte dalla comunità che miglioramenti dell'ordine dello 0,1\% non sono
+più significativi: di fatto è diventato un validation set (\rif{sec:errori-validazione}).
+\end{attenzione}
+
+Esistono molte architetture specializzate per le immagini, e si possono riusare le feature di reti
+\textbf{pre-addestrate} su grandi dataset (\rif{sec:transfer}). Le implementazioni efficienti sfruttano le
+\textbf{GPU} tramite la rappresentazione a \textbf{tensori}: la moltiplicazione di matrici (cioè i prodotti scalari) si
+parallelizza molto bene, e molte operazioni di convoluzione si possono scrivere come un'unica moltiplicazione tra
+matrici a blocchi o con operazioni su tensori.
+
+Un'alternativa al max pooling sono le \textbf{Capsule Network}: una ``capsula'' è un gruppo di neuroni che produce sia
+un parametro che indica se un'entità è presente, sia un vettore di \textbf{parametri di posa} (posizione,
+orientamento); al posto del pooling un meccanismo di \textbf{routing} instrada l'informazione di basso livello verso la
+capsula più adatta.
+
+\begin{puntichiave}
+\begin{itemize}
+  \item Convoluzione = la stessa unità (filtro adattivo) che scorre sull'input: connessioni locali e pesi condivisi.
+  \item Kernel, stride, padding, feature map; il pooling (soprattutto max) riduce la mappa e dà invarianza a piccoli
+        spostamenti.
+  \item I pesi condivisi riducono i parametri liberi: è una regolarizzazione.
+  \item Con la profondità il campo recettivo cresce e le feature diventano più astratte.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Quali sono le idee chiave delle CNN e cosa comporta ciascuna?
+  \item Cos'è la convoluzione in una rete neurale? Cosa sono kernel, stride, padding, feature map?
+  \item A cosa serve il pooling? Come funziona il max pooling?
+  \item Perché la condivisione dei pesi è una forma di regolarizzazione?
+  \item Come cresce il campo recettivo con la profondità?
+\end{enumerate}
+\end{domande}

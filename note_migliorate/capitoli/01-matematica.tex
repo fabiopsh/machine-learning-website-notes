@@ -1,0 +1,216 @@
+\chapter{Strumenti matematici}
+\label{cap:matematica}
+
+\begin{inbreve}
+Questo capitolo raccoglie gli strumenti usati in tutto il resto delle note: prodotto scalare e norme,
+derivate parziali e gradiente (la base della discesa del gradiente), regole di derivazione per funzioni
+composte, e i richiami di probabilità necessari (gaussiana, valore atteso, varianza).
+\end{inbreve}
+
+\section{Vettori, prodotto scalare e norme}
+
+Si usa la notazione: $x$ scalare, $\x$ vettore (colonna), $X$ matrice.
+
+\begin{definizione}[Prodotto scalare]
+Dati $\vv{a},\vv{b}\in\R^n$, il \termine{prodotto scalare} (\ingl{inner} o \ingl{dot product}) è
+\begin{equation}
+\vv{a}\cdot\vv{b} \;=\; a_1b_1 + a_2b_2 + \dots + a_nb_n \;=\; \sum_{i=1}^{n} a_i b_i \;=\; \norm{\vv{a}}\,\norm{\vv{b}}\cos\theta ,
+\end{equation}
+dove $\theta$ è l'angolo tra i due vettori. Notazioni equivalenti:
+$\vv{a}\cdot\vv{b} = \vv{a}\T\vv{b} = \vv{a}^t\vv{b} = \langle\vv{a},\vv{b}\rangle$, e anche solo $\vv{a}\vv{b}$ quando il contesto è chiaro.
+\end{definizione}
+
+La forma con il coseno dà la lettura geometrica: il prodotto scalare misura \textbf{quanto due vettori puntano
+nella stessa direzione}. È massimo quando sono paralleli e concordi ($\cos\theta = 1$), nullo quando sono
+ortogonali ($\cos\theta=0$), negativo quando puntano in versi opposti. Nei modelli lineari, $\w\T\x$ misura
+l'\emph{allineamento} dell'input $\x$ con il vettore dei pesi $\w$.
+
+\begin{definizione}[Norme]
+La \termine{norma euclidea} (modulo, lunghezza) di $\x$ è
+\[
+\norm{\x}_2 = \sqrt{\x\T\x} = \sqrt{\textstyle\sum_i x_i^2} = d(\x,\vv{0}),
+\]
+scritta spesso semplicemente $\norm{\x}$ o $\abs{\x}$. Altre norme utili sono la \termine{norma $L^1$},
+$\norm{\x}_1 = \sum_i \abs{x_i}$, e la \termine{norma del massimo}, $\norm{\x}_\infty = \max_i\abs{x_i}$.
+\end{definizione}
+
+Più in generale, un \termine{prodotto interno} $\langle\cdot,\cdot\rangle$ su uno spazio vettoriale $V$ è una
+forma bilineare simmetrica che associa a due vettori uno scalare, con le proprietà
+\[
+\langle v,w\rangle = \langle w,v\rangle, \qquad
+\langle v+w,u\rangle = \langle v,u\rangle + \langle w,u\rangle, \qquad
+\langle kv,w\rangle = k\,\langle v,w\rangle .
+\]
+
+\begin{teorema}[Disuguaglianza di Cauchy-Schwarz]
+Per ogni $x,y\in V$ vale $\abs{\langle x,y\rangle} \le \norm{x}\cdot\norm{y}$, cioè, elevando al quadrato,
+$\norm{x}^2\norm{y}^2 \ge \langle x,y\rangle^2$.
+\end{teorema}
+
+Sarà usata nella dimostrazione del teorema di convergenza del Perceptron (\rif{sec:convergenza-perceptron}).
+Un'altra identità che serve spesso è lo sviluppo del quadrato di una norma:
+\begin{equation}\label{eq:quadrato-norma}
+\norm{\vv{a}+\vv{b}}^2 = (\vv{a}+\vv{b})\T(\vv{a}+\vv{b}) = \norm{\vv{a}}^2 + 2\,\vv{a}\T\vv{b} + \norm{\vv{b}}^2 .
+\end{equation}
+
+\begin{definizione}[Tensore]
+Nella visione semplificata usata nel ML, un \termine{tensore} è un array multidimensionale di numeri disposti su
+una griglia regolare con un numero variabile di assi: uno scalare ha 0 assi, un vettore 1, una matrice 2, e ad
+esempio $X_{i,j,k}$ ha 3 indici. Nel ML il termine è soprattutto una comodità di notazione, utile per
+descrivere il calcolo su GPU; in matematica i tensori hanno proprietà più ricche, legate ai cambi di base.
+\end{definizione}
+
+\section{Derivate parziali e gradiente}
+\label{sec:gradiente}
+
+La \termine{derivata parziale} generalizza la derivata alle funzioni di più variabili: è la derivata rispetto a
+una sola variabile, tenendo fisse tutte le altre. Per $f(x_1,x_2,x_3)$ si calcolano
+$\partial f/\partial x_1$, $\partial f/\partial x_2$, $\partial f/\partial x_3$.
+
+\begin{definizione}[Gradiente]
+Il \termine{gradiente} di $f:\R^n\to\R$ è il vettore delle sue derivate parziali:
+\begin{equation}
+\nabla f = \operatorname{grad} f = \left(\frac{\partial f}{\partial x_1},\dots,\frac{\partial f}{\partial x_n}\right)
+= \sum_{i=1}^{n}\frac{\partial f}{\partial x_i}\,\vv{e}_i ,
+\end{equation}
+dove gli $\vv{e}_i$ sono i versori ortogonali lungo le direzioni coordinate.
+\end{definizione}
+
+\begin{idea}[Significato geometrico]
+In un punto, il gradiente \textbf{punta nella direzione di massima pendenza} (massima crescita di $f$), e la sua
+norma dice \textbf{quanto è ripida} la pendenza. Il suo opposto $-\nabla f$ indica la direzione in cui $f$
+\textbf{decresce più rapidamente}: è l'idea alla base della \emph{discesa del gradiente}, usata per addestrare
+quasi tutti i modelli del corso minimizzando una funzione di errore.
+\end{idea}
+
+Il motivo si vede con il prodotto scalare. La variazione di $f$ spostandosi di poco lungo una direzione
+unitaria $\vv{u}$ (la derivata direzionale) è
+\[
+D_{\vv{u}}f = \nabla f\cdot\vv{u} = \norm{\nabla f}\,\norm{\vv{u}}\cos\theta = \norm{\nabla f}\cos\theta ,
+\]
+con $\theta$ angolo tra $\vv{u}$ e $\nabla f$. Il valore è massimo per $\theta = 0$ (direzione di $\nabla f$),
+vale $-\norm{\nabla f}$, il minimo possibile, per $\theta=\pi$ (direzione di $-\nabla f$), ed è nullo per
+$\theta=\pi/2$: lungo le \emph{curve di livello} $f$ non cambia, quindi il gradiente è perpendicolare a esse
+(\figrif{fig:gradiente}).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=6.4cm, height=5.6cm, view={35}{30}, colormap={gr}{gray(0cm)=(0.92); gray(1cm)=(0.55)},
+  axis lines=none, zmin=0, zmax=9]
+\addplot3[surf, shader=faceted interp, faceted color=black!45, line width=0.1pt, domain=-2:2, y domain=-1.6:1.6, samples=17, samples y=15]
+  {x^2+2*y^2};
+\addplot3[only marks, mark=*, mark size=1.8pt, blu] coordinates {(0,0,0)};
+\end{axis}
+\end{tikzpicture}\hspace{0.6cm}
+\begin{tikzpicture}[scale=1.15]
+\foreach \c in {0.5,1,1.5,2,2.5}
+  \draw[grigio] (0,0) ellipse ({\c} and {\c/1.414});
+\draw[->, grigio!70] (-2.9,0) -- (2.9,0) node[right, black] {$x_1$};
+\draw[->, grigio!70] (0,-2) -- (0,2.1) node[above, black] {$x_2$};
+\fill[blu] (0,0) circle (1.6pt) node[below left, font=\footnotesize] {minimo};
+% punto (1.2, 1.162) sulla curva c^2=4: x^2+2y^2=4
+\coordinate (P) at (1.2,1.1662);
+\fill (P) circle (1.5pt);
+\draw[->, very thick, rosso] (P) -- ++(0.6,1.166) node[right, font=\small] {$\nabla f$};
+\draw[->, very thick, verde] (P) -- ++(-0.6,-1.166) node[below left, font=\small, xshift=2pt] {$-\nabla f$};
+\end{tikzpicture}
+\caption{La funzione $f(x_1,x_2)=x_1^2+2x_2^2$. A sinistra la superficie, con il minimo (gradiente nullo); a
+destra le curve di livello: in un punto $\nabla f$ (rosso) indica la crescita più rapida, $-\nabla f$ (verde) la
+decrescita più rapida; entrambi sono perpendicolari alla curva di livello che passa per il punto.}
+\label{fig:gradiente}
+\end{figure}
+
+\begin{definizione}[Punto stazionario]
+Un punto in cui il gradiente è nullo, $\nabla f = \vv{0}$, si dice \termine{punto stazionario}. Può essere un
+minimo locale, un massimo locale o un \termine{punto di sella}: il gradiente nullo, da solo, non basta a dire di
+quale caso si tratta.
+\end{definizione}
+
+\subsection{Regole di derivazione}
+\label{sec:regole-derivazione}
+
+Il calcolo dei gradienti delle funzioni di errore usa sempre le stesse regole:
+\begin{gather}
+\frac{\partial k}{\partial w} = 0 \ (k \text{ costante}), \qquad \frac{\partial w}{\partial w} = 1, \qquad
+\frac{\partial\, f(w)^2}{\partial w} = 2f(w)\frac{\partial f(w)}{\partial w}, \qquad
+\frac{\partial}{\partial w}\sum_i f_i = \sum_i\frac{\partial f_i}{\partial w}, \\
+\frac{\partial f}{\partial x} = \frac{\partial f}{\partial g}\cdot\frac{\partial g}{\partial x}
+\ \text{(regola della catena)}, \qquad D[f(g(x))] = f'(g(x))\,g'(x), \qquad D[f\cdot g] = f'g + fg' .
+\label{eq:catena}
+\end{gather}
+La regola della catena è la più importante: \textbf{scompone} il calcolo della derivata di una funzione composta
+in fattori semplici, ciascuno calcolabile localmente. Su di essa si basa la backpropagation
+(\rif{sec:backprop}).
+
+\section{Probabilità}
+\label{sec:probabilita}
+
+\begin{definizione}[Valore atteso e varianza]
+Per una variabile aleatoria discreta $Z$ che assume valori $z_i$ con probabilità $P(z_i)$:
+\[
+\bar Z = \E_P[Z] = \sum_i z_i\,P(z_i), \qquad \Var[Z] = \E\big[(Z-\bar Z)^2\big].
+\]
+Su un campione di $l$ valori si usano la media $\bar x = \frac1l\sum_p x_p$, la varianza
+$\Var[x] = \frac1l\sum_p (x_p-\bar x)^2$ e la covarianza $\Cov[x,y] = \frac1l\sum_p (x_p-\bar x)(y_p-\bar y)$.
+\end{definizione}
+
+\begin{teorema}[Lemma della varianza]
+\[
+\Var[Z] = \E[Z^2] - \bar Z^2 \qquad\Longleftrightarrow\qquad \E[Z^2] = \bar Z^2 + \Var[Z].
+\]
+\end{teorema}
+\begin{proof}
+Si sviluppa il quadrato e si usa $\sum_i P(z_i) = 1$:
+\begin{align*}
+\Var[Z] &= \sum_i (z_i-\bar Z)^2P(z_i) = \sum_i z_i^2P(z_i) - 2\bar Z\sum_i z_iP(z_i) + \bar Z^2\sum_iP(z_i)\\
+&= \E[Z^2] - 2\bar Z\cdot\bar Z + \bar Z^2 = \E[Z^2]-\bar Z^2. \qedhere
+\end{align*}
+\end{proof}
+
+Il lemma è lo strumento chiave della decomposizione bias-varianza (\rif{sec:decomposizione}). Il valore atteso è
+\textbf{lineare}: $\E[aX+bY] = a\E[X]+b\E[Y]$; se $X$ e $Y$ sono indipendenti vale anche $\E[XY]=\E[X]\,\E[Y]$.
+Un campione si dice \termine{i.i.d.} (indipendente e identicamente distribuito) quando i suoi elementi sono
+estratti indipendentemente l'uno dall'altro dalla stessa distribuzione.
+
+\begin{definizione}[Distribuzione normale]
+La \termine{distribuzione normale} (gaussiana) con media $\mu$ e varianza $\sigma^2$ ha densità
+\begin{equation}
+f(x) = \frac{1}{\sigma\sqrt{2\pi}}\;e^{-(x-\mu)^2/(2\sigma^2)} .
+\end{equation}
+Con $\mu=0$ e $\sigma^2=1$ si ottiene la \termine{normale standard}.
+\end{definizione}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=9cm, height=4.6cm, domain=-3.6:3.6, ymin=0, ymax=0.45,
+  xtick={-1.96,0,1,2,3,-1,-2,-3}, xticklabels={$-1{,}96$,$0$,$1$,$2$,$3$,$-1$,,$-3$}, ytick={0.1,0.2,0.3,0.4},
+  yticklabels={$0{,}1$,$0{,}2$,$0{,}3$,$0{,}4$}, xlabel={$x$}, ylabel={$f(x)$}]
+\addplot[name path=g, thick, inchiostro] {exp(-x^2/2)/sqrt(2*pi)};
+\path[name path=ax] (axis cs:-3.6,0) -- (axis cs:3.6,0);
+\addplot[pattern=north east lines, pattern color=rosso] fill between[of=g and ax, soft clip={domain=-3.6:-1.96}];
+\node[font=\footnotesize, rosso, align=center] at (axis cs:-2.75,0.13) {area\\$2{,}5\%$};
+\draw[densely dashed, grigio] (axis cs:-1.96,0) -- (axis cs:-1.96,0.0584);
+\end{axis}
+\end{tikzpicture}
+\caption{Densità della normale standard ($\mu=0$, $\sigma=1$): l'area a sinistra di $-1{,}96$ vale il $2{,}5\%$.}
+\label{fig:gaussiana}
+\end{figure}
+
+\begin{puntichiave}
+\begin{itemize}
+  \item $\vv{a}\T\vv{b} = \norm{\vv a}\norm{\vv b}\cos\theta$: il prodotto scalare misura l'allineamento.
+  \item $\nabla f$ indica la crescita più rapida, $-\nabla f$ la decrescita più rapida; $\nabla f=\vv0$ individua
+        i punti stazionari (minimi, massimi o selle).
+  \item La regola della catena scompone le derivate di funzioni composte in fattori locali.
+  \item $\E[Z^2] = \bar Z^2+\Var[Z]$.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Che cos'è il gradiente e perché $-\nabla f$ indica la direzione di massima decrescita?
+  \item Che cos'è un punto stazionario? È sempre un minimo?
+\end{enumerate}
+\end{domande}

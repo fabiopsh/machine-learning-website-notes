@@ -1,0 +1,443 @@
+\chapter{Multi-Layer Perceptron e backpropagation}
+\label{cap:mlp}
+
+\begin{inbreve}
+Componendo unità non lineari in strati si ottiene il Multi-Layer Perceptron (MLP). Il capitolo lo descrive come
+rete di unità e come funzione flessibile, lo interpreta come espansione in basi adattiva, ne discute il potere
+espressivo (approssimazione universale, VC-dimension, bias induttivo) e deriva per intero l'algoritmo che lo
+addestra: la backpropagation, che risolve il problema del \emph{credit assignment} per le unità nascoste.
+\end{inbreve}
+
+\section{Il Multi-Layer Perceptron}
+
+Un MLP si può vedere in due modi (\figrif{fig:due-viste}):
+\begin{itemize}
+  \item \textbf{come rete di unità interconnesse}, organizzate in \termine{strati} (\ingl{layer}): lo
+        \textbf{strato di input} è solo la sorgente dell'input $\x$ (carica il pattern, senza calcolare $\net$ né
+        $f$); lo \textbf{strato nascosto} (\ingl{hidden}) proietta sullo strato di uscita o su un altro strato
+        nascosto; lo \textbf{strato di uscita} produce $h(\x)$;
+  \item \textbf{come funzione flessibile}, composta da funzioni non lineari annidate. Una rete a due strati (uno
+        nascosto e uno di uscita) calcola
+        \begin{equation}\label{eq:mlp}
+        h(\x) = f_k\Bigg(\sum_j w_{kj}\,f_j\Big(\sum_i w_{ji}\,x_i\Big)\Bigg),
+        \end{equation}
+        dove $x_i$ sono le variabili di input, $w$ i parametri liberi e $f$ funzioni non lineari (sigmoidi). Si
+        confronti con il modello lineare $h(\x)=\sum_iw_ix_i$: la rete è una composizione di funzioni lineari e
+        non lineari.
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1.15cm, y=0.95cm]
+\foreach \i/\y in {1/2,2/1,3/0} \node[neur] (i\i) at (0,\y) {$x_\i$};
+\foreach \j/\y in {1/2.5,2/1.5,3/0.5,4/-0.5} \node[neurp] (j\j) at (2.2,\y) {};
+\foreach \k/\y in {1/1.6,2/0.4} \node[neurp] (k\k) at (4.4,\y) {};
+\foreach \i in {1,2,3} \foreach \j in {1,2,3,4} \draw[->, grigio] (i\i) -- (j\j);
+\foreach \j in {1,2,3,4} \foreach \k in {1,2} \draw[->, grigio] (j\j) -- (k\k);
+\draw[->, thick] (i1) -- (j1) node[midway, above, font=\scriptsize, black] {$w_{ji}$};
+\draw[->, thick] (j1) -- (k1) node[midway, above, font=\scriptsize, black] {$w_{kj}$};
+\foreach \k in {1,2} \draw[->] (k\k) -- ++(0.9,0) node[right, font=\footnotesize] {$o_\k$};
+\node[font=\footnotesize] at (0,-1.4) {input ($i$)};
+\node[font=\footnotesize] at (2.2,-1.4) {nascosto ($j$)};
+\node[font=\footnotesize] at (4.4,-1.4) {uscita ($k$)};
+\node[font=\small, anchor=west] at (6.2,1.0)
+  {$h(\x) = f_k\Big(\sum_j w_{kj}\,\underbrace{f_j\big(\textstyle\sum_iw_{ji}x_i\big)}_{o_j}\Big)$};
+\end{tikzpicture}
+\caption{Le due viste di una rete feedforward con uno strato nascosto: rete di unità (sinistra) e funzione
+annidata (destra). Ogni unità nascosta e di uscita calcola $\net$ e $f$.}
+\label{fig:due-viste}
+\end{figure}
+
+Una rete si descrive con il tipo di \textbf{unità} (net e funzione di attivazione), l'\textbf{architettura}
+(numero di unità, topologia, numero di strati) e l'\textbf{algoritmo di apprendimento}. L'MLP standard a due
+strati è \textbf{completamente connesso}; si possono avere più strati nascosti e connessioni che ``saltano''
+strati.
+
+\subsection{Notazione uniforme}
+
+Per una generica unità $t$ (nascosta, $j$, o di uscita, $k$):
+\begin{equation}\label{eq:notazione-t}
+\net_t(\x) = \sum_u w_{tu}\,o_u, \qquad o_t(\x) = f_t\big(\net_t(\x)\big),
+\end{equation}
+dove $u$ indica una generica sorgente di input (un'unità di input $i$ o nascosta $j$). Caricando il pattern nello
+strato di input si usa il simbolo $o$ sia per gli input sia per le uscite delle unità: l'input all'unità $t$
+attraverso la connessione $w_{tu}$ è $o_u$. Quindi:
+\begin{itemize}
+  \item per i pesi $w_{ji}$ (input $\to$ nascosta) l'input è $o_i = x_i$, la componente del pattern;
+  \item per i pesi $w_{kj}$ (nascosta $\to$ uscita) l'input è $o_j$, l'uscita dell'unità nascosta $j$;
+  \item $w_{t0}$ è il \textbf{bias} di ogni unità $t$, con input costante $o_0=1$;
+  \item unità nascosta: $o_j = f_j\big(\sum_iw_{ji}x_i\big)$; unità di uscita: $o_k = f_k\big(\sum_jw_{kj}o_j\big)$.
+\end{itemize}
+
+\subsection{Elaborazione feedforward}
+
+L'elaborazione di un pattern procede dall'input all'uscita:
+\begin{enumerate}
+  \item si carica il pattern $\x$ nello strato di input;
+  \item si calcolano le uscite delle unità del primo strato nascosto, poi del secondo, e così via;
+  \item si calcolano le uscite dello strato di uscita, cioè $h(\x)$;
+  \item si può calcolare l'errore (il delta) in uscita.
+\end{enumerate}
+Le reti \termine{feedforward} hanno un'unica direzione input $\to$ output. Le \textbf{reti ricorrenti} aggiungono
+connessioni di feedback e quindi una memoria delle computazioni passate (capitolo~\ref{cap:rnn}).
+
+\section{Perché le reti neurali sono flessibili}
+
+\subsection{Task}
+Lo spazio delle ipotesi è lo \textbf{spazio continuo di tutte le funzioni} rappresentabili assegnando valori ai
+pesi di un'architettura data. Con unità di uscita \textbf{sigmoidali} la rete fa \textbf{classificazione}; con
+uscite \textbf{lineari} fa \textbf{regressione}. Con più unità di uscita si ottengono regressione multipla o
+classificatori multi-classe (ad esempio tre uscite che valgono $0{,}2$; $0{,}7$; $0{,}1$ per tre classi).
+
+\subsection{La rete come espansione in basi adattiva}
+\label{sec:lbe-adattiva}
+
+Nella \eqref{eq:mlp} ogni termine
+\[
+\phi_j(\x,\w) = f_j\Big(\sum_iw_{ji}\,x_i\Big)
+\]
+può essere visto come calcolato da un'unità nascosta oppure come una \textbf{funzione di base} di una LBE
+(\rif{sec:lbe}). Il confronto è istruttivo:
+\begin{itemize}
+  \item \textbf{LBE}: $h(\x) = \sum_jw_j\,\phi_j(\x)$ (regressione) o $h(\x) = f\big(\sum_jw_j\phi_j(\x)\big)$
+        (classificazione), con le $\phi$ \textbf{fissate a priori}: il modello è lineare nei parametri;
+  \item \textbf{rete neurale}: $h(\x) = f_k\big(\sum_jw_{kj}\,\phi_j(\x,\w)\big)$, dove le $\phi$ \textbf{dipendono dai
+        pesi} e quindi \textbf{si adattano ai dati} durante l'addestramento.
+\end{itemize}
+
+\begin{idea}[Basi adattive]
+Le reti neurali sono un approccio a \textbf{funzioni di base adattive}: ogni unità nascosta calcola una nuova
+\textbf{feature derivata non lineare}, appresa dai dati. La capacità rappresentativa del modello è legata alla
+presenza di uno strato nascosto con attivazioni non lineari, che trasforma l'input nella \textbf{rappresentazione
+interna} della rete; l'apprendimento definisce una rappresentazione adatta al task, che permette di estrarre le
+statistiche di ordine superiore utili per approssimare la funzione target.
+\end{idea}
+
+\begin{proprieta}{Le unità nascoste devono essere non lineari}
+Un MLP con unità nascoste \textbf{lineari} equivale a una rete a \textbf{un solo strato}.
+\end{proprieta}
+\begin{proof}
+Con $f$ identità nelle unità nascoste e in uscita:
+\[
+h(\x) = \sum_jw_{kj}\sum_iw_{ji}x_i = \sum_i\Big(\sum_jw_{kj}w_{ji}\Big)x_i = \sum_iw'_ix_i ,\qquad w'_i = \sum_jw_{kj}w_{ji},
+\]
+cioè ancora un modello lineare: la composizione di funzioni lineari è lineare.
+\end{proof}
+
+Il prezzo della non linearità è che il modello è \textbf{non lineare nei parametri}: l'addestramento diventa un
+problema di \textbf{ottimizzazione non lineare e non convesso}.
+
+\subsection{Approssimazione universale}
+\label{sec:approssimazione-universale}
+
+\begin{teorema}[Approssimazione universale]
+Una rete con \textbf{un solo strato nascosto} (con attivazioni logistiche) e uscita lineare può approssimare
+arbitrariamente bene \textbf{ogni funzione continua} su un ipercubo, purché abbia abbastanza unità nascoste: data
+$f$ e dato $\eps>0$ esiste $h$ tale che $\abs{f(\x)-h(\x)}<\eps$ per ogni $\x$ dell'ipercubo. Più in generale un
+MLP può approssimare arbitrariamente bene ogni mappatura input-output, con abbastanza unità nascoste.
+\end{teorema}
+
+\begin{attenzione}[È un teorema di esistenza]
+Il teorema dice che la rete \textbf{esiste}, ma non fornisce né l'\textbf{algoritmo} per trovarla né il
+\textbf{numero di unità} necessario. Restano quindi due questioni: come apprendere (la backpropagation) e come
+scegliere l'architettura (model selection, \rif{sec:unita-nascoste}).
+\end{attenzione}
+
+\subsection{Potere espressivo e VC-dimension}
+\label{sec:vc-reti}
+
+Il potere espressivo di una rete dipende dal \textbf{numero di unità} e dalla loro configurazione. La
+VC-dimension dipende dal numero di parametri (in un MLP completamente connesso circa il numero di input per il
+numero di unità nascoste, più le unità nascoste per le uscite), ma anche dal \textbf{valore} dei pesi:
+\begin{itemize}
+  \item pesi nulli: VC-dimension minima;
+  \item pesi piccoli: si lavora nella parte lineare delle sigmoidi, VC-dimension piccola;
+  \item pesi grandi: modello più complesso.
+\end{itemize}
+Poiché l'addestramento parte da pesi vicini a zero e i pesi crescono durante il training, la rete è uno
+\textbf{spazio delle ipotesi di dimensione variabile}: la VC-dimension effettiva cresce durante l'apprendimento.
+Su questo si basa l'early stopping (\rif{sec:early-stopping}).
+
+Il teorema di approssimazione universale dice che uno strato nascosto basta, ma non che basti un numero
+\emph{piccolo} di unità: esistono funzioni che con un solo strato richiederebbero un numero esponenziale di unità
+e con più strati molte meno (\rif{sec:no-flattening}).
+
+\subsection{Il bias induttivo}
+
+Per le reti addestrate con backpropagation il bias induttivo è legato alla \textbf{smoothness}: piccole variazioni
+dell'input producono piccole variazioni dell'output (ad esempio derivata prima localmente limitata). È
+un'assunzione molto comune e ragionevole: se la funzione target non è liscia (un generatore di numeri casuali) la
+generalizzazione è comunque impossibile.
+
+\section{Verso l'algoritmo di apprendimento}
+\label{sec:credit-assignment}
+
+\subsection{Il problema del credit assignment}
+
+Il Perceptron ha un algoritmo di apprendimento ma non rappresenta tutte le funzioni booleane; una rete di unità a
+soglia le rappresenta tutte ma serve un algoritmo per addestrarla. Il problema è il \termine{credit assignment}:
+quanta ``responsabilità'' dell'errore attribuire alle unità nascoste? Per le unità di uscita si conosce la
+risposta desiderata e quindi l'errore; per le unità nascoste \textbf{non si sa quale dovrebbe essere la loro
+uscita}, quindi il segnale d'errore non è direttamente misurabile. In più il modello è non lineare nei pesi. Il
+problema è risolto dall'algoritmo di \textbf{backpropagation}.
+
+\begin{definizione}[Loading problem]
+Data una rete e un insieme di esempi, esiste un insieme di pesi per cui la rete è consistente con gli esempi?
+(Si tratta di ``caricare'' i dati di training nei parametri liberi.) Il loading problem è
+\textbf{NP-completo}: non è noto un algoritmo polinomiale. In pratica però le reti si addestrano in tempi
+ragionevoli con la backpropagation, senza garanzia di ottimalità.
+\end{definizione}
+
+\subsection{L'idea: estendere la discesa del gradiente}
+
+La discesa del gradiente si estende agli MLP purché \textbf{loss e funzioni di attivazione siano differenziabili}:
+bisogna trovare il delta di \textbf{ogni} unità. Il problema resta lo stesso: dati $l$ esempi $(\x_p,d_p)$ e una
+loss (ad esempio l'errore quadratico), trovare $\w$ che minimizzi $E(\w) = \Remp$ calcolandone il gradiente. La
+backpropagation
+\begin{itemize}
+  \item è semplice grazie alla \textbf{forma composizionale} del modello;
+  \item usa solo quantità \textbf{locali} a ogni unità, preservandone la modularità;
+  \item è \textbf{efficiente}: costa $O(\#W)$ invece di $O(\#W^2)$, grazie alla fattorizzazione dei delta.
+\end{itemize}
+
+\section{La backpropagation}
+\label{sec:backprop}
+
+\begin{attenzione}[Come studiare la derivazione]
+La derivazione va saputa \textbf{rifare}, non memorizzare: l'obiettivo è saperla ricalcolare per loss, attivazioni o
+architetture diverse.
+\end{attenzione}
+
+\subsection{Il problema}
+
+La rete di riferimento è un MLP completamente connesso con indici $i$ (input), $j$ (nascoste), $k$ (uscita;
+$K$ unità di uscita) e training set $TR = \{(\x^1,\dd^1),\dots,(\x^l,\dd^l)\}$. Ogni unità di input carica la
+componente del pattern: $o_i = x_i$. L'\textbf{errore totale} è
+\begin{equation}\label{eq:etot}
+E_{tot} = \sum_pE_p,\qquad E_p = \frac12\sum_{k=1}^{K}(d_k-o_k)^2 ,
+\end{equation}
+dove $E_p$ è l'errore sull'esempio $p$ su tutte le uscite; il fattore $\frac12$ serve solo a semplificare la
+derivata. D'ora in poi l'indice $p$ è omesso: $o_k$ sta per $o_k(\x_p)$ e $d_k$ per $d_{p,k}$.
+
+\begin{definizione}[Il problema della backpropagation]
+Stimare il \textbf{contributo delle unità nascoste all'errore} in uscita, cioè calcolare per ogni peso della rete
+$\partial E_{tot}/\partial w$: la \termine{regola delta generalizzata} (\ingl{Generalized Delta Rule}).
+\end{definizione}
+
+L'obiettivo è trovare i pesi che minimizzano $E_{tot}$ scendendo lungo la sua superficie seguendo il gradiente. A
+differenza del modello lineare la superficie \textbf{non è convessa} (\figrif{fig:superficie-nonconvessa}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=7.6cm, height=5.4cm, view={40}{38}, axis lines=none, colormap={gr}{gray(0cm)=(0.93); gray(1cm)=(0.5)}]
+\addplot3[surf, shader=faceted interp, faceted color=black!40, line width=0.1pt, domain=-3:3, y domain=-3:3, samples=31, samples y=31]
+  {1.8 - 1.3*exp(-((x-1)^2+(y-1)^2)/0.8) - 0.9*exp(-((x+1.4)^2+(y+0.8)^2)/0.6) - 0.6*exp(-((x+0.8)^2+(y-1.8)^2)/0.4) + 0.08*(x^2+y^2)};
+\addplot3[only marks, mark=*, mark size=1.8pt, rosso] coordinates {(1,1,0.66)};
+\node[font=\footnotesize, rosso] at (axis cs:1.6,1.4,0.9) {minimo};
+\node[font=\footnotesize] at (axis cs:3.4,0,1.8) {$w_1$};
+\node[font=\footnotesize] at (axis cs:0,-3.5,1.8) {$w_2$};
+\end{axis}
+\end{tikzpicture}
+\caption{Una superficie d'errore non convessa nello spazio di due pesi (andamento qualitativo): più minimi
+locali, e il punto di arrivo della discesa dipende dal punto di partenza.}
+\label{fig:superficie-nonconvessa}
+\end{figure}
+
+\begin{algoritmo}[Backpropagation (schema iterativo)]
+Inizializzare tutti i pesi $\w$ e $\eta$; calcolare le uscite delle unità ed $E_{tot}$.\\
+Finché $E_{tot}>\epsilon$ (o un altro criterio di arresto):
+\begin{enumerate}
+  \item per ogni peso $w$: $\Delta w = -\dfrac{\partial E_{tot}}{\partial w}$ \hfill (passo 1: calcolo del gradiente)
+  \item $w_{\mathit{new}} = w + \eta\,\Delta w + \dots$ \hfill (passo 2: regola di aggiornamento)
+  \item ricalcolare le uscite ed $E_{tot}$.
+\end{enumerate}
+\end{algoritmo}
+
+Bisogna distinguere il \textbf{calcolo del gradiente} (passo 1, ciò che fa la backpropagation) dalla
+\textbf{regola di aggiornamento} (passo 2: standard, con momentum, Quickprop, R-prop, \dots; capitolo~\ref{cap:addestramento}).
+Per il passo 1:
+\[
+\Delta w = -\frac{\partial E_{tot}}{\partial w} = -\sum_p\frac{\partial E_p}{\partial w} \overset{\mathrm{def}}{=} \sum_p\Delta_pw .
+\]
+
+\subsection{La derivazione}
+
+\subsubsection{Il gradiente per un peso generico}
+Si consideri un peso generico $w_{tu}$, che porta all'unità generica $t$ l'input proveniente dall'unità generica
+$u$ (che può essere un $i$ o un $j$). Poiché $\net_t = \sum_sw_{ts}\,o_s$ e $o_t = f_t(\net_t)$, la regola della
+catena attraverso $\net_t$ dà
+\begin{equation}\label{eq:bp-generico}
+\Delta_pw_{tu} = -\frac{\partial E_p}{\partial w_{tu}}
+= \underbrace{-\frac{\partial E_p}{\partial\net_t}}_{\delta_t}\cdot\underbrace{\frac{\partial\net_t}{\partial w_{tu}}}_{o_u}
+= \delta_t\,o_u ,
+\end{equation}
+perché $\frac{\partial\net_t}{\partial w_{tu}} = \frac{\partial\sum_sw_{ts}o_s}{\partial w_{tu}} = o_u$: tutti i
+termini della somma sono costanti rispetto a $w_{tu}$ tranne quello con $s=u$. Si è definito il \termine{delta
+dell'unità $t$}
+\[
+\delta_t = -\frac{\partial E_p}{\partial\net_t},
+\]
+che si espande ancora con la regola della catena passando per $o_t = f_t(\net_t)$:
+\begin{equation}\label{eq:delta-generico}
+\delta_t = -\frac{\partial E_p}{\partial\net_t} = -\frac{\partial E_p}{\partial o_t}\cdot\frac{\partial o_t}{\partial\net_t} = -\frac{\partial E_p}{\partial o_t}\cdot f'_t(\net_t).
+\end{equation}
+Resta da calcolare $-\partial E_p/\partial o_t$, e qui si distinguono due casi.
+
+\subsubsection{Caso 1: unità di uscita ($t=k$)}
+L'uscita $o_k$ compare direttamente in $E_p$:
+\[
+-\frac{\partial E_p}{\partial o_k} = -\frac{\partial\,\frac12\sum_{r=1}^{K}(d_r-o_r)^2}{\partial o_k} = (d_k-o_k),
+\]
+perché solo il termine $r=k$ dipende da $o_k$, con derivata $\frac12\cdot2(d_k-o_k)\cdot(-1)$. Quindi
+\begin{equation}\label{eq:delta-uscita}
+\boxed{\;\delta_k = (d_k-o_k)\,f'_k(\net_k)\;}
+\end{equation}
+È il delta della singola unità sigmoidale (\rif{sec:lms-sigmoide}): l'errore è misurabile perché si conosce il
+target.
+
+\subsubsection{Caso 2: unità nascosta ($t=j$)}
+Un'unità nascosta non ha target e $o_j$ non compare direttamente in $E_p$. Però $o_j$ influenza $E_p$
+\textbf{attraverso tutte le unità di uscita} a cui è collegata, perché ogni $\net_k$ dipende da $o_j$. La regola
+della catena con una somma su tutte le $k$ dà
+\[
+-\frac{\partial E_p}{\partial o_j} = \sum_{k=1}^{K}\underbrace{-\frac{\partial E_p}{\partial\net_k}}_{\delta_k}\cdot\frac{\partial\net_k}{\partial o_j} = \sum_{k=1}^{K}\delta_k\,w_{kj},
+\]
+poiché $\frac{\partial\net_k}{\partial o_j} = \frac{\partial\sum_sw_{ks}o_s}{\partial o_j} = w_{kj}$. Quindi
+\begin{equation}\label{eq:delta-nascosta}
+\boxed{\;\delta_j = \Big(\sum_{k=1}^{K}\delta_k\,w_{kj}\Big)\,f'_j(\net_j)\;}
+\end{equation}
+
+\begin{idea}[Il punto cruciale]
+Il termine $-\partial E_p/\partial\net_k$ è \textbf{già stato calcolato}: è $\delta_k$. Il delta di un'unità
+nascosta si ottiene \textbf{propagando all'indietro} i delta delle unità di uscita, pesati con gli stessi pesi
+$w_{kj}$ usati in avanti: l'errore ``risale'' la rete, da cui il nome \emph{back-propagation}. Questo risolve il
+credit assignment: la ``colpa'' di un'unità nascosta è la somma delle colpe delle unità a cui contribuisce, pesata
+da quanto contribuisce (\figrif{fig:retropropagazione}).
+\end{idea}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1.4cm, y=1.05cm]
+\node[neur] (i) at (0,0.5) {$i$};
+\node[neurp] (j) at (2,0.5) {$j$};
+\foreach \k/\y in {1/2.0,2/0.5,3/-1.0} \node[neurp] (k\k) at (5,\y) {$k_\k$};
+\draw[->] (i) -- (j) node[midway, above, font=\footnotesize] {$w_{ji}$};
+\foreach \k in {1,2,3} \draw[->] (j) -- (k\k) node[pos=0.72, above, font=\scriptsize, sloped] {$w_{k_\k j}$};
+\foreach \k in {1,2,3} \node[font=\scriptsize, rosso, below right] at (k\k.south west) {$\delta_{k_\k}$};
+\draw[->, rosso, densely dashed, very thick] (4.6,2.75) to[bend right=30] node[pos=0.45, above left, font=\scriptsize, rosso, align=right] {retropropagazione dei $\delta_k$} (j.north);
+\node[font=\footnotesize, rosso] at (2,-0.65) {$\delta_j = \big(\sum_k\delta_kw_{kj}\big)f'_j(\net_j)$};
+\foreach \k in {1,2,3} \draw[->] (k\k) -- ++(0.9,0) node[right, font=\scriptsize] {$o_{k_\k}$ vs $d_{k_\k}$};
+\end{tikzpicture}
+\caption{Retropropagazione dei delta: l'influenza dell'unità nascosta $j$ sull'errore si calcola dai delta delle
+unità a cui è collegata e dai pesi $w_{kj}$. Ogni termine coinvolge solo unità e pesi adiacenti.}
+\label{fig:retropropagazione}
+\end{figure}
+
+Lo stesso risultato si può ottenere derivando direttamente la definizione di $E_p$ (per esercizio), ma la forma
+vista è più istruttiva perché mostra il flusso delle derivate parziali \textbf{sulla rete}.
+
+\subsection{Sintesi delle formule}
+
+\begin{table}[ht]
+\centering\small
+\caption{La backpropagation per una rete a due strati: $\Delta_pw_{tu} = \delta_t\,o_u$.}
+\begin{tabular}{lll}
+\toprule
+Peso & Aggiornamento & Delta \\
+\midrule
+$w_{kj}$ (nascosta $\to$ uscita) & $\Delta_pw_{kj} = \delta_k\,o_j$ & $\delta_k = (d_k-o_k)\,f'_k(\net_k)$\\
+$w_{ji}$ (input $\to$ nascosta) & $\Delta_pw_{ji} = \delta_j\,o_i$ & $\delta_j = \big(\sum_k\delta_kw_{kj}\big)f'_j(\net_j)$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+$\delta_t$ è il \textbf{segnale d'errore} disponibile all'unità $t$ e $o_u$ l'input a $t$ proveniente da $u$.
+La derivazione vale per \textbf{qualsiasi numero di strati nascosti}: i delta di un'unità arrivano da tutte le
+unità a cui è connessa,
+\begin{equation}\label{eq:delta-generale}
+\delta_j = \Big(\sum_{h\in\mathrm{successori}(j)}\delta_h\,w_{hj}\Big)\,f'_j(\net_j),
+\end{equation}
+e la regola di aggiornamento per ogni esempio è $w_{tu}^{\mathit{new}} = w_{tu} + \eta\,\delta_t\,o_u$. Usando
+$\Delta_pw$ esempio per esempio si ottiene la versione \textbf{on-line}; sommando i contributi di tutti gli esempi
+prima di aggiornare, la versione \textbf{batch}.
+
+\begin{algoritmo}[Ciclo di addestramento completo]
+\begin{enumerate}
+  \item \textbf{Fase forward}: calcolare le uscite di tutte le unità, strato per strato.
+  \item Calcolare errori e delta nello strato di uscita.
+  \item \textbf{Fase backward}: propagare i delta dallo strato di uscita agli strati nascosti.
+  \item Aggiornare i pesi.
+  \item Ricominciare, fino al criterio di arresto.
+\end{enumerate}
+\end{algoritmo}
+
+\begin{attenzione}[Non dimenticare i bias]
+Calcolo e aggiornamento valgono anche per i \textbf{bias} di tutte le unità: con input costante $o_0=1$ e bias
+$w_{t0}$, si ha $\Delta w_{t0} = \delta_t\cdot1$.
+\end{attenzione}
+
+\subsection{Proprietà e interpretazione}
+
+\begin{itemize}
+  \item \textbf{Calcoli solo locali}: ogni unità usa solo informazioni delle unità vicine (sotto e sopra); il resto
+        arriva indirettamente con il flusso dei delta. Eppure la modifica di un peso ha un \textbf{effetto
+        globale} sulla rete: l'influenza complessa di ogni $w_{tu}$ sull'errore globale è stata \textbf{scomposta}
+        in componenti semplici, i delta locali.
+  \item \textbf{Processo di diffusione}: una propagazione locale dai ``genitori'' dell'unità all'unità e
+        dall'unità ai ``figli''.
+  \item \textbf{Efficienza (la fattorizzazione dei delta)}: il delta $\delta_t$ di ogni unità si calcola \textbf{una
+        sola volta} e si riusa per \textbf{tutti} i suoi pesi $w_{tu}$. Il costo è proporzionale al numero di pesi,
+        non al suo quadrato: con $10^9$ pesi sono $10^9$ operazioni invece di $10^{18}$.
+\end{itemize}
+
+\begin{idea}[Tre livelli di lettura]
+\begin{enumerate}
+  \item I singoli \textbf{passaggi matematici}.
+  \item Il significato delle derivate parziali come \textbf{variazioni locali} di una quantità rispetto a
+        un'altra.
+  \item Il \textbf{quadro generale}: la scomposizione serve a trovare i delta di ogni livello, scomponendo
+        l'errore \emph{sulla rete} che si ha davanti.
+\end{enumerate}
+\end{idea}
+
+\begin{attenzione}[Terminologia]
+Non si dice ``rete backprop'': la rete neurale è il \textbf{modello}, la backpropagation è un \textbf{algoritmo di
+addestramento} basato sul calcolo del gradiente attraverso la rete.
+\end{attenzione}
+
+\begin{esempio}[Un passo di backpropagation]
+Rete con un input $x=1$, un'unità nascosta sigmoidale e un'unità di uscita lineare, senza bias; pesi
+$w_{ji}=0{,}5$, $w_{kj}=1$, target $d=1$, $\eta=0{,}1$.
+\begin{itemize}
+  \item \textbf{Forward}: $\net_j=0{,}5$, $o_j = \sigma(0{,}5)\approx0{,}622$; $o_k = 1\cdot0{,}622 = 0{,}622$.
+  \item \textbf{Delta di uscita} (lineare, $f'=1$): $\delta_k = (1-0{,}622)\cdot1 = 0{,}378$.
+  \item \textbf{Delta nascosto}: $\delta_j = (\delta_kw_{kj})\,\sigma'(\net_j) = 0{,}378\cdot0{,}622\cdot(1-0{,}622)\approx0{,}089$.
+  \item \textbf{Aggiornamenti}: $\Delta w_{kj} = \eta\,\delta_k\,o_j\approx0{,}1\cdot0{,}378\cdot0{,}622\approx0{,}0235$;
+        $\Delta w_{ji} = \eta\,\delta_j\,x\approx0{,}0089$.
+\end{itemize}
+Entrambi i pesi aumentano, facendo crescere l'uscita verso il target.
+\end{esempio}
+
+\begin{puntichiave}
+\begin{itemize}
+  \item MLP: $h(\x) = f_k\big(\sum_jw_{kj}f_j(\sum_iw_{ji}x_i)\big)$; una LBE con basi $\phi_j(\x,\w)$ adattive.
+  \item Unità nascoste lineari $\Rightarrow$ modello lineare. Un solo strato nascosto basta per approssimare
+        funzioni continue (teorema di esistenza).
+  \item La VC-dimension dipende anche dal valore dei pesi: spazio delle ipotesi di dimensione variabile.
+  \item Backpropagation: $\Delta_pw_{tu} = \delta_to_u$, $\delta_k = (d_k-o_k)f'_k$,
+        $\delta_j = (\sum_k\delta_kw_{kj})f'_j$; costo lineare nel numero di pesi.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Perché le unità nascoste devono essere non lineari?
+  \item In che senso una rete neurale è una LBE adattiva?
+  \item Enunciare il teorema di approssimazione universale e discuterne i limiti.
+  \item Cos'è il problema del credit assignment? E il loading problem?
+  \item Derivare la backpropagation per un MLP a due strati con errore quadratico. Come cambia con una loss diversa
+        o con più strati nascosti?
+  \item Perché la backpropagation ha costo lineare nel numero dei pesi?
+\end{enumerate}
+\end{domande}

@@ -1,0 +1,204 @@
+% ============================================================================
+%  Preambolo — Machine Learning, note riorganizzate
+%  Motore: XeTeX (tectonic). Font: XCharter (testo e formule), Fira Sans (titoli).
+% ============================================================================
+
+% --- Font e lingua -----------------------------------------------------------
+\usepackage{amsmath,amsthm}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\setmainfont{XCharter}[Extension=.otf, UprightFont=*-Roman, BoldFont=*-Bold,
+  ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic]
+\setsansfont{FiraSans}[Extension=.otf, UprightFont=*-Regular, BoldFont=*-SemiBold,
+  ItalicFont=*-Italic, BoldItalicFont=*-SemiBoldItalic, Scale=MatchLowercase]
+\setmathfont{XCharter-Math.otf}
+\usepackage{polyglossia}
+\setmainlanguage{italian}
+\usepackage{microtype}
+\linespread{1.06}
+
+% --- Pagina ------------------------------------------------------------------
+\usepackage[a4paper, left=2.4cm, right=2.4cm, top=2.5cm, bottom=2.6cm,
+  headheight=15pt, headsep=0.6cm, footskip=1cm]{geometry}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55ex plus 0.3ex minus 0.1ex}
+\setlength{\emergencystretch}{2.5em}
+\raggedbottom
+\clubpenalty=8000 \widowpenalty=8000
+
+% --- Colori (usati solo dove serve attirare l'attenzione e nei grafici) ------
+\usepackage{xcolor}
+\definecolor{accento}{HTML}{A3262A}   % avvertenze
+\definecolor{inchiostro}{HTML}{1A1A1A}
+\definecolor{grigio}{HTML}{6E6E6E}
+\definecolor{grigiochiaro}{HTML}{EFEFEF}
+\definecolor{blu}{HTML}{1F5A9E}
+\definecolor{rosso}{HTML}{C0392B}
+\definecolor{verde}{HTML}{2E7D32}
+\definecolor{arancio}{HTML}{D9822B}
+\definecolor{viola}{HTML}{6A3D9A}
+
+% --- Titoli ------------------------------------------------------------------
+\usepackage{titlesec}
+\titleformat{\part}[display]{\centering\sffamily}
+  {\large\scshape\color{grigio}Parte \thepart}{1.2ex}{\Huge\bfseries}
+\titleformat{\chapter}[display]{\sffamily}
+  {\large\color{grigio}Capitolo \thechapter}{0.6ex}
+  {\huge\bfseries}[\vspace{0.8ex}{\color{inchiostro}\titlerule[0.8pt]}]
+\titlespacing*{\chapter}{0pt}{-1.2cm}{1.4cm}
+\titleformat{\section}{\sffamily\Large\bfseries}{\thesection}{0.8em}{}
+\titlespacing*{\section}{0pt}{3.2ex plus 1ex minus .4ex}{1.4ex plus .3ex}
+\titleformat{\subsection}{\sffamily\large\bfseries}{\thesubsection}{0.8em}{}
+\titlespacing*{\subsection}{0pt}{2.6ex plus .8ex minus .3ex}{1ex plus .2ex}
+\titleformat{\subsubsection}[runin]{\sffamily\bfseries}{}{0em}{}[.]
+\titlespacing*{\subsubsection}{0pt}{1.6ex plus .5ex minus .2ex}{0.6em}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{1}
+
+% --- Intestazioni ------------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\makeatletter
+\renewcommand{\chaptermark}[1]{\markboth{\ifnum\c@chapter>0 \thechapter.\ \fi#1}{}}
+\makeatother
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ \ #1}}
+\fancyhead[L]{\sffamily\small\color{grigio}\leftmark}
+\fancyhead[R]{\sffamily\small\color{grigio}\rightmark}
+\fancyfoot[C]{\sffamily\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\sffamily\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% --- Liste, tabelle, didascalie ----------------------------------------------
+\usepackage{enumitem}
+\setlist{itemsep=0.25ex, topsep=0.6ex, parsep=0.2ex, leftmargin=1.6em}
+\setlist[enumerate]{label=\arabic*.}
+\usepackage{booktabs, array, tabularx, multirow}
+\renewcommand{\arraystretch}{1.18}
+\usepackage[font=small, labelfont={bf,sf}, labelsep=period, margin=0.6cm]{caption}
+\captionsetup[table]{position=top, skip=4pt}
+\usepackage[normalem]{ulem}
+
+% --- Grafica -----------------------------------------------------------------
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, decorations.pathreplacing, patterns,
+  shapes.geometric, shapes.misc, fit, backgrounds, matrix, 3d, intersections}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween, groupplots}
+\pgfplotsset{
+  stile/.style={
+    axis lines=left, tick style={grigio}, axis line style={-{Stealth[length=2mm]}, inchiostro},
+    every tick label/.append style={font=\footnotesize},
+    label style={font=\small}, legend style={font=\footnotesize, draw=none, fill=none},
+    legend cell align=left, clip mode=individual, samples=150,
+  },
+  scatola/.style={
+    axis lines=box, tick style={grigio}, every tick label/.append style={font=\footnotesize},
+    label style={font=\small}, legend style={font=\footnotesize, draw=grigio!50, fill=white},
+    legend cell align=left, samples=150,
+  },
+  nudo/.style={axis lines=none, ticks=none},
+  empty line=jump,
+}
+\tikzset{
+  >={Stealth[length=2.2mm]},
+  blocco/.style={draw, rounded corners=1.5pt, minimum height=8mm, inner sep=4pt,
+    align=center, font=\small},
+  neur/.style={circle, draw, minimum size=7mm, inner sep=0pt, font=\small},
+  neurp/.style={circle, draw, fill=grigiochiaro, minimum size=7mm, inner sep=0pt, font=\small},
+  freccia/.style={->, thick},
+  cpos/.style={circle, fill=blu, inner sep=1.4pt},
+  cneg/.style={circle, draw=rosso, fill=white, thick, inner sep=1.4pt},
+}
+
+% --- Riquadri ----------------------------------------------------------------
+\usepackage[most]{tcolorbox}
+\tcbset{
+  base/.style={enhanced, breakable, sharp corners, boxrule=0pt, frame hidden,
+    left=8pt, right=6pt, top=3pt, bottom=3pt, before skip=1.8ex plus .5ex,
+    after skip=1.8ex plus .5ex, fontupper=\normalsize},
+}
+\newcommand{\etichetta}[2]{{\sffamily\bfseries\color{#1}#2}}
+% Definizione: filetto nero a sinistra
+\newtcolorbox{definizione}[1][]{base, colback=white,
+  borderline west={1.6pt}{0pt}{inchiostro},
+  before upper={\etichetta{inchiostro}{Definizione\ifx\relax#1\relax\else\ --- #1\fi.}\ }}
+% Teorema: cornice sottile su tutti i lati
+\newtcolorbox{teorema}[1][]{base, colback=white, frame hidden,
+  borderline={0.6pt}{0pt}{inchiostro},
+  left=7pt, right=7pt, top=5pt, bottom=5pt,
+  before upper={\etichetta{inchiostro}{Teorema\ifx\relax#1\relax\else\ --- #1\fi.}\ \itshape}}
+\newtcolorbox{proprieta}[1]{base, colback=white, frame hidden,
+  borderline={0.6pt}{0pt}{inchiostro},
+  left=7pt, right=7pt, top=5pt, bottom=5pt,
+  before upper={\etichetta{inchiostro}{#1.}\ }}
+% Esempio: filetto grigio sottile
+\newtcolorbox{esempio}[1][]{base, colback=white,
+  borderline west={0.8pt}{0pt}{grigio},
+  before upper={\etichetta{grigio}{Esempio\ifx\relax#1\relax\else\ --- #1\fi.}\ }}
+% Attenzione: l'unico riquadro colorato
+\newtcolorbox{attenzione}[1][]{base, colback=accento!4,
+  borderline west={1.6pt}{0pt}{accento},
+  before upper={\etichetta{accento}{Attenzione\ifx\relax#1\relax\else\ --- #1\fi.}\ }}
+% Algoritmo: fondo grigio chiaro
+\newtcolorbox{algoritmo}[1][]{base, colback=grigiochiaro,
+  before upper={\etichetta{inchiostro}{Algoritmo\ifx\relax#1\relax\else\ --- #1\fi.}\par\smallskip}}
+% Idea / osservazione chiave
+\newtcolorbox{idea}[1][]{base, colback=white,
+  borderline west={0.8pt}{0pt}{inchiostro}, borderline west={0.8pt}{2.4pt}{inchiostro},
+  left=11pt,
+  before upper={\etichetta{inchiostro}{\ifx\relax#1\relax Idea chiave\else #1\fi.}\ }}
+% Apertura e chiusura dei capitoli
+\newtcolorbox{inbreve}{base, colback=white, left=0pt, right=0pt, top=0pt, bottom=4pt,
+  fontupper=\itshape\normalsize}
+\newtcolorbox{puntichiave}{base, colback=grigiochiaro, top=5pt, bottom=5pt,
+  before upper={\etichetta{inchiostro}{Punti chiave}\par\smallskip}}
+\newtcolorbox{domande}{base, colback=white, borderline={0.4pt}{0pt}{grigio}, top=5pt, bottom=5pt,
+  before upper={\etichetta{inchiostro}{Domande di verifica}\par\smallskip}}
+
+% Dimostrazioni
+\renewcommand{\qedsymbol}{\rule{1.2ex}{1.2ex}}
+\makeatletter
+\renewenvironment{proof}[1][\proofname]{\par\pushQED{\qed}\normalfont
+  \topsep6\p@\@plus6\p@\relax\trivlist
+  \item[\hskip\labelsep{\sffamily\bfseries #1.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse}
+\makeatother
+\AtBeginDocument{\renewcommand{\proofname}{Dimostrazione}\renewcommand{\figurename}{Figura}\renewcommand{\tablename}{Tabella}}
+
+% --- Comandi matematici ------------------------------------------------------
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\w}{\mathbf{w}}
+\newcommand{\y}{\mathbf{y}}
+\newcommand{\dd}{\mathbf{d}}
+\newcommand{\h}{\mathbf{h}}
+\newcommand{\vv}[1]{\mathbf{#1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\T}{^{T}}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\abs}[1]{\lvert #1\rvert}
+\newcommand{\E}{\mathbb{E}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Bias}{Bias}
+\newcommand{\Remp}{R_{\mathrm{emp}}}
+\newcommand{\VC}{\mathrm{VC}}
+\newcommand{\net}{\mathit{net}}
+\newcommand{\out}{\mathit{out}}
+\newcommand{\balpha}{\symbf{\alpha}}
+\newcommand{\bxi}{\symbf{\xi}}
+\newcommand{\bphi}{\symbf{\Phi}}
+\newcommand{\eps}{\varepsilon}
+
+% Testo
+\newcommand{\termine}[1]{\textbf{#1}}       % termine definito per la prima volta
+\newcommand{\ingl}[1]{\textit{#1}}          % termine inglese
+\newcommand{\rif}[1]{\S\,\ref{#1}}
+\newcommand{\figrif}[1]{Figura~\ref{#1}}
+
+% --- Collegamenti ------------------------------------------------------------
+\usepackage[hidelinks, bookmarksnumbered, pdfusetitle]{hyperref}
+\usepackage{bookmark}

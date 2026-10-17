@@ -1,0 +1,564 @@
+\chapter{Dal neurone al Perceptron}
+\label{cap:perceptron}
+
+\begin{inbreve}
+Questo capitolo introduce l'unità di base delle reti neurali, il neurone artificiale, e il suo caso più
+semplice, il Perceptron (un'unità a soglia). Si vede che reti di unità a soglia rappresentano qualunque funzione
+booleana grazie alla ri-rappresentazione nello strato nascosto, si studia l'algoritmo di apprendimento del
+Perceptron con la dimostrazione del suo teorema di convergenza, lo si confronta con l'LMS, e si introducono le
+unità sigmoidali, che rendono possibile la discesa del gradiente anche con uscite non lineari.
+\end{inbreve}
+
+\section{Le reti neurali come strumento di ML}
+
+Le reti neurali si studiano con due obiettivi: \textbf{modellare sistemi biologici} e processi di apprendimento
+(neuroscienze, scienze cognitive), dove conta il realismo biologico; oppure \textbf{costruire sistemi di ML
+efficaci}, dove contano le proprietà computazionali e algoritmiche, anche a scapito del realismo. Nel corso
+interessa il secondo aspetto: una rete neurale artificiale (ANN) realizza una funzione $h(\x)$ con proprietà
+speciali. In particolare le reti neurali
+\begin{itemize}
+  \item apprendono da esempi;
+  \item sono \textbf{approssimatori universali} (\rif{sec:approssimazione-universale}): approcci flessibili per
+        funzioni arbitrarie, anche non lineari;
+  \item gestiscono rumore e dati incompleti, con prestazioni che \textbf{degradano gradualmente};
+  \item trattano dati reali e discreti, per regressione e classificazione;
+  \item non sono un singolo modello ma un \textbf{paradigma} (nella classe degli approcci sub-simbolici).
+\end{itemize}
+L'idea di fondo è il \termine{connessionismo}: comportamenti complessi che \textbf{emergono} dall'interazione di
+molte unità computazionali semplici interconnesse.
+
+\subsection{L'ispirazione biologica}
+
+Il cervello umano ha più di $10^{10}$ neuroni, ciascuno con $10^4$--$10^5$ connessioni. Un neurone risponde in
+circa un millisecondo, eppure si riconosce un'immagine in circa $0{,}1$ secondi, cioè in al massimo un centinaio
+di passi seriali: il cervello esegue una computazione \textbf{massicciamente parallela}. Un neurone riceve
+segnali dai \textbf{dendriti}, che ne modificano il potenziale; superata una \textbf{soglia}, emette un impulso
+(\ingl{spike}) che si propaga lungo l'\textbf{assone} fino alle \textbf{sinapsi}, dove passa ai neuroni successivi.
+Le sinapsi possono essere \textbf{eccitatorie} o \textbf{inibitorie} e la loro forza cambia con l'apprendimento
+(\textbf{plasticità}): nel modello artificiale la forza sinaptica diventa un \textbf{peso}.
+
+\begin{definizione}[Apprendimento hebbiano]
+Una sinapsi si rafforza quando gli input del neurone (e le uscite correlate) si ripetono: lo stimolo in ingresso
+rinforza la sinapsi, quindi \textbf{i pesi si avvicinano agli input}.
+\end{definizione}
+
+\section{Il neurone artificiale}
+\label{sec:neurone}
+
+Un'\termine{unità} (nodo, neurone) riceve input da sorgenti esterne o da altre unità. Ogni connessione ha un
+\textbf{peso} $w$, parametro libero modificato dall'apprendimento. L'unità $i$ calcola
+\begin{equation}\label{eq:neurone}
+\net_i(\x) = \sum_j w_{ij}\,x_j, \qquad o_i(\x) = f\big(\net_i(\x)\big),
+\end{equation}
+dove $\net_i$ è l'\termine{input netto} (che include il bias $w_{i0}$ tramite l'input costante $x_0=1$) e $f$ è la
+\termine{funzione di attivazione} (\figrif{fig:unita}).
+
+\begin{attenzione}[Notazione dei pesi]
+$w_{ij}$ è il peso \textbf{dell'unità $i$}, cioè della connessione \textbf{dall'input (o unità) $j$ verso l'unità
+$i$}: il primo indice è l'unità che riceve. Alcune fonti e librerie usano la convenzione opposta.
+\end{attenzione}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1cm, y=0.8cm]
+\node[font=\small] (x0) at (0,2) {$x_0=1$};
+\node[font=\small] (x1) at (0,1) {$x_1$};
+\node[font=\small] (x2) at (0,0) {$x_2$};
+\node[font=\small] (xd) at (0,-0.8) {$\vdots$};
+\node[font=\small] (xn) at (0,-1.6) {$x_n$};
+\node[circle, draw, thick, minimum size=1.3cm] (s) at (3.2,0.2) {$\Sigma \mid f$};
+\draw[->] (x0) -- (s) node[pos=0.45, above, font=\footnotesize] {$w_{i0}$};
+\draw[->] (x1) -- (s) node[pos=0.45, above, font=\footnotesize] {$w_{i1}$};
+\draw[->] (x2) -- (s) node[pos=0.45, above, font=\footnotesize] {$w_{i2}$};
+\draw[->] (xn) -- (s) node[pos=0.45, below, font=\footnotesize] {$w_{in}$};
+\draw[->, thick] (s) -- (6,0.2) node[right, font=\small] {$o_i = f(\net_i)$};
+\node[font=\footnotesize, grigio] at (3.2,-1.2) {$\net_i = \sum_j w_{ij}x_j$};
+\end{tikzpicture}
+\caption{L'unità $i$: somma pesata degli input (bias incluso tramite $x_0=1$) e funzione di attivazione.}
+\label{fig:unita}
+\end{figure}
+
+Tre funzioni di attivazione classiche (\figrif{fig:attivazioni}): \textbf{lineare} (identità),
+$h(\x)=\sum_iw_ix_i$; \textbf{a soglia} (gradino), che dà il \termine{Perceptron}, cioè la LTU del
+\rif{sec:classificazione-lineare}; \textbf{logistica} (sigmoide), trattata nel \rif{sec:sigmoidi}.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=3 by 1, horizontal sep=0.9cm}, stile, width=4.4cm, height=3.4cm,
+  xmin=-4, xmax=4, xtick={0}, xlabel={$\net$}, domain=-4:4, samples=120]
+\nextgroupplot[ymin=-4.2, ymax=4.2, ytick={0}, title={\small lineare}]
+\addplot[thick, blu] {x};
+\nextgroupplot[ymin=-1.3, ymax=1.3, ytick={-1,1}, title={\small a soglia}]
+\addplot[thick, blu, const plot] coordinates {(-4,-1) (0,-1) (0,1) (4,1)};
+\nextgroupplot[ymin=-0.1, ymax=1.15, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$}, title={\small logistica}]
+\addplot[thick, blu] {1/(1+exp(-x))};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Funzione di attivazione lineare, a soglia (Perceptron) e logistica.}
+\label{fig:attivazioni}
+\end{figure}
+
+\section{Reti di unità a soglia e funzioni booleane}
+\label{sec:xor}
+
+Il primo modello di neurone (McCulloch e Pitts) ha due stati, attivo (1) e non attivo (0); ogni sinapsi è
+caratterizzata da un numero reale $w$, positivo per le connessioni \textbf{eccitatorie} e negativo per le
+\textbf{inibitorie}; un neurone si attiva quando la somma dei pesi provenienti dai neuroni attivi, più un bias,
+supera zero. Con input e output binari è sostanzialmente la LTU. Con $\net = \w\T\x = \sum_{i=0}^nw_ix_i$ e uscita
+1 se $\net>0$, 0 (o $-1$) altrimenti:
+\begin{itemize}
+  \item \textbf{AND}: $w_1=w_2=1$, $w_0=-1{,}5$ (serve che entrambi gli input valgano 1 per superare $1{,}5$);
+  \item \textbf{OR}: $w_1=w_2=1$, $w_0=-0{,}5$ (basta un input a 1);
+  \item \textbf{NOT}: $w_1=-1$, $w_0=0{,}5$ (per $x_1=0$ il net vale $0{,}5>0$, per $x_1=1$ vale $-0{,}5$).
+\end{itemize}
+
+\subsection{Lo XOR con due strati}
+
+Lo XOR non è linearmente separabile (\rif{sec:separabilita}): nessuna singola unità a soglia lo rappresenta. Si può
+però scomporre in funzioni separabili:
+\[
+x_1\oplus x_2 = x_1\bar x_2 + \bar x_1x_2 = \bar h_1\cdot h_2, \qquad h_1 = x_1\cdot x_2\ \text{(AND)},\quad h_2 = x_1+x_2\ \text{(OR)}.
+\]
+
+\begin{proprieta}{XOR come composizione di AND e OR}
+Con $a=x_1$, $b=x_2$, $h_1 = a\wedge b$ e $h_2 = a\vee b$ vale $\bar h_1\wedge h_2 = a\oplus b$.
+\end{proprieta}
+\begin{proof}
+Per De Morgan $\bar h_1 = \overline{a\wedge b} = \bar a\vee\bar b$. Distribuendo:
+\[
+\bar h_1\wedge h_2 = (\bar a\vee\bar b)\wedge(a\vee b) = (\bar a\wedge a)\vee(\bar a\wedge b)\vee(\bar b\wedge a)\vee(\bar b\wedge b) = (\bar a\wedge b)\vee(a\wedge\bar b) = a\oplus b,
+\]
+perché $\bar a\wedge a$ e $\bar b\wedge b$ sono sempre falsi.
+\end{proof}
+
+Si ottiene una rete a \textbf{due strati}: due unità nascoste calcolano $h_1$ (AND) e $h_2$ (OR), e l'unità di
+uscita calcola $\bar h_1\wedge h_2$ con pesi $-1$ da $h_1$, $+1$ da $h_2$ e bias $-0{,}5$ (\figrif{fig:xor-rete}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm]
+\node[neur] (x1) at (0,1.4) {$x_1$}; \node[neur] (x2) at (0,0) {$x_2$};
+\node[neurp] (h1) at (2.2,1.4) {$h_1$}; \node[neurp] (h2) at (2.2,0) {$h_2$};
+\node[neurp] (o) at (4.3,0.7) {$o$};
+\draw[->] (x1) -- (h1) node[pos=0.35, above, font=\scriptsize] {1};
+\draw[->] (x1) -- (h2) node[pos=0.25, above, font=\scriptsize] {1};
+\draw[->] (x2) -- (h1) node[pos=0.25, below, font=\scriptsize] {1};
+\draw[->] (x2) -- (h2) node[pos=0.35, below, font=\scriptsize] {1};
+\draw[->] (h1) -- (o) node[midway, above, font=\scriptsize] {$-1$};
+\draw[->] (h2) -- (o) node[midway, below, font=\scriptsize] {$+1$};
+\node[font=\scriptsize, above] at (h1.north) {AND, $w_0=-1{,}5$};
+\node[font=\scriptsize, below] at (h2.south) {OR, $w_0=-0{,}5$};
+\node[font=\scriptsize, above] at (o.north) {$w_0=-0{,}5$};
+\begin{scope}[xshift=6.0cm, yshift=-0.2cm, scale=1.3]
+\draw[->, grigio] (-0.25,0) -- (1.4,0) node[right, black, font=\footnotesize] {$x_1$};
+\draw[->, grigio] (0,-0.25) -- (0,1.4) node[above, black, font=\footnotesize] {$x_2$};
+\node[cneg] at (0,0) {}; \node[cpos] at (1,0) {}; \node[cpos] at (0,1) {}; \node[cneg] at (1,1) {};
+\node[font=\footnotesize] at (0.65,-0.45) {spazio degli input};
+\end{scope}
+\begin{scope}[xshift=9.4cm, yshift=-0.2cm, scale=1.3]
+\draw[->, grigio] (-0.25,0) -- (1.4,0) node[right, black, font=\footnotesize] {$h_1$};
+\draw[->, grigio] (0,-0.25) -- (0,1.4) node[above, black, font=\footnotesize] {$h_2$};
+\node[cneg] at (0,0) {}; \node[cpos] at (0,1) {}; \node[cneg] at (1,1) {};
+\node[font=\scriptsize, right] at (0.05,1.08) {$\times2$};
+\draw[thick, rosso] (-0.2,0.3) -- (0.9,1.4);
+\node[font=\footnotesize] at (0.65,-0.45) {spazio nascosto};
+\end{scope}
+\end{tikzpicture}
+\caption{Lo XOR con una rete a due strati. Nello spazio degli input i punti non sono separabili; nello spazio
+delle unità nascoste $(h_1,h_2)$ i due positivi $(0,1)$ e $(1,0)$ finiscono nello stesso punto $(0,1)$ e il problema
+diventa linearmente separabile (retta rossa $h_2 = h_1 + 0{,}5$).}
+\label{fig:xor-rete}
+\end{figure}
+
+\begin{idea}[Lo strato nascosto come rappresentazione]
+Lo strato nascosto produce una \textbf{ri-rappresentazione interna} degli input che rende facile il compito
+dello strato di uscita. Questa composizione si estende su \textbf{molti strati di astrazione} e, a differenza di
+qui (dove i pesi sono scelti a mano), nelle reti neurali queste rappresentazioni \textbf{si apprendono}. È il
+fattore chiave delle reti neurali, alla base del \emph{representation learning} e del deep learning
+(capitolo~\ref{cap:deep}).
+\end{idea}
+
+\begin{proprieta}{Reti di unità a soglia}
+\begin{itemize}
+  \item Le unità a soglia rappresentano AND, OR, NOT (quindi anche NAND, NOR): \textbf{ogni funzione booleana} può
+        essere rappresentata da una rete di unità a soglia.
+  \item \textbf{Due livelli} bastano (più livelli possono essere più efficienti, \rif{sec:no-flattening}).
+  \item Un singolo strato non basta, per il limite della separabilità lineare.
+\end{itemize}
+Per ora però non c'è alcun algoritmo di apprendimento, nemmeno per una singola unità.
+\end{proprieta}
+
+\section{Apprendere con una singola unità}
+
+Per una singola unità ci sono due famiglie di metodi:
+\begin{enumerate}
+  \item \termine{Adaline} (\ingl{Adaptive Linear Neuron}): durante il training l'unità è \textbf{lineare} e si usa
+        l'LMS, in forma diretta o con la discesa del gradiente (capitolo~\ref{cap:lineari}). Serve per regressione
+        e, con la soglia, classificazione. È l'approccio che si estende agli MLP.
+  \item \termine{Perceptron}: durante il training l'unità è \textbf{non lineare} (con soglia). Solo
+        classificazione.
+\end{enumerate}
+Per costruire un classificatore lineare si hanno quindi tre algoritmi: LMS diretto, LMS a gradiente e
+l'algoritmo del Perceptron (e più avanti le SVM).
+
+\subsection{L'algoritmo del Perceptron}
+
+L'obiettivo è \textbf{minimizzare il numero di esempi classificati male}, cioè trovare $\w$ con
+$\sign(\w\T\x) = d$ per ogni esempio. L'algoritmo è \textbf{on-line}.
+
+\begin{algoritmo}[Perceptron Learning Algorithm]
+\begin{enumerate}
+  \item Inizializzare i pesi (a zero o a piccoli valori casuali); scegliere un learning rate $\eta\in(0,1)$.
+  \item Finché non vale la condizione di arresto (ad esempio i pesi non cambiano più), per ogni esempio $(\x,d)$
+        con $d\in\{+1,-1\}$:
+        \begin{itemize}
+          \item calcolare $\out = \sign(\w\T\x)$;
+          \item se $\out = d$, \textbf{non cambiare i pesi};
+          \item se $\out\neq d$, aggiornare $\w_{\mathit{new}} = \w + \eta\,d\,\x$.
+        \end{itemize}
+\end{enumerate}
+\end{algoritmo}
+
+In pratica si aggiunge $\eta\x$ se $\w\T\x\le0$ e $d=+1$ (falso negativo) e si sottrae $\eta\x$ se $\w\T\x>0$ e
+$d=-1$ (falso positivo). In forma equivalente
+\[
+\w_{\mathit{new}} = \w + \tfrac12\eta\,(d-\out)\,\x ,
+\]
+perché $d-\out$ vale 0 se la classificazione è corretta e $\pm2$ se è sbagliata.
+
+\begin{attenzione}[Differenza con l'LMS]
+La formula somiglia a quella dell'LMS, ma qui $\out = \sign(\w\T\x)$ contiene il \textbf{segno}, mentre nell'LMS
+l'errore è calcolato sull'uscita lineare $\w\T\x$.
+\end{attenzione}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.25]
+\draw[->, grigio] (-1.9,0) -- (2.4,0); \draw[->, grigio] (0,-1.5) -- (0,2.4);
+\draw[rosso, thick, densely dashed] (-0.48,1.92) -- (0.38,-1.52) node[below, font=\footnotesize] {confine prima};
+\draw[blu, thick, densely dashed] (-1.6,1.53) -- (1.3,-1.24) node[below right, font=\footnotesize] {confine dopo};
+\draw[->, very thick, rosso] (0,0) -- (1.6,0.4) node[below right, font=\small] {$\w$};
+\draw[->, thick, inchiostro] (1.6,0.4) -- (1.3,1.36) node[midway, right, font=\footnotesize] {$\eta d\x$};
+\draw[->, very thick, blu] (0,0) -- (1.3,1.36) node[above, font=\small] {$\w_{\mathit{new}}$};
+\draw[->, grigio] (0,0) -- (-0.5,1.6);
+\fill[inchiostro] (-0.5,1.6) circle (2pt) node[above left, font=\small] {$p_1$ ($d=+1$)};
+\end{tikzpicture}
+\caption{Aggiornamento del Perceptron: $p_1$ ha target $+1$ ma sta dal lato negativo del confine (rosso).
+Sommando $\eta d\x$ a $\w$, il vettore dei pesi si sposta verso $p_1$ e il nuovo confine (blu) lo classifica
+correttamente.}
+\label{fig:perceptron-geometria}
+\end{figure}
+
+Geometricamente (\figrif{fig:perceptron-geometria}) $\w$ punta verso la regione positiva; se un esempio con
+$d=+1$ è classificato male, $\w$ viene spostato un po' nella sua direzione (somma vettoriale $\w+\eta d\x$); se un
+esempio con $d=-1$ è classificato male, $\w$ viene allontanato da esso.
+
+\subsubsection{Due letture della regola}
+\begin{itemize}
+  \item $\w_{\mathit{new}} = \w+\eta\,d\,\x$ è un \textbf{apprendimento hebbiano}: $\w$ si muove verso $\x$.
+  \item $\w_{\mathit{new}} = \w+\eta\,(d-\out)\,\x = \w + \eta\,\delta\,\x$ è una regola di \textbf{correzione
+        dell'errore} (delta rule): la modifica di un peso è proporzionale al prodotto del segnale d'errore per il
+        segnale di input della connessione.
+\end{itemize}
+Il calcolo è facile perché il segnale d'errore $\delta$ è \textbf{direttamente misurabile}: si conosce la risposta
+desiderata per l'unità. Nelle reti con strati nascosti questo non sarà più vero (\rif{sec:credit-assignment}).
+
+Il Perceptron \textbf{rappresenta} confini lineari, quindi risolve i problemi linearmente separabili. Il teorema
+seguente garantisce che riesce anche a \textbf{impararli}: il Perceptron apprende tutto ciò che può rappresentare.
+
+\section{Il teorema di convergenza del Perceptron}
+\label{sec:convergenza-perceptron}
+
+\begin{teorema}[Convergenza del Perceptron]
+Se il problema è \textbf{linearmente separabile}, l'algoritmo del Perceptron converge, classificando correttamente
+tutti gli esempi, in un \textbf{numero finito di passi}, qualunque sia il punto di partenza (la soluzione finale
+non è unica e dipende dal punto di partenza). Se il problema non è separabile l'algoritmo può essere instabile e
+sviluppare \textbf{cicli}, con pesi non necessariamente ottimali.
+\end{teorema}
+
+Nella dimostrazione si omette la $\T$ nei prodotti scalari.
+
+\subsubsection{Passo 1: ridursi a esempi tutti positivi}
+Siano $(\x_i,d_i)$, $i=1,\dots,l$, gli esempi, con $d_i\in\{+1,-1\}$. Se il problema è separabile esiste una
+soluzione $\w^*$ con
+\[
+d_i\,(\w^*\x_i)\ge\alpha,\qquad \alpha = \min_i d_i\,(\w^*\x_i) > 0 .
+\]
+Definendo $\x'_i = d_i\x_i$, si ha $\w^*\x'_i = d_i(\w^*\x_i)\ge\alpha$: \textbf{$\w^*$ risolve il problema
+originale se e solo se risolve il problema $(\x'_i,+1)$} con tutti i target positivi (il ragionamento vale nei
+due versi, perché $d_i^2=1$). Basta quindi dimostrare il teorema per un problema con \textbf{soli esempi positivi}:
+``ribaltare'' gli esempi negativi non cambia nulla.
+
+\subsubsection{Passo 2: i pesi dopo $q$ errori}
+Si assume $\w(0) = \vv0$, $\eta=1$ e si definisce $\beta = \max_i\norm{\x_i}^2$. Con soli esempi positivi la regola
+diventa $\w(j) = \w(j-1)+\x_{i_j}$ a ogni errore, dove $i_j$ è l'indice del $j$-esimo esempio classificato male
+(lo stesso esempio può comparire più volte). Dopo $q$ errori
+\[
+\w(q) = \sum_{j=1}^{q}\x_{i_j}.
+\]
+
+\subsubsection{Idea}
+Si trovano un \textbf{limite inferiore} a $\norm{\w(q)}^2$ che cresce come $q^2$ e un \textbf{limite superiore}
+che cresce come $q$. Poiché una funzione quadratica supera prima o poi una lineare, i due limiti sono compatibili
+solo per $q$ fino a un valore massimo: il numero di errori, e quindi di aggiornamenti, è finito
+(\figrif{fig:convergenza}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=7cm, height=4.6cm, domain=0:5.6, xmin=0, xmax=6, ymin=0, ymax=8, xtick={4},
+  xticklabels={$q_{\max}$}, ytick=\empty, xlabel={numero di errori $q$}, ylabel={$\norm{\w(q)}^2$}]
+\addplot[thick, blu] {0.25*x^2} node[pos=0.97, left, font=\footnotesize] {$\dfrac{(q\alpha)^2}{\norm{\w^*}^2}$};
+\addplot[thick, rosso] {x} node[pos=0.9, above left, font=\footnotesize] {$q\beta$};
+\draw[densely dashed, grigio] (axis cs:4,0) -- (axis cs:4,4);
+\end{axis}
+\end{tikzpicture}
+\caption{$\norm{\w(q)}^2$ deve stare tra il limite inferiore quadratico (blu) e il limite superiore lineare
+(rosso): oltre $q_{\max}$ le due condizioni non possono valere insieme.}
+\label{fig:convergenza}
+\end{figure}
+
+\subsubsection{Passo 3: limite inferiore}
+Moltiplicando $\w(q)$ per $\w^*$ e usando $\w^*\x_{i_j}\ge\alpha$ per ogni termine:
+\[
+\w^*\w(q) = \sum_{j=1}^{q}\w^*\x_{i_j} \ge q\,\alpha .
+\]
+Per la disuguaglianza di Cauchy-Schwarz $\norm{\vv a}^2\norm{\vv b}^2\ge(\vv a\vv b)^2$, con $\vv a = \w^*$ e
+$\vv b=\w(q)$:
+\[
+\norm{\w^*}^2\,\norm{\w(q)}^2 \ge \big(\w^*\w(q)\big)^2 \ge (q\alpha)^2
+\quad\Longrightarrow\quad
+\norm{\w(q)}^2 \ge \frac{(q\alpha)^2}{\norm{\w^*}^2}.
+\]
+
+\subsubsection{Passo 4: limite superiore}
+Con lo sviluppo \eqref{eq:quadrato-norma}:
+\[
+\norm{\w(q)}^2 = \norm{\w(q-1)+\x_{i_q}}^2 = \norm{\w(q-1)}^2 + 2\,\w(q-1)\,\x_{i_q} + \norm{\x_{i_q}}^2 .
+\]
+Poiché $\x_{i_q}$ è stato classificato male (è il $q$-esimo errore), $\w(q-1)\,\x_{i_q}\le0$; eliminando questo
+termine non positivo
+\[
+\norm{\w(q)}^2 \le \norm{\w(q-1)}^2 + \norm{\x_{i_q}}^2 ,
+\]
+e iterando fino a $\w(0)=\vv0$:
+\[
+\norm{\w(q)}^2 \le \sum_{j=1}^{q}\norm{\x_{i_j}}^2 \le q\,\beta .
+\]
+
+\subsubsection{Passo 5: conclusione}
+Mettendo insieme i due limiti
+\[
+q\,\beta \;\ge\; \norm{\w(q)}^2 \;\ge\; \frac{(q\alpha)^2}{\norm{\w^*}^2}
+\quad\Longrightarrow\quad
+\boxed{\;q \le \frac{\beta\,\norm{\w^*}^2}{\alpha^2}\;}
+\]
+Il numero di errori, e quindi di aggiornamenti, è limitato da una costante: l'algoritmo converge in un numero
+finito di passi. \hfill\qedsymbol
+
+\begin{idea}[Interpretazione del bound]
+Il numero di passi cresce con $\beta$ (quanto sono ``grandi'' gli esempi) e decresce con $\alpha^2$, che misura
+quanto il problema è ``ben separato'' (il margine minimo della soluzione $\w^*$). Problemi con classi vicine
+all'iperpiano separatore richiedono più passi. L'idea di \textbf{margine} è centrale nelle SVM
+(capitolo~\ref{cap:svm}).
+\end{idea}
+
+\section{Perceptron contro LMS}
+
+Le due regole hanno la stessa forma, $\w_{\mathit{new}} = \w+\eta\,\delta\,\x$, ma
+\begin{itemize}
+  \item l'LMS è derivato dal gradiente \textbf{senza} soglia, minimizzando l'errore dell'unità lineare:
+        $\delta = d - \w\T\x$;
+  \item il Perceptron usa l'uscita con soglia: $\delta = d-\sign(\w\T\x)$.
+\end{itemize}
+Una conseguenza importante: \textbf{l'LMS può classificare male anche problemi linearmente separabili}. L'LMS non
+minimizza il numero di errori della LTU ma l'errore quadratico, e modifica i pesi \textbf{anche per gli esempi già
+classificati correttamente}: un esempio corretto ma lontano dall'iperpiano (con $\w\T\x$ molto maggiore di 1)
+produce comunque un errore quadratico grande che ``tira'' l'iperpiano (\figrif{fig:lms-perceptron}).
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[scatola, width=7.2cm, height=5.6cm, xmin=-1.5, xmax=7, ymin=-1.5, ymax=6.2, xtick=\empty, ytick=\empty,
+  legend pos=north west, legend style={font=\footnotesize}]
+\addplot[only marks, mark=*, mark size=1.5pt, blu] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{1:1}] {dati/pl_punti.dat}; \addlegendentry{classe $+1$}
+\addplot[only marks, mark=o, mark size=1.7pt, rosso, thick] table[x=x, y=y, restrict expr to domain={\thisrow{c}}{-1:-1}] {dati/pl_punti.dat}; \addlegendentry{classe $-1$}
+\addplot[very thick, arancio] table {dati/pl_lms.dat}; \addlegendentry{LMS}
+\addplot[thick, inchiostro] table {dati/pl_perc0.dat}; \addlegendentry{Perceptron}
+\addplot[thick, inchiostro, densely dashed] table {dati/pl_perc1.dat};
+\end{axis}
+\end{tikzpicture}
+\caption{Un problema separabile: la soluzione ai minimi quadrati (arancione) è attirata dal gruppo lontano di
+esempi positivi e classifica male \valplErrLS{} esempi; il Perceptron (nero, due inizializzazioni diverse) li
+separa tutti.}
+\label{fig:lms-perceptron}
+\end{figure}
+
+\begin{table}[ht]
+\centering\small
+\caption{Algoritmo del Perceptron e LMS a confronto.}
+\begin{tabularx}{0.95\linewidth}{XX}
+\toprule
+Perceptron & LMS \\
+\midrule
+minimizza le classificazioni errate ($\out = \sign(\w\T\x)$) & minimizza $E(\w)$ con $\out = \w\T\x$ \\
+converge sempre, per problemi separabili, in un numero finito di passi, a un classificatore perfetto & convergenza \textbf{asintotica}, anche per problemi non separabili \\
+non converge se il problema non è separabile & non sempre zero errori di classificazione, anche su problemi separabili \\
+difficile da estendere a reti di unità & \textbf{estendibile alle reti} con l'approccio a gradiente \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+L'ultima riga è decisiva: per costruire reti neurali serve un approccio basato sul \textbf{gradiente}, che
+richiede funzioni di attivazione differenziabili.
+
+\section{Unità sigmoidali}
+\label{sec:sigmoidi}
+
+\begin{definizione}[Sigmoide logistica]
+La \termine{funzione logistica} è una funzione ``a schiacciamento'' (\ingl{squashing}) con valori continui in
+$(0,1)$:
+\[
+f_\sigma(x) = \frac{1}{1+e^{-ax}} ,
+\]
+dove $a$ è la \textbf{pendenza} (\ingl{slope}). È una versione \textbf{liscia e differenziabile della funzione
+soglia}. La versione simmetrica, con valori in $(-1,+1)$, è la \termine{tangente iperbolica}:
+\[
+f_{\mathit{symm}}(x) = 2f_\sigma(x) - 1 = \tanh(ax/2).
+\]
+\end{definizione}
+
+La relazione con la tangente iperbolica si verifica direttamente:
+$2f_\sigma(x)-1 = \frac{2-(1+e^{-ax})}{1+e^{-ax}} = \frac{1-e^{-ax}}{1+e^{-ax}}$, e moltiplicando numeratore e
+denominatore per $e^{ax/2}$ si ottiene $\frac{e^{ax/2}-e^{-ax/2}}{e^{ax/2}+e^{-ax/2}} = \tanh(ax/2)$.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=2 by 1, horizontal sep=1.2cm}, stile, width=6.2cm, height=4.2cm,
+  xmin=-8, xmax=8, domain=-8:8, samples=150, xtick={-5,0,5}, xlabel={$x$}]
+\nextgroupplot[ymin=-0.05, ymax=1.1, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$}, title={\small logistica}, legend pos=north west]
+\addplot[thick, verde] {1/(1+exp(-0.5*x))}; \addlegendentry{$a=0{,}5$}
+\addplot[thick, rosso] {1/(1+exp(-x))}; \addlegendentry{$a=1$}
+\addplot[thick, blu] {1/(1+exp(-2*x))}; \addlegendentry{$a=2$}
+\nextgroupplot[ymin=-1.15, ymax=1.15, ytick={-1,0,1}, title={\small tangente iperbolica}]
+\addplot[thick, blu] {tanh(x/2)};
+\end{groupplot}
+\end{tikzpicture}
+\caption{La logistica per tre valori della pendenza $a$ (sinistra) e la tangente iperbolica (destra).}
+\label{fig:sigmoidi}
+\end{figure}
+
+Vicino a zero la sigmoide è quasi lineare (\textbf{semi-linearità}). Per $a\to0$ tende a una funzione
+\textbf{lineare} molto piatta, per $a\to\infty$ alla funzione \textbf{a gradino}. Per la classificazione, con la
+logistica un'uscita $\ge0{,}5$ corrisponde alla classe positiva e $<0{,}5$ a quella negativa (per la tanh la
+soglia è 0). La soglia si può spostare (studiando l'effetto su falsi positivi e negativi, ad esempio con una curva
+ROC) e si può definire una \textbf{zona di rifiuto} attorno alla soglia per evitare decisioni fragili.
+
+\subsubsection{Altre funzioni di attivazione}
+\begin{itemize}
+  \item \textbf{Funzioni a base radiale} (RBF): $f(x) = e^{-ax^2}$ applicata a $\norm{\w-\x}$, una gaussiana
+        centrata sui pesi (\textbf{reti RBF}).
+  \item \textbf{Softmax}: per uscite multiple (\rif{sec:input-output}).
+  \item \textbf{Neuroni stocastici}: uscita $+1$ con probabilità $P(\net)$, $-1$ altrimenti (macchine di
+        Boltzmann).
+  \item Approssimazioni \textbf{lineari a tratti} della tanh, per calcoli efficienti.
+  \item \termine{ReLU} (\ingl{Rectified Linear Unit}): $f(x)=\max(0,x)$, la scelta predefinita nei modelli
+        profondi (\rif{sec:relu}); \textbf{softplus}, la sua approssimazione liscia: $f(x) = \ln(1+e^x)$.
+\end{itemize}
+Molte funzioni di attivazione hanno prestazioni simili in pratica.
+
+\subsection{Derivate}
+
+La derivata dell'identità è 1; quella della funzione a gradino \textbf{non è definita} in zero ed è nulla altrove,
+ed è esattamente il motivo per cui non si può usare con la discesa del gradiente. Per le sigmoidi (con $a=1$):
+\begin{equation}\label{eq:derivata-sigmoide}
+\boxed{\;\frac{df_\sigma(x)}{dx} = f_\sigma(x)\big(1-f_\sigma(x)\big), \qquad \frac{d\tanh(x)}{dx} = 1-\tanh^2(x)\;}
+\end{equation}
+e con $a$ generico $\frac{df_\sigma}{dx} = a\,f_\sigma(x)\big(1-f_\sigma(x)\big)$.
+
+\begin{proof}[Derivazione per la logistica]
+$f_\sigma(x) = (1+e^{-x})^{-1}$, quindi con la regola della catena
+\[
+f'_\sigma(x) = -(1+e^{-x})^{-2}\cdot(-e^{-x}) = \frac{e^{-x}}{(1+e^{-x})^2} = \frac{1}{1+e^{-x}}\cdot\frac{e^{-x}}{1+e^{-x}} = f_\sigma(x)\big(1-f_\sigma(x)\big),
+\]
+perché $\frac{e^{-x}}{1+e^{-x}} = 1-\frac{1}{1+e^{-x}}$. La derivata si calcola dal valore della funzione stessa.
+\end{proof}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[stile, width=7.4cm, height=4.4cm, domain=-6:6, samples=150, xmin=-6, xmax=6, ymin=-0.15, ymax=1.05,
+  xtick={-5,0,5}, ytick={0,0.25,0.5,1}, yticklabels={$0$,$0{,}25$,$0{,}5$,$1$}, xlabel={$x$}, legend pos=outer north east]
+\addplot[thick, inchiostro] {1/(1+exp(-x))}; \addlegendentry{$f_\sigma$}
+\addplot[thick, rosso] {exp(-x)/(1+exp(-x))^2}; \addlegendentry{$f'_\sigma$}
+\addplot[thick, verde] {exp(-x)*(exp(-x)-1)/(1+exp(-x))^3}; \addlegendentry{$f''_\sigma$}
+\end{axis}
+\end{tikzpicture}
+\caption{La logistica, la sua derivata prima (massima in zero, dove vale $0{,}25$) e la derivata seconda.}
+\label{fig:derivate-sigmoide}
+\end{figure}
+
+\subsection{LMS con un'unità sigmoidale}
+\label{sec:lms-sigmoide}
+
+Poiché la logistica è una soglia differenziabile, si può derivare un algoritmo LMS come per l'unità lineare,
+passando da $o(\x) = \x\T\w$ a $o(\x) = f_\sigma(\x\T\w)$ e minimizzando
+\[
+E(\w) = \sum_{p=1}^{l}\big(d_p - f_\sigma(\x_p\T\w)\big)^2 .
+\]
+Per un esempio $p$, con $\net_p = \x_p\T\w$ e $o_p = f_\sigma(\net_p)$, la regola della catena attraverso le
+variabili intermedie $o_p$ e $\net_p$ dà
+\[
+\frac{\partial E_p}{\partial w_j} = \frac{\partial E_p}{\partial o_p}\cdot\frac{\partial o_p}{\partial\net_p}\cdot\frac{\partial\net_p}{\partial w_j}
+= -2\,(d_p-o_p)\cdot f'_\sigma(\net_p)\cdot x_{p,j},
+\]
+e sommando sugli esempi
+\[
+\frac{\partial E(\w)}{\partial w_j} = -2\sum_{p=1}^{l}\big(d_p-o(\x_p)\big)\,f'_\sigma\big(\net(\x_p)\big)\,x_{p,j} = -2\sum_{p=1}^{l}\delta_p\,x_{p,j}.
+\]
+Questa derivata risponde alla domanda: \emph{quanto una variazione di $w_j$ influenza la variazione di $E$?} La
+discesa del gradiente è identica a quella per l'unità lineare, con un nuovo delta:
+\begin{equation}\label{eq:delta-sigmoide}
+\boxed{\;\w_{\mathit{new}} = \w + \eta\,\delta_p\,\x_p,\qquad \delta_p = \big(d_p-o(\x_p)\big)\,f'_\sigma\big(\net(\x_p)\big)\;}
+\end{equation}
+
+È ancora una regola di correzione dell'errore, con alcune differenze:
+\begin{itemize}
+  \item la pendenza $a$ influenza l'ampiezza del passo;
+  \item $f'_\sigma$ è \textbf{massima per $\net$ vicino a 0} (zona quasi lineare), dove i delta possono essere
+        grandi;
+  \item $f'_\sigma$ è \textbf{minima nei casi saturi} ($f$ vicino a 0 o a 1): delta piccoli, pesi che cambiano
+        lentissimamente. Bisogna evitare una \textbf{saturazione prematura}, ad esempio \textbf{partendo con pesi
+        piccoli}.
+\end{itemize}
+
+\begin{idea}[Un ponte tra LMS e Perceptron]
+Quando un esempio è classificato correttamente ``con decisione'' (uscita satura vicino al target),
+$f'_\sigma\approx0$ e la correzione è quasi nulla, proprio come nel Perceptron, che non corregge gli esempi
+corretti. Con $f_\sigma$ si approssima quindi non solo la LTU, ma anche l'algoritmo del Perceptron.
+\end{idea}
+
+\begin{puntichiave}
+\begin{itemize}
+  \item Neurone: $o = f(\sum_jw_jx_j)$; $w_{ij}$ va dall'unità $j$ all'unità $i$.
+  \item Le unità a soglia rappresentano AND, OR, NOT; lo XOR richiede due strati, grazie alla ri-rappresentazione
+        nello strato nascosto.
+  \item Perceptron: $\w\leftarrow\w+\eta d\x$ solo sugli errori; converge in al più $\beta\norm{\w^*}^2/\alpha^2$
+        errori se il problema è separabile.
+  \item L'LMS può sbagliare su problemi separabili, ma si estende alle reti con il gradiente.
+  \item $f'_\sigma = f_\sigma(1-f_\sigma)$; per un'unità sigmoidale $\delta = (d-o)f'_\sigma(\net)$.
+\end{itemize}
+\end{puntichiave}
+
+\begin{domande}
+\begin{enumerate}
+  \item Descrivere il neurone artificiale e le principali funzioni di attivazione.
+  \item Come si rappresentano AND, OR, NOT con un'unità a soglia? Come si risolve lo XOR?
+  \item Scrivere l'algoritmo di apprendimento del Perceptron.
+  \item Enunciare e dimostrare il teorema di convergenza del Perceptron.
+  \item Differenze tra Perceptron e LMS; perché l'LMS può sbagliare su problemi separabili?
+  \item Derivare la regola di aggiornamento per una singola unità sigmoidale.
+\end{enumerate}
+\end{domande}
