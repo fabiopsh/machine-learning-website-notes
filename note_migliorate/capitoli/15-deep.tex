@@ -2,11 +2,11 @@
 \label{cap:deep}
 
 \begin{inbreve}
-Il deep learning (DL) usa reti con molti strati che apprendono rappresentazioni dei dati su più livelli di
-astrazione. Il capitolo discute perché la profondità può servire (risultati di \emph{no-flattening}, l'esempio della
-parità, il bias induttivo composizionale), i concetti di representation learning (pre-training, autoencoder,
-transfer learning) e di rappresentazione distribuita, alcuni risultati recenti e le tecniche che rendono addestrabili
-le reti profonde (ReLU, gradient clipping, batch normalization, dropout).
+Il deep learning (DL) usa reti con molti strati, che apprendono rappresentazioni dei dati su più livelli di
+astrazione. Il capitolo discute perché la profondità può servire: i risultati di \emph{no-flattening}, l'esempio
+della parità, il bias induttivo composizionale. Presenta poi i concetti di representation learning (pre-training,
+autoencoder, transfer learning) e di rappresentazione distribuita. Seguono alcuni risultati recenti. Chiudono le
+tecniche che rendono addestrabili le reti profonde: ReLU, gradient clipping, batch normalization, dropout.
 \end{inbreve}
 
 \section{Che cos'è il deep learning}
@@ -16,13 +16,13 @@ Il \termine{deep learning} permette a modelli computazionali composti da più st
 \textbf{apprendere rappresentazioni dei dati con più livelli di astrazione}.
 \end{definizione}
 
-Il DL è un \textbf{quadro generale} che include reti profonde (MLP con molti strati), reti convoluzionali, modelli
-generativi (\ingl{deep belief network}), reti ricorrenti e ricorsive, e si contrappone ai modelli \textbf{shallow}
-(superficiali, ad esempio con meno di 3 strati). Gli aspetti comuni sono:
+Il DL è un \textbf{quadro generale}. Include reti profonde (MLP con molti strati), reti convoluzionali, modelli
+generativi (\ingl{deep belief network}), reti ricorrenti e ricorsive. Si contrappone ai modelli \textbf{shallow},
+cioè superficiali, ad esempio con meno di 3 strati. Gli aspetti comuni sono:
 \begin{itemize}
   \item \textbf{più strati} di unità di elaborazione \textbf{non lineari};
-  \item apprendimento (supervisionato o non supervisionato) di \textbf{rappresentazioni delle feature} in ogni strato,
-        con gli strati che formano una \textbf{gerarchia} da feature di basso livello a feature di alto livello;
+  \item apprendimento (supervisionato o non supervisionato) di \textbf{rappresentazioni delle feature} in ogni
+        strato. Gli strati formano una \textbf{gerarchia}, da feature di basso livello a feature di alto livello;
   \item quindi, una rappresentazione \textbf{gerarchica, sparsa e distribuita} dei dati.
 \end{itemize}
 Il suo successo pratico dipende da tre fattori: \textbf{grandi dataset}, \textbf{potenza di calcolo} (le GPU) e
@@ -30,15 +30,15 @@ Il suo successo pratico dipende da tre fattori: \textbf{grandi dataset}, \textbf
 
 \subsection{Astrazione gerarchica}
 
-Come nello XOR (\rif{sec:xor}), lo strato nascosto crea una ri-rappresentazione che semplifica il compito
-dello strato successivo; il DL estende questa composizione su molti livelli.
+Come nello XOR (\rif{sec:xor}), lo strato nascosto crea una ri-rappresentazione che semplifica il compito dello
+strato successivo. Il DL estende questa composizione su molti livelli.
 \begin{itemize}
-  \item Si passa dal \textbf{feature engineering} (feature estratte a mano, per esperienza) al \textbf{feature
+  \item Si passa dal \textbf{feature engineering}, con feature estratte a mano per esperienza, al \textbf{feature
         learning}: si \textbf{apprendono rappresentazioni} dei dati, anche in modo non supervisionato o
         semi-supervisionato.
-  \item I livelli di astrazione crescono con gli strati: un'immagine si può rappresentare come vettore di intensità
-        dei pixel, oppure come insieme di bordi, regioni di forma particolare, ecc. \textbf{I bordi formano motivi, i
-        motivi si assemblano in parti, le parti formano oggetti} (\figrif{fig:gerarchia}).
+  \item I livelli di astrazione crescono con gli strati. Un'immagine si può rappresentare come vettore di
+        intensità dei pixel, oppure come insieme di bordi, regioni di forma particolare, ecc. \textbf{I bordi
+        formano motivi, i motivi si assemblano in parti, le parti formano oggetti} (\figrif{fig:gerarchia}).
   \item Funziona al meglio quando l'input ha una \textbf{struttura} (spaziale, temporale, \dots).
 \end{itemize}
 
@@ -62,18 +62,19 @@ annidate, ciascuna descritta da uno strato.}
 \label{fig:gerarchia}
 \end{figure}
 
-Il DL risolve una mappatura complicata \textbf{scomponendola in mappature semplici annidate}, e la nuova
-rappresentazione semplifica la classificazione nell'ultimo strato. Le feature si \textbf{apprendono dagli esempi}:
-con la backpropagation l'errore in uscita si propaga attraverso gli strati e le unità si specializzano nelle feature
-utili al task. I primi filtri di una rete per immagini estraggono tipicamente linee orizzontali o verticali, come un
-semplice filtro convolutivo.
+Il DL risolve una mappatura complicata \textbf{scomponendola in mappature semplici annidate}. La nuova
+rappresentazione semplifica la classificazione nell'ultimo strato. Le feature si \textbf{apprendono dagli
+esempi}: con la backpropagation l'errore in uscita si propaga attraverso gli strati, e le unità si specializzano
+nelle feature utili al task. I primi filtri di una rete per immagini estraggono tipicamente linee orizzontali o
+verticali, come un semplice filtro convolutivo.
 
 \subsection{Combinare per generalizzare}
 
 Le feature astratte si \textbf{riusano} ai livelli superiori e si \textbf{combinano} per generalizzare a casi mai
-visti: se la rete ha visto donne senza occhiali e uomini con occhiali, può rappresentare anche una donna con gli
-occhiali. Operazioni sulle rappresentazioni vettoriali apprese lo mostrano: ``uomo con occhiali $-$ uomo $+$ donna
-$=$ donna con occhiali''. Lo stesso accade nel linguaggio:
+visti. Si supponga che la rete abbia visto donne senza occhiali e uomini con occhiali. Può rappresentare anche una
+donna con gli occhiali. Lo mostrano operazioni sulle rappresentazioni vettoriali apprese: ``uomo con occhiali
+$-$ uomo $+$ donna $=$ donna con occhiali''. Lo stesso accade nel linguaggio, con le rappresentazioni vettoriali
+delle parole (i \emph{word embedding}, \rif{sec:distribuite}):
 \begin{itemize}
   \item $\mathrm{Rep}(\text{re}) - \mathrm{Rep}(\text{maschio}) + \mathrm{Rep}(\text{femmina})\approx\mathrm{Rep}(\text{regina})$:
         la differenza tra ``re'' e ``maschio'' cattura il concetto di monarchia;
@@ -89,23 +90,24 @@ $=$ donna con occhiali''. Lo stesso accade nel linguaggio:
 molto grande per essere rappresentata con una insufficientemente profonda.}
 \end{idea}
 
-Un circuito logico a \textbf{due strati} rappresenta \textbf{qualsiasi} funzione booleana in forma normale disgiuntiva
-(porte AND nel primo strato, eventualmente con input negati, e una porta OR nel secondo), ma con profondità due
-\textbf{la maggior parte delle funzioni booleane richiede un numero esponenziale di porte}.
+Un circuito logico a \textbf{due strati} rappresenta \textbf{qualsiasi} funzione booleana in forma normale
+disgiuntiva. Ha porte AND nel primo strato, eventualmente con input negati, e una porta OR nel secondo. Ma con
+profondità due \textbf{la maggior parte delle funzioni booleane richiede un numero esponenziale di porte}.
 
 \begin{esempio}[La funzione di parità]
-La \textbf{parità dispari} estende lo XOR a $N$ input: vale 1 se e solo se il numero di 1 tra gli $N$ bit è dispari
-(si assumono disponibili anche i NOT).
+La \textbf{parità dispari} estende lo XOR a $n$ input: vale 1 se e solo se il numero di 1 tra gli $n$ bit è dispari.
+Si assumono disponibili anche i NOT.
 \begin{itemize}
   \item \textbf{Con 2 strati} bisogna elencare tutte le configurazioni positive. Per 3 input:
         $x_1x_2x_3 + x_1\bar x_2\bar x_3 + \bar x_1x_2\bar x_3 + \bar x_1\bar x_2x_3$ (1 se l'input è 111, 100, 010 o
         001), cioè 4 AND e 1 OR, 5 porte. In generale le configurazioni con un numero dispari di 1 sono metà delle
-        $2^N$, quindi servono $2^N/2$ porte AND più l'OR finale: $2^{N-1}+1$ porte, cioè 9 per $N=4$ e
-        \textbf{129} per $N=8$, un numero \textbf{esponenziale}.
-  \item \textbf{Con $\log N$ strati} si usa un \textbf{albero binario completo} di XOR (\figrif{fig:parita}): un
-        albero con $N$ foglie ha $N-1$ nodi interni, ognuno uno XOR da 3 porte (AND e OR come nel
-        \rif{sec:xor}), per un totale di $3(N-1)$ porte, un numero \textbf{polinomiale}: 21 porte per $N=8$
-        contro 129.
+        $2^n$. Servono quindi $2^n/2$ porte AND più l'OR finale: $2^{n-1}+1$ porte. Sono 9 per $n=4$ e \textbf{129}
+        per $n=8$, un numero \textbf{esponenziale}.
+  \item \textbf{Con un albero di XOR} si fa molto meglio. Si usa un \textbf{albero binario completo} di XOR, profondo
+        $\log_2 n$ livelli di XOR (\figrif{fig:parita}). Ogni XOR è fatto di due livelli di porte (AND e OR, come nel
+        \rif{sec:xor}), quindi il circuito ha $2\log_2 n$ strati di porte. Un albero con $n$ foglie ha $n-1$ nodi
+        interni, ognuno uno XOR da 3 porte. Il totale è $3(n-1)$ porte, un numero \textbf{polinomiale}: 21 porte
+        per $n=8$ contro 129.
 \end{itemize}
 \end{esempio}
 
@@ -121,68 +123,71 @@ La \textbf{parità dispari} estende lo XOR a $N$ input: vale 1 se e solo se il n
 \draw[->] (r) -- (4.5,3.7) node[above, font=\small] {parità};
 \node[font=\footnotesize, align=left, anchor=west] at (9,1.5) {$\log_2 8 = 3$ livelli di XOR,\\$8-1 = 7$ XOR da 3 porte:\\$21$ porte in tutto};
 \end{tikzpicture}
-\caption{Parità di 8 bit con un albero di XOR: un numero di porte lineare in $N$, contro le $2^{N-1}+1$ di un
+\caption{Parità di 8 bit con un albero di XOR: un numero di porte lineare in $n$, contro le $2^{n-1}+1$ di un
 circuito a due strati.}
 \label{fig:parita}
 \end{figure}
 
-Questo vantaggio \textbf{non vale per tutte le classi di funzioni}: caratterizzare quelle che traggono un vantaggio
-(esponenziale) dalla profondità è un problema di ricerca aperto. Per le reti neurali i risultati sono di due tipi,
-entrambi \textbf{sull'efficienza} e non sull'espressività (per l'approssimazione universale basta uno strato):
+Questo vantaggio \textbf{non vale per tutte le classi di funzioni}. Caratterizzare quelle che traggono un vantaggio
+(esponenziale) dalla profondità è un problema di ricerca aperto. Per le reti neurali i risultati sono di due tipi.
+Entrambi riguardano l'\textbf{efficienza}, non l'espressività: per l'approssimazione universale basta uno strato.
 \begin{enumerate}
-  \item \textbf{reti shallow}: esistono casi in cui un solo strato nascosto richiede un numero \textbf{esponenziale} di
-        unità (rispetto alla dimensione $n$ dell'input) o di pesi non nulli. Nel caso binario le funzioni su
-        $\{0,1\}^n$ sono $2^{2^n}$, e nel caso peggiore può servire un'unità per ogni configurazione di input da
-        distinguere, come nella parità. Non è solo un problema di dimensione: significa anche che diventa
-        \textbf{difficile apprendere con pochi esempi}, ed è questo il punto più rilevante per il ML;
-  \item \textbf{no-flattening delle reti profonde}: esistono famiglie di funzioni approssimabili in modo efficiente con
-        profondità maggiore di $d$ che richiedono un modello molto più grande (fino a un fattore esponenziale) se la
-        profondità è al più $d$.
+  \item \textbf{Reti shallow}: esistono casi in cui un solo strato nascosto richiede un numero
+        \textbf{esponenziale} di unità (rispetto alla dimensione $n$ dell'input) o di pesi non nulli. Nel caso
+        binario le funzioni su $\{0,1\}^n$ sono $2^{2^n}$. Nel caso peggiore può servire un'unità per ogni
+        configurazione di input da distinguere, come nella parità. Non è solo un problema di dimensione: significa
+        anche che diventa \textbf{difficile apprendere con pochi esempi}. È questo il punto più rilevante per il
+        ML.
+  \item \textbf{No-flattening delle reti profonde}: esistono famiglie di funzioni approssimabili in modo efficiente
+        con profondità maggiore di $k$. Le stesse funzioni richiedono un modello molto più grande (fino a un fattore
+        esponenziale) se la profondità è al più $k$.
 \end{enumerate}
 Non c'è però garanzia che un dato task abbia questa proprietà.
 
 \subsection{Composizionalità e bias induttivo}
 \label{sec:bias-deep}
 
-Le reti profonde sfruttano la \textbf{composizionalità delle rappresentazioni interne}: i concetti semplici di uno
-strato sono usati come \textbf{primitive} dallo strato successivo per rappresentare concetti più complessi, evitando la
-rappresentazione (e l'apprendimento) esplicita e combinatoria di tutte le combinazioni. Si imparano le singole parole
-o i sotto-pattern, non direttamente tutte le loro combinazioni.
+Le reti profonde sfruttano la \textbf{composizionalità delle rappresentazioni interne}. I concetti semplici di uno
+strato sono usati come \textbf{primitive} dallo strato successivo, per rappresentare concetti più complessi. Si
+evita così la rappresentazione (e l'apprendimento) esplicita e combinatoria di tutte le combinazioni. Si imparano
+le singole parole o i sotto-pattern, non direttamente tutte le loro combinazioni.
 
 \begin{idea}[Profondo non significa grande]
-Le reti profonde non vanno viste come modelli \emph{enormi}: sono modelli \textbf{compatti} rispetto a modelli
+Le reti profonde non vanno viste come modelli \emph{enormi}. Sono modelli \textbf{compatti} rispetto a modelli
 superficiali potenzialmente molto più grandi (anche esponenzialmente) per lo stesso task. Meno unità e meno pesi
 aiutano anche l'apprendimento: permettono di generalizzare bene con \textbf{meno esempi}. Una piccola rete profonda
 può sostituire un'enorme rete superficiale.
 \end{idea}
 
 Scegliere un modello profondo codifica una convinzione molto generale: che la funzione da apprendere sia una
-\textbf{composizione di funzioni più semplici} (o di fattori di variazione annidati). Se il task corrisponde a questo
-bias, la generalizzazione migliora proprio grazie ai molti strati: a parità di numero di parametri, reti più profonde
-generalizzano meglio, mentre aumentare i parametri senza aumentare la profondità non aiuta. Task tipicamente
-gerarchici sono le \textbf{immagini} (composizione di parti) e il \textbf{linguaggio}, ma non tutti i dati e i task. È
-comunque un bias molto più \textbf{generale} di vincoli ad hoc (le $\phi$ scelte a mano di una LBE, le feature
-ingegnerizzate); nulla però funziona senza assunzioni.
+\textbf{composizione di funzioni più semplici} (o di fattori di variazione annidati). Se il task corrisponde a
+questo bias, la generalizzazione migliora proprio grazie ai molti strati. A parità di numero di parametri, reti più
+profonde generalizzano meglio; aumentare i parametri senza aumentare la profondità invece non aiuta. Task
+tipicamente gerarchici sono le \textbf{immagini} (composizione di parti) e il \textbf{linguaggio}, ma non tutti i
+dati e i task. È comunque un bias molto più \textbf{generale} di vincoli ad hoc, come le $\phi$ scelte a mano di
+una LBE o le feature ingegnerizzate. Nulla però funziona senza assunzioni.
 
 \subsection{Maledizione della dimensionalità e bias}
 
 \begin{itemize}
-  \item Molti learner si basano su \textbf{approssimazioni locali} (un prior di smoothness locale): K-NN, kernel
-        locali, alberi di decisione. Per distinguere $O(k)$ regioni richiedono $O(k)$ esempi, e in alta dimensione
-        servono moltissimi esempi per coprire lo spazio (\rif{sec:curse}).
-  \item Per distinguere un numero \textbf{esponenziale} di regioni (in $k$) con $O(k)$ esempi, cioè per generalizzare
-        \textbf{non localmente}, servono ipotesi aggiuntive sulla distribuzione dei dati.
+  \item Molti learner si basano su \textbf{approssimazioni locali}, cioè su un prior di smoothness locale: K-NN,
+        kernel locali, alberi di decisione. Per distinguere $O(k)$ regioni richiedono $O(k)$ esempi. In alta
+        dimensione servono moltissimi esempi per coprire lo spazio (\rif{sec:curse}).
+  \item Per distinguere un numero \textbf{esponenziale} di regioni (in $k$) con $O(k)$ esempi, cioè per
+        generalizzare \textbf{non localmente}, servono ipotesi aggiuntive sulla distribuzione dei dati. Un esempio
+        concreto è nel \rif{sec:distribuite}.
   \item Il DL sceglie un bias \textbf{generale}, legato alla composizione di funzioni: i dati sono generati dalla
         composizione di fattori, su più livelli. Quando l'ipotesi è vera si ottiene un guadagno potenzialmente
         esponenziale tra numero di esempi e numero di regioni distinguibili.
-  \item La distribuzione delle immagini e dei testi reali sembra concentrata su una varietà (\ingl{manifold}) che
-        occupa una piccola frazione del volume di tutte le immagini o i testi possibili.
+  \item La distribuzione delle immagini e dei testi reali sembra concentrata su una varietà (\ingl{manifold}), cioè
+        su una superficie di dimensione più bassa. Occupa una piccola frazione del volume di tutte le immagini o i
+        testi possibili.
 \end{itemize}
 
-Quanti strati e quante unità? Non c'è una risposta generale: è un problema di model selection. Le reti profonde usano
-spesso meno unità per strato, quindi meno parametri e meno dati per generalizzare, ma molti strati possono essere
-\textbf{più difficili da ottimizzare} (\rif{sec:tecniche-deep}); con modelli così grandi l'esperienza conta molto nel
-fissare gli aspetti architetturali.
+Quanti strati e quante unità? Non c'è una risposta generale: è un problema di model selection. Le reti profonde
+usano spesso meno unità per strato, quindi meno parametri e meno dati per generalizzare. Ma molti strati possono
+essere \textbf{più difficili da ottimizzare} (\rif{sec:tecniche-deep}). Con modelli così grandi l'esperienza conta
+molto nel fissare gli aspetti architetturali.
 
 \section{Representation learning}
 \label{sec:representation}
@@ -192,28 +197,29 @@ Il \termine{representation learning} è l'insieme dei metodi che permettono a un
 scoprire automaticamente le rappresentazioni necessarie per il rilevamento o la classificazione.
 \end{definizione}
 
-I metodi di DL sono metodi di representation learning con più livelli di rappresentazione, ma il concetto vale per
-molti modelli (le reti neurali in generale) e riguarda soprattutto i \textbf{dati grezzi} (immagini, testo).
+I metodi di DL sono metodi di representation learning con più livelli di rappresentazione. Il concetto però vale per
+molti modelli (le reti neurali in generale) e riguarda soprattutto i \textbf{dati grezzi}, come immagini e testo.
 \begin{itemize}
   \item Molti compiti sono facili o difficilissimi \textbf{a seconda di come l'informazione è rappresentata}.
   \item Nel ML \textbf{una buona rappresentazione è quella che rende più facile il compito di apprendimento
         successivo}.
-  \item Progettare le feature a mano è difficile ed equivale a scegliere a mano le $\phi(\x)$ di una LBE;
-        l'apprendimento supervisionato di un MLP produce invece una rappresentazione $\phi(\x,\w)$ in ogni strato
+  \item Progettare le feature a mano è difficile, ed equivale a scegliere a mano le $\phi(\x)$ di una LBE.
+        L'apprendimento supervisionato di un MLP produce invece una rappresentazione $\phi(\x,\w)$ in ogni strato
         nascosto, appresa trovando il miglior $\w$.
 \end{itemize}
 Oltre all'addestramento completo di MLP e CNN, le rappresentazioni nascoste si possono \textbf{ottenere} con
-l'apprendimento non supervisionato (pre-training) e \textbf{sfruttare} per altri task (transfer learning).
+l'apprendimento non supervisionato (pre-training). Si possono anche \textbf{sfruttare} per altri task (transfer
+learning).
 
 \subsection{Pre-training e autoencoder}
 
 Il \termine{pre-training} strato per strato non supervisionato fu il primo approccio che rese possibile addestrare
-reti profonde (a parte CNN e RNN): si cattura la distribuzione dell'input strato per strato e si inizializza così la
-rete, invece di addestrarla subito \ingl{end-to-end} con la discesa del gradiente.
+reti profonde (a parte CNN e RNN). Si cattura la distribuzione dell'input strato per strato, e così si inizializza
+la rete. Non la si addestra subito \ingl{end-to-end} con la discesa del gradiente.
 
 \begin{definizione}[Autoencoder]
 Un \termine{autoencoder} è una rete addestrata a \textbf{copiare il proprio input in uscita}. Ha uno strato nascosto
-$\h$ che descrive un \textbf{codice} dell'input, ed è composto da un \textbf{encoder} $\h = f(\x)$ e da un
+$\h$ che descrive un \textbf{codice} dell'input. È composto da un \textbf{encoder} $\h = f(\x)$ e da un
 \textbf{decoder} che produce la ricostruzione $\vv r = g(\h)$. È apprendimento non supervisionato.
 \end{definizione}
 
@@ -233,12 +239,13 @@ feature più salienti per poter ricostruire l'input.}
 \end{figure}
 
 \begin{itemize}
-  \item \textbf{Undercomplete}: strato nascosto \textbf{più piccolo} dell'input; il vincolo architetturale forza la rete
-        a catturare le feature più salienti (con decoder lineare e loss quadratica si ottiene la PCA).
+  \item \textbf{Undercomplete}: strato nascosto \textbf{più piccolo} dell'input. Il vincolo architetturale forza la
+        rete a catturare le feature più salienti. Con decoder lineare e loss quadratica si ottiene la PCA
+        (\ingl{Principal Component Analysis}), la classica proiezione lineare sulle direzioni di massima varianza.
   \item \textbf{Overcomplete}: strato nascosto \textbf{più grande} dell'input, con una regolarizzazione che impone
         sparsità, robustezza al rumore o altre proprietà, oltre alla banale capacità di copiare.
-  \item \textbf{Denoising autoencoder}: si addestra a ricostruire l'input pulito da una versione corrotta (una buona
-        rappresentazione si ottiene in modo robusto da un input corrotto ed è utile per recuperare l'input pulito).
+  \item \textbf{Denoising autoencoder}: si addestra a ricostruire l'input pulito da una versione corrotta. Una buona
+        rappresentazione si ottiene in modo robusto da un input corrotto, ed è utile per recuperare l'input pulito.
 \end{itemize}
 
 \begin{algoritmo}[Pre-training strato per strato]
@@ -252,33 +259,39 @@ feature più salienti per poter ricostruire l'input.}
 \end{enumerate}
 \end{algoritmo}
 
-Il pre-training funziona sia come \textbf{inizializzazione} (si spera di portare i parametri in una regione da cui la
-discesa locale raggiunge un buon ottimo) sia come \textbf{regolarizzazione}, non nel senso di un modello più semplice
-ma di feature che catturano le regolarità della distribuzione degli input; riduce anche la \textbf{varianza} della
-stima. Oggi è largamente abbandonato per l'addestramento da zero, perché le tecniche moderne bastano per un buon
-addestramento end-to-end, ma resta utile dove permette di sfruttare grandi quantità di dati non etichettati (ad esempio
-l'NLP). Architetture collegate: gli \textbf{autoencoder variazionali} (lo spazio latente è una distribuzione), le
-architetture \textbf{encoder-decoder} per la traduzione, i \textbf{transformer} (\rif{sec:transformer}), usati con il
-solo encoder (BERT) o il solo decoder per la generazione autoregressiva (GPT).
+Il pre-training funziona in due modi. Funziona come \textbf{inizializzazione}: si spera di portare i parametri in
+una regione da cui la discesa locale raggiunge un buon ottimo. Funziona anche come \textbf{regolarizzazione}, non
+nel senso di un modello più semplice, ma di feature che catturano le regolarità della distribuzione degli input.
+Riduce inoltre la \textbf{varianza} della stima. Oggi è largamente abbandonato per l'addestramento da zero, perché
+le tecniche moderne bastano per un buon addestramento end-to-end. Resta utile dove permette di sfruttare grandi
+quantità di dati non etichettati, ad esempio nell'NLP. Ci sono architetture collegate. Negli
+\textbf{autoencoder variazionali} lo spazio latente è una distribuzione. Le architetture
+\textbf{encoder-decoder} si usano per la traduzione. I \textbf{transformer} (\rif{sec:transformer}) si usano con
+il solo encoder (BERT) o con il solo decoder per la generazione autoregressiva (GPT).
 
 \subsection{Transfer learning}
 \label{sec:transfer}
 
-Si usa la rappresentazione appresa da un modello per \textbf{migliorarne un altro}, assumendo che esistano feature utili
-in contesti o task diversi. Forme diverse: dall'autoencoder al classificatore; \textbf{multi-task learning} (stessi
-input, target diversi: una regolarizzazione implicita); \textbf{domain adaptation} (domini di input diversi con feature
-condivise); riuso di \textbf{modelli pre-addestrati} su dataset più grandi.
+Si usa la rappresentazione appresa da un modello per \textbf{migliorarne un altro}. Si assume che esistano feature
+utili in contesti o task diversi. Le forme sono diverse:
+\begin{itemize}
+  \item dall'autoencoder al classificatore;
+  \item il \textbf{multi-task learning}: stessi input, target diversi (una regolarizzazione implicita);
+  \item la \textbf{domain adaptation}: domini di input diversi con feature condivise;
+  \item il riuso di \textbf{modelli pre-addestrati} su dataset più grandi.
+\end{itemize}
 
 \begin{esempio}[Riusare una CNN pre-addestrata]
-Una CNN addestrata su circa 1,2 milioni di immagini in 1000 categorie ha appreso rappresentazioni ricche, con primitive
-di basso livello condivise tra immagini diverse. Per un nuovo task si \textbf{sostituiscono gli ultimi strati} e si
-addestrano solo quelli con poche immagini nuove, oppure si fa il \textbf{fine-tuning} di tutta la rete.
+Una CNN addestrata su circa 1,2 milioni di immagini in 1000 categorie ha appreso rappresentazioni ricche, con
+primitive di basso livello condivise tra immagini diverse. Per un nuovo task si \textbf{sostituiscono gli ultimi
+strati} e si addestrano solo quelli, con poche immagini nuove. Oppure si fa il \textbf{fine-tuning} di tutta la rete.
 \end{esempio}
 
 \section{Rappresentazioni distribuite}
+\label{sec:distribuite}
 
 \begin{definizione}[Rappresentazione distribuita]
-In una \termine{rappresentazione distribuita} gli elementi (le feature) non sono mutuamente esclusivi, e le loro molte
+In una \termine{rappresentazione distribuita} gli elementi (le feature) non sono mutuamente esclusivi. Le loro molte
 configurazioni corrispondono alle variazioni osservate nei dati.
 \end{definizione}
 
@@ -296,55 +309,57 @@ distanza sempre $\sqrt2$ tra concetti diversi & ogni concetto è l'insieme delle
 \end{tabularx}
 \end{table}
 
-Qui non si classifica, si \textbf{rappresenta}. L'apprendimento agisce sulla rappresentazione \textbf{interna}: una
-rappresentazione distribuita in \textbf{input} si usa solo se la conoscenza di dominio permette di fissarla (fissarla
-arbitrariamente può danneggiare il task); di solito si fornisce un input one-hot e si lascia che il modello sviluppi
-internamente la rappresentazione distribuita.
+Qui non si classifica, si \textbf{rappresenta}. L'apprendimento agisce sulla rappresentazione \textbf{interna}. Una
+rappresentazione distribuita in \textbf{input} si usa solo se la conoscenza di dominio permette di fissarla:
+fissarla arbitrariamente può danneggiare il task. Di solito si fornisce un input one-hot, e si lascia che il
+modello sviluppi internamente la rappresentazione distribuita.
 
 \subsection{Contare la differenza}
 
-Quattro concetti: auto blu, bici blu, auto rossa, bici rossa. Con una rappresentazione one-hot servono 4 unità; con una
-distribuita ne bastano \textbf{2} ($2^2$ concetti), una per il colore e una per il tipo, e l'unità del ``rosso'' impara
-il rosso da immagini sia di auto sia di bici. In generale, con $n$ feature a $k$ valori una rappresentazione
-distribuita descrive $k^n$ concetti, contro gli $n$ di una one-hot: si può assegnare un codice a un numero
-\textbf{esponenziale} di regioni. Sono invece non distribuiti il K-NN (uno o pochi prototipi per input), i kernel RBF
-stretti (che si riducono al K-NN), le miscele di gaussiane, gli alberi di decisione (si attiva una sola foglia).
+Si considerino quattro concetti: auto blu, bici blu, auto rossa, bici rossa. Con una rappresentazione one-hot
+servono 4 unità. Con una distribuita ne bastano \textbf{2} ($2^2$ concetti), una per il colore e una per il tipo.
+L'unità del ``rosso'' impara il rosso da immagini sia di auto sia di bici. In generale, con $n$ feature a $k$
+valori una rappresentazione distribuita descrive $k^n$ concetti, contro gli $n$ di una one-hot. Si può quindi
+assegnare un codice a un numero \textbf{esponenziale} di regioni. Alcuni modelli invece non sono distribuiti. Il
+K-NN usa uno o pochi prototipi per input. I kernel RBF stretti si riducono al K-NN. Lo stesso vale per le miscele
+di gaussiane e per gli alberi di decisione, dove si attiva una sola foglia.
 
 \begin{idea}[Attributi condivisi]
-Separando (\ingl{disentangling}) i concetti di colore e di tipo, si impara la distinzione auto/bici o il colore
-\textbf{senza vedere esempi di tutte le combinazioni}: avendo visto gli altri tre casi, si tratta facilmente la bici
-blu, che per una rappresentazione one-hot sarebbe del tutto nuova. Con le parole, una rappresentazione in cui ``cane''
-e ``gatto'' condividono feature permette di trattarle in modo simile (le frasi con ``gatto'' informano quelle con
-``cane'') e di imparare automaticamente che sono simili perché compaiono in contesti simili: è il \termine{word
-embedding}. Nello spazio one-hot ogni parola è a distanza $\sqrt2$ da tutte le altre; nello spazio appreso parole di
-significato simile (nomi di paesi, anni) diventano vicine.
+Si separano (\ingl{disentangling}) i concetti di colore e di tipo. Così si impara la distinzione auto/bici o il
+colore \textbf{senza vedere esempi di tutte le combinazioni}. Avendo visto gli altri tre casi, si tratta facilmente
+la bici blu, che per una rappresentazione one-hot sarebbe del tutto nuova. Lo stesso vale per le parole. In una
+rappresentazione in cui ``cane'' e ``gatto'' condividono feature, le due parole si trattano in modo simile: le frasi
+con ``gatto'' informano quelle con ``cane''. Il modello impara automaticamente che sono simili, perché compaiono in
+contesti simili. È il \termine{word embedding}. Nello spazio one-hot ogni parola è a distanza $\sqrt2$ da tutte le
+altre. Nello spazio appreso, parole di significato simile (nomi di paesi, anni) diventano vicine.
 \end{idea}
 
 Il rovescio della medaglia è l'\textbf{interpretabilità}: una rappresentazione distribuita è meno facile da
-interpretare di una localista. Il DL sfrutta rappresentazioni distribuite \textbf{attraverso molti strati}: la
-composizionalità porta un ulteriore guadagno di efficienza statistica, per \textbf{due vantaggi potenzialmente
-esponenziali} rispetto ai modelli non distribuiti e superficiali.
+interpretare di una localista. Il DL sfrutta rappresentazioni distribuite \textbf{attraverso molti strati}. La
+composizionalità porta un ulteriore guadagno di efficienza statistica. Ci sono quindi \textbf{due vantaggi
+potenzialmente esponenziali} rispetto ai modelli non distribuiti e superficiali.
 
 \section{Altri risultati recenti}
 \label{sec:double-descent}
 
 \begin{itemize}
   \item \textbf{Smoothness dalla struttura}: a parità di parametri, le reti più profonde impongono più smoothness di
-        quelle superficiali (ogni strato lavora sulla superficie già liscia prodotta dal precedente): vincoli
+        quelle superficiali. Ogni strato lavora sulla superficie già liscia prodotta dal precedente. Sono vincoli
         \textbf{impliciti} anziché espliciti.
-  \item \textbf{Il puzzle del non-overfitting}: reti sovra-parametrizzate capaci di azzerare l'errore di training anche
-        su etichette \textbf{casuali} generalizzano comunque bene sui dati reali. Una spiegazione è che la discesa del
-        gradiente imponga una \textbf{regolarizzazione implicita}, convergendo verso soluzioni a \textbf{margine massimo}.
-  \item \termine{Double descent}: al crescere della dimensione del modello (o dei dati, o del tempo di addestramento)
-        l'errore di test prima scende, poi sale (la classica U), raggiunge un picco attorno alla \textbf{soglia di
-        interpolazione} (dove l'errore di training si azzera) e poi \textbf{scende di nuovo} (\figrif{fig:double-descent}).
-        L'effetto è spesso evitato con una regolarizzazione accurata e non è ancora pienamente compreso; non riguarda
-        necessariamente i modelli piccoli.
+  \item \textbf{Il puzzle del non-overfitting}: reti sovra-parametrizzate possono azzerare l'errore di training anche
+        su etichette \textbf{casuali}. Eppure sui dati reali generalizzano bene. Una spiegazione è che la discesa
+        del gradiente imponga una \textbf{regolarizzazione implicita}, convergendo verso soluzioni a
+        \textbf{margine massimo} (come nelle SVM, \rif{sec:svm-srm}).
+  \item \termine{Double descent}: si fa crescere la dimensione del modello (o dei dati, o del tempo di
+        addestramento). L'errore di test prima scende, poi sale (la classica U). Raggiunge un picco attorno alla
+        \textbf{soglia di interpolazione}, dove l'errore di training si azzera. Poi \textbf{scende di nuovo}
+        (\figrif{fig:double-descent}). L'effetto è spesso evitato con una regolarizzazione accurata e non è ancora
+        pienamente compreso. Non riguarda necessariamente i modelli piccoli.
   \item \textbf{Ridondanza}: nei modelli profondi una gran parte dei pesi si può predire dagli altri o eliminare
         (pruning, quantizzazione) senza perdere accuratezza.
-  \item \textbf{Lottery ticket hypothesis}: le buone prestazioni dipenderebbero da un'inizializzazione fortunata di una
-        o più sotto-reti, e le reti grandi ne contengono esponenzialmente di più; riaddestrando la rete potata con la
-        stessa inizializzazione si ottengono prestazioni simili. Il ruolo della casualità è il tema del
+  \item \textbf{Lottery ticket hypothesis}: le buone prestazioni dipenderebbero da un'inizializzazione fortunata di
+        una o più sotto-reti, e le reti grandi ne contengono esponenzialmente di più. Riaddestrando la rete potata
+        con la stessa inizializzazione si ottengono prestazioni simili. Il ruolo della casualità è il tema del
         capitolo~\ref{cap:random}.
 \end{itemize}
 
@@ -369,42 +384,48 @@ l'errore di test torna a scendere.}
 \section{Tecniche}
 \label{sec:tecniche-deep}
 
-Molti strati possono essere difficili da ottimizzare: l'enfasi è sul miglioramento della discesa del gradiente,
-sulla regolarizzazione (le reti sono grandi) e sullo sfruttamento dei dati.
+Molti strati possono essere difficili da ottimizzare. L'enfasi è quindi su tre fronti: il miglioramento della
+discesa del gradiente, la regolarizzazione (le reti sono grandi) e lo sfruttamento dei dati.
 
 \begin{idea}[Tecniche chiave]
 \begin{itemize}
   \item \textbf{SGD con momentum} (mini-batch, decadimento di $\eta$) o \textbf{Adam} (\rif{sec:learning-rate}).
   \item Attivazioni \textbf{ReLU} nelle unità nascoste.
-  \item Loss di massima verosimiglianza (\textbf{cross-entropy}) con \textbf{softmax} in uscita (anche per evitare
-        saturazione e gradienti piccoli).
+  \item Loss di massima verosimiglianza (\textbf{cross-entropy}) con \textbf{softmax} in uscita, anche per evitare
+        saturazione e gradienti piccoli.
   \item Regolarizzazione: early stopping, weight decay, \textbf{dropout}, \textbf{batch normalization}.
 \end{itemize}
 \end{idea}
 
 \subsection{Vanishing ed exploding gradient}
 
-Retropropagando il gradiente attraverso molti strati, se i pesi sono piccoli il gradiente si \textbf{riduce
-esponenzialmente} (\termine{vanishing gradient}), anche per via delle derivate delle sigmoidi; se sono grandi
+Si retropropaghi il gradiente attraverso molti strati. Se i pesi sono piccoli, il gradiente si \textbf{riduce
+esponenzialmente} (\termine{vanishing gradient}), anche per via delle derivate delle sigmoidi. Se sono grandi,
 \textbf{cresce esponenzialmente} (\termine{exploding gradient}). Le attivazioni come la tanh hanno derivate in
-$(0,1]$, e la regola della catena moltiplica $d$ di questi fattori per raggiungere gli strati vicini all'input: il
-delta decresce esponenzialmente con $d$ e quegli strati si addestrano lentissimamente.
+$(0,1]$. Per raggiungere gli strati vicini all'input, la regola della catena moltiplica tanti di questi fattori
+quanti sono gli strati attraversati. Il delta decresce quindi esponenzialmente con la profondità, e quegli strati si
+addestrano lentissimamente.
 
 \begin{proprieta}{Schizzo formale}
-Se $\h_l = F_l(\h_{l-1})$ e $F = F_M\circ\dots\circ F_1$, allora
+Sia una rete di $M$ strati, con $\h_i = F_i(\h_{i-1})$, e $F = F_M\circ\dots\circ F_1$. Per i pesi $w_l$ dello strato
+$l$ la regola della catena dà
 \[
-\frac{\partial F}{\partial w_l} = \frac{\partial F_M}{\partial\h_{M-1}}\cdots\frac{\partial F_l}{\partial w_l},
-\qquad \left\lvert\frac{\partial F}{\partial w_l}\right\rvert\approx\rho^{M-l+1}\ \text{ se }\ \left\lVert\frac{\partial F_i}{\partial\h_i}\right\rVert\approx\rho .
+\frac{\partial F}{\partial w_l} = \frac{\partial F_M}{\partial\h_{M-1}}\cdots\frac{\partial F_{l+1}}{\partial\h_l}\cdot\frac{\partial F_l}{\partial w_l}.
 \]
-Con $\rho<1$ il gradiente svanisce, con $\rho>1$ esplode.
+Il prodotto contiene $M-l$ fattori $\partial F_i/\partial\h_{i-1}$, uno per ogni strato sopra $l$. Se ciascuno ha
+norma circa $\rho$, allora $\lvert\partial F/\partial w_l\rvert$ è proporzionale a $\rho^{M-l}$. Con $\rho<1$ il
+gradiente svanisce, con $\rho>1$ esplode.
 \end{proprieta}
 
-Gli approcci vanno da R-prop alle connessioni \ingl{shortcut}, alle reti randomizzate, alle ReLU.
+Qui $\partial F_i/\partial\h_{i-1}$ è lo \termine{Jacobiano} dello strato $i$: la matrice delle derivate parziali di
+ogni uscita dello strato rispetto a ogni suo input. La sua norma misura di quanto lo strato può ``allungare'' una
+piccola variazione dell'input. Gli approcci al problema vanno da R-prop alle connessioni \ingl{shortcut}, alle reti
+randomizzate, alle ReLU.
 
 \subsubsection{Gradient clipping}
-La moltiplicazione ripetuta può creare \textbf{scogliere} (\ingl{cliff}) nella funzione di costo: derivate altissime
-che ``catapultano'' i pesi molto lontano. Il \termine{gradient clipping} limita la norma del gradiente mantenendone la
-direzione:
+La moltiplicazione ripetuta può creare \textbf{scogliere} (\ingl{cliff}) nella funzione di costo: derivate
+altissime che ``catapultano'' i pesi molto lontano. Il \termine{gradient clipping} limita la norma del gradiente
+mantenendone la direzione:
 \[
 \text{se }\norm{\vv g}>v\ \text{ allora }\ \vv g\leftarrow\frac{v\,\vv g}{\norm{\vv g}},
 \]
@@ -422,15 +443,17 @@ f(x) = \max(0,x) = \begin{cases}0 & x<0\\ x & x\ge0.\end{cases}
 \begin{itemize}
   \item \textbf{Propagazione del gradiente} migliore attraverso molti strati: niente saturazione, perché $f'(x)=1$ per
         ogni net positivo.
-  \item \textbf{Attivazione sparsa}: in una rete inizializzata a caso circa metà delle unità nascoste è attiva.
+  \item \textbf{Attivazione sparsa}: in una rete inizializzata a caso circa metà delle unità nascoste è attiva;
+        le altre danno esattamente 0.
   \item \textbf{Calcolo efficiente}: solo confronti, somme e prodotti.
 \end{itemize}
-La ReLU \textbf{non è differenziabile in 0}, ma nelle librerie si assume derivata 0 o 1: è un'approssimazione sicura,
-perché è improbabile valutare esattamente $f(0)$. Conviene iniziare con net positivi (ad esempio bias piccoli e
-positivi, $0{,}1$), così che le unità siano inizialmente attive. Varianti come \textbf{ELU}
-($\alpha(e^x-1)$ per $x\le0$, $x$ per $x>0$) e \textbf{Leaky ReLU} ($0{,}01x$ per $x<0$, $x$ per $x\ge0$) apprendono
-anche sulla parte sinistra (le unità non si ``spengono'') e hanno attivazione media più vicina a zero
-(\figrif{fig:relu}).
+La ReLU \textbf{non è differenziabile in 0}, ma nelle librerie si assume derivata 0 o 1. È un'approssimazione sicura,
+perché è improbabile valutare esattamente $f(0)$. Conviene iniziare con net positivi, ad esempio con bias piccoli e
+positivi ($0{,}1$), così che le unità siano inizialmente attive. Alcune varianti apprendono anche sulla parte
+sinistra, quindi le unità non si ``spengono''. Sono la \textbf{ELU} ($\alpha(e^x-1)$ per $x\le0$, $x$ per $x>0$) e
+la \textbf{Leaky ReLU} ($0{,}01x$ per $x<0$, $x$ per $x\ge0$). Hanno anche attivazione media più vicina a zero
+(\figrif{fig:relu}). La \textbf{softplus}, $\ln(1+e^x)$, è un'approssimazione liscia della ReLU
+(\rif{sec:sigmoidi}).
 
 \begin{figure}[ht]
 \centering
@@ -451,18 +474,19 @@ visibile).}
 \subsection{Batch normalization}
 
 La \termine{batch normalization} normalizza, in ogni strato, le attivazioni del mini-batch a media zero e varianza
-unitaria, calcolandone le statistiche sul mini-batch; la trasformazione è inclusa nella backpropagation. Come
-normalizzare l'input è pratica standard, così si mantengono normalizzati i dati che fluiscono negli strati intermedi.
-Effetti: \textbf{regolarizzazione} (per il rumore introdotto dal mini-batch) e \textbf{apprendimento più rapido}.
+unitaria. Le statistiche sono calcolate sul mini-batch, e la trasformazione è inclusa nella backpropagation.
+Normalizzare l'input è pratica standard; così si mantengono normalizzati anche i dati che fluiscono negli strati
+intermedi. Gli effetti sono una \textbf{regolarizzazione} (per il rumore introdotto dal mini-batch) e un
+\textbf{apprendimento più rapido}.
 
 \subsection{Dropout}
 \label{sec:dropout}
 
 Il \termine{dropout} seleziona casualmente una sotto-rete a ogni passo di addestramento. Si spiega con due concetti
-noti: \textbf{ensemble} (un bagging implicito ed economico di sotto-reti) e \textbf{regolarizzazione}. Il bagging
-(\rif{sec:ensemble}) media modelli ad alta varianza e basso bias; il dropout sfrutta questo principio con un numero
-\textbf{esponenziale} di sotto-reti (\figrif{fig:dropout}), avendo a test time \textbf{una sola rete}, e massimizza la
-diversità dell'ensemble evitando co-adattamenti tra le unità.
+noti. Il primo è l'\textbf{ensemble}: il dropout è un bagging implicito ed economico di sotto-reti. Il secondo è la
+\textbf{regolarizzazione}. Il bagging (\rif{sec:ensemble}) media modelli ad alta varianza e basso bias. Il dropout
+sfrutta questo principio con un numero \textbf{esponenziale} di sotto-reti (\figrif{fig:dropout}), avendo a test
+time \textbf{una sola rete}. Massimizza inoltre la diversità dell'ensemble, evitando co-adattamenti tra le unità.
 
 \begin{figure}[ht]
 \centering
@@ -496,31 +520,32 @@ resti alcun percorso.}
 \begin{algoritmo}[Dropout]
 \begin{itemize}
   \item Ogni volta che si carica un esempio in un mini-batch si campiona una \textbf{maschera binaria} per tutte le
-        unità di input e nascoste, indipendentemente per ogni unità; la probabilità di includere un'unità è un
-        iperparametro (tipicamente $0{,}8$ per l'input e $0{,}5$ per le unità nascoste).
+        unità di input e nascoste, indipendentemente per ogni unità. La probabilità di includere un'unità è un
+        iperparametro: tipicamente $0{,}8$ per l'input e $0{,}5$ per le unità nascoste.
   \item Ogni unità è moltiplicata per la sua maschera: zero equivale a rimuoverla, e si ottiene una sotto-rete.
   \item Forward, backpropagation e aggiornamento procedono come al solito sulla sotto-rete.
   \item Le unità rimosse vengono poi reinserite con i loro pesi.
 \end{itemize}
 \end{algoritmo}
 
-Solo una piccola frazione delle sotto-reti viene addestrata, ciascuna per un solo passo, ma la \textbf{condivisione dei
-parametri} porta anche le altre a buoni parametri. A test time si approssima la predizione dell'ensemble con la
-\ingl{weight scaling inference rule}: si moltiplicano i pesi per la probabilità di inclusione, così che l'uscita attesa
-di ogni unità sia la stessa dell'addestramento. L'effetto regolarizzante: riduce le interazioni tra le unità e le
-diversifica; riduce la varianza come il bagging; inserisce \textbf{rumore strutturato} (ad esempio riconoscere un volto
-senza l'unità che rileva il naso); soprattutto regolarizza ogni unità a essere una feature buona \textbf{in molti
-contesti}. Per la regressione lineare equivale a un weight decay $L^2$ con un $\lambda$ diverso per ogni input.
+Solo una piccola frazione delle sotto-reti viene addestrata, ciascuna per un solo passo. La \textbf{condivisione
+dei parametri} porta però anche le altre a buoni parametri. A test time si approssima la predizione dell'ensemble
+con la \ingl{weight scaling inference rule}. Si moltiplicano i pesi per la probabilità di inclusione, così che
+l'uscita attesa di ogni unità sia la stessa dell'addestramento. L'effetto regolarizzante ha più aspetti. Riduce le
+interazioni tra le unità e le diversifica. Riduce la varianza come il bagging. Inserisce \textbf{rumore
+strutturato}, ad esempio dover riconoscere un volto senza l'unità che rileva il naso. Soprattutto, regolarizza
+ogni unità a essere una feature buona \textbf{in molti contesti}. Per la regressione lineare equivale a un weight
+decay $L^2$ con un $\lambda$ diverso per ogni input.
 
-Altre tecniche: la regolarizzazione $L^1$ (\rif{sec:l1}), che elimina feature; le \termine{Generative Adversarial
-Network} (GAN), due reti in competizione, una che \textbf{genera} candidati e una che li \textbf{valuta} distinguendoli
-dai dati veri.
+Altre tecniche sono la regolarizzazione $L^1$ (\rif{sec:l1}), che elimina feature. Tra gli sviluppi del DL ci sono
+anche le \termine{Generative Adversarial Network} (GAN). Sono due reti in competizione: una \textbf{genera}
+candidati e l'altra li \textbf{valuta}, distinguendoli dai dati veri.
 
 \begin{puntichiave}
 \begin{itemize}
   \item DL: molti strati non lineari che apprendono una gerarchia di rappresentazioni distribuite.
   \item No-flattening: funzioni compatte con molti strati possono richiedere modelli esponenzialmente grandi con pochi
-        strati (parità: $2^{N-1}+1$ porte contro $3(N-1)$).
+        strati (parità: $2^{n-1}+1$ porte contro $3(n-1)$).
   \item Bias induttivo: la funzione è una composizione di funzioni più semplici.
   \item Representation learning: pre-training (autoencoder), transfer learning. Rappresentazioni distribuite: $k^n$
         configurazioni, attributi condivisi.

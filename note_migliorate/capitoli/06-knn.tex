@@ -2,10 +2,10 @@
 \label{cap:knn}
 
 \begin{inbreve}
-Il K-nearest neighbors (K-NN) è l'estremo opposto del modello lineare: non costruisce un'ipotesi globale ma
-risponde, per ogni nuovo punto, con una stima locale basata sugli esempi più vicini. Il capitolo ne descrive
-l'algoritmo, il compromesso tra underfitting e overfitting governato da $k$, il legame con il classificatore
-ottimo di Bayes, il bias induttivo e i limiti, in particolare la maledizione della dimensionalità.
+Il K-nearest neighbors (K-NN) è l'estremo opposto del modello lineare. Non costruisce un'ipotesi globale: per
+ogni nuovo punto risponde con una stima locale, basata sugli esempi più vicini. Il capitolo ne descrive
+l'algoritmo e il compromesso tra underfitting e overfitting governato da $k$. Mostra poi il legame con il
+classificatore ottimo di Bayes, il bias induttivo e i limiti, in particolare la maledizione della dimensionalità.
 \end{inbreve}
 
 \section{Apprendimento eager e lazy}
@@ -14,7 +14,7 @@ Rispetto al momento in cui avviene l'apprendimento si distinguono due approcci:
 \begin{itemize}
   \item \termine{eager} (``avido''): si analizzano i dati di training e si costruisce un'\textbf{ipotesi
         esplicita}, come nel modello lineare;
-  \item \termine{lazy} (``pigro''): si memorizzano i dati e si aspetta un punto di test; solo allora si costruisce
+  \item \termine{lazy} (``pigro''): si memorizzano i dati e si aspetta un punto di test. Solo allora si costruisce
         un'ipotesi ad hoc per classificare quel punto.
 \end{itemize}
 
@@ -23,13 +23,13 @@ Rispetto al momento in cui avviene l'apprendimento si distinguono due approcci:
 
 \begin{algoritmo}[1-nearest neighbor]
 \begin{enumerate}
-  \item Memorizzare i dati di training $\langle\x_p,y_p\rangle$, $p=1,\dots,l$.
+  \item Memorizzare i dati di training $\langle\x_p,d_p\rangle$, $p=1,\dots,l$.
   \item Dato un input $\x$, trovare l'esempio di training più vicino
         \[
         i(\x) = \argmin_p d(\x,\x_p),
         \]
         ad esempio con la distanza euclidea $d(\x,\x_p) = \sqrt{\sum_{t=1}^n(x_t-x_{p,t})^2} = \norm{\x-\x_p}$.
-  \item Restituire $y_{i(\x)}$.
+  \item Restituire $d_{i(\x)}$.
 \end{enumerate}
 \end{algoritmo}
 
@@ -37,9 +37,9 @@ Il 1-NN è \textbf{molto flessibile}: sul training set commette \textbf{zero err
 vicino più prossimo di se stesso. Il confine di decisione non è lineare ed è molto irregolare, forse inutilmente
 rumoroso.
 
-Il 1-NN usa implicitamente il \termine{diagramma di Voronoi}: ogni cella contiene i punti dello spazio più vicini
-a un certo esempio che a qualsiasi altro, e i lati delle celle sono i punti equidistanti da due esempi. Il 1-NN
-assegna a ogni cella l'etichetta del suo esempio, quindi il suo confine di decisione è formato dai lati che
+Il 1-NN usa implicitamente il \termine{diagramma di Voronoi}. Ogni cella contiene i punti dello spazio più vicini
+a un certo esempio che a qualsiasi altro; i lati delle celle sono i punti equidistanti da due esempi. Il 1-NN
+assegna a ogni cella l'etichetta del suo esempio. Il suo confine di decisione è quindi formato dai lati che
 separano celle di classi diverse (\figrif{fig:voronoi}).
 
 \begin{figure}[ht]
@@ -62,16 +62,16 @@ quelli tra celle di classi diverse, che formano il confine di decisione del 1-NN
 
 Un modo naturale di classificare un nuovo punto è guardare i suoi $k$ vicini e farne la media:
 \[
-\mathrm{avg}_k(\x) = \frac1k\sum_{\x_i\in N_k(\x)}y_i ,
+\mathrm{avg}_k(\x) = \frac1k\sum_{\x_i\in N_k(\x)}d_i ,
 \]
-dove $N_k(\x)$ è l'insieme dei $k$ esempi più vicini a $\x$ secondo la distanza $d$. Se nell'intorno di $\x$ una
-classe domina chiaramente, è probabile che anche $\x$ vi appartenga: la regola di classificazione è il
-\textbf{voto a maggioranza} tra i membri di $N_k(\x)$. Con target in $\{0,1\}$
+dove $N_k(\x)$ è l'insieme dei $k$ esempi più vicini a $\x$ secondo la distanza $d(\cdot,\cdot)$. Se nell'intorno
+di $\x$ una classe domina chiaramente, è probabile che anche $\x$ vi appartenga. La regola di classificazione è
+quindi il \textbf{voto a maggioranza} tra i membri di $N_k(\x)$. Con target in $\{0,1\}$
 \[
 h(\x) = \begin{cases}1 & \text{se } \mathrm{avg}_k(\x) > 0{,}5\\ 0 & \text{altrimenti;}\end{cases}
 \]
 per la \textbf{regressione} si usa direttamente la media dei target dei $k$ vicini. Aumentare $k$ ``liscia'' la
-decisione, il che è utile con dati rumorosi (\figrif{fig:knn-query}).
+decisione, e questo è utile con dati rumorosi (\figrif{fig:knn-query}).
 
 \begin{figure}[ht]
 \centering
@@ -107,21 +107,21 @@ cerchio) prevalgono i negativi, quindi il 5-NN risponde ``$-$''.}
 \label{fig:knn-confini}
 \end{figure}
 
-Con $k=15$ il modello è ancora molto flessibile ma commette qualche errore sul training; il confine è meno
+Con $k=15$ il modello è ancora molto flessibile ma commette qualche errore sul training. Il confine è meno
 irregolare e si \textbf{adatta alle densità locali} delle classi (\figrif{fig:knn-confini}).
 
 \subsection{Varianti}
 
 \textbf{Multi-classe}: si restituisce la classe più frequente tra i $k$ vicini,
 \[
-h(\x) = \argmax_v\sum_{\x_i\in N_k(\x)}\mathbb{1}_{v,y_i},\qquad
-\mathbb{1}_{v,y_i} = \begin{cases}1 & \text{se } v=y_i\\ 0 & \text{altrimenti.}\end{cases}
+h(\x) = \argmax_v\sum_{\x_i\in N_k(\x)}\mathbb{1}_{v,d_i},\qquad
+\mathbb{1}_{v,d_i} = \begin{cases}1 & \text{se } v=d_i\\ 0 & \text{altrimenti.}\end{cases}
 \]
 \textbf{Distanza pesata}: i vicini più vicini contano di più,
 \[
-h(\x) = \argmax_v\sum_{\x_i\in N_k(\x)}\frac{\mathbb{1}_{v,y_i}}{d(\x,\x_i)^2},
+h(\x) = \argmax_v\sum_{\x_i\in N_k(\x)}\frac{\mathbb{1}_{v,d_i}}{d(\x,\x_i)^2},
 \]
-e se $d(\x,\x_i)=0$ per qualche $\x_i$ si restituisce direttamente $y_i$.
+e se $d(\x,\x_i)=0$ per qualche $\x_i$ si restituisce direttamente $d_i$.
 
 \section{Il comportamento al variare di $k$}
 
@@ -156,10 +156,10 @@ corrispondenza dei suoi 3 parametri, $l/k\approx3$), la linea tratteggiata l'err
 \end{figure}
 
 È lo stesso andamento del fitting polinomiale al crescere del grado (\figrif{fig:rms-M}) e del bound della
-SLT (\figrif{fig:vc-bound}): qui è $k$, letto da destra verso sinistra (cioè $l/k$), a fare da controllo della
-complessità, e i valori intermedi danno il miglior compromesso (\figrif{fig:knn-errori}). Si potrebbe pensare che
-il K-NN abbia un solo parametro ($k$), ma realisticamente ha circa \textbf{$l/k$ parametri effettivi}: è come se
-dividesse lo spazio in $l/k$ regioni, ognuna con la sua media.
+SLT (\figrif{fig:vc-bound}). Qui il controllo della complessità è $k$, letto da destra verso sinistra (cioè
+$l/k$). I valori intermedi danno il miglior compromesso (\figrif{fig:knn-errori}). Si potrebbe pensare che il
+K-NN abbia un solo parametro ($k$). In realtà ha circa \textbf{$l/k$ parametri effettivi}: è come se dividesse lo
+spazio in $l/k$ regioni, ognuna con la sua media.
 
 \section{K-NN contro modello lineare}
 
@@ -178,16 +178,16 @@ Parametri & $n+1$ (3 nell'esempio) & circa $l/k$ parametri effettivi \\
 \end{tabular}
 \end{table}
 
-Il K-NN non costruisce un'ipotesi globale valida per tutte le istanze: \textbf{non c'è un modello da
+Il K-NN non costruisce un'ipotesi globale valida per tutte le istanze. \textbf{Non c'è un modello da
 addestrare}, ma bisogna memorizzare gli esempi. Fa stime \textbf{locali}, con funzioni localmente costanti,
-invece di un'approssimazione lineare globale: è un metodo lazy, basato sulla memoria, sulle istanze e sulle
+invece di un'approssimazione lineare globale. È un metodo lazy, basato sulla memoria, sulle istanze e sulle
 distanze. Con $k$ piccolo bastano pochi punti per cambiare il confine: la flessibilità si paga.
 
 \section{Il classificatore ottimo di Bayes}
 \label{sec:bayes}
 
 \begin{definizione}[Classificatore ed errore di Bayes]
-Se si conosce la densità $P(\x,y)$, la scelta ottima è assegnare la classe più probabile:
+Se si conosce la densità $P(\x,d)$, la scelta ottima è assegnare la classe più probabile:
 \[
 h(\x) = \argmax_v P(v\mid\x),\qquad v\in\{C_1,\dots,C_K\}.
 \]
@@ -195,7 +195,7 @@ Il suo tasso d'errore, il \termine{Bayes rate}, è il \textbf{minimo errore ragg
 dei dati.
 \end{definizione}
 
-Il K-NN approssima direttamente questa soluzione: il voto a maggioranza in un intorno è una stima di
+Il K-NN approssima direttamente questa soluzione. Il voto a maggioranza in un intorno è una stima di
 $\argmax_vP(v\mid\x)$ con due rilassamenti:
 \begin{enumerate}
   \item la probabilità condizionata \textbf{in un punto} diventa la probabilità condizionata \textbf{in un
@@ -229,9 +229,9 @@ $\argmax_vP(v\mid\x)$ con due rilassamenti:
 
 \subsection{Il bias induttivo}
 \begin{enumerate}
-  \item \textbf{La distanza assunta} stabilisce quali esempi sono simili: si assume che la classificazione di un
+  \item \textbf{La distanza assunta} stabilisce quali esempi sono simili. Si assume che la classificazione di un
         punto sia simile a quella dei vicini \emph{secondo la metrica scelta}. Si possono usare metriche diverse
-        dall'euclidea; dati simbolici richiedono metriche ad hoc, come la \termine{distanza di Hamming} tra
+        dall'euclidea. Dati simbolici richiedono metriche ad hoc, come la \termine{distanza di Hamming} tra
         stringhe della stessa lunghezza (il numero di posizioni in cui differiscono). Questo bias è spesso
         sottovalutato, ma è cruciale.
   \item \textbf{Località}: approssimazione locale, con un'assunzione di \ingl{smoothness} locale (da confrontare
@@ -240,8 +240,8 @@ $\argmax_vP(v\mid\x)$ con due rilassamenti:
 
 \subsection{Scala delle variabili}
 La scelta della scala dipende dalla conoscenza del dominio. Se le variabili devono contribuire allo stesso modo
-bisogna fare attenzione ai loro range: \textbf{riscalare i dati} (ad esempio a media zero e varianza unitaria)
-\textbf{equivale a cambiare la metrica}, e può cambiare del tutto quale sia il vicino più prossimo
+bisogna fare attenzione ai loro range. \textbf{Riscalare i dati} (ad esempio a media zero e varianza unitaria)
+\textbf{equivale a cambiare la metrica}. Può cambiare del tutto quale sia il vicino più prossimo
 (\figrif{fig:scala}). Il K-NN è fragile anche rispetto a un pre-processing elementare.
 
 \begin{figure}[ht]
@@ -268,10 +268,10 @@ bisogna fare attenzione ai loro range: \textbf{riscalare i dati} (ad esempio a m
 
 \subsection{Costo computazionale e interpretabilità}
 Il K-NN costruisce l'approssimazione locale \textbf{per ogni nuovo esempio}: il costo è \textbf{spostato nella
-fase di predizione}. Per ogni input si calcolano le distanze da tutti gli esempi memorizzati (tempo
-proporzionale a $l$), anche se esistono algoritmi di ricerca di prossimità ad hoc, come l'indicizzazione degli
-esempi o la ricerca \textbf{approssimata} dei vicini, che rinuncia a trovare sempre il vicino esatto in cambio
-di una ricerca molto più veloce. Anche il costo in \textbf{spazio} è alto (tutto il training set). I modelli
+fase di predizione}. Per ogni input si calcolano le distanze da tutti gli esempi memorizzati, in un tempo
+proporzionale a $l$. Esistono algoritmi di ricerca di prossimità ad hoc, come l'indicizzazione degli esempi. C'è
+anche la ricerca \textbf{approssimata} dei vicini: rinuncia a trovare sempre il vicino esatto, in cambio di una
+ricerca molto più veloce. Anche il costo in \textbf{spazio} è alto (tutto il training set). I modelli
 K-NN offrono infine poca interpretazione, soggettiva e dipendente dalla metrica.
 
 \subsection{La maledizione della dimensionalità}
@@ -279,7 +279,7 @@ K-NN offrono infine poca interpretazione, soggettiva e dipendente dalla metrica.
 
 Il K-NN funziona bene se per ogni $\x$ si trova un insieme significativo di dati vicini, cioè con un
 \textbf{campionamento denso}. Con molte variabili di input fallisce spesso per la \termine{curse of
-dimensionality}, che ha tre manifestazioni rilevanti per la generalizzazione.
+dimensionality} (maledizione della dimensionalità). Ha tre manifestazioni rilevanti per la generalizzazione.
 
 \textbf{1. In alta dimensione è difficile trovare punti vicini.} Si considerino dati uniformi nel cubo unitario
 di $\R^n$ e un sottocubo che contenga una frazione $r$ dei dati. Poiché il volume è $\text{lato}^n$, il lato
@@ -288,13 +288,13 @@ deve essere
 \text{lato} = r^{1/n}.
 \]
 \begin{itemize}
-  \item Per catturare il 10\% dei dati: in 2D basta un lato $0{,}1^{1/2}\approx0{,}32$ (il 32\% del range di
-        ogni variabile); in 10D serve $0{,}1^{1/10}\approx0{,}8$, l'\textbf{80\% del range} di ogni coordinata.
-        Anche per l'1\% del volume in 10D serve il 63\% del range: l'intorno non è più ``locale'' e i vicini non
+  \item Per catturare il 10\% dei dati in 2D basta un lato $0{,}1^{1/2}\approx0{,}32$, il 32\% del range di
+        ogni variabile. In 10D serve $0{,}1^{1/10}\approx0{,}8$, l'\textbf{80\% del range} di ogni coordinata.
+        Anche per l'1\% del volume in 10D serve il 63\% del range. L'intorno non è più ``locale'' e i vicini non
         sono più simili.
-  \item Viceversa, fissato il lato a $0{,}3$: si cattura il 30\% dei dati in 1D, il 9\% in 2D, il 2,7\% in 3D,
-        circa lo 0,0006\% in 10D. Quel lato può non bastare a trovare $k$ dati, a meno di usare $k$ piccolo
-        (e quindi rischiare overfitting: la varianza della stima aumenta).
+  \item Viceversa, si fissi il lato a $0{,}3$. Si cattura il 30\% dei dati in 1D, il 9\% in 2D, il 2,7\% in 3D,
+        circa lo 0,0006\% in 10D. Quel lato può non bastare a trovare $k$ dati, a meno di usare $k$ piccolo. Ma
+        con $k$ piccolo si rischia l'overfitting, perché la varianza della stima aumenta.
 \end{itemize}
 
 \begin{figure}[ht]
@@ -318,16 +318,16 @@ della dimensione $n$: in 10 dimensioni il 10\% del volume richiede un lato di ci
 \textbf{2. Bassa densità di campionamento.} La densità di campionamento è proporzionale a $l^{1/n}$: se 100 punti
 bastano a stimare una funzione in $\R^1$, per un'accuratezza simile in $\R^{10}$ ne servono $100^{10}=10^{20}$.
 
-\textbf{3. Feature irrilevanti.} Se il target dipende solo da poche delle molte feature (ad esempio 2 su 20), la
-somiglianza tra esempi può essere dominata dalle feature irrilevanti, e il ``vicino'' trovato non è davvero
-simile. Il problema cresce con la dimensione. Rimedi: \textbf{pesare le feature} secondo la loro rilevanza
-(allungando gli assi lungo alcune dimensioni; i pesi si cercano con una costosa model selection o con altri
-metodi) oppure fare \textbf{feature selection}, riducendo la dimensione dell'input.
+\textbf{3. Feature irrilevanti.} Il target può dipendere solo da poche delle molte feature (ad esempio 2 su
+20). Allora la somiglianza tra esempi può essere dominata dalle feature irrilevanti, e il ``vicino'' trovato non
+è davvero simile. Il problema cresce con la dimensione. Un rimedio è \textbf{pesare le feature} secondo la loro
+rilevanza, allungando gli assi lungo alcune dimensioni; i pesi si cercano con una costosa model selection o con
+altri metodi. L'altro rimedio è la \textbf{feature selection}, che riduce la dimensione dell'input.
 
 \section{Scelte di progetto}
 
 \begin{itemize}
-  \item La \textbf{metrica} $d$ (euclidea, Hamming, Manhattan, pesi sulle feature, \dots): spesso è la chiave del
+  \item La \textbf{metrica} (euclidea, Hamming, Manhattan, pesi sulle feature, \dots): spesso è la chiave del
         successo di un'applicazione.
   \item Il valore di \textbf{$k$}, che controlla underfitting e overfitting.
   \item Spesso conviene selezionare un \textbf{sottoinsieme dei dati} (un insieme di prototipi, ad esempio con un
@@ -337,10 +337,10 @@ Estensioni ad altri modelli locali: \ingl{kernel smoothers}, regressione lineare
 \ingl{case-based reasoning}.
 
 \begin{idea}[Cosa manca al K-NN]
-Il K-NN non costruisce un vero modello: non estrae regolarità né sintetizza conoscenza, e non permette di
+Il K-NN non costruisce un vero modello: non estrae regolarità né sintetizza conoscenza. Non permette nemmeno di
 ``dimenticare'' gli esempi dopo l'apprendimento. L'obiettivo dei capitoli successivi sono modelli
 \textbf{compatti} come la LTU (tutta la conoscenza in pochi parametri) ma \textbf{flessibili} come il K-NN, con
-un adeguato controllo della complessità: le reti neurali e le SVM.
+un adeguato controllo della complessità. Sono le reti neurali e le SVM.
 \end{idea}
 
 \begin{puntichiave}

@@ -3,41 +3,42 @@
 
 \begin{inbreve}
 Il capitolo introduce l'apprendimento non supervisionato dal punto di vista del clustering come quantizzazione
-vettoriale. Si ricava il K-means (versione on-line e batch) come discesa del gradiente sull'errore di quantizzazione e
-si arriva alle Self-Organizing Map di Kohonen, che al clustering aggiungono la preservazione della topologia e quindi
+vettoriale. Ricava il K-means (versione on-line e batch) come discesa del gradiente sull'errore di quantizzazione.
+Arriva poi alle Self-Organizing Map di Kohonen. Al clustering aggiungono la preservazione della topologia, e quindi
 la visualizzazione dei dati.
 \end{inbreve}
 
 \section{Apprendimento non supervisionato}
 
 Nell'apprendimento non supervisionato il training set contiene solo dati \textbf{non etichettati} $\langle\x\rangle$
-(\rif{sec:task}). I task principali sono il \textbf{clustering}, la \textbf{riduzione di dimensionalità} (con
-visualizzazione e pre-elaborazione: PCA, Multi-Dimensional Scaling, Independent Component Analysis, \dots) e la
-modellazione della densità (non trattata). Un motivo pratico della sua importanza è che i \textbf{dati non etichettati
-costano molto meno} di quelli etichettati.
+(\rif{sec:task}). I task principali sono tre. Il primo è il \textbf{clustering}. Il secondo è la \textbf{riduzione di
+dimensionalità}, per la visualizzazione e la pre-elaborazione: PCA, Multi-Dimensional Scaling, Independent
+Component Analysis, \dots. Il terzo è la modellazione della densità, qui non trattata. Un motivo pratico della sua
+importanza è che i \textbf{dati non etichettati costano molto meno} di quelli etichettati.
 
 \begin{definizione}[Clustering]
 Il \termine{clustering} partiziona i dati in \textbf{cluster}, sottoinsiemi di dati simili: gli esempi di un cluster
 sono più simili tra loro che agli esempi di un altro cluster. Ogni cluster è rappresentato da un \termine{centroide}
-(prototipo, vettore di riferimento, \ingl{codevector}); l'insieme dei centroidi è il \termine{codebook}.
+(prototipo, vettore di riferimento, \ingl{codevector}). L'insieme dei centroidi è il \termine{codebook}.
 \end{definizione}
 
 \begin{attenzione}[La metrica domina]
-Come nel K-NN, è la \textbf{distanza assunta} a stabilire quali esempi sono simili, e i raggruppamenti dipendono da
-quella metrica. La distanza euclidea è popolare ma è \textbf{solo una scelta}, con implicazioni profonde (ad esempio si
-possono pesare di meno gli outlier usando $1$ meno una gaussiana centrata sul prototipo).
+Come nel K-NN, è la \textbf{distanza assunta} a stabilire quali esempi sono simili. I raggruppamenti dipendono da
+quella metrica. La distanza euclidea è popolare, ma è \textbf{solo una scelta}, con implicazioni profonde. Ad
+esempio si possono pesare di meno gli outlier usando come distanza $1$ meno una gaussiana centrata sul prototipo.
+Questa distanza non supera mai 1: un punto lontanissimo non pesa più di un punto appena fuori dal cluster.
 \end{attenzione}
 
 \section{Quantizzazione vettoriale}
 
 \begin{definizione}[Vector Quantization]
-La \termine{quantizzazione vettoriale} (VQ) codifica una varietà di dati $V\subseteq\R^n$ usando un insieme finito
-di vettori di riferimento (il codebook) $\w = (\w_1,\dots,\w_K)$, $\w_i\in\R^n$. Un vettore $\x\in V$ è descritto dal
-vettore di riferimento \textbf{vincente} (\ingl{best matching}) $\w_{i^*(\x)}$, quello con distorsione
-$d(\x,\w_{i^*(\x)})$ minima.
+La \termine{quantizzazione vettoriale} (VQ) codifica un insieme di dati $V\subseteq\R^n$ usando un insieme finito
+di vettori di riferimento, il codebook $\w = (\w_1,\dots,\w_K)$, con $\w_i\in\R^n$. Un vettore $\x\in V$ è descritto
+dal vettore di riferimento \textbf{vincente} (\ingl{best matching}) $\w_{i^*(\x)}$: quello con distorsione
+$\mathrm{dist}(\x,\w_{i^*(\x)})$ minima.
 \end{definizione}
 
-La VQ divide la varietà nei \textbf{poliedri di Voronoi} (\rif{sec:knn-algoritmo}, \figrif{fig:voronoi})
+La VQ divide l'insieme nei \textbf{poliedri di Voronoi} (\rif{sec:knn-algoritmo}, \figrif{fig:voronoi})
 \[
 V_i = \{\x\in V : \norm{\x-\w_i}\le\norm{\x-\w_j}\ \forall j\},
 \]
@@ -47,7 +48,7 @@ e ogni $\x$ è descritto dal vettore di riferimento della sua cella. Il problema
 
 \begin{esempio}[Quantizzazione in una dimensione]
 Nell'elaborazione dei segnali la quantizzazione approssima un intervallo continuo di valori con un piccolo insieme di
-simboli discreti, commettendo un errore di quantizzazione (distorsione): ogni valore è sostituito dal centroide del suo
+simboli discreti. Commette un errore di quantizzazione (distorsione): ogni valore è sostituito dal centroide del suo
 intervallo.
 \begin{center}
 \begin{tikzpicture}[x=1.2cm]
@@ -60,16 +61,16 @@ intervallo.
 \end{center}
 \end{esempio}
 
-Il clustering ha un obiettivo più generale (trovare raggruppamenti \emph{interessanti}, spesso definiti implicitamente
-dalla procedura stessa e non dall'errore di quantizzazione minimo), ma la VQ fornisce un quadro utile e i suoi algoritmi
-sono molto usati per il clustering partizionale.
+Il clustering ha un obiettivo più generale: trovare raggruppamenti \emph{interessanti}, spesso definiti
+implicitamente dalla procedura stessa e non dall'errore di quantizzazione minimo. La VQ fornisce però un quadro
+utile, e i suoi algoritmi sono molto usati per il clustering partizionale.
 
 \subsection{L'errore di quantizzazione}
 
-L'obiettivo è partizionare in modo ottimo una distribuzione sconosciuta in regioni approssimate da prototipi, cioè
-trovare un quantizzatore $\x\mapsto c(\x) = \w_{i^*(\x)}$ da uno spazio continuo a uno discreto. Con la distorsione
-quadratica $d(\x,c(\x)) = \norm{\x-c(\x)}^2$ (\rif{sec:loss}), la loss è la distorsione attesa (errore di
-ricostruzione o di quantizzazione):
+L'obiettivo è partizionare in modo ottimo una distribuzione sconosciuta in regioni approssimate da prototipi. Si
+cerca cioè un quantizzatore $\x\mapsto c(\x) = \w_{i^*(\x)}$ da uno spazio continuo a uno discreto. Si usa la
+distorsione quadratica $\mathrm{dist}(\x,c(\x)) = \norm{\x-c(\x)}^2$ (\rif{sec:loss}). La loss è allora la
+distorsione attesa (errore di ricostruzione o di quantizzazione):
 \[
 E = \int\norm{\x-\w_{i^*(\x)}}^2\,p(\x)\,d\x ,
 \]
@@ -79,7 +80,7 @@ E = \sum_{i=1}^{l}\sum_{j=1}^{K}\norm{\x_i-\w_j}^2\,\delta_{\mathit{winner}}(i,j
 \delta_{\mathit{winner}}(i,j) = \begin{cases}1 & \text{se } j \text{ è il vincitore per } \x_i\\ 0 & \text{altrimenti.}\end{cases}
 \end{equation}
 Minimizzare $E$ rispetto ai $\w$ è il problema della VQ. L'integrando \textbf{non è differenziabile con continuità},
-perché il vincitore cambia in modo discreto al variare di $\x$; le derivate si calcolano però \textbf{localmente},
+perché il vincitore cambia in modo discreto al variare di $\x$. Le derivate si calcolano però \textbf{localmente},
 fissando $\x$ dentro una cella di Voronoi.
 
 \section{K-means}
@@ -87,21 +88,23 @@ fissando $\x$ dentro una cella di Voronoi.
 \subsection{Versione on-line}
 
 \begin{proprieta}{Regola del K-means on-line}
-La discesa del gradiente stocastica su \eqref{eq:errore-quantizzazione} dà, per ogni esempio $\x_i$,
+La discesa del gradiente stocastica su \eqref{eq:errore-quantizzazione} dà, per ogni esempio $\x_i$ con vincitore
+$i^*$,
 \[
-\Delta\w_{i^*} = \eta\,\delta_{\mathit{winner}}(i,i^*)\,(\x_i-\w_{i^*}) :
+\Delta\w_{i^*} = \eta\,(\x_i-\w_{i^*}) :
 \]
 si sposta \textbf{solo il prototipo vincitore}, verso $\x_i$.
 \end{proprieta}
 \begin{proof}
 Per un esempio $\x_i$ fissato, il termine di $E$ che dipende da $\w_j$ è $\norm{\x_i-\w_j}^2\delta_{\mathit{winner}}(i,j)$.
 Poiché $\norm{\x_i-\w_j}^2 = \sum_t(x_{i,t}-w_{j,t})^2$, la derivata rispetto a $\w_j$ è
-$-2(\x_i-\w_j)\,\delta_{\mathit{winner}}(i,j)$: è nulla per tutti i prototipi tranne il vincitore. Muovendosi nel verso
-opposto al gradiente (e assorbendo il 2 in $\eta$) si ottiene la regola.
+$-2(\x_i-\w_j)\,\delta_{\mathit{winner}}(i,j)$. È nulla per tutti i prototipi tranne il vincitore, per il quale
+$\delta_{\mathit{winner}}=1$. Muovendosi nel verso opposto al gradiente (e assorbendo il 2 in $\eta$) si ottiene la
+regola.
 \end{proof}
 
-È l'algoritmo \termine{K-means} nella versione on-line: una discesa del gradiente stocastica, quindi soggetta a
-\textbf{minimi locali} e dipendente dall'\textbf{inizializzazione}; il \textbf{numero di cluster} va fornito in
+È l'algoritmo \termine{K-means} nella versione on-line. È una discesa del gradiente stocastica, quindi soggetta a
+\textbf{minimi locali} e dipendente dall'\textbf{inizializzazione}. Il \textbf{numero di cluster} va fornito in
 anticipo.
 
 \subsection{Versione batch}
@@ -117,17 +120,25 @@ anticipo.
         \[
         \w_i = \frac{1}{\abs{\mathrm{cluster}_i}}\sum_{\x_j\in\mathrm{cluster}_i}\x_j .
         \]
-  \item Se il criterio di convergenza non è soddisfatto (nessuna o minima riassegnazione, minima diminuzione dell'errore
-        quadratico), tornare al passo 2.
+  \item Se il criterio di convergenza non è soddisfatto, tornare al passo 2. Il criterio è nessuna o minima
+        riassegnazione, oppure una minima diminuzione dell'errore quadratico.
 \end{enumerate}
 \end{algoritmo}
 
 \begin{proof}[Dalla versione on-line alla batch]
-Sommando su tutti gli esempi $\x$ di un cluster $C$ il passo on-line con $\eta=1$ e mediando:
+Si fissi l'assegnazione degli esempi ai cluster, e si consideri un cluster $C$ con centro $\w$. Il suo contributo
+all'errore è $E_C = \sum_{\x\in C}\norm{\x-\w}^2$. La derivata rispetto a $\w$ è la somma dei gradienti on-line dei
+suoi esempi:
 \[
-\w_{\mathit{new}} = \w_{\mathit{old}} + \frac{1}{\abs{C}}\sum_{\x\in C}(\x-\w_{\mathit{old}}) = \w_{\mathit{old}} + \frac{1}{\abs C}\sum_{\x\in C}\x - \w_{\mathit{old}} = \frac{1}{\abs C}\sum_{\x\in C}\x ,
+\frac{\partial E_C}{\partial\w} = -2\sum_{\x\in C}(\x-\w) = -2\Big(\sum_{\x\in C}\x - \abs{C}\,\w\Big).
 \]
-cioè la media del cluster, il passo 3 dell'algoritmo batch.
+Imponendo la derivata nulla si ottiene
+\[
+\w = \frac{1}{\abs C}\sum_{\x\in C}\x ,
+\]
+cioè la media del cluster, il passo 3 dell'algoritmo batch. È il centro ottimo per l'assegnazione fissata. Lo stesso
+punto si raggiunge con un solo passo di discesa batch da $\w_{\mathit{old}}$, con $\eta = 1/(2\abs C)$:
+$\w_{\mathit{old}} + \frac{1}{\abs C}\sum_{\x\in C}(\x-\w_{\mathit{old}}) = \frac{1}{\abs C}\sum_{\x\in C}\x$.
 \end{proof}
 
 \begin{figure}[ht]
@@ -166,21 +177,22 @@ più vicino, ricalcolo dei centri come medie, nuova assegnazione.}
   \item È l'algoritmo più semplice e usato con un criterio d'errore quadratico: facile da implementare ed efficiente.
   \item Il numero $K$ di cluster va fornito.
   \item I minimi locali di $E$ rendono il risultato dipendente dall'inizializzazione, con prototipi solo sub-ottimi.
-  \item Funziona molto bene per cluster \textbf{compatti e ipersferici}; con cluster di altre forme (ad esempio due
+  \item Funziona molto bene per cluster \textbf{compatti e ipersferici}. Con cluster di altre forme (ad esempio due
         spirali intrecciate) fallisce.
-  \item \textbf{Nessuna visualizzazione}: non proietta i dati in uno spazio a dimensione minore, e l'indicizzazione dei
-        prototipi è arbitraria, quindi la mappatura non è ordinata.
+  \item \textbf{Nessuna visualizzazione}: non proietta i dati in uno spazio a dimensione minore. L'indicizzazione
+        dei prototipi è arbitraria, quindi la mappatura non è ordinata.
 \end{itemize}
 
-Per ridurre il problema dei minimi locali si usa una regola \textbf{soft-max}: si modificano \textbf{tutti} i centri,
-con un passo che decresce con la loro distanza da $\x$ (ad esempio il \ingl{maximum-entropy clustering}). Le SOM sono
-un'istanza di questa strategia, in cui però la vicinanza tra prototipi è definita su una \textbf{mappa ordinata}.
+Per ridurre il problema dei minimi locali si usa una regola \textbf{soft-max}. Si modificano \textbf{tutti} i centri,
+con un passo che decresce con la loro distanza da $\x$ (ad esempio il \ingl{maximum-entropy clustering}). Le SOM
+sono un'istanza di questa strategia, in cui però la vicinanza tra prototipi è definita su una \textbf{mappa
+ordinata}.
 
 \section{Self-Organizing Map}
 
 Le \termine{Self-Organizing Map} (SOM, mappe di Kohonen) sono reti di neuroni disposti su una \textbf{griglia regolare
-a bassa dimensione} (di solito 2D): ogni unità è identificata dalle sue \textbf{coordinate} $\vv r_i$ sulla mappa,
-riceve \textbf{lo stesso input} $\x$ e ha un vettore di pesi $\w_i$ della stessa dimensione $n$ dell'input
+a bassa dimensione}, di solito 2D. Ogni unità è identificata dalle sue \textbf{coordinate} $\vv r_i$ sulla mappa.
+Riceve \textbf{lo stesso input} $\x$ e ha un vettore di pesi $\w_i$ della stessa dimensione $n$ dell'input
 (\figrif{fig:som-griglia}).
 
 \begin{figure}[ht]
@@ -206,16 +218,19 @@ più vicini all'input; i suoi vicini sulla mappa (rosa) vengono aggiornati con l
 \label{fig:som-griglia}
 \end{figure}
 
-La SOM apprende una mappa dallo spazio di input alla griglia che \textbf{preserva la topologia}: unità vicine sulla
-mappa rispondono a input simili, e punti vicini nello spazio di input vengono mappati sulla stessa unità o su unità
-vicine. Si usa per il \textbf{clustering} (i cluster si individuano sulla mappa), per la \textbf{VQ} (l'input diventa il
-vettore dei pesi del vincitore), per la \textbf{compressione} (l'input diventa l'indice del vincitore) e per la
-\textbf{proiezione ed esplorazione} dei dati in due dimensioni.
+La SOM apprende una mappa dallo spazio di input alla griglia che \textbf{preserva la topologia}. Unità vicine sulla
+mappa rispondono a input simili. Punti vicini nello spazio di input vengono mappati sulla stessa unità o su unità
+vicine. La SOM si usa in quattro modi:
+\begin{itemize}
+  \item per il \textbf{clustering}: i cluster si individuano sulla mappa;
+  \item per la \textbf{VQ}: l'input diventa il vettore dei pesi del vincitore;
+  \item per la \textbf{compressione}: l'input diventa l'indice del vincitore;
+  \item per la \textbf{proiezione ed esplorazione} dei dati in due dimensioni.
+\end{itemize}
 
-L'apprendimento è \termine{competitivo}: i neuroni competono per ogni input, il vincitore apprende di più, e
-gradualmente le unità si specializzano su insiemi diversi di input. Un analogo biologico è la corteccia
-somatosensoriale, in cui una mappa topologicamente ordinata del corpo associa neuroni adiacenti a parti del corpo
-vicine.
+L'apprendimento è \termine{competitivo}: i neuroni competono per ogni input, e il vincitore apprende di più.
+Gradualmente le unità si specializzano su insiemi diversi di input. Un analogo biologico è la corteccia
+somatosensoriale: una mappa topologicamente ordinata del corpo associa neuroni adiacenti a parti del corpo vicine.
 
 \begin{algoritmo}[SOM]
 \begin{enumerate}
@@ -233,22 +248,22 @@ vicine.
 \end{enumerate}
 \end{algoritmo}
 
-La fase cooperativa è un aggiornamento hebbiano (i pesi si avvicinano all'input) modulato dalla \termine{funzione di
-vicinato} $h$, che decresce con la distanza \textbf{sulla mappa} tra l'unità $i$ e il vincitore, ad esempio una
-gaussiana
+La fase cooperativa è un aggiornamento hebbiano: i pesi si avvicinano all'input (\rif{sec:neurone}). È modulato
+dalla \termine{funzione di vicinato} $h$, che decresce con la distanza \textbf{sulla mappa} tra l'unità $i$ e il
+vincitore. Un esempio è la gaussiana
 \[
 h_{i,i^*}(t) = \exp\left(-\frac{\norm{\vv r_i-\vv r_{i^*}}^2}{2\sigma^2(t)}\right),
 \]
-con $\sigma(t)$ larghezza del vicinato (in pratica si usano anche vicinati di forma geometrica, rettangolare o
-esagonale, con un numero finito di unità). Il \textbf{learning rate} $\eta$ e il \textbf{raggio} $\sigma$ diminuiscono
-con le iterazioni: il vicinato è \textbf{ampio all'inizio} (ordinamento globale della mappa) e si restringe lentamente
-(convergenza e raffinamento locale).
+con $\sigma(t)$ larghezza del vicinato. In pratica si usano anche vicinati di forma geometrica, rettangolare o
+esagonale, con un numero finito di unità. Il \textbf{learning rate} $\eta$ e il \textbf{raggio} $\sigma$
+diminuiscono con le iterazioni. Il vicinato è \textbf{ampio all'inizio}, per l'ordinamento globale della mappa. Poi
+si restringe lentamente, per la convergenza e il raffinamento locale.
 
 \begin{idea}[L'emergere dell'ordine topologico]
-I pesi non sono modificati indipendentemente ma \textbf{per sottoinsiemi topologicamente legati}: il vincitore e i suoi
-vicini sulla griglia ricevono aggiornamenti simili e quindi, dopo l'apprendimento, rispondono a input simili. Così
-l'informazione topologica viene trasmessa alla mappa (\figrif{fig:som-training}). Una dimostrazione formale
-dell'ordinamento è però difficile.
+I pesi non sono modificati indipendentemente, ma \textbf{per sottoinsiemi topologicamente legati}. Il vincitore e i
+suoi vicini sulla griglia ricevono aggiornamenti simili, e quindi, dopo l'apprendimento, rispondono a input
+simili. Così l'informazione topologica viene trasmessa alla mappa (\figrif{fig:som-training}). Una dimostrazione
+formale dell'ordinamento è però difficile.
 \end{idea}
 
 \begin{figure}[ht]
@@ -293,21 +308,22 @@ Con un vicinato di raggio zero la SOM si riduce al K-means on-line.
 
 \subsection{Visualizzazione}
 
-Sulla mappa si possono visualizzare la \textbf{densità} dei vettori di riferimento (colore proporzionale al numero di
-esempi assegnati a ogni unità) e le \textbf{distanze} tra i pesi di unità vicine, con la \termine{U-matrix}: colori scuri
-indicano grandi distanze tra unità adiacenti (confini tra cluster), colori chiari piccole distanze (unità dello stesso
-cluster). Questo rende la SOM facilmente interpretabile. Ad esempio, addestrando una mappa $13\times9$ su 39 indicatori
-di benessere di 77 paesi, le zone chiare della U-matrix raggruppano paesi simili e le zone scure separano i gruppi,
-senza alcuna ipotesi a priori sulla forma dei cluster.
+Sulla mappa si possono visualizzare due cose. La prima è la \textbf{densità} dei vettori di riferimento: il colore è
+proporzionale al numero di esempi assegnati a ogni unità. La seconda sono le \textbf{distanze} tra i pesi di unità
+vicine, con la \termine{U-matrix}. Nella U-matrix i colori scuri indicano grandi distanze tra unità adiacenti, cioè
+confini tra cluster. I colori chiari indicano piccole distanze, cioè unità dello stesso cluster. Questo rende la
+SOM facilmente interpretabile. Ad esempio, si addestri una mappa $13\times9$ su 39 indicatori di benessere di 77
+paesi. Le zone chiare della U-matrix raggruppano paesi simili e le zone scure separano i gruppi, senza alcuna
+ipotesi a priori sulla forma dei cluster.
 
 \section{Valutare un clustering}
 
-La valutazione è spesso \textbf{soggettiva}: esistono pochi riferimenti oggettivi, tranne in sotto-domini ben definiti.
-Esistono misure \textbf{oggettive} come l'errore di quantizzazione, che però dipende dal numero di centroidi. Non si usa
-semplicemente l'etichetta di un task di classificazione sottostante (la \emph{purity}): se si hanno le etichette, tanto
-vale usare un classificatore. Va distinta la qualità del clustering in sé dalla qualità dei risultati per il dominio.
-Altri metodi non supervisionati sono il clustering gerarchico (dendrogrammi), l'analisi delle componenti principali, le
-regole di associazione, ICA, Multidimensional Scaling, t-SNE.
+La valutazione è spesso \textbf{soggettiva}: esistono pochi riferimenti oggettivi, tranne in sotto-domini ben
+definiti. Esistono misure \textbf{oggettive} come l'errore di quantizzazione, che però dipende dal numero di
+centroidi. Non si usa semplicemente l'etichetta di un task di classificazione sottostante (la \emph{purity}): se si
+hanno le etichette, tanto vale usare un classificatore. Va distinta la qualità del clustering in sé dalla qualità
+dei risultati per il dominio. Altri metodi non supervisionati sono il clustering gerarchico (dendrogrammi),
+l'analisi delle componenti principali, le regole di associazione, ICA, Multidimensional Scaling, t-SNE.
 
 \begin{puntichiave}
 \begin{itemize}

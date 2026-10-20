@@ -2,9 +2,9 @@
 \label{cap:matematica}
 
 \begin{inbreve}
-Questo capitolo raccoglie gli strumenti usati in tutto il resto delle note: prodotto scalare e norme,
-derivate parziali e gradiente (la base della discesa del gradiente), regole di derivazione per funzioni
-composte, e i richiami di probabilità necessari (gaussiana, valore atteso, varianza).
+Questo capitolo raccoglie gli strumenti usati in tutto il resto delle note. Sono il prodotto scalare e le norme,
+le derivate parziali e il gradiente (la base della discesa del gradiente), le regole di derivazione per le
+funzioni composte. Seguono i richiami di probabilità: gaussiana, valore atteso, varianza.
 \end{inbreve}
 
 \section{Vettori, prodotto scalare e norme}
@@ -55,9 +55,9 @@ Un'altra identità che serve spesso è lo sviluppo del quadrato di una norma:
 
 \begin{definizione}[Tensore]
 Nella visione semplificata usata nel ML, un \termine{tensore} è un array multidimensionale di numeri disposti su
-una griglia regolare con un numero variabile di assi: uno scalare ha 0 assi, un vettore 1, una matrice 2, e ad
+una griglia regolare. Il numero di assi è variabile: uno scalare ha 0 assi, un vettore 1, una matrice 2, e ad
 esempio $X_{i,j,k}$ ha 3 indici. Nel ML il termine è soprattutto una comodità di notazione, utile per
-descrivere il calcolo su GPU; in matematica i tensori hanno proprietà più ricche, legate ai cambi di base.
+descrivere il calcolo su GPU. In matematica i tensori hanno proprietà più ricche, legate ai cambi di base.
 \end{definizione}
 
 \section{Derivate parziali e gradiente}
@@ -79,8 +79,8 @@ dove gli $\vv{e}_i$ sono i versori ortogonali lungo le direzioni coordinate.
 \begin{idea}[Significato geometrico]
 In un punto, il gradiente \textbf{punta nella direzione di massima pendenza} (massima crescita di $f$), e la sua
 norma dice \textbf{quanto è ripida} la pendenza. Il suo opposto $-\nabla f$ indica la direzione in cui $f$
-\textbf{decresce più rapidamente}: è l'idea alla base della \emph{discesa del gradiente}, usata per addestrare
-quasi tutti i modelli del corso minimizzando una funzione di errore.
+\textbf{decresce più rapidamente}. È l'idea alla base della \emph{discesa del gradiente}, che addestra quasi
+tutti i modelli del corso minimizzando una funzione di errore.
 \end{idea}
 
 Il motivo si vede con il prodotto scalare. La variazione di $f$ spostandosi di poco lungo una direzione
@@ -88,10 +88,10 @@ unitaria $\vv{u}$ (la derivata direzionale) è
 \[
 D_{\vv{u}}f = \nabla f\cdot\vv{u} = \norm{\nabla f}\,\norm{\vv{u}}\cos\theta = \norm{\nabla f}\cos\theta ,
 \]
-con $\theta$ angolo tra $\vv{u}$ e $\nabla f$. Il valore è massimo per $\theta = 0$ (direzione di $\nabla f$),
-vale $-\norm{\nabla f}$, il minimo possibile, per $\theta=\pi$ (direzione di $-\nabla f$), ed è nullo per
-$\theta=\pi/2$: lungo le \emph{curve di livello} $f$ non cambia, quindi il gradiente è perpendicolare a esse
-(\figrif{fig:gradiente}).
+con $\theta$ angolo tra $\vv{u}$ e $\nabla f$. Il valore è massimo per $\theta = 0$, cioè nella direzione di
+$\nabla f$. Vale $-\norm{\nabla f}$, il minimo possibile, per $\theta=\pi$, cioè nella direzione di $-\nabla f$.
+È nullo per $\theta=\pi/2$: lungo le \emph{curve di livello} $f$ non cambia, quindi il gradiente è
+perpendicolare a esse (\figrif{fig:gradiente}).
 
 \begin{figure}[t]
 \centering
@@ -108,12 +108,12 @@ $\theta=\pi/2$: lungo le \emph{curve di livello} $f$ non cambia, quindi il gradi
   \draw[grigio] (0,0) ellipse ({\c} and {\c/1.414});
 \draw[->, grigio!70] (-2.9,0) -- (2.9,0) node[right, black] {$x_1$};
 \draw[->, grigio!70] (0,-2) -- (0,2.1) node[above, black] {$x_2$};
-\fill[blu] (0,0) circle (1.6pt) node[below left, font=\footnotesize] {minimo};
+\fill[blu] (0,0) circle (1.6pt) node[above left, font=\footnotesize, fill=white, inner sep=1pt] {minimo};
 % punto (1.2, 1.162) sulla curva c^2=4: x^2+2y^2=4
 \coordinate (P) at (1.2,1.1662);
 \fill (P) circle (1.5pt);
 \draw[->, very thick, rosso] (P) -- ++(0.6,1.166) node[right, font=\small] {$\nabla f$};
-\draw[->, very thick, verde] (P) -- ++(-0.6,-1.166) node[below left, font=\small, xshift=2pt] {$-\nabla f$};
+\draw[->, very thick, verde] (P) -- ++(-0.6,-1.166) node[below right, font=\small] {$-\nabla f$};
 \end{tikzpicture}
 \caption{La funzione $f(x_1,x_2)=x_1^2+2x_2^2$. A sinistra la superficie, con il minimo (gradiente nullo); a
 destra le curve di livello: in un punto $\nabla f$ (rosso) indica la crescita più rapida, $-\nabla f$ (verde) la

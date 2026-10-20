@@ -3,8 +3,8 @@
 
 \begin{inbreve}
 Un modello che si adatta perfettamente ai dati di training può predire male i dati nuovi. Il capitolo definisce
-l'overfitting, lo osserva in un caso di studio (il fitting di polinomi, che è una espansione in basi lineare) e
-introduce lo strumento principale per controllare la complessità di un modello: la regolarizzazione di
+l'overfitting e lo osserva in un caso di studio: il fitting di polinomi, che è una espansione in basi lineare.
+Introduce poi lo strumento principale per controllare la complessità di un modello, la regolarizzazione di
 Tikhonov (\emph{ridge regression}, \emph{weight decay}), con le varianti $L^1$ ed \emph{elastic net}.
 \end{inbreve}
 
@@ -46,7 +46,7 @@ la cui complessità cresce con $M$. La funzione target è $\sin(2\pi x)$ e i tar
 irrealistico (una sola variabile, funzione target nota) e serve solo a visualizzare i concetti. I parametri si
 trovano minimizzando la somma degli errori quadratici
 \[
-E(\w) = \sum_{p=1}^{l}\big(y_p - h_\w(x_p)\big)^2 ,
+E(\w) = \sum_{p=1}^{l}\big(d_p - h_\w(x_p)\big)^2 ,
 \]
 con le equazioni normali del \rif{sec:equazioni-normali} applicate alle feature $(1,x,x^2,\dots,x^M)$.
 
@@ -93,7 +93,7 @@ $\sin(2\pi x)$ (verde).}
 
 Per confrontare modelli e dataset si usa il \termine{Root-Mean-Square error}
 \[
-E_{RMS} = \sqrt{\frac1l\sum_{p=1}^{l}\big(y_p - h_{\w^*}(x_p)\big)^2}
+E_{RMS} = \sqrt{\frac1l\sum_{p=1}^{l}\big(d_p - h_{\w^*}(x_p)\big)^2}
 \]
 dove $\w^*$ sono i pesi del modello addestrato (equivale a $\sqrt{2E(\w^*)/l}$ se $E$ è definito con un fattore
 $\tfrac12$ davanti alla somma). La divisione per $l$ permette di confrontare dataset di dimensione diversa, la
@@ -116,33 +116,18 @@ destra overfitting (per $M=9$ l'errore di test esce dal grafico).}
 L'errore di training \textbf{decresce sempre} all'aumentare di $M$, perché un modello più flessibile può
 adattarsi meglio ai dati. L'errore di test prima decresce, poi resta stabile e infine \textbf{esplode} per
 $M=9$: è la firma dell'overfitting. Anche i coefficienti ottimi $\w^*$ sono rivelatori
-(Tabella~\ref{tab:coeff-M}, dall'esempio originale di questo esperimento).
+(Tabella~\ref{tab:coeff-M}, calcolata sugli stessi dati della \figrif{fig:polinomi}).
 
 \begin{table}[ht]
 \centering\small
-\caption{Coefficienti ottimi $\w^*$ dei polinomi di grado $M$.}
+\caption{Coefficienti ottimi $\w^*$ dei polinomi di grado $M$ della \figrif{fig:polinomi}.}
 \label{tab:coeff-M}
-\begin{tabular}{lrrrr}
-\toprule
- & $M=0$ & $M=1$ & $M=3$ & $M=9$ \\
-\midrule
-$w_0^*$ & $0{,}19$ & $0{,}82$ & $0{,}31$ & $0{,}35$ \\
-$w_1^*$ & & $-1{,}27$ & $7{,}99$ & $232{,}37$ \\
-$w_2^*$ & & & $-25{,}43$ & $-5321{,}83$ \\
-$w_3^*$ & & & $17{,}37$ & $48568{,}31$ \\
-$w_4^*$ & & & & $-231639{,}30$ \\
-$w_5^*$ & & & & $640042{,}26$ \\
-$w_6^*$ & & & & $-1061800{,}52$ \\
-$w_7^*$ & & & & $1042400{,}18$ \\
-$w_8^*$ & & & & $-557682{,}99$ \\
-$w_9^*$ & & & & $125201{,}43$ \\
-\bottomrule
-\end{tabular}
+\input{dati/poly_coeff_M.tex}
 \end{table}
 
 \begin{idea}[Pesi enormi = overfitting]
-Nel polinomio di grado 9 i coefficienti diventano \textbf{enormi} e di segno alterno: si compensano a vicenda
-per far passare la curva esattamente per ogni punto, producendo oscillazioni fortissime. Penalizzare i pesi
+Nel polinomio di grado 9 i coefficienti diventano \textbf{enormi} e di segno alterno. Si compensano a vicenda
+per far passare la curva esattamente per ogni punto, e producono oscillazioni fortissime. Penalizzare i pesi
 grandi è quindi un modo per controllare la complessità: è la regolarizzazione (\rif{sec:tikhonov}).
 \end{idea}
 
@@ -174,7 +159,7 @@ complessi} senza cadere nell'overfitting.
 \begin{idea}[Cosa mostra l'esempio]
 La capacità di generalizzazione (misurata come rischio o errore di test) va studiata in relazione a
 \textbf{errore di training}, \textbf{complessità del modello} e \textbf{numero di dati}. In generale, al crescere
-della complessità l'errore di training decresce sempre, mentre quello di test decresce e poi risale
+della complessità l'errore di training decresce sempre. Quello di test invece decresce e poi risale
 (\figrif{fig:curva-complessita}). La teoria che lega i tre elementi è la Statistical Learning Theory
 (capitolo~\ref{cap:slt}).
 \end{idea}
@@ -198,7 +183,7 @@ modello.}
 
 \begin{esempio}[Rumore o complessità?]
 Il rumore è la causa dell'overfitting, o lo è il compromesso di complessità? Si può avere overfitting anche con
-dati perfettamente puliti: un polinomio di grado molto alto che interpola pochi punti di una funzione liscia può
+dati perfettamente puliti. Un polinomio di grado molto alto che interpola pochi punti di una funzione liscia può
 oscillare molto tra un punto e l'altro. Il problema è la \textbf{complessità eccessiva rispetto ai dati
 disponibili}. Per lo stesso motivo un errore di training nullo non implica una buona soluzione.
 \end{esempio}
@@ -210,11 +195,11 @@ Tra i molti modi di controllare la complessità c'è il \ingl{coefficient shrink
 coefficienti. La \termine{ridge regression} (\termine{regolarizzazione di Tikhonov}) aggiunge all'errore un
 termine che \textbf{penalizza i pesi grandi}:
 \begin{equation}\label{eq:ridge}
-\boxed{\;\mathrm{Loss}(\w) = \underbrace{\sum_{p=1}^{l}\big(y_p - \x_p\T\w\big)^2}_{\text{termine d'errore }(\Remp)}
+\boxed{\;\mathrm{Loss}(\w) = \underbrace{\sum_{p=1}^{l}\big(d_p - \x_p\T\w\big)^2}_{\text{termine d'errore }(\Remp)}
 + \underbrace{\lambda\,\norm{\w}^2}_{\text{penalità}},\qquad \norm{\w}^2 = \sum_j w_j^2 .\;}
 \end{equation}
 $\lambda>0$ è l'\termine{iperparametro di regolarizzazione}, scelto in fase di \textbf{model selection}
-(capitolo~\ref{cap:validazione}). Il modello risultante è più ``liscio'' (\ingl{smooth}): si favoriscono
+(capitolo~\ref{cap:validazione}). Il modello risultante è più ``liscio'' (\ingl{smooth}). Si favoriscono
 modelli con pesi piccoli o nulli, che usano di fatto meno termini, cioè meno complessi.
 
 \begin{attenzione}[Loss ed errore non sono più sinonimi]
@@ -238,19 +223,19 @@ e $\lambda$ decide quanto pesa la penalità.
 
 \begin{proprieta}{Soluzione diretta della ridge regression}
 \[
-\w = (X\T X + \lambda I)^{-1}X\T\y ,
+\w = (X\T X + \lambda I)^{-1}X\T\dd ,
 \]
 e per $\lambda>0$ la matrice $X\T X+\lambda I$ è \textbf{sempre invertibile}.
 \end{proprieta}
 \begin{proof}
-In forma matriciale $\mathrm{Loss}(\w) = \norm{\y - X\w}^2 + \lambda\,\w\T\w$. Il gradiente del primo termine è
-$-2X\T(\y-X\w)$ (\rif{sec:equazioni-normali}); quello del secondo è $2\lambda\w$, perché
+In forma matriciale $\mathrm{Loss}(\w) = \norm{\dd - X\w}^2 + \lambda\,\w\T\w$. Il gradiente del primo termine è
+$-2X\T(\dd-X\w)$ (\rif{sec:equazioni-normali}); quello del secondo è $2\lambda\w$, perché
 $\partial(\lambda\sum_jw_j^2)/\partial w_j = 2\lambda w_j$. Imponendo il gradiente nullo:
 \[
--2X\T\y + 2X\T X\w + 2\lambda\w = \vv0 \iff (X\T X + \lambda I)\w = X\T\y .
+-2X\T\dd + 2X\T X\w + 2\lambda\w = \vv0 \iff (X\T X + \lambda I)\w = X\T\dd .
 \]
-Per ogni $\vv v\neq\vv0$ vale $\vv v\T(X\T X+\lambda I)\vv v = \norm{X\vv v}^2 + \lambda\norm{\vv v}^2 > 0$: la
-matrice è definita positiva, quindi invertibile. È anche un vantaggio numerico rispetto alle equazioni normali
+Per ogni $\vv v\neq\vv0$ vale $\vv v\T(X\T X+\lambda I)\vv v = \norm{X\vv v}^2 + \lambda\norm{\vv v}^2 > 0$. La
+matrice è quindi definita positiva, e perciò invertibile. È anche un vantaggio numerico rispetto alle equazioni normali
 semplici.
 \end{proof}
 
@@ -259,21 +244,27 @@ penalità rispetto a $w_j$ è $2\lambda w_j$, la regola diventa
 \begin{equation}\label{eq:weight-decay}
 \boxed{\;\w_{\mathit{new}} = \w + \eta\,\Delta\w - 2\lambda\w\;}
 \end{equation}
-dove $\eta\,\Delta\w$ è il passo sul solo termine d'errore e la penalità è moltiplicata direttamente per
-$\lambda$. È la tecnica del \termine{weight decay}: anche con gradiente d'errore nullo, a ogni passo ogni peso si
-riduce di una frazione del suo valore.
+dove $\eta\,\Delta\w$ è il passo sul solo termine d'errore. È la tecnica del \termine{weight decay}: anche con
+gradiente d'errore nullo, a ogni passo ogni peso si riduce di una frazione del suo valore.
+
+\begin{attenzione}[Il $\lambda$ della regola non è quello della loss]
+Un passo di discesa sulla loss completa darebbe $\w_{\mathit{new}} = \w + \eta\,\Delta\w - 2\eta\lambda\w$. Nella
+regola \eqref{eq:weight-decay} il fattore $\eta$ della penalità è stato assorbito in $\lambda$: il $\lambda$ della
+regola vale $\eta$ volte quello della loss \eqref{eq:ridge}. I due valori numerici quindi non vanno confrontati
+direttamente con quello della soluzione diretta.
+\end{attenzione}
 
 \subsection{Il compromesso governato da $\lambda$}
 
 \begin{itemize}
-  \item \textbf{$\lambda$ piccolo}: conta soprattutto il termine d'errore; il modello resta troppo complesso
+  \item \textbf{$\lambda$ piccolo}: conta soprattutto il termine d'errore. Il modello resta troppo complesso
         (pesi di norma alta), con rischio di \textbf{overfitting}.
-  \item \textbf{$\lambda$ grande}: conta soprattutto la penalità; l'errore sui dati può crescere troppo, verso
+  \item \textbf{$\lambda$ grande}: conta soprattutto la penalità. L'errore sui dati può crescere troppo, verso
         l'\textbf{underfitting}.
 \end{itemize}
 Il vantaggio è una \textbf{realizzazione concreta del controllo della complessità}, facile da implementare e di
-applicabilità generale (la stessa penalità si usa nelle reti neurali, \rif{sec:reg-reti}). Spingendo i pesi
-verso valori piccoli si ottiene un modello con VC-dimension più bassa (\rif{sec:srm}), e il compromesso è regolato
+applicabilità generale: la stessa penalità si usa nelle reti neurali (\rif{sec:reg-reti}). Spingendo i pesi
+verso valori piccoli si ottiene un modello con VC-dimension più bassa (\rif{sec:srm}). Il compromesso è regolato
 da \textbf{un solo parametro}.
 
 \subsection{Effetto sul polinomio di grado 9}
@@ -300,7 +291,7 @@ $\ln\lambda=-18$ la curva è liscia e segue la funzione vera; con $\ln\lambda=0$
 
 Senza regolarizzazione ($\lambda=0$) il polinomio di grado 9 aveva errore di training nullo e overfitting
 fortissimo. Con un $\lambda$ adatto ($\ln\lambda = -18$, cioè $\lambda\approx1{,}5\cdot10^{-8}$) il modello è
-\textbf{peggiore sul training} ma molto migliore sui dati nuovi; con $\lambda$ troppo alto ($\ln\lambda=0$,
+\textbf{peggiore sul training} ma molto migliore sui dati nuovi. Con $\lambda$ troppo alto ($\ln\lambda=0$,
 $\lambda=1$) si finisce in underfitting (\figrif{fig:poly-reg} e \figrif{fig:rms-lambda}). I coefficienti
 (Tabella~\ref{tab:coeff-lambda}) mostrano come la penalità ``doma'' i pesi enormi del caso non regolarizzato.
 
@@ -320,24 +311,10 @@ $\lambda=1$) si finisce in underfitting (\figrif{fig:poly-reg} e \figrif{fig:rms
 
 \begin{table}[ht]
 \centering\small
-\caption{Coefficienti del polinomio di grado 9 per tre valori di $\lambda$ (esempio originale).}
+\caption{Coefficienti del polinomio di grado 9 per tre valori di $\lambda$, sugli stessi dati della
+\figrif{fig:poly-reg}.}
 \label{tab:coeff-lambda}
-\begin{tabular}{lrrr}
-\toprule
- & $\ln\lambda=-\infty$ ($\lambda=0$) & $\ln\lambda=-18$ & $\ln\lambda=0$ \\
-\midrule
-$w_0^*$ & $0{,}35$ & $0{,}35$ & $0{,}13$\\
-$w_1^*$ & $232{,}37$ & $4{,}74$ & $-0{,}05$\\
-$w_2^*$ & $-5321{,}83$ & $-0{,}77$ & $-0{,}06$\\
-$w_3^*$ & $48568{,}31$ & $-31{,}97$ & $-0{,}05$\\
-$w_4^*$ & $-231639{,}30$ & $-3{,}89$ & $-0{,}03$\\
-$w_5^*$ & $640042{,}26$ & $55{,}28$ & $-0{,}02$\\
-$w_6^*$ & $-1061800{,}52$ & $41{,}32$ & $-0{,}01$\\
-$w_7^*$ & $1042400{,}18$ & $-45{,}95$ & $-0{,}00$\\
-$w_8^*$ & $-557682{,}99$ & $-91{,}53$ & $0{,}00$\\
-$w_9^*$ & $125201{,}43$ & $72{,}68$ & $0{,}01$\\
-\bottomrule
-\end{tabular}
+\input{dati/poly_coeff_lambda.tex}
 \end{table}
 
 \section{Altre forme di regolarizzazione}
@@ -347,51 +324,54 @@ $w_9^*$ & $125201{,}43$ & $72{,}68$ & $0{,}01$\\
   \item \textbf{Ridge} (norma $\norm{\cdot}_2$): penalizza il quadrato dei pesi e tende a rendere \textbf{tutti} i
         pesi più piccoli.
   \item \termine{Lasso} (norma $\norm{\cdot}_1$, penalità $\lambda\sum_j\abs{w_j}$): tende a portare \textbf{alcuni
-        pesi esattamente a zero}, lasciandone altri grandi: è una forma di \textbf{feature selection} e produce
-        modelli più semplici. Il valore assoluto rende però la loss non differenziabile in zero, e servono
+        pesi esattamente a zero}, lasciandone altri grandi. È una forma di \textbf{feature selection} e produce
+        modelli più semplici. Il valore assoluto rende però la loss non differenziabile in zero. Servono allora
         tecniche di ottimizzazione non differenziabile (sub-gradiente, approssimazioni lisce della norma).
   \item \termine{Elastic net}: usa entrambe le norme.
 \end{itemize}
 
 \begin{idea}[Perché $L^1$ azzera i pesi e $L^2$ no]
-Il gradiente di $\lambda w^2$ è $2\lambda w$: diventa piccolissimo quando $w$ è vicino a zero, quindi la spinta
-verso zero si attenua e il peso resta piccolo ma non nullo. Il (sub-)gradiente di $\lambda\abs{w}$ è invece
-$\lambda\sign(w)$: una spinta \textbf{costante} verso zero, anche per pesi già piccoli, che li porta
+Il gradiente di $\lambda w^2$ è $2\lambda w$: diventa piccolissimo quando $w$ è vicino a zero. La spinta verso
+zero quindi si attenua, e il peso resta piccolo ma non nullo. Il (sub-)gradiente di $\lambda\abs{w}$ è invece
+$\lambda\sign(w)$: una spinta \textbf{costante} verso zero, anche per pesi già piccoli. Questa spinta li porta
 esattamente a zero se il termine d'errore non li ``difende''. Geometricamente (\figrif{fig:l1-l2}) le curve di
-livello della norma $L^1$ hanno \textbf{spigoli sugli assi}, dove una coordinata è nulla: la soluzione del
+livello della norma $L^1$ hanno \textbf{spigoli sugli assi}, dove una coordinata è nulla. La soluzione del
 problema vincolato cade tipicamente su uno spigolo.
 \end{idea}
 
 \begin{figure}[ht]
 \centering
-\begin{tikzpicture}[scale=1.05]
-\draw[->, grigio] (-1.7,0) -- (2.2,0) node[right, black, font=\small] {$w_1$};
-\draw[->, grigio] (0,-1.5) -- (0,2.1) node[above, black, font=\small] {$w_2$};
+\begin{tikzpicture}[scale=0.85]
+\draw[->, grigio] (-1.6,0) -- (3.6,0) node[right, black, font=\small] {$w_1$};
+\draw[->, grigio] (0,-1.4) -- (0,2.9) node[above, black, font=\small] {$w_2$};
 \draw[thick, fill=grigiochiaro] (1,0) -- (0,1) -- (-1,0) -- (0,-1) -- cycle;
-\draw[thick, rosso] (-0.6,1.75) -- (2.1,-0.2);
-\draw[thick, rosso, densely dashed] (-0.85,1.32) -- (1.6,-0.45);
-\fill[blu] (0,1) circle (1.8pt) node[left, font=\footnotesize] {$w_1=0$};
-\node[font=\small] at (0,-1.9) {$L^1$: $\abs{w_1}+\abs{w_2}\le c$};
-\begin{scope}[xshift=5.4cm]
-\draw[->, grigio] (-1.7,0) -- (2.2,0) node[right, black, font=\small] {$w_1$};
-\draw[->, grigio] (0,-1.5) -- (0,2.1) node[above, black, font=\small] {$w_2$};
+\draw[rosso, thin] (1.3,1.7) ellipse ({1.044} and {0.4475});
+\draw[rosso, thick] (1.3,1.7) ellipse ({2.088} and {0.895});
+\fill[rosso] (1.3,1.7) circle (1.4pt) node[right, font=\footnotesize] {$\hat\w$};
+\fill[blu] (0,1) circle (2pt) node[left, font=\footnotesize] {$w_1=0$};
+\node[font=\small] at (1,-1.85) {$L^1$: $\abs{w_1}+\abs{w_2}\le c$};
+\begin{scope}[xshift=5.6cm]
+\draw[->, grigio] (-1.6,0) -- (3.6,0) node[right, black, font=\small] {$w_1$};
+\draw[->, grigio] (0,-1.4) -- (0,2.9) node[above, black, font=\small] {$w_2$};
 \draw[thick, fill=grigiochiaro] (0,0) circle (1);
-\draw[thick, rosso] (-0.6,1.75) -- (2.1,-0.2);
-\draw[thick, rosso, densely dashed] (-0.25,1.32) -- (1.85,-0.2);
-\fill[blu] (0.586,0.81) circle (1.8pt);
-\node[font=\small] at (0,-1.9) {$L^2$: $w_1^2+w_2^2\le c$};
+\draw[rosso, thin] (1.3,1.7) ellipse ({1.002} and {0.4295});
+\draw[rosso, thick] (1.3,1.7) ellipse ({2.004} and {0.859});
+\fill[rosso] (1.3,1.7) circle (1.4pt) node[right, font=\footnotesize] {$\hat\w$};
+\fill[blu] (0.254,0.967) circle (2pt);
+\node[font=\small] at (1,-1.85) {$L^2$: $w_1^2+w_2^2\le c$};
 \end{scope}
 \end{tikzpicture}
-\caption{Perché $L^1$ produce soluzioni sparse. In rosso le curve di livello del termine d'errore: la soluzione
-regolarizzata è il punto in cui la curva di livello più bassa raggiungibile tocca la regione ammessa (grigia).
-Con $L^1$ il contatto avviene su un vertice del rombo ($w_1=0$); con $L^2$ in un punto generico del cerchio.}
+\caption{Perché $L^1$ produce soluzioni sparse. $\hat\w$ è il minimo del solo termine d'errore; le ellissi rosse sono
+sue curve di livello. La soluzione regolarizzata (blu) è il punto della regione ammessa (grigia) toccato dalla
+curva di livello più bassa. Con $L^1$ il contatto avviene su un vertice del rombo, dove $w_1=0$. Con $L^2$ avviene
+in un punto generico del cerchio, dove entrambi i pesi sono diversi da zero.}
 \label{fig:l1-l2}
 \end{figure}
 
 Altri miglioramenti (opzionali):
 \begin{itemize}
   \item \termine{data augmentation}: aggiungere rumore agli input insegna al modello a ignorare variazioni
-        irrilevanti (robustezza e regolarizzazione); l'\emph{oversampling} aiuta con dataset sbilanciati;
+        irrilevanti (robustezza e regolarizzazione). L'\emph{oversampling} aiuta con dataset sbilanciati;
   \item \textbf{input derivati}: si usa un piccolo numero di nuove variabili, combinazioni lineari degli input
         (\ingl{Principal Component Regression}, \ingl{Partial Least Squares}).
 \end{itemize}
@@ -401,7 +381,7 @@ Altri miglioramenti (opzionali):
   \item Overfitting: esiste $h'$ con errore di training maggiore ma rischio minore.
   \item Nel fitting polinomiale l'errore di training cala sempre con $M$, quello di test ha forma a U; più dati
         permettono modelli più complessi.
-  \item Ridge: $\mathrm{Loss} = \norm{\y-X\w}^2 + \lambda\norm{\w}^2$; soluzione $(X\T X+\lambda I)^{-1}X\T\y$;
+  \item Ridge: $\mathrm{Loss} = \norm{\dd-X\w}^2 + \lambda\norm{\w}^2$; soluzione $(X\T X+\lambda I)^{-1}X\T\dd$;
         weight decay $\w\leftarrow\w+\eta\Delta\w-2\lambda\w$.
   \item $\lambda$ piccolo $\to$ overfitting, $\lambda$ grande $\to$ underfitting; si sceglie con la model
         selection.

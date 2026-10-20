@@ -3,32 +3,33 @@
 
 \begin{inbreve}
 Le reti convoluzionali (CNN) mostrano come si progetta una rete feedforward \emph{non} completamente connessa per
-un problema specifico, inserendo nell'architettura conoscenza a priori sui dati (le immagini). Il capitolo
-presenta la convoluzione come unità che scorre sull'input con pesi condivisi, il pooling, l'architettura
-complessiva con i suoi vantaggi, e i risultati che hanno fatto delle CNN il primo esempio di rete profonda.
+un problema specifico. Nell'architettura si inserisce conoscenza a priori sui dati, in questo caso le immagini. Il
+capitolo presenta la convoluzione come un'unità che scorre sull'input con pesi condivisi. Seguono il pooling e
+l'architettura complessiva con i suoi vantaggi. Chiudono i risultati che hanno fatto delle CNN il primo esempio di
+rete profonda.
 \end{inbreve}
 
 \section{Il problema e l'idea}
 
-Nel riconoscimento di caratteri scritti a mano (ad esempio immagini $16\times16$ in scala di grigi) un primo approccio
-è un MLP standard con 256 input, uno per pixel: si ottiene un errore del 5--20\%, con molti errori dovuti alla
-\textbf{mancanza di invarianza} a traslazioni, rotazioni e deformazioni. Una rete completamente connessa tratta ogni
-pixel come un input indipendente: non ``sa'' che pixel vicini sono correlati né che uno stesso tratto può comparire
-in posizioni diverse.
+Si consideri il riconoscimento di caratteri scritti a mano, ad esempio immagini $16\times16$ in scala di grigi. Un
+primo approccio è un MLP standard con 256 input, uno per pixel. Si ottiene un errore del 5--20\%. Molti errori sono
+dovuti alla \textbf{mancanza di invarianza} a traslazioni, rotazioni e deformazioni. Una rete completamente
+connessa tratta ogni pixel come un input indipendente. Non ``sa'' che pixel vicini sono correlati, né che uno
+stesso tratto può comparire in posizioni diverse.
 
 \begin{idea}[Conoscenza a priori nell'architettura]
 \begin{itemize}
   \item \textbf{Connessioni locali} (campi recettivi locali): ogni unità vede solo una piccola zona dell'immagine ed
         estrae \textbf{feature locali}.
   \item \textbf{Condivisione dei pesi} (\ingl{weight sharing}) tra unità diverse: la \textbf{stessa operazione} è
-        applicata a parti diverse dell'input, perché le feature di un carattere possono comparire ovunque
+        applicata a parti diverse dell'input. Le feature di un carattere infatti possono comparire ovunque
         nell'immagine. Si riduce il numero di parametri liberi pur mantenendo una connettività complessa.
 \end{itemize}
 \end{idea}
 
 \section{La convoluzione}
 
-Il nome viene dall'\termine{operatore di convoluzione}, una media pesata di una funzione $f$ con pesi dati da
+Il nome viene dall'\termine{operatore di convoluzione}. È una media pesata di una funzione $f$, con pesi dati da
 un'altra funzione $g$ che scorre:
 \[
 (f*g)(t) = \int_{-\infty}^{\infty}f(\tau)\,g(t-\tau)\,d\tau .
@@ -43,8 +44,9 @@ Un'unità con tre pesi che scorre su una sequenza di input calcola
 \out_t = \sum_{i=1}^{3}w_i\,x_{t+i-2};
 \]
 ad esempio $o_2 = w_1x_1+w_2x_2+w_3x_3$ e $o_3 = w_1x_2+w_2x_3+w_3x_4$ (\figrif{fig:conv1d}). I pesi sono
-\textbf{condivisi} tra le copie dell'unità e si apprendono come al solito: l'unità è un \textbf{filtro adattivo}, e
-più unità diverse formano un \textbf{banco di filtri}. Questa rete si chiama anche \ingl{Time-Delay Neural Network}.
+\textbf{condivisi} tra le copie dell'unità, e si apprendono come al solito. L'unità è un \textbf{filtro
+adattivo}, e più unità diverse formano un \textbf{banco di filtri}. Questa rete si chiama anche \ingl{Time-Delay
+Neural Network}.
 
 \begin{figure}[ht]
 \centering
@@ -64,10 +66,22 @@ più unità diverse formano un \textbf{banco di filtri}. Questa rete si chiama a
 
 \subsection{Convoluzione 2D}
 
-Su un'immagine si usa un \termine{kernel} 2D, ad esempio $3\times3$ (il \textbf{campo recettivo locale}
-dell'unità), che si sposta di un pixel alla volta (\termine{stride} 1); il \termine{padding} gestisce i bordi. Il
-kernel scorre sull'immagine e produce una \termine{feature map}, le feature estratte da quel filtro. In termini di reti
-neurali: si percorre l'immagine con \textbf{lo stesso neurone}, che usa connessioni locali (\figrif{fig:conv2d}).
+\begin{attenzione}[Due significati di ``kernel'']
+Qui \emph{kernel} indica il filtro di una convoluzione, cioè una piccola matrice di pesi. Non ha nulla a che vedere
+con il kernel delle SVM del capitolo~\ref{cap:svm}, che è una funzione di similarità.
+\end{attenzione}
+
+Su un'immagine si usa un \termine{kernel} 2D, ad esempio $3\times3$: è il \textbf{campo recettivo locale}
+dell'unità. Il kernel si sposta di un pixel alla volta: è lo \termine{stride} 1. Il kernel scorre sull'immagine e
+produce una \termine{feature map}, cioè le feature estratte da quel filtro. In termini di reti neurali, si percorre
+l'immagine con \textbf{lo stesso neurone}, che usa connessioni locali (\figrif{fig:conv2d}).
+
+Ai bordi il kernel non può essere centrato sui pixel esterni, perché uscirebbe dall'immagine. Il
+\termine{padding} gestisce i bordi: aggiunge valori attorno all'immagine (una cornice), così il kernel può
+scorrere anche sui pixel di bordo. Senza padding la feature map è più piccola dell'input. Nella
+\figrif{fig:conv2d}, ad esempio, un input $3\times4$ con un kernel $2\times2$ dà una mappa di
+$(3-2+1)\times(4-2+1) = 2\times3$. In generale, con stride 1 e senza padding, ogni dimensione si riduce della
+dimensione del kernel meno uno.
 
 \begin{figure}[ht]
 \centering
@@ -103,10 +117,10 @@ posizione.}
 \begin{attenzione}[Convoluzione o cross-correlazione]
 La convoluzione 2D di un'immagine $I$ con un kernel $K$ è $S(i,j) = (I*K)(i,j) = \sum_m\sum_nI(m,n)\,K(i-m,j-n)$.
 Molte librerie implementano in realtà la \textbf{cross-correlazione}, $S(i,j) = \sum_m\sum_nI(i+m,j+n)\,K(m,n)$,
-come nella \figrif{fig:conv2d} (i dettagli non sono richiesti).
+come nella \figrif{fig:conv2d}. I dettagli non sono richiesti.
 \end{attenzione}
 
-Con \textbf{stride} maggiore di 1 il kernel ``salta'' pixel (ad esempio due alla volta): è un
+Con \textbf{stride} maggiore di 1 il kernel ``salta'' pixel, ad esempio due alla volta. È un
 \textbf{sotto-campionamento} e produce una feature map più piccola.
 
 \subsection{Una rete di filtri}
@@ -118,8 +132,8 @@ dell'architettura prevede:
         \textbf{spazialmente locali};
   \item \textbf{lo stesso filtro su tutta l'immagine}: le feature sono rilevate indipendentemente dalla posizione, e
         si ottiene l'\textbf{invarianza per traslazione};
-  \item \textbf{filtri appresi}: i filtri che nell'elaborazione delle immagini tradizionale erano progettati a mano
-        vengono appresi, senza dipendere da conoscenza a priori e sforzo umano;
+  \item \textbf{filtri appresi}: nell'elaborazione delle immagini tradizionale i filtri erano progettati a mano.
+        Qui vengono appresi, senza dipendere da conoscenza a priori e sforzo umano;
   \item \textbf{molti strati impilati}: le unità delle feature map rappresentano aree via via più grandi
         dell'immagine originale (\figrif{fig:campo-recettivo}).
 \end{itemize}
@@ -150,9 +164,9 @@ dell'architettura prevede:
 
 \section{Pooling}
 
-Il \termine{pooling} riduce la feature map producendo un valore per un insieme rettangolare di posizioni invece che
-per ogni posizione: con un sotto-campionamento (stride $>1$), con una \textbf{media} (semplice o pesata) o, più
-comunemente, con il \termine{max pooling} (\figrif{fig:maxpool}). Il pooling rende la rappresentazione
+Il \termine{pooling} riduce la feature map. Produce un valore per un insieme rettangolare di posizioni, invece che
+per ogni posizione. Lo fa con un sotto-campionamento (stride $>1$), con una \textbf{media} (semplice o pesata) o,
+più comunemente, con il \termine{max pooling} (\figrif{fig:maxpool}). Il pooling rende la rappresentazione
 \textbf{approssimativamente invariante a piccole traslazioni}: il massimo (o la media) di una zona cambia poco se
 l'input si sposta di poco.
 
@@ -179,11 +193,11 @@ l'input si sposta di poco.
 
 \section{La CNN nel complesso}
 
-Una CNN realizza con la condivisione dei pesi una finestra scorrevole di campi locali sul segnale, estesa alle
-immagini 2D e ripetuta su molti strati di feature map, alternata a operazioni di pooling; in cima ci sono di solito
-alcuni strati completamente connessi (con softmax per la classificazione). Il numero di filtri può crescere negli
-strati più alti; per un'immagine a colori (RGB) l'input ha tre canali, e la ``profondità'' del volume di ogni strato è
-il suo numero di feature map (\figrif{fig:cnn}).
+Una CNN realizza, con la condivisione dei pesi, una finestra scorrevole di campi locali sul segnale. La estende
+alle immagini 2D e la ripete su molti strati di feature map, alternati a operazioni di pooling. In cima ci sono di
+solito alcuni strati completamente connessi, con softmax per la classificazione. Il numero di filtri può crescere
+negli strati più alti. Per un'immagine a colori (RGB) l'input ha tre canali. La ``profondità'' del volume di ogni
+strato è il suo numero di feature map (\figrif{fig:cnn}).
 
 \begin{figure}[ht]
 \centering
@@ -211,28 +225,29 @@ connessi (classificazione). Le feature map si rimpiccioliscono e aumentano di nu
 \begin{idea}[I quattro ingredienti e i loro vantaggi]
 \begin{enumerate}
   \item \textbf{Connessioni locali} e
-  \item \textbf{pesi condivisi}: rilevano pattern locali in modo \textbf{invariante alla traslazione} e
-        \textbf{riducono il numero di parametri liberi} pur mantenendo le connessioni, il che è una forma di
+  \item \textbf{pesi condivisi}: rilevano pattern locali in modo \textbf{invariante alla traslazione}. Inoltre
+        \textbf{riducono il numero di parametri liberi} pur mantenendo le connessioni, e questo è una forma di
         \textbf{regolarizzazione}.
   \item \textbf{Pooling}: riduce la dimensione della rappresentazione a ogni strato (una ``piramide'' di strati) e
         aiuta l'invarianza a piccoli spostamenti e distorsioni.
   \item \textbf{Molti strati}: le operazioni 1 e 2 applicate a tutte le feature map producono un'\textbf{astrazione
-        progressiva}, che compone primitive di basso livello (apprese una volta sola) nelle combinazioni utili agli
-        strati successivi. Le unità degli ultimi strati hanno un campo recettivo che copre gran parte dell'immagine.
+        progressiva}. Le primitive di basso livello sono apprese una volta sola e composte nelle combinazioni utili
+        agli strati successivi. Le unità degli ultimi strati hanno un campo recettivo che copre gran parte
+        dell'immagine.
 \end{enumerate}
 \end{idea}
 
-L'addestramento avviene con la \textbf{backpropagation}, con le euristiche note e qualche specializzazione (per i pesi
-condivisi, il pooling, \dots). Vista la dimensione tipica delle reti e dei dati, molti iperparametri si fissano
-\textbf{per esperienza}, perché una cross-validation su grandi spazi di iperparametri sarebbe troppo costosa.
+L'addestramento avviene con la \textbf{backpropagation}, con le euristiche note e qualche specializzazione (per i
+pesi condivisi, il pooling, \dots). Le reti e i dati sono tipicamente grandi. Per questo molti iperparametri si
+fissano \textbf{per esperienza}: una cross-validation su grandi spazi di iperparametri sarebbe troppo costosa.
 
 \section{Risultati}
 
 \subsection{Pesi condivisi e connessioni locali}
 
-Su un problema di cifre manoscritte (circa 300 immagini di training) LeCun confrontò cinque reti: Net-1 senza strati
-nascosti, Net-2 completamente connessa con uno strato nascosto, Net-3 con connessioni locali $3\times3$, Net-4 e Net-5
-con connessioni locali e pesi condivisi.
+Su un problema di cifre manoscritte (circa 300 immagini di training) LeCun confrontò cinque reti. Net-1 non ha
+strati nascosti. Net-2 è completamente connessa, con uno strato nascosto. Net-3 ha connessioni locali $3\times3$.
+Net-4 e Net-5 hanno connessioni locali e pesi condivisi.
 
 \begin{table}[ht]
 \centering\small
@@ -250,21 +265,21 @@ Net-5 & 5194 & 1060 \\
 \end{tabular}
 \end{table}
 
-Con i pesi condivisi il numero di \textbf{connessioni} può crescere mentre il numero di \textbf{pesi} (parametri liberi)
-resta basso. L'errore di training è nullo per tutte le reti, mentre l'accuratezza di test va da circa il 72\% (Net-1)
-e l'88\% (Net-2, Net-3) fino al 98\% (Net-4) e quasi al 99\% (Net-5, errore dell'1,6\%).
+Con i pesi condivisi il numero di \textbf{connessioni} può crescere, mentre il numero di \textbf{pesi} (parametri
+liberi) resta basso. L'errore di training è nullo per tutte le reti. L'accuratezza di test va da circa il 72\%
+(Net-1) e l'88\% (Net-2, Net-3) fino al 98\% (Net-4). Net-5 arriva al 98,4\%, cioè a un errore dell'1,6\%.
 
 \subsection{Altri risultati}
 
 \begin{itemize}
   \item Sul dataset MNIST (60\,000 immagini di training, 10\,000 di test) le reti profonde, convoluzionali e no,
         sono arrivate a errori di pochi decimi di punto percentuale. Anche un semplice MLP con molti strati e molte
-        unità ottiene risultati di questo livello se si controlla la complessità generando \textbf{molte immagini
-        deformate} per il training (\ingl{data augmentation}).
-  \item AlexNet, una CNN profonda (cinque strati convoluzionali, alcuni seguiti da max pooling, e strati
-        completamente connessi con softmax a 1000 classi, circa 60 milioni di parametri), migliorò nettamente lo
+        unità ottiene risultati di questo livello. Serve però controllare la complessità generando \textbf{molte
+        immagini deformate} per il training (\ingl{data augmentation}).
+  \item AlexNet è una CNN profonda: cinque strati convoluzionali, alcuni seguiti da max pooling, e strati
+        completamente connessi con softmax a 1000 classi, per circa 60 milioni di parametri. Migliorò nettamente lo
         stato dell'arte nella classificazione di immagini (ImageNet). Per velocizzare l'addestramento usava unità
-        \textbf{non saturanti} (ReLU) e le GPU; per ridurre l'overfitting negli strati densi usava il
+        \textbf{non saturanti} (ReLU) e le GPU. Per ridurre l'overfitting negli strati densi usava il
         \textbf{dropout} (\rif{sec:dropout}).
 \end{itemize}
 
@@ -273,16 +288,16 @@ Il test set di MNIST è stato usato così tante volte dalla comunità che miglio
 più significativi: di fatto è diventato un validation set (\rif{sec:errori-validazione}).
 \end{attenzione}
 
-Esistono molte architetture specializzate per le immagini, e si possono riusare le feature di reti
+Esistono molte architetture specializzate per le immagini. Si possono anche riusare le feature di reti
 \textbf{pre-addestrate} su grandi dataset (\rif{sec:transfer}). Le implementazioni efficienti sfruttano le
-\textbf{GPU} tramite la rappresentazione a \textbf{tensori}: la moltiplicazione di matrici (cioè i prodotti scalari) si
-parallelizza molto bene, e molte operazioni di convoluzione si possono scrivere come un'unica moltiplicazione tra
-matrici a blocchi o con operazioni su tensori.
+\textbf{GPU} tramite la rappresentazione a \textbf{tensori}. La moltiplicazione di matrici (cioè i prodotti
+scalari) si parallelizza molto bene. Molte operazioni di convoluzione si possono scrivere come un'unica
+moltiplicazione tra matrici a blocchi, o con operazioni su tensori.
 
-Un'alternativa al max pooling sono le \textbf{Capsule Network}: una ``capsula'' è un gruppo di neuroni che produce sia
-un parametro che indica se un'entità è presente, sia un vettore di \textbf{parametri di posa} (posizione,
-orientamento); al posto del pooling un meccanismo di \textbf{routing} instrada l'informazione di basso livello verso la
-capsula più adatta.
+Un'alternativa al max pooling sono le \textbf{Capsule Network}. Una ``capsula'' è un gruppo di neuroni che produce
+due cose: un parametro che indica se un'entità è presente, e un vettore di \textbf{parametri di posa} (posizione,
+orientamento). Al posto del pooling, un meccanismo di \textbf{routing} instrada l'informazione di basso livello
+verso la capsula più adatta.
 
 \begin{puntichiave}
 \begin{itemize}

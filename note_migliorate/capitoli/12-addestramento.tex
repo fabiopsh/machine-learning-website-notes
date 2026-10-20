@@ -2,30 +2,30 @@
 \label{cap:addestramento}
 
 \begin{inbreve}
-Con la backpropagation si sa calcolare il gradiente di ogni peso; restano le scelte che servono per addestrare
-davvero un MLP: inizializzazione, minimi multipli, on-line/batch/mini-batch, learning rate e momentum, criteri di
-arresto, overfitting e regolarizzazione, numero di unità (con il Cascade Correlation), rappresentazione di input e
-output, validazione specifica per le reti. Il capitolo si chiude con pregi e difetti delle reti neurali e con un
-banco di prova per verificare un'implementazione.
+Con la backpropagation si sa calcolare il gradiente di ogni peso. Restano le scelte che servono per addestrare
+davvero un MLP. Sono l'inizializzazione, i minimi multipli, la scelta tra on-line, batch e mini-batch, il learning
+rate e il momentum, i criteri di arresto. Seguono overfitting e regolarizzazione, il numero di unità (con il
+Cascade Correlation), la rappresentazione di input e output, la validazione specifica per le reti. Il capitolo si
+chiude con pregi e difetti delle reti neurali e con un banco di prova per verificare un'implementazione.
 \end{inbreve}
 
 \section{L'addestramento come percorso}
 
 \begin{idea}[Un'interpretazione utile]
 La backpropagation è un \textbf{percorso nello spazio dei pesi}, sulla superficie della loss. Il percorso dipende
-dai dati, dal modello, dal \textbf{punto di partenza} (pesi iniziali), dalla \textbf{velocità} di convergenza e dal
-\textbf{punto finale} (regola di arresto). Tutte queste scelte sono un \textbf{controllo della ricerca} nello spazio
-delle ipotesi.
+dai dati e dal modello. Dipende anche dal \textbf{punto di partenza} (pesi iniziali), dalla \textbf{velocità} di
+convergenza e dal \textbf{punto finale} (regola di arresto). Tutte queste scelte sono un \textbf{controllo della
+ricerca} nello spazio delle ipotesi.
 \end{idea}
 
-L'algoritmo di base resta la discesa del gradiente: pesi iniziali piccoli, $\Delta\w = -\partial E/\partial\w$
-calcolato con la backpropagation (fase forward fino alle uscite, fase backward per i delta),
-$\w_{\mathit{new}} = \w+\eta\,\Delta\w$, ripetuto. Il modello è spesso \textbf{sovra-parametrizzato} e
-l'ottimizzazione è \textbf{non convessa} e potenzialmente instabile: da qui le questioni di questo capitolo. Gli
-\termine{iperparametri} sono i valori da fissare per eseguire l'addestramento. Le tecniche segnate con
-\textbf{(!)} sono di uso comune e vanno usate in pratica; le altre sono varianti da conoscere. Le ``regole
-empiriche'' trovate in rete vanno evitate, a meno che non siano dimostrate in letteratura scientifica o se ne sia
-verificato sperimentalmente il vantaggio.
+L'algoritmo di base resta la discesa del gradiente. Si parte da pesi iniziali piccoli. Si calcola
+$\Delta\w = -\partial E/\partial\w$ con la backpropagation: fase forward fino alle uscite, fase backward per i
+delta. Si aggiorna $\w_{\mathit{new}} = \w+\eta\,\Delta\w$, e si ripete. Il modello è spesso
+\textbf{sovra-parametrizzato}, e l'ottimizzazione è \textbf{non convessa} e potenzialmente instabile: da qui le
+questioni di questo capitolo. Gli \termine{iperparametri} sono i valori da fissare per eseguire l'addestramento.
+Le tecniche segnate con \textbf{(!)} sono di uso comune e vanno usate in pratica; le altre sono varianti da
+conoscere. Le ``regole empiriche'' trovate in rete vanno evitate. Fanno eccezione quelle dimostrate in letteratura
+scientifica, o di cui si sia verificato sperimentalmente il vantaggio.
 
 \section{Inizializzazione e minimi multipli}
 
@@ -36,18 +36,18 @@ per dati standardizzati.
 
 Da evitare:
 \begin{itemize}
-  \item pesi \textbf{tutti nulli}: i delta delle unità nascoste sarebbero nulli (dipendono dai pesi verso
-        l'uscita, \eqref{eq:delta-nascosta}) e la rete non imparerebbe;
+  \item pesi \textbf{tutti nulli}: i delta delle unità nascoste sarebbero nulli, perché dipendono dai pesi verso
+        l'uscita \eqref{eq:delta-nascosta}. La rete non imparerebbe;
   \item pesi \textbf{grandi}: le sigmoidi partono \textbf{saturate}, con derivate quasi nulle e apprendimento
         lentissimo;
   \item pesi \textbf{tutti uguali}: le unità nascoste restano \textbf{simmetriche}, ricevono gli stessi
         aggiornamenti e calcolano tutte la stessa cosa. La casualità serve a \textbf{rompere la simmetria}.
 \end{itemize}
-Si può tenere conto del \termine{fan-in} (numero di input di un'unità), ad esempio con un intervallo
-$\text{range}\cdot2/\text{fan-in}$, ma non se il fan-in è troppo grande e non per le unità di uscita
+Si può tenere conto del \termine{fan-in}, il numero di input di un'unità. Ad esempio si usa un intervallo
+$\text{range}\cdot2/\text{fan-in}$. Non conviene però se il fan-in è troppo grande, e non per le unità di uscita
 (altrimenti i delta partono vicini a zero). Molto usata è l'inizializzazione di \textbf{Glorot e Bengio}: bias a 0
-e pesi da una distribuzione uniforme in $[-1/a,+1/a]$ con $a = \sqrt{\text{fan-in}}$ (in varianti successive $a$
-dipende anche dal fan-out). Una rete molto piccola può dipendere fortemente dall'inizializzazione.
+e pesi da una distribuzione uniforme in $[-1/a,+1/a]$ con $a = \sqrt{\text{fan-in}}$. In varianti successive $a$
+dipende anche dal fan-out. Una rete molto piccola può dipendere fortemente dall'inizializzazione.
 
 \subsection{Minimi multipli}
 
@@ -56,18 +56,18 @@ La loss \textbf{non è convessa}: ci sono molti minimi locali e il risultato dip
 \begin{idea}[(!) Più inizializzazioni]
 Provare diverse configurazioni iniziali casuali (ad esempio 5--10 o più \ingl{trial}) e riportare la
 \textbf{media} e la \textbf{varianza} dei risultati. Come scegliere il modello finale tra le prove è discusso nel
-\rif{sec:validazione-reti}; si possono anche usare tutti i modelli con una risposta \textbf{di comitato}
+\rif{sec:validazione-reti}. Si possono anche usare tutti i modelli con una risposta \textbf{di comitato}
 (\rif{sec:ensemble}).
 \end{idea}
 
-Fermarsi in un minimo locale con errore alto non è un grosso problema: lo si vede dall'errore finale e si può
-ricominciare; spesso un \textbf{``buon'' minimo locale è sufficiente}. In ogni caso il minimo globale non è
+Fermarsi in un minimo locale con errore alto non è un grosso problema. Lo si vede dall'errore finale, e si può
+ricominciare. Spesso un \textbf{``buon'' minimo locale è sufficiente}. In ogni caso il minimo globale non è
 l'obiettivo:
 \begin{enumerate}
   \item nel ML \textbf{non si cerca né il minimo locale né quello globale di $\Remp$}, ma il minimo di $R$, che
-        non si può calcolare; spesso ci si ferma in un punto che non ha nemmeno gradiente nullo;
-  \item la rete è uno spazio delle ipotesi di dimensione variabile (\rif{sec:vc-reti}): durante l'addestramento
-        l'errore di training scende verso il minimo mentre la rete diventa troppo complessa, e bisogna fermarsi
+        non si può calcolare. Spesso ci si ferma in un punto che non ha nemmeno gradiente nullo;
+  \item la rete è uno spazio delle ipotesi di dimensione variabile (\rif{sec:vc-reti}). Durante l'addestramento
+        l'errore di training scende verso il minimo, mentre la rete diventa troppo complessa. Bisogna fermarsi
         \textbf{prima} di questa condizione di \ingl{overtraining}, indipendentemente dalla questione dei minimi.
 \end{enumerate}
 
@@ -80,21 +80,21 @@ Con la notazione della backpropagation, per il peso $w_{tu}$:
 \qquad
 \text{on-line: } -\frac{\partial E_p}{\partial w_{tu}} = \delta_{p,t}\,o_{p,u}.
 \]
-Nel batch si somma su tutta l'epoca e poi si aggiorna (\rif{sec:batch-online}); nell'on-line si aggiorna dopo ogni
+Nel batch si somma su tutta l'epoca e poi si aggiorna (\rif{sec:batch-online}). Nell'on-line si aggiorna dopo ogni
 esempio. Il batch dà una stima \textbf{più accurata} del gradiente. Nell'on-line il gradiente di un esempio è
-un'approssimazione \textbf{rumorosa} del gradiente complessivo (da cui il nome \termine{stochastic gradient
-descent}, SGD): la discesa procede a zig-zag, e questo \textbf{può aiutare a sfuggire ai minimi locali}.
+un'approssimazione \textbf{rumorosa} del gradiente complessivo: da qui il nome \termine{stochastic gradient
+descent} (SGD). La discesa procede a zig-zag, e questo \textbf{può aiutare a sfuggire ai minimi locali}.
 
 \begin{idea}[(!) Shuffling]
 Nella versione on-line i pattern vanno presentati in \textbf{ordine diverso} a ogni epoca, di solito
-\textbf{mescolandoli casualmente}, per evitare una deriva sistematica della discesa.
+\textbf{mescolandoli casualmente}. Si evita così una deriva sistematica della discesa.
 \end{idea}
 
-Nel \termine{mini-batch} si divide ogni epoca in parti: si sommano i gradienti di $mb$ esempi ($1<mb<l$) prima di
+Nel \termine{mini-batch} si divide ogni epoca in parti. Si sommano i gradienti di $mb$ esempi ($1<mb<l$) prima di
 aggiornare i pesi, e si ripete finché tutti i dati dell'epoca sono stati usati (\figrif{fig:minibatch}). Lo SGD
-con mini-batch usa il campionamento casuale (shuffling) per una stima non distorta del gradiente; poiché il costo
-di un aggiornamento dipende da $mb$ e non da $l$, è un fattore chiave per scalare a dataset di milioni di esempi
-(con dati enormi o in streaming si può fare anche a meno delle epoche).
+con mini-batch usa il campionamento casuale (shuffling) per una stima non distorta del gradiente. Il costo di un
+aggiornamento dipende da $mb$ e non da $l$: è un fattore chiave per scalare a dataset di milioni di esempi. Con
+dati enormi o in streaming si può fare anche a meno delle epoche.
 
 \begin{figure}[ht]
 \centering
@@ -129,14 +129,14 @@ il rumore può avere un effetto regolarizzante & & \\
 \begin{itemize}
   \item \textbf{Batch}: gradiente più accurato, si può usare un $\eta$ più alto.
   \item \textbf{On-line}: più veloce ma più instabile, serve un $\eta$ più piccolo.
-  \item In generale un $\eta$ \textbf{alto} è veloce ma può essere instabile, uno \textbf{basso} è stabile ma può
-        essere troppo lento; con LMS si cerca tipicamente in $[0{,}01;\,0{,}5]$.
+  \item In generale un $\eta$ \textbf{alto} è veloce ma può essere instabile. Uno \textbf{basso} è stabile ma può
+        essere troppo lento. Con LMS si cerca tipicamente in $[0{,}01;\,0{,}5]$.
 \end{itemize}
 
 \begin{idea}[(!) Guardare sempre la curva di apprendimento]
 Il grafico dell'errore di training durante l'addestramento mostra la \textbf{qualità} della discesa e la
-\textbf{velocità} di convergenza (il valore assoluto dell'errore dipende anche dalla capacità del modello). Si cerca
-una curva che scende rapidamente \textbf{e in modo liscio} (\figrif{fig:eta-curve}); una curva irregolare può
+\textbf{velocità} di convergenza. Il valore assoluto dell'errore dipende anche dalla capacità del modello. Si cerca
+una curva che scende rapidamente \textbf{e in modo liscio} (\figrif{fig:eta-curve}). Una curva irregolare può
 dipendere da batch troppo piccoli o da $\eta$ troppo alto, e va evitata. Qui si guardano solo i fallimenti
 dell'ottimizzazione sul training, non la generalizzazione.
 \end{idea}
@@ -153,17 +153,17 @@ dell'ottimizzazione sul training, non la generalizzazione.
 \addplot[very thick, rosso] {0.08+0.87*exp(-x/14)}; \addlegendentry{buono}
 \end{axis}
 \end{tikzpicture}
-\caption{Effetto del learning rate sulla curva di training (andamenti qualitativi): con $\eta$ molto alto la
-discesa diverge, molto basso resta quasi ferma, basso scende lentamente, alto scende in fretta ma si ferma presto;
-quello buono scende rapidamente e in modo liscio.}
+\caption{Effetto del learning rate sulla curva di training (andamenti qualitativi). Con $\eta$ molto alto la
+discesa diverge; molto basso resta quasi ferma; basso scende lentamente; alto scende in fretta ma si ferma presto.
+Quello buono scende rapidamente e in modo liscio.}
 \label{fig:eta-curve}
 \end{figure}
 
 \begin{idea}[(!) Usare la media dei gradienti]
-Conviene usare la \textbf{media} dei gradienti sull'epoca (somma divisa per $l$): rende l'approccio uniforme
-rispetto al numero di dati (è il \ingl{least mean squares}) ed equivale a usare $\eta/l$. Confrontando on-line e
-batch, l'on-line richiede un $\eta$ molto più piccolo (dello stesso fattore $1/l$) per essere comparabile; nel
-mini-batch, se si divide per $mb$, va ritarato $\eta$, oppure si divide sempre per $l$.
+Conviene usare la \textbf{media} dei gradienti sull'epoca, cioè la somma divisa per $l$. Rende l'approccio
+uniforme rispetto al numero di dati (è il \ingl{least mean squares}) ed equivale a usare $\eta/l$. Confrontando
+on-line e batch, l'on-line richiede un $\eta$ molto più piccolo (dello stesso fattore $1/l$) per essere
+comparabile. Nel mini-batch, se si divide per $mb$, va ritarato $\eta$; oppure si divide sempre per $l$.
 \end{idea}
 
 \subsection{Momentum (!)}
@@ -171,7 +171,7 @@ mini-batch, se si divide per $mb$, va ritarato $\eta$, oppure si divide sempre p
 \begin{equation}\label{eq:momentum}
 \boxed{\;\Delta\w_{\mathit{new}} = -\eta\,\frac{\partial E(\w)}{\partial\w} + \alpha\,\Delta\w_{\mathit{old}},\qquad \w_{\mathit{new}} = \w + \Delta\w_{\mathit{new}}\;}
 \end{equation}
-con $0<\alpha<1$ (ad esempio $0{,}5$--$0{,}9$); qui $\eta$ è incluso in $\Delta\w$ e dopo ogni passo si salva
+con $0<\alpha<1$ (ad esempio $0{,}5$--$0{,}9$). Qui $\eta$ è incluso in $\Delta\w$, e dopo ogni passo si salva
 $\Delta\w_{\mathit{old}} = \Delta\w_{\mathit{new}}$. È il metodo della \textbf{``palla pesante''}: a ogni passo si
 aggiunge una frazione dello spostamento precedente, come se i pesi avessero un'inerzia.
 \begin{itemize}
@@ -198,46 +198,48 @@ le pareti, il momentum procede lungo la valle verso il minimo.}
 \end{figure}
 
 Il momentum nasce per il batch. Nell'on-line $\Delta\w_{\mathit{old}}$ è quello dell'\textbf{esempio
-precedente}, e il momentum diventa una \textbf{media mobile dei gradienti passati} che liscia i gradienti stocastici
-dentro l'epoca (analogamente nel mini-batch): il significato è diverso dal batch, dove si combinano gradienti
-calcolati sugli stessi esempi in epoche diverse.
+precedente}. Il momentum diventa allora una \textbf{media mobile dei gradienti passati}, che liscia i gradienti
+stocastici dentro l'epoca (analogamente nel mini-batch). Il significato è diverso dal batch, dove si combinano
+gradienti calcolati sugli stessi esempi in epoche diverse.
 
-Nel \termine{momentum di Nesterov} si applica prima il momentum ($\w+\alpha\Delta\w_{\mathit{old}}$), si valuta il
-gradiente in questo punto intermedio, e poi si applica il $\Delta\w$ complessivo (momentum più nuovo gradiente) ai
-pesi originali. Migliora la velocità di convergenza nel batch (non nel caso stocastico).
+Il \termine{momentum di Nesterov} procede in tre passi. Prima si applica il momentum
+($\w+\alpha\Delta\w_{\mathit{old}}$). Poi si valuta il gradiente in questo punto intermedio. Infine si applica il
+$\Delta\w$ complessivo (momentum più nuovo gradiente) ai pesi originali. Migliora la velocità di convergenza nel
+batch, non nel caso stocastico.
 
 \subsection{Learning rate variabile e adattivo}
 
-Con il mini-batch il gradiente \textbf{non tende a zero} vicino al minimo (per il rumore di campionamento), quindi
-un $\eta$ fisso va evitato. Ad esempio lo si decresce linearmente fino all'iterazione $\tau$,
+Con il mini-batch il gradiente \textbf{non tende a zero} vicino al minimo, per il rumore di campionamento. Un
+$\eta$ fisso va quindi evitato. Ad esempio lo si decresce linearmente fino all'iterazione $\tau$,
 \[
 \eta_s = \Big(1-\frac{s}{\tau}\Big)\eta_0 + \frac{s}{\tau}\,\eta_\tau,\qquad s\le\tau,
 \]
-e poi si usa $\eta=\eta_\tau$ costante e piccolo (ad esempio $\eta_\tau\approx1\%$ di $\eta_0$, $\tau$ qualche
-centinaio di passi); $\eta_0$ si sceglie con il compromesso tra instabilità e blocco (prove preliminari o grid
+e poi si usa $\eta=\eta_\tau$ costante e piccolo. Valori tipici: $\eta_\tau\approx1\%$ di $\eta_0$, $\tau$ qualche
+centinaio di passi. $\eta_0$ si sceglie con il compromesso tra instabilità e blocco (prove preliminari o grid
 search). Gli algoritmi a \textbf{learning rate adattivo} lo regolano automaticamente, anche separatamente
-\textbf{per ogni parametro}: \textbf{AdaGrad}, \textbf{RMSProp}, \textbf{Adam} (molto popolare e spesso robusto con i
-valori di default, ma da usare con cautela); si combinano con il momentum. Nelle reti con molti strati $\eta$ può
-dipendere anche dallo strato o dal fan-in.
+\textbf{per ogni parametro}: \textbf{AdaGrad}, \textbf{RMSProp}, \textbf{Adam}. Adam è molto popolare e spesso
+robusto con i valori di default, ma va usato con cautela. Questi algoritmi si combinano con il momentum. Nelle
+reti con molti strati $\eta$ può dipendere anche dallo strato o dal fan-in.
 
 \subsection{Oltre lo SGD di base}
 
-Lo SGD è efficiente (lineare nel numero di parametri) ma dipende dal numero di dati e di epoche. Esistono molte
-euristiche: \textbf{Quickprop} (salta al minimo di una parabola che approssima localmente la loss),
-\textbf{R-prop} (usa solo il \textbf{segno} del gradiente, utile quando il gradiente svanisce negli strati
-profondi). I \textbf{metodi del secondo ordine} usano l'Hessiana (derivate seconde) per tenere conto della
-curvatura (metodo di Newton), ma l'Hessiana è costosissima; ne esistono versioni approssimate (Gauss-Newton,
-Levenberg-Marquardt, metodi \ingl{Hessian-free} come il gradiente coniugato, metodi quasi-Newton come BFGS).
+Lo SGD è efficiente (lineare nel numero di parametri), ma dipende dal numero di dati e di epoche. Esistono molte
+euristiche. \textbf{Quickprop} salta al minimo di una parabola che approssima localmente la loss.
+\textbf{R-prop} usa solo il \textbf{segno} del gradiente, ed è utile quando il gradiente svanisce negli strati
+profondi. I \textbf{metodi del secondo ordine} usano l'Hessiana (le derivate seconde) per tenere conto della
+curvatura, come nel metodo di Newton. L'Hessiana però è costosissima. Ne esistono versioni approssimate:
+Gauss-Newton, Levenberg-Marquardt, metodi \ingl{Hessian-free} come il gradiente coniugato, metodi quasi-Newton
+come BFGS.
 
 \begin{attenzione}[Punti di sella]
 Un punto di sella ha gradiente (quasi) nullo ma non è un minimo. In alta dimensione i punti di sella sono
-esponenzialmente più numerosi dei minimi locali. Il metodo di Newton cerca i punti a gradiente nullo e quindi è
-attratto dai punti di sella: può essere uno dei motivi per cui i metodi del secondo ordine non hanno sostituito la
-discesa del gradiente per le reti neurali, mentre la discesa del gradiente empiricamente riesce a sfuggire ai punti
+esponenzialmente più numerosi dei minimi locali. Il metodo di Newton cerca i punti a gradiente nullo, e quindi è
+attratto dai punti di sella. Può essere uno dei motivi per cui i metodi del secondo ordine non hanno sostituito
+la discesa del gradiente per le reti neurali. La discesa del gradiente, empiricamente, riesce a sfuggire ai punti
 di sella.
 \end{attenzione}
 
-Gli approcci di base (quelli segnati con (!)), applicati correttamente, di solito bastano: l'esperienza con
+Gli approcci di base (quelli segnati con (!)), applicati correttamente, di solito bastano. L'esperienza con
 tecniche note conta più di metodi sofisticati che non si sanno gestire. La tecnica di ottimizzazione conta solo se
 ci sono ostacoli all'addestramento: \textbf{la validazione conta più dell'ottimizzazione sul training set}, che non
 è l'obiettivo. Il punto di partenza è lo \textbf{SGD con momentum} (e regolarizzazione).
@@ -246,15 +248,16 @@ ci sono ostacoli all'addestramento: \textbf{la validazione conta più dell'ottim
 \label{sec:arresto}
 
 \begin{itemize}
-  \item Il criterio di base è l'errore (errore medio $<\epsilon$): il migliore se si conosce la tolleranza dei dati
-        (conoscenza dell'esperto), il che spesso non accade. Varianti: tolleranza massima invece che media; per la
-        classificazione, il numero di errori.
+  \item Il criterio di base è l'errore: errore medio $<\epsilon$. È il migliore se si conosce la tolleranza dei
+        dati (conoscenza dell'esperto), ma spesso non accade. Varianti: tolleranza massima invece che media; per
+        la classificazione, il numero di errori.
   \item Criteri ``interni'': pesi che non cambiano più, gradiente quasi nullo (norma $<\epsilon$), errore che non
         diminuisce più in modo significativo in un'epoca (ad esempio meno dello 0,1\%). Possono essere
-        \textbf{prematuri} (ad esempio con $\eta$ troppo piccolo), quindi si osservano $k$ epoche
+        \textbf{prematuri} (ad esempio con $\eta$ troppo piccolo); si osservano quindi $k$ epoche
         (\termine{patience}).
-  \item \textbf{(!)} Fermarsi comunque dopo un numero eccessivo di epoche, per sfuggire a convergenze troppo lente,
-        ma \textbf{non} fermarsi a un numero arbitrario di epoche fissato a priori (\rif{sec:validazione-reti}).
+  \item \textbf{(!)} Fermarsi comunque dopo un numero eccessivo di epoche, per sfuggire a convergenze troppo
+        lente. Ma \textbf{non} fermarsi a un numero arbitrario di epoche fissato a priori
+        (\rif{sec:validazione-reti}).
   \item Non necessariamente fermarsi con un errore di training molto basso: è il tema dell'overfitting.
 \end{itemize}
 
@@ -262,16 +265,16 @@ ci sono ostacoli all'addestramento: \textbf{la validazione conta più dell'ottim
 \label{sec:reg-reti}
 
 Tipicamente \textbf{non} si vuole il minimizzatore globale di $\Remp(\w)$, perché è probabilmente una soluzione in
-overfitting: è la differenza fondamentale rispetto all'ottimizzazione pura. Lo scopo è il \textbf{controllo della
-complessità}, tramite regolarizzazione (esplicita con una penalità, o implicita con l'early stopping) più la model
-selection per trovare il compromesso.
+overfitting. È la differenza fondamentale rispetto all'ottimizzazione pura. Lo scopo è il \textbf{controllo della
+complessità}. Si ottiene con la regolarizzazione, esplicita con una penalità o implicita con l'early stopping, più
+la model selection per trovare il compromesso.
 
 \subsection{Come nasce l'overfitting in una rete}
 \begin{itemize}
   \item Si parte con \textbf{pesi piccoli e casuali}.
-  \item La mappatura input-output è quasi \textbf{lineare} (le sigmoidi lavorano nella zona lineare): il numero
-        effettivo di parametri liberi, e la VC-dimension, è quasi quello di un'unità lineare.
-  \item Man mano che l'ottimizzazione procede, le unità nascoste tendono a \textbf{saturare}, il numero effettivo
+  \item La mappatura input-output è quasi \textbf{lineare}, perché le sigmoidi lavorano nella zona lineare. Il
+        numero effettivo di parametri liberi, e la VC-dimension, è quasi quello di un'unità lineare.
+  \item Man mano che l'ottimizzazione procede, le unità nascoste tendono a \textbf{saturare}. Il numero effettivo
         di parametri e le non linearità aumentano: la VC-dimension cresce.
 \end{itemize}
 
@@ -294,11 +297,11 @@ di validazione raggiunge un minimo e poi risale.}
 
 La curva della \figrif{fig:early-stopping} va letta insieme al bound della SLT. Gli strumenti sono tre:
 \begin{enumerate}
-  \item \termine{early stopping}: usare un \textbf{validation set} per decidere quando fermarsi, cioè quando
-        l'errore di validazione inizia a salire. È un criterio vago: bisogna osservare più epoche prima di decidere
-        (patience) ed eventualmente tornare indietro (\ingl{backtracking}). Poiché il numero effettivo di parametri
-        cresce durante l'addestramento, \textbf{fermarsi prima equivale a limitare la complessità effettiva};
-        \label{sec:early-stopping}
+  \item \termine{early stopping}\label{sec:early-stopping}: usare un \textbf{validation set} per decidere quando
+        fermarsi, cioè quando l'errore di validazione inizia a salire. È un criterio vago. Bisogna osservare più
+        epoche prima di decidere (patience) ed eventualmente tornare indietro (\ingl{backtracking}). Il numero
+        effettivo di parametri cresce durante l'addestramento. Per questo \textbf{fermarsi prima equivale a
+        limitare la complessità effettiva};
   \item \textbf{regolarizzazione} della loss, lo strumento principale;
   \item metodi di \textbf{pruning} (eliminazione di pesi o unità).
 \end{enumerate}
@@ -311,8 +314,9 @@ Si usa la penalità di Tikhonov (\rif{sec:tikhonov}) su \textbf{tutti i pesi del
 \]
 con l'effetto di \textbf{weight decay} \eqref{eq:weight-decay}: si aggiunge circa $2\lambda w$ al gradiente di ogni
 peso (il 2 si può omettere). $\lambda$ è in genere piccolo (ad esempio $0{,}01$) e si sceglie con la model
-selection. Applicata a un modello lineare è la ridge regression; esistono penalità più sofisticate (ad esempio per
-la \ingl{weight elimination}). Nei risultati \textbf{(!)} si riporta l'errore (il termine sui dati), non la loss.
+selection. Applicata a un modello lineare è la ridge regression. Esistono penalità più sofisticate, ad esempio
+per la \ingl{weight elimination}. Nei risultati \textbf{(!)} si riporta l'errore (il termine sui dati), non la
+loss.
 
 \begin{figure}[ht]
 \centering
@@ -338,40 +342,41 @@ $\valnnsenzaTest$ a $\valnnwdTest$ (errore di Bayes $\valbayesErr$).}
 \end{figure}
 
 \begin{attenzione}[La regolarizzazione non serve a stabilizzare la convergenza]
-La regolarizzazione serve a \textbf{controllare la complessità} del modello (la VC-dimension, legata al numero e
-al valore dei pesi), non a rendere più stabile la curva di apprendimento. Se la curva è instabile il problema è
-altrove (learning rate, dimensione dei batch, \dots).
+La regolarizzazione serve a \textbf{controllare la complessità} del modello, cioè la VC-dimension, legata al
+numero e al valore dei pesi. Non serve a rendere più stabile la curva di apprendimento. Se la curva è instabile il
+problema è altrove (learning rate, dimensione dei batch, \dots).
 \end{attenzione}
 
 \begin{idea}[Early stopping o regolarizzazione?]
-L'early stopping è un approccio \textbf{empirico}, che richiede un validation set e sacrifica una parte dei dati.
-La regolarizzazione nella loss è un approccio \textbf{fondato}: permette alla curva di validazione di seguire
-quella di training (purché $\lambda$ non sia così alto da dare underfitting), e in quel caso non serve l'early
-stopping e ci si può fermare a convergenza. Si possono usare entrambi: l'early stopping non interviene se l'errore
-di validazione non sale.
+L'early stopping è un approccio \textbf{empirico}: richiede un validation set e sacrifica una parte dei dati. La
+regolarizzazione nella loss è un approccio \textbf{fondato}. Permette alla curva di validazione di seguire quella
+di training, purché $\lambda$ non sia così alto da dare underfitting. In quel caso non serve l'early stopping, e ci
+si può fermare a convergenza. Si possono usare entrambi: l'early stopping non interviene se l'errore di
+validazione non sale.
 \end{idea}
 
 Alcuni dettagli:
 \begin{itemize}
-  \item spesso il \textbf{bias $w_0$ è escluso} dal regolarizzatore (includerlo renderebbe i risultati dipendenti
-        da traslazioni o scalature del target), oppure ha un proprio coefficiente;
-  \item la regolarizzazione si applica tipicamente nella versione batch; nell'on-line e nel mini-batch la penalità
-        viene applicata a ogni passo, cioè molte volte per epoca, e per un confronto equo con il batch si userebbe
-        $\lambda\cdot mb/l$ (se $\lambda$ si sceglie con la model selection, questo avviene automaticamente);
+  \item spesso il \textbf{bias $w_0$ è escluso} dal regolarizzatore, oppure ha un proprio coefficiente.
+        Includerlo renderebbe i risultati dipendenti da traslazioni o scalature del target;
+  \item la regolarizzazione si applica tipicamente nella versione batch. Nell'on-line e nel mini-batch la
+        penalità viene applicata a ogni passo, cioè molte volte per epoca. Per un confronto equo con il batch si
+        userebbe $\lambda\cdot mb/l$. Se $\lambda$ si sceglie con la model selection, questo avviene
+        automaticamente;
   \item un'altra tecnica di regolarizzazione è il \textbf{dropout} (\rif{sec:dropout}).
 \end{itemize}
 
 \subsection{Momentum e weight decay insieme}
 
-Con la loss regolarizzata, separando i due termini e usando $\eta$ solo per il termine d'errore (come nel
-\rif{sec:tikhonov}), la regola con momentum diventa
+Con la loss regolarizzata si separano i due termini e si usa $\eta$ solo per il termine d'errore, come nel
+\rif{sec:tikhonov}. La regola con momentum diventa
 \[
 \Delta w_{tu} = -\eta\,\frac{\partial\,\mathrm{Loss}}{\partial w_{tu}} + \alpha\,\Delta w_{tu}^{\mathit{old}}
 \;\doteq\; \eta\,\delta_t\,o_u - \lambda\,w_{tu} + \alpha\,\Delta w_{tu}^{\mathit{old}},\qquad
-w_{tu}^{\mathit{new}} = w_{tu} + \Delta w_{tu},
+w_{tu}^{\mathit{new}} = w_{tu} + \Delta w_{tu}.
 \]
-così $\eta$ non moltiplica $\lambda$ e cambiando l'uno non si cambia l'altro. Spesso il momentum include anche la
-parte di $\lambda$; per rendere \textbf{indipendenti tutti e tre gli iperparametri} $\eta$, $\alpha$, $\lambda$ si
+Così $\eta$ non moltiplica $\lambda$, e cambiando l'uno non si cambia l'altro. Spesso il momentum include anche la
+parte di $\lambda$. Per rendere \textbf{indipendenti tutti e tre gli iperparametri} $\eta$, $\alpha$, $\lambda$ si
 può separare il weight decay dalla memoria del momentum:
 \[
 \Delta w_{tu} = \eta\,\delta_t\,o_u + \alpha\,\Delta w_{tu}^{\mathit{old}},\qquad
@@ -382,29 +387,29 @@ Si divide per $l$ solo il gradiente di $E$, dove c'è la somma sugli esempi.
 \section{Numero di unità nascoste}
 \label{sec:unita-nascoste}
 
-Il numero di unità è legato al controllo della complessità, alla dimensione dell'input e a quella del training set:
-in generale è un problema di \textbf{model selection}, e il numero di unità si sceglie insieme a $\lambda$ con la
-cross-validation. Troppe poche unità danno underfitting, troppe possono dare overfitting; il numero può essere più
-alto se si usa un'adeguata regolarizzazione. Alternative alla ricerca manuale sono gli \textbf{approcci
-costruttivi}, che partono da una rete piccola e aggiungono unità, e i \textbf{metodi di pruning}, che partono da
-reti grandi ed eliminano pesi o unità.
+Il numero di unità è legato al controllo della complessità, alla dimensione dell'input e a quella del training
+set. In generale è un problema di \textbf{model selection}: il numero di unità si sceglie insieme a $\lambda$ con
+la cross-validation. Troppe poche unità danno underfitting, troppe possono dare overfitting. Il numero può essere
+più alto se si usa un'adeguata regolarizzazione. Ci sono due alternative alla ricerca manuale. Gli \textbf{approcci
+costruttivi} partono da una rete piccola e aggiungono unità. I \textbf{metodi di pruning} partono da reti grandi ed
+eliminano pesi o unità.
 
 \subsection{Cascade Correlation}
 
 Il \termine{Cascade Correlation} (CC) è l'approccio costruttivo più noto, per regressione e classificazione.
-Apprende \textbf{sia i pesi sia la topologia}: lo spazio delle ipotesi ha dimensione decisa dall'algoritmo, e a
+Apprende \textbf{sia i pesi sia la topologia}. Lo spazio delle ipotesi ha dimensione decisa dall'algoritmo, e a
 ogni passo si addestra una sola unità.
 
 \begin{algoritmo}[Cascade Correlation]
 \begin{enumerate}
   \item Si parte da una rete $N_0$ \textbf{senza unità nascoste} e la si addestra. Se non risolve il problema si
         passa a $N_1$.
-  \item In $N_1$ si aggiunge un'unità nascosta i cui pesi in ingresso sono addestrati per \textbf{massimizzare la
-        correlazione} tra la sua uscita e l'\textbf{errore residuo} della rete precedente.
-  \item Dopo l'addestramento i pesi in ingresso della nuova unità vengono \textbf{congelati} e si riaddestrano i
+  \item In $N_1$ si aggiunge un'unità nascosta. I suoi pesi in ingresso sono addestrati per \textbf{massimizzare
+        la correlazione} tra la sua uscita e l'\textbf{errore residuo} della rete precedente.
+  \item Dopo l'addestramento i pesi in ingresso della nuova unità vengono \textbf{congelati}, e si riaddestrano i
         pesi rimanenti (lo strato di uscita).
-  \item Se la rete non risolve il problema si aggiungono altre unità, ciascuna collegata a \textbf{tutti gli input e
-        a tutte le unità nascoste precedenti} (da qui ``a cascata'').
+  \item Se la rete non risolve il problema si aggiungono altre unità. Ciascuna è collegata a \textbf{tutti gli
+        input e a tutte le unità nascoste precedenti} (da qui ``a cascata'').
   \item Si continua finché l'errore residuo soddisfa il criterio di arresto.
 \end{enumerate}
 \end{algoritmo}
@@ -439,25 +444,25 @@ nascoste precedenti; i pesi segnati con $*$ (in ingresso alle unità già inseri
 \label{fig:cascade}
 \end{figure}
 
-L'algoritmo alterna la minimizzazione dell'errore totale (LMS, ad esempio backpropagation sullo strato di uscita) e
-la \textbf{massimizzazione della covarianza} $S$ tra l'uscita $o_p$ della candidata e l'errore residuo
-$E_{p,k} = o_{p,k}-d_{p,k}$ di ogni uscita $k$:
+L'algoritmo alterna due fasi. Nella prima minimizza l'errore totale (LMS, ad esempio backpropagation sullo strato
+di uscita). Nella seconda \textbf{massimizza la covarianza} $S$ tra l'uscita $o_p$ della candidata e l'errore
+residuo $E_{p,k} = o_{p,k}-d_{p,k}$ di ogni uscita $k$:
 \[
 S = \sum_k\Big\lvert\sum_p\big(o_p-\bar o\big)\big(E_{p,k}-\bar E_k\big)\Big\rvert .
 \]
-Il gradiente, usando $d\abs{f}/dx = \sign(f)\,df/dx$ e trascurando la dipendenza delle medie da $o_p$, è
+Il gradiente si ottiene usando $d\abs{f}/dx = \sign(f)\,df/dx$ e trascurando la dipendenza delle medie da $o_p$:
 \[
 \frac{\partial S}{\partial w_j} = \sum_k\sign(S_k)\sum_p\big(E_{p,k}-\bar E_k\big)\,f'(\net_{p,h})\,I_{p,j},
 \]
-dove $h$ è la candidata, $S_k$ il termine $k$-esimo della somma e $I_{p,j}$ il suo input $j$-esimo; si fa
+dove $h$ è la candidata, $S_k$ il termine $k$-esimo della somma e $I_{p,j}$ il suo input $j$-esimo. Si fa
 \textbf{ascesa} del gradiente, perché si massimizza $S$.
 \begin{itemize}
   \item Il ruolo delle unità nascoste è \textbf{ridurre l'errore residuo}: ogni unità risolve un sotto-problema e
         diventa un \textbf{rilevatore di feature permanente}.
   \item \textbf{Pool di candidate}: la superficie di $S$ ha molti massimi, quindi si addestra un gruppo di
         candidate e si sceglie la migliore.
-  \item È un algoritmo \textbf{greedy}: converge facilmente e può trovare un numero minimo di unità, ma può andare
-        in overfitting (serve regolarizzazione).
+  \item È un algoritmo \textbf{greedy}: converge facilmente e può trovare un numero minimo di unità. Può però
+        andare in overfitting (serve regolarizzazione).
   \item La loss non deve essere necessariamente ``max $S$'' (per la regressione si può usare LMS).
 \end{itemize}
 
@@ -477,64 +482,69 @@ dove $h$ è la candidata, $S_k$ il termine $k$-esimo della somma e $I_{p,j}$ il 
 \begin{itemize}
   \item \textbf{(!) Regressione}: unità di uscita \textbf{lineari}.
   \item \textbf{Classificazione}: una unità (binaria) o codifica 1-of-$K$ con più uscite. Con la sigmoide si sceglie
-        la soglia per assegnare la classe (eventualmente con zona di rifiuto); con 1-of-$K$ vince l'uscita più alta.
-        Spesso la \textbf{tanh} (simmetrica) apprende più in fretta. Come target si può usare $0{,}9$ invece di 1
-        (e $-0{,}9$ o $0{,}1$ invece di $-1$ o 0) per evitare la convergenza asintotica verso la saturazione; il
-        range dei target deve comunque stare nel range delle uscite.
+        la soglia per assegnare la classe, eventualmente con zona di rifiuto. Con 1-of-$K$ vince l'uscita più
+        alta. Spesso la \textbf{tanh} (simmetrica) apprende più in fretta. Come target si può usare $0{,}9$ invece
+        di 1 (e $-0{,}9$ o $0{,}1$ invece di $-1$ o 0). Si evita così la convergenza asintotica verso la
+        saturazione. Il range dei target deve comunque stare nel range delle uscite.
   \item \termine{Softmax} per target 0/1 multi-classe: le uscite sommano a 1 e si interpretano come probabilità
         $p(\text{classe}=k\mid\x)$:
         \[
         o_k(\x) = \frac{e^{\net_k}}{\sum_{j=1}^{K}e^{\net_j}} .
         \]
-  \item Come loss alternativa si può usare la \termine{cross-entropy} (stima di massima verosimiglianza); per
+  \item Come loss alternativa si può usare la \termine{cross-entropy} (stima di massima verosimiglianza). Per
         un'unità:
         \[
-        -\sum_{i\in TR}\Big\{d_i\log\big(\out(\x_i)\big) + (1-d_i)\log\big(1-\out(\x_i)\big)\Big\}.
+        -\sum_{p=1}^{l}\Big\{d_p\log\big(\out(\x_p)\big) + (1-d_p)\log\big(1-\out(\x_p)\big)\Big\}.
         \]
 \end{itemize}
 
 \section{Validazione di una rete neurale}
 \label{sec:validazione-reti}
 
-Gli schemi generali sono nel capitolo~\ref{cap:validazione}; per le reti ci sono tre questioni specifiche.
+Gli schemi generali sono nel capitolo~\ref{cap:validazione}. Per le reti ci sono tre questioni specifiche.
 
 \subsection{Non fissare il numero di epoche}
 \begin{attenzione}[Errore frequente]
 Evitare di fermare l'addestramento dopo un \textbf{numero fisso e arbitrario di epoche}.
 \end{attenzione}
-Se è piccolo ci si ferma \textbf{troppo presto} (underfitting, o si favoriscono i learning rate alti che richiedono
-meno epoche); se è grande \textbf{troppo tardi} (overfitting o tempo perso); lo stesso valore non può andare bene
-per tutte le configurazioni e le iterazioni di una K-fold CV; e non si saprebbe quale numero usare nel
-riaddestramento finale. Anche selezionare il numero di epoche con la model selection è impreciso. Con un sistema
-\textbf{ben regolarizzato} funzionano bene i criteri del \rif{sec:arresto} (soglia sulla diminuzione dell'errore o
-sul gradiente), oppure l'early stopping se si può usare un validation set.
+I motivi sono quattro.
+\begin{itemize}
+  \item Se il numero è piccolo ci si ferma \textbf{troppo presto}: underfitting, oppure si favoriscono i learning
+        rate alti, che richiedono meno epoche.
+  \item Se è grande ci si ferma \textbf{troppo tardi}: overfitting, o tempo perso.
+  \item Lo stesso valore non può andare bene per tutte le configurazioni e le iterazioni di una K-fold CV.
+  \item Non si saprebbe quale numero usare nel riaddestramento finale.
+\end{itemize}
+Anche selezionare il numero di epoche con la model selection è impreciso. Con un sistema \textbf{ben
+regolarizzato} funzionano bene i criteri del \rif{sec:arresto}: soglia sulla diminuzione dell'errore o sul
+gradiente. Oppure si usa l'early stopping, se si può usare un validation set.
 
 \subsection{Early stopping e cross-validation}
-Il criterio di early stopping fa \textbf{parte della model selection} (non va applicato sul test set) e in linea di
+Il criterio di early stopping fa \textbf{parte della model selection}: non va applicato sul test set. In linea di
 principio richiede un VL ogni volta che si addestra il modello. Il problema è scegliere il punto di arresto del
 \textbf{riaddestramento finale}, se ogni fold della CV si è fermato a un'epoca diversa:
 \begin{itemize}
-  \item prendere la \textbf{media} delle epoche sui fold è rischioso: con più dati nel riaddestramento il punto di
-        arresto ottimo cambia (ad esempio, in on-line, più dati per epoca significano più aggiornamenti per epoca e
-        servono meno epoche);
-  \item \textbf{molto meglio}: prendere la media dell'\textbf{errore di training} nel punto migliore di validazione e
-        usarla come soglia nel riaddestramento, per raggiungere lo stesso livello di fitting;
-  \item altrimenti serve un VL ogni volta: CV con early stopping attivo in ogni fold e, trovati i migliori
-        iperparametri, riaddestramento sul dataset ricomposto usando ancora una parte dei dati come VL.
+  \item prendere la \textbf{media} delle epoche sui fold è rischioso. Con più dati nel riaddestramento il punto di
+        arresto ottimo cambia. Ad esempio, in on-line, più dati per epoca significano più aggiornamenti per epoca,
+        e servono meno epoche;
+  \item \textbf{molto meglio}: prendere la media dell'\textbf{errore di training} nel punto migliore di validazione.
+        La si usa come soglia nel riaddestramento, per raggiungere lo stesso livello di fitting;
+  \item altrimenti serve un VL ogni volta. Si fa una CV con early stopping attivo in ogni fold. Trovati i migliori
+        iperparametri, si riaddestra sul dataset ricomposto, usando ancora una parte dei dati come VL.
 \end{itemize}
-In alternativa all'early stopping si usano \textbf{modelli regolarizzati} con criteri di arresto standard; la
+In alternativa all'early stopping si usano \textbf{modelli regolarizzati} con criteri di arresto standard. La
 regolarizzazione riduce comunque la dipendenza dall'early stopping.
 
 \subsection{Inizializzazioni diverse e modello finale}
-Inizializzazioni diverse portano a \textbf{modelli diversi}. Come scegliere il modello finale (scelta da
-dichiarare quando si riportano i risultati)?
+Inizializzazioni diverse portano a \textbf{modelli diversi}. Come scegliere il modello finale? La scelta va
+dichiarata quando si riportano i risultati.
 \begin{itemize}
-  \item Si calcolano \textbf{media e varianza} dell'errore sulle prove: un'esecuzione qualsiasi cadrà in
-        quell'intervallo, quindi il rischio è sotto controllo, a meno di una varianza alta (che è comunque un
-        segnale negativo, \rif{sec:decomposizione}).
+  \item Si calcolano \textbf{media e varianza} dell'errore sulle prove. Un'esecuzione qualsiasi cadrà in
+        quell'intervallo, quindi il rischio è sotto controllo. Fa eccezione una varianza alta, che è comunque un
+        segnale negativo (\rif{sec:decomposizione}).
   \item Si usano \textbf{tutti} i modelli con un \textbf{ensemble} (media delle uscite o voto).
-  \item Se se ne sceglie \textbf{uno}, è una \textbf{model selection} e serve un VL: il migliore (errore minimo sul
-        VL), la mediana (scelta più cauta), oppure uno casuale (che non richiede un VL).
+  \item Se se ne sceglie \textbf{uno}, è una \textbf{model selection} e serve un VL. Si può prendere il migliore
+        (errore minimo sul VL) o la mediana (scelta più cauta). Oppure uno casuale, che non richiede un VL.
   \item Si possono scartare i casi ``sfortunati'' guardando solo l'errore di training.
 \end{itemize}
 
@@ -542,15 +552,15 @@ dichiarare quando si riportano i risultati)?
 
 \begin{idea}[Pregi]
 \begin{itemize}
-  \item Metodo flessibile, che estende i metodi lineari alla stima di funzioni arbitrarie e costruisce
-        un'\textbf{ipotesi esplicita} (a differenza del K-NN).
+  \item Metodo flessibile, che estende i metodi lineari alla stima di funzioni arbitrarie. Costruisce
+        un'\textbf{ipotesi esplicita}, a differenza del K-NN.
   \item Spazio delle ipotesi continuo e ricco, loss differenziabile: addestramento con la discesa del gradiente.
-  \item Approssimatori universali; gestiscono rumore e dati incompleti con degrado graduale; dati continui e
-        discreti, regressione e classificazione.
+  \item Approssimatori universali. Gestiscono rumore e dati incompleti con degrado graduale; trattano dati
+        continui e discreti, regressione e classificazione.
   \item Un paradigma ampio (anche apprendimento non supervisionato, memorie associative, approcci stocastici).
-  \item \textbf{Rappresentazione distribuita} della conoscenza, compatta in matrici di pesi; tolleranza ai guasti;
-        adattamento ad ambienti non stazionari con l'apprendimento on-line (\ingl{continual learning}, con il
-        dilemma stabilità-plasticità).
+  \item \textbf{Rappresentazione distribuita} della conoscenza, compatta in matrici di pesi, e tolleranza ai
+        guasti. Adattamento ad ambienti non stazionari con l'apprendimento on-line (\ingl{continual learning}, con
+        il dilemma stabilità-plasticità).
 \end{itemize}
 \end{idea}
 
@@ -566,20 +576,21 @@ dichiarare quando si riportano i risultati)?
 \end{itemize}
 \end{attenzione}
 
-Le reti neurali sono indicate quando l'input è ad alta dimensione (discreto o reale), il task è di classificazione
-o regressione, i dati possono essere rumorosi, il tempo di addestramento non è critico, la forma della funzione
-target è sconosciuta, la leggibilità del risultato non è critica e il calcolo dell'uscita deve essere veloce.
+Le reti neurali sono indicate in queste condizioni: input ad alta dimensione (discreto o reale), task di
+classificazione o regressione, dati anche rumorosi. Inoltre il tempo di addestramento non è critico, la forma della
+funzione target è sconosciuta, la leggibilità del risultato non è critica, e il calcolo dell'uscita deve essere
+veloce.
 
 \section{Verificare un'implementazione: il benchmark MONK}
 
 Verificare la correttezza di un'implementazione è difficile: una rete spesso ``funziona'' (anche se male)
 nonostante piccoli errori. Un primo collaudo è il dataset \textbf{MONK}:
 \begin{itemize}
-  \item 3 task di classificazione binaria piccoli e artificiali: una piccola rete con poche unità raggiunge
+  \item 3 task di classificazione binaria piccoli e artificiali. Una piccola rete con poche unità raggiunge
         accuratezze altissime (fino al 100\%) in poco tempo;
   \item input: 6 variabili con 2, 3 o 4 valori simbolici ciascuna, quindi codifica \textbf{1-of-$k$} e
         \textbf{17 unità di input};
-  \item il test set include il training set (cattiva pratica, qui irrilevante); MONK3 contiene etichette
+  \item il test set include il training set (cattiva pratica, qui irrilevante). MONK3 contiene etichette
         rumorose e può andare in overfitting.
 \end{itemize}
 
@@ -588,14 +599,14 @@ nonostante piccoli errori. Un primo collaudo è il dataset \textbf{MONK}:
   \item Un'unità di uscita, con target e uscite coerenti ($0/1$ o $-1/+1$), ad esempio con tanh.
   \item \textbf{Codifica one-hot degli input}: dimenticarla è un errore frequentissimo.
   \item Batch con gradiente diviso per il numero di esempi: converge in qualche centinaio di epoche.
-  \item Poche unità nascoste (2--5); provare intervalli di inizializzazione piccoli (o basati sul fan-in), perché
+  \item Poche unità nascoste (2--5). Provare intervalli di inizializzazione piccoli (o basati sul fan-in), perché
         con poche unità il risultato è sensibile all'inizializzazione.
   \item Con approcci on-line usare lo \textbf{shuffling}: gli esempi sono ordinati per classe.
 \end{itemize}
-Buoni risultati sul MONK \textbf{non garantiscono} la correttezza; risultati cattivi indicano \textbf{sicuramente}
+Buoni risultati sul MONK \textbf{non garantiscono} la correttezza. Risultati cattivi indicano \textbf{sicuramente}
 che codice o impostazioni vanno rivisti. Nelle curve conta la \textbf{forma} (lisce, convergenti), non i valori.
-Per verificare la backpropagation si può usare un esempio svolto passo per passo (attenzione se omette i bias) o
-una libreria affidabile come confronto.
+Per verificare la backpropagation si può usare un esempio svolto passo per passo (attenzione se omette i bias). In
+alternativa si usa una libreria affidabile come confronto.
 \end{idea}
 
 \begin{puntichiave}

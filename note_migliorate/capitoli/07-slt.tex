@@ -4,8 +4,8 @@
 \begin{inbreve}
 La Statistical Learning Theory (SLT) dà una risposta formale alla domanda centrale del corso: quando l'errore
 sui dati di training è una buona stima dell'errore sui dati futuri? Il capitolo definisce rischio e rischio
-empirico, misura la complessità di uno spazio delle ipotesi con la VC-dimension, presenta il bound sul rischio
-e il principio della Structural Risk Minimization, da cui nascono le SVM.
+empirico. Misura poi la complessità di uno spazio delle ipotesi con la VC-dimension. Infine presenta il bound sul
+rischio e il principio della Structural Risk Minimization, da cui nascono le SVM.
 \end{inbreve}
 
 \section{Rischio e rischio empirico}
@@ -18,7 +18,7 @@ R = \int L\big(d, h(\x)\big)\,dP(\x,d),
 \end{equation}
 dove $P(\x,d)$ è la distribuzione (sconosciuta) dei dati e $L$ una loss, ad esempio
 $L(h(\x),d) = (d-h(\x))^2$. Si cerca $h\in H$ che minimizzi $R$. Si dispone però solo di un dataset finito
-$TR = \{(\x_p,d_p)\}_{p=1}^{l}$, e si minimizza il \termine{rischio empirico} (errore di training):
+$TR = \{(\x_p,d_p)\}_{p=1}^{l}$. Si minimizza quindi il \termine{rischio empirico} (errore di training):
 \begin{equation}\label{eq:rischio-empirico}
 \Remp(h,TR) = \frac1l\sum_{p=1}^{l}\big(d_p - h(\x_p)\big)^2 .
 \end{equation}
@@ -37,20 +37,20 @@ Le alternative per stimare l'errore atteso sono di due tipi:
 \label{sec:vc}
 
 Per un bound analitico serve misurare la \textbf{complessità} di $H$ (capacità, potere espressivo,
-flessibilità) anche quando $H$ è \textbf{infinito}, come nei modelli lineari con pesi reali: non si può usare
-$\abs{H}$. L'idea di Vapnik e Chervonenkis è misurare \textbf{il numero di istanze distinte che $H$ riesce a
-discriminare completamente}: nel caso della classificazione, il numero massimo di punti che si possono
+flessibilità). Va misurata anche quando $H$ è \textbf{infinito}, come nei modelli lineari con pesi reali: non si
+può usare $\abs{H}$. L'idea di Vapnik e Chervonenkis è misurare \textbf{il numero di istanze distinte che $H$
+riesce a discriminare completamente}. Nel caso della classificazione è il numero massimo di punti che si possono
 classificare senza errori \emph{per tutte le possibili etichettature}.
 
-Sia $X$ lo spazio delle istanze e si considerino $N$ punti (attenzione: qui $N$ è il numero di punti
-considerati, che può differire dal numero di dati $l$). Con due classi esistono $2^N$ possibili
-\termine{dicotomie} (etichettature dei punti con $-1$ o $+1$); una dicotomia è \textbf{rappresentata} in $H$ se
-esiste $h\in H$ che la realizza.
+Sia $X$ lo spazio delle istanze e si considerino $m$ punti. Attenzione: $m$ è il numero di punti considerati, che
+può differire dal numero di dati $l$. Con due classi esistono $2^m$ possibili \termine{dicotomie}, cioè
+etichettature dei punti con $-1$ o $+1$. Una dicotomia è \textbf{rappresentata} in $H$ se esiste $h\in H$ che la
+realizza.
 
 \begin{definizione}[Shattering]
 $H$ \termine{frammenta} (\ingl{shatters}) un insieme di punti se e solo se può rappresentare \textbf{tutte} le
-possibili dicotomie su di esso: per ogni etichettatura esiste un'ipotesi $h\in H$ consistente con essa (errore
-zero).
+possibili dicotomie su di esso. Cioè, per ogni etichettatura esiste un'ipotesi $h\in H$ consistente con essa
+(errore zero).
 \end{definizione}
 
 \begin{definizione}[VC-dimension]
@@ -64,7 +64,7 @@ Se si possono frammentare insiemi arbitrariamente grandi, $\VC(H) = \infty$.
 \end{definizione}
 
 \begin{attenzione}[Asimmetria della definizione]
-Per il limite inferiore basta mostrare \textbf{una} configurazione frammentabile; per il limite superiore bisogna
+Per il limite inferiore basta mostrare \textbf{una} configurazione frammentabile. Per il limite superiore bisogna
 mostrare che \textbf{nessuna} configurazione di $p+1$ punti lo è.
 \end{attenzione}
 
@@ -75,23 +75,28 @@ Per gli iperpiani separatori (LTU) in $\R^2$, $h(\x) = \sign(\w\T\x+w_0)$, vale 
 \end{teorema}
 \begin{proof}
 \textbf{$\VC(H)\ge3$.} Si prendano 3 punti non allineati. Le loro $2^3=8$ dicotomie sono tutte separabili da una
-retta (\figrif{fig:dicotomie}): quando i tre punti hanno la stessa etichetta basta una retta che li lasci tutti
-dalla stessa parte; altrimenti un punto ha etichetta diversa dagli altri due, ed essendo i punti non allineati
+retta (\figrif{fig:dicotomie}). Quando i tre punti hanno la stessa etichetta, basta una retta che li lasci tutti
+dalla stessa parte. Altrimenti un punto ha etichetta diversa dagli altri due. Poiché i punti non sono allineati,
 esiste una retta che isola quel vertice del triangolo dagli altri due. Non tutte le configurazioni di 3 punti
-funzionano (tre punti allineati con quello centrale di classe diversa non sono separabili), ma ne basta una.
+funzionano: tre punti allineati, con quello centrale di classe diversa, non sono separabili. Ma ne basta una.
 
-\textbf{$\VC(H)<4$.} Dati 4 punti qualsiasi del piano, si distinguono due casi.
+\textbf{$\VC(H)<4$.} Dati 4 punti qualsiasi del piano, si distinguono tre casi, che coprono tutte le
+possibilità.
 \begin{itemize}
-  \item I 4 punti formano un quadrilatero convesso: le due diagonali si incrociano. Si assegnano le estremità di
-        una diagonale alla classe $+1$ e quelle dell'altra alla classe $-1$.
-  \item Un punto è interno al triangolo formato dagli altri tre: si assegna al punto interno una classe e agli
-        altri tre la classe opposta.
-  \item (Caso degenere) Tre dei punti sono allineati: si assegna al punto centrale una classe diversa da quella
-        dei due estremi, come nella \figrif{fig:separabilita}.
+  \item \textbf{Tre dei punti sono allineati.} Si assegna al punto centrale dei tre una classe diversa da quella
+        dei due estremi (\figrif{fig:separabilita}).
+  \item \textbf{Nessuna terna è allineata e i 4 punti formano un quadrilatero convesso}: le due diagonali si
+        incrociano. Si assegnano le estremità di una diagonale alla classe $+1$ e quelle dell'altra alla
+        classe $-1$.
+  \item \textbf{Nessuna terna è allineata e un punto è interno al triangolo formato dagli altri tre.} Si assegna
+        al punto interno una classe e agli altri tre la classe opposta.
 \end{itemize}
-In entrambi i casi l'etichettatura non è separabile da una retta: nel primo è uno XOR (i segmenti che uniscono i
-punti della stessa classe si incrociano, \figrif{fig:quattro-punti}); nel secondo ogni semipiano che contiene i
-tre vertici contiene anche il triangolo, e quindi il punto interno. Nessun insieme di 4 punti è frammentato.
+In ciascun caso l'etichettatura scelta non è separabile da una retta. Un semipiano è convesso: se contiene due
+punti, contiene tutto il segmento che li unisce. Nel primo caso il semipiano che contiene i due estremi contiene
+quindi anche il punto centrale. Nel secondo caso i segmenti che uniscono i punti della stessa classe si
+incrociano (è uno XOR, \figrif{fig:quattro-punti}). Il punto d'incrocio dovrebbe stare in entrambi i semipiani,
+che invece sono disgiunti. Nel terzo caso ogni semipiano che contiene i tre vertici contiene anche il triangolo, e
+quindi il punto interno. Nessun insieme di 4 punti è frammentato.
 \end{proof}
 
 \begin{figure}[ht]
@@ -134,8 +139,8 @@ punti della stessa classe si incrociano (XOR) e serve un confine non lineare.}
 La VC-dimension della classe degli iperpiani separatori (LTU) in uno spazio $n$-dimensionale è $n+1$.
 \end{teorema}
 
-È un valore massimo: vincolando il modello (ad esempio limitando la norma dei pesi, come nelle SVM,
-\rif{sec:svm-srm}) può diminuire.
+È un valore massimo. Vincolando il modello può diminuire, ad esempio limitando la norma dei pesi come nelle SVM
+(\rif{sec:svm-srm}).
 
 \subsection{Altri esempi}
 
@@ -156,7 +161,7 @@ Cerchi in 2D (raggio fisso, centro libero) & 3 \\
 \end{tabular}
 \end{table}
 
-Per i cerchi centrati nell'origine con il solo parametro $b$, il cerchio include i punti vicini all'origine: con
+Per i cerchi centrati nell'origine con il solo parametro $b$, il cerchio include i punti vicini all'origine. Con
 due punti a distanze diverse non si può etichettare ``$+$'' il più lontano e ``$-$'' il più vicino, quindi
 $\VC=1$. Aggiungendo $k$ si può scambiare l'interno con l'esterno, e la VC-dimension sale a 2.
 
@@ -164,11 +169,11 @@ $\VC=1$. Aggiungendo $k$ si può scambiare l'interno con l'esterno, e la VC-dime
 
 La VC-dimension è legata al numero di parametri liberi, ma \textbf{non coincide} con esso:
 \begin{itemize}
-  \item nell'esempio dei cerchi, classi con lo \textbf{stesso} numero di parametri hanno VC-dimension diverse, e
+  \item nell'esempio dei cerchi, classi con lo \textbf{stesso} numero di parametri hanno VC-dimension diverse; e
         viceversa;
   \item si possono aggiungere parametri \textbf{ridondanti} senza cambiare nulla;
-  \item esistono modelli con \textbf{un solo parametro e VC-dimension infinita}: l'esempio classico è
-        $\sign(\sin(\alpha x))$, che con un $\alpha$ abbastanza grande frammenta qualsiasi insieme di punti
+  \item esistono modelli con \textbf{un solo parametro e VC-dimension infinita}. L'esempio classico è
+        $\sign(\sin(\alpha x))$: con un $\alpha$ abbastanza grande frammenta qualsiasi insieme di punti
         opportunamente scelti;
   \item per il \textbf{nearest neighbor} la VC-dimension è \textbf{infinita}: il 1-NN classifica correttamente
         qualunque etichettatura del training set.
@@ -179,35 +184,35 @@ La VC-dimension può essere difficile da calcolare per modelli con parametri non
 \label{sec:vc-bound}
 
 \begin{teorema}[VC-bound]
-Con probabilità almeno $1-\delta$, per ogni $h\in H$ (con $\VC<N$, dove $N$ è il numero di dati):
+Con probabilità almeno $1-\delta$, per ogni $h\in H$ (con $\VC<l$, dove $l$ è il numero di dati):
 \begin{equation}\label{eq:vc-bound}
-\boxed{\;\underbrace{R[h]}_{\text{rischio}} \;\le\; \underbrace{\Remp[h] + \eps(\VC,N,\delta)}_{\text{rischio garantito}}\;}
+\boxed{\;\underbrace{R[h]}_{\text{rischio}} \;\le\; \underbrace{\Remp[h] + \eps(\VC,l,\delta)}_{\text{rischio garantito}}\;}
 \end{equation}
 dove $\eps$ è la \termine{VC-confidence}. Ad esempio, per la loss 0/1:
 \[
-\eps(\VC,N,\delta) = \sqrt{\frac{\VC\left(\ln\frac{2N}{\VC}+1\right) - \ln\frac{\delta}{4}}{N}} .
+\eps(\VC,l,\delta) = \sqrt{\frac{\VC\left(\ln\frac{2l}{\VC}+1\right) - \ln\frac{\delta}{4}}{l}} .
 \]
 \end{teorema}
 
 $\delta$ è la \textbf{confidenza}: con $\delta=0{,}01$ il bound vale con probabilità $0{,}99$. Esistono
 formulazioni diverse per diverse classi di funzioni e task, scritte in generale come
 $R\le\Remp+\eps\left(\frac1l,\VC,\frac1\delta\right)$ o $R\le\Remp+\eps\left(\frac{\VC}{l},-\frac{\ln\delta}{l}\right)$.
-La VC-confidence \textbf{cresce con la VC-dimension} e \textbf{decresce con il numero di dati}: a meno di
-logaritmi dipende dal rapporto $\VC/N$, quindi raddoppiare i dati ha lo stesso effetto di dimezzare la
-complessità. Il bound permette di \textbf{stimare l'errore sui dati futuri} usando solo l'errore di training e
-la VC-dimension, e $\eps$ si può calcolare \textbf{prima} dell'apprendimento.
+La VC-confidence \textbf{cresce con la VC-dimension} e \textbf{decresce con il numero di dati}. A meno di
+logaritmi dipende dal rapporto $\VC/l$: raddoppiare i dati ha lo stesso effetto di dimezzare la complessità. Il
+bound permette di \textbf{stimare l'errore sui dati futuri} usando solo l'errore di training e la VC-dimension. E
+$\eps$ si può calcolare \textbf{prima} dell'apprendimento.
 
 \begin{idea}[Il bound spiega underfitting e overfitting]
 \begin{itemize}
-  \item \textbf{Più dati} ($l$ alto): $\eps$ diminuisce e il bound si avvicina a $R$: il rischio empirico diventa
+  \item \textbf{Più dati} ($l$ alto): $\eps$ diminuisce e il bound si avvicina a $R$. Il rischio empirico diventa
         una buona stima di quello vero.
   \item \textbf{Modello troppo semplice} (VC bassa): $\eps$ piccolo ma $\Remp$ alto: \textbf{underfitting}.
   \item \textbf{Modello troppo complesso} (VC alta, $l$ fissato): $\Remp$ basso ma $\eps$ alto, e con esso il
         bound su $R$: \textbf{overfitting}.
 \end{itemize}
-In parole semplici: si può approssimare bene $f$ dagli esempi \uline{purché si abbiano abbastanza dati e la
-complessità del modello sia adatta al problema}. Bisogna adattarsi ai dati abbastanza da evitare l'underfitting,
-ma non troppo, per evitare l'overfitting.
+In parole semplici, si può approssimare bene $f$ dagli esempi \uline{purché si abbiano abbastanza dati e la
+complessità del modello sia adatta al problema}. Bisogna adattarsi ai dati abbastanza da evitare l'underfitting.
+Ma non troppo, per evitare l'overfitting.
 \end{idea}
 
 \begin{figure}[ht]
@@ -232,20 +237,20 @@ loro somma, il bound su $R$, ha un minimo nel punto di miglior compromesso (anda
 
 \begin{esempio}[Ritrovare $h$ e $h'$]
 Nella definizione di overfitting (\rif{sec:overfitting}), $h$ ha errore di training minore ma rischio maggiore di
-$h'$. Sul grafico della \figrif{fig:vc-bound}: $h$ sta \textbf{a destra del minimo} (VC più alta, $\Remp$ più
-basso, bound più alto); $h'$ sta vicino al minimo.
+$h'$. Sul grafico della \figrif{fig:vc-bound}, $h$ sta \textbf{a destra del minimo}: VC più alta, $\Remp$ più
+basso, bound più alto. $h'$ sta vicino al minimo.
 \end{esempio}
 
 \begin{attenzione}[Bound ``nel caso peggiore'']
-I bound devono valere per tutte le funzioni di $H$ e tutti i training set, tranne una frazione $\delta$: sono
-\ingl{worst case} e spesso molto larghi. La VC-confidence può essere \textbf{centinaia di volte} più grande
+I bound devono valere per tutte le funzioni di $H$ e tutti i training set, tranne una frazione $\delta$. Sono
+quindi \ingl{worst case} e spesso molto larghi. La VC-confidence può essere \textbf{centinaia di volte} più grande
 dell'effetto di overfitting osservato empiricamente.
 \end{attenzione}
 
 \begin{idea}[Una conseguenza pratica]
 Per molte classi ragionevoli (ad esempio gli approssimatori lineari) la VC-dimension è \textbf{lineare nel numero
 di parametri liberi}. Quindi per apprendere ``bene'' serve un numero di esempi \textbf{lineare nella
-VC-dimension}, cioè nel numero di parametri: è una giustificazione teorica di euristiche come ``servono almeno
+VC-dimension}, cioè nel numero di parametri. È una giustificazione teorica di euristiche come ``servono almeno
 $k$ esempi per parametro''.
 \end{idea}
 
@@ -253,7 +258,7 @@ $k$ esempi per parametro''.
 \label{sec:srm}
 
 \begin{definizione}[Structural Risk Minimization]
-La \termine{SRM} usa la VC-dimension come parametro di controllo e, invece di minimizzare solo $\Remp$,
+La \termine{SRM} usa la VC-dimension come parametro di controllo. Invece di minimizzare solo $\Remp$,
 \textbf{minimizza il bound}, cioè la somma di errore di training e VC-confidence. Si definisce una
 \textbf{struttura annidata} di spazi delle ipotesi ordinati per VC-dimension (finita)
 \[
@@ -262,14 +267,14 @@ H_1\subseteq H_2\subseteq\dots\subseteq H_n,\qquad \VC(H_1)\le\dots\le\VC(H_n),
 e si sceglie lo spazio (e in esso l'ipotesi) con il \textbf{miglior bound sul rischio vero}.
 \end{definizione}
 
-La SRM formalizza il \textbf{controllo della complessità}: un compromesso tra complessità (VC-dimension) e
+La SRM formalizza il \textbf{controllo della complessità}, cioè un compromesso tra complessità (VC-dimension) e
 accuratezza sul training (\ingl{fitting}). Esempi di strutture annidate:
 \begin{itemize}
-  \item reti neurali con numero crescente di \textbf{unità nascoste} (circa), ma anche con numero crescente di
+  \item reti neurali con numero crescente di \textbf{unità nascoste} (circa). Ma anche con numero crescente di
         \textbf{epoche}, perché conta anche la grandezza dei pesi (\rif{sec:vc-reti});
   \item polinomi di \textbf{grado} $M$ crescente;
-  \item valori crescenti di $c$ con il vincolo $\norm{\w}<c$, cioè la \textbf{regolarizzazione} (controllata
-        equivalentemente da $\lambda$: aumentare $\lambda$ equivale a spostarsi verso spazi più piccoli);
+  \item valori crescenti di $c$ con il vincolo $\norm{\w}<c$, cioè la \textbf{regolarizzazione}. È controllata
+        equivalentemente da $\lambda$: aumentare $\lambda$ equivale a spostarsi verso spazi più piccoli;
   \item alberi di decisione con numero crescente di nodi (circa).
 \end{itemize}
 Gli \textbf{iperparametri importanti} di un modello sono proprio quelli legati alla VC-dimension.
@@ -277,20 +282,20 @@ Gli \textbf{iperparametri importanti} di un modello sono proprio quelli legati a
 \subsection{A cosa serve il bound}
 
 \begin{itemize}
-  \item Dà un \textbf{fondamento teorico} al ML, indipendente dai dettagli del modello e dell'algoritmo: il
-        rischio si può limitare analiticamente, il controllo della complessità ha un ruolo preciso, e la scelta
-        ottima della complessità sulla struttura minimizza il rischio atteso (il \textbf{principio induttivo della
-        SRM}). Spiega anche la differenza tra il ML e l'ottimizzazione pura: nel ML l'obiettivo non è minimizzare
-        l'errore sui dati, ma sui dati \emph{futuri}.
+  \item Dà un \textbf{fondamento teorico} al ML, indipendente dai dettagli del modello e dell'algoritmo. Il
+        rischio si può limitare analiticamente, e il controllo della complessità ha un ruolo preciso. La scelta
+        ottima della complessità sulla struttura minimizza il rischio atteso: è il \textbf{principio induttivo
+        della SRM}. Il bound spiega anche la differenza tra il ML e l'ottimizzazione pura: nel ML l'obiettivo non
+        è minimizzare l'errore sui dati, ma sui dati \emph{futuri}.
   \item Come \textbf{stima dell'errore} è usato raramente:
         \begin{itemize}
-          \item può essere molto largo, ma resta utile per la \textbf{model selection}, dove conta la
+          \item può essere molto largo. Resta però utile per la \textbf{model selection}, dove conta la
                 \textbf{dimensione relativa} (il \emph{ranking}) degli errori;
-          \item è un upper bound probabilistico valido per tutte le funzioni della classe, quindi si può cercare
+          \item è un upper bound probabilistico valido per tutte le funzioni della classe; quindi si può cercare
                 nella classe;
           \item la VC-dimension di classi specifiche è difficile da calcolare;
           \item il bound grezzo può non essere adeguato per una valutazione affidabile (\textbf{model
-                assessment}); si studiano bound più stretti.
+                assessment}). Si studiano bound più stretti.
         \end{itemize}
   \item Indica una direzione per sviluppare \textbf{nuovi modelli} guidati dalla SRM.
 \end{itemize}
@@ -299,8 +304,8 @@ Gli \textbf{iperparametri importanti} di un modello sono proprio quelli legati a
 
 \begin{enumerate}
   \item \textbf{Fissare la complessità} (quindi la VC-confidence) e \textbf{minimizzare l'errore di training}.
-        È l'approccio delle reti neurali: alcune euristiche di addestramento realizzano già una SRM
-        \textbf{implicita} (l'early stopping), oppure la si realizza con la \textbf{regolarizzazione di
+        È l'approccio delle reti neurali. Alcune euristiche di addestramento realizzano già una SRM
+        \textbf{implicita} (l'early stopping). Oppure la si realizza con la \textbf{regolarizzazione di
         Tikhonov}, minimizzando $\Remp$ più un termine di complessità.
   \item \textbf{Fissare l'errore di training} e \textbf{minimizzare automaticamente la VC-confidence}. È l'idea
         delle \textbf{SVM} (capitolo~\ref{cap:svm}).
@@ -308,7 +313,7 @@ Gli \textbf{iperparametri importanti} di un modello sono proprio quelli legati a
 
 \begin{attenzione}[Oltre il compromesso classico]
 Fenomeni più recenti, tipici delle reti profonde sovra-parametrizzate (\ingl{double descent},
-\ingl{benign overfitting}), sembrano sfidare questa visione; sono discussi nel \rif{sec:double-descent}.
+\ingl{benign overfitting}), sembrano sfidare questa visione. Sono discussi nel \rif{sec:double-descent}.
 \end{attenzione}
 
 \begin{puntichiave}
@@ -316,7 +321,7 @@ Fenomeni più recenti, tipici delle reti profonde sovra-parametrizzate (\ingl{do
   \item ERM: si minimizza $\Remp$ al posto di $R$; la domanda è quanto $\Remp$ approssimi $R$.
   \item VC-dimension: il massimo numero di punti che $H$ frammenta; $n+1$ per gli iperpiani in $\R^n$; non
         coincide con il numero di parametri (infinita con un solo parametro, infinita per il NN).
-  \item VC-bound: $R\le\Remp+\eps(\VC,N,\delta)$, con $\eps$ crescente in VC e decrescente in $N$.
+  \item VC-bound: $R\le\Remp+\eps(\VC,l,\delta)$, con $\eps$ crescente in VC e decrescente in $l$.
   \item SRM: su una struttura annidata $H_1\subseteq H_2\subseteq\dots$ si sceglie lo spazio con il bound
         minimo. Due realizzazioni: complessità fissa + minimo $\Remp$ (Tikhonov), $\Remp$ fisso + minima
         VC-confidence (SVM).

@@ -1,6 +1,7 @@
 \documentclass[11pt,a4paper,oneside,openany]{book}
 \input{preambolo.tex}
 \input{dati/valori.tex}
+\input{versione.tex}
 % include un capitolo solo se il file esiste (comodo durante la stesura)
 \newcommand{\capitolo}[1]{\IfFileExists{capitoli/#1.tex}{\input{capitoli/#1.tex}}{}}
 \hypersetup{pdftitle={Machine Learning --- Note riorganizzate}, pdfauthor={Fabio Piscitelli}}
@@ -23,7 +24,7 @@
 \vspace{0.2cm}
 {\normalsize Dal corso del Prof.\ Alessio Micheli, a.a.\ 2026/27\par}
 \vfill
-{\normalsize\color{grigio}\today\par}
+{\normalsize\color{grigio}Versione \versione\ --- \today\par}
 \end{titlepage}
 
 \frontmatter

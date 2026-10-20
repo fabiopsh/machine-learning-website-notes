@@ -3,18 +3,18 @@
 
 \begin{inbreve}
 Questo capitolo introduce l'unità di base delle reti neurali, il neurone artificiale, e il suo caso più
-semplice, il Perceptron (un'unità a soglia). Si vede che reti di unità a soglia rappresentano qualunque funzione
-booleana grazie alla ri-rappresentazione nello strato nascosto, si studia l'algoritmo di apprendimento del
-Perceptron con la dimostrazione del suo teorema di convergenza, lo si confronta con l'LMS, e si introducono le
+semplice, il Perceptron (un'unità a soglia). Mostra che reti di unità a soglia rappresentano qualunque funzione
+booleana, grazie alla ri-rappresentazione nello strato nascosto. Studia poi l'algoritmo di apprendimento del
+Perceptron, con la dimostrazione del suo teorema di convergenza, e lo confronta con l'LMS. Infine introduce le
 unità sigmoidali, che rendono possibile la discesa del gradiente anche con uscite non lineari.
 \end{inbreve}
 
 \section{Le reti neurali come strumento di ML}
 
-Le reti neurali si studiano con due obiettivi: \textbf{modellare sistemi biologici} e processi di apprendimento
-(neuroscienze, scienze cognitive), dove conta il realismo biologico; oppure \textbf{costruire sistemi di ML
-efficaci}, dove contano le proprietà computazionali e algoritmiche, anche a scapito del realismo. Nel corso
-interessa il secondo aspetto: una rete neurale artificiale (ANN) realizza una funzione $h(\x)$ con proprietà
+Le reti neurali si studiano con due obiettivi. Il primo è \textbf{modellare sistemi biologici} e processi di
+apprendimento (neuroscienze, scienze cognitive): qui conta il realismo biologico. Il secondo è \textbf{costruire
+sistemi di ML efficaci}: qui contano le proprietà computazionali e algoritmiche, anche a scapito del realismo. Nel
+corso interessa il secondo aspetto. Una rete neurale artificiale (ANN) realizza una funzione $h(\x)$ con proprietà
 speciali. In particolare le reti neurali
 \begin{itemize}
   \item apprendono da esempi;
@@ -30,15 +30,15 @@ molte unità computazionali semplici interconnesse.
 \subsection{L'ispirazione biologica}
 
 Il cervello umano ha più di $10^{10}$ neuroni, ciascuno con $10^4$--$10^5$ connessioni. Un neurone risponde in
-circa un millisecondo, eppure si riconosce un'immagine in circa $0{,}1$ secondi, cioè in al massimo un centinaio
+circa un millisecondo. Eppure si riconosce un'immagine in circa $0{,}1$ secondi, cioè in al massimo un centinaio
 di passi seriali: il cervello esegue una computazione \textbf{massicciamente parallela}. Un neurone riceve
-segnali dai \textbf{dendriti}, che ne modificano il potenziale; superata una \textbf{soglia}, emette un impulso
-(\ingl{spike}) che si propaga lungo l'\textbf{assone} fino alle \textbf{sinapsi}, dove passa ai neuroni successivi.
-Le sinapsi possono essere \textbf{eccitatorie} o \textbf{inibitorie} e la loro forza cambia con l'apprendimento
-(\textbf{plasticità}): nel modello artificiale la forza sinaptica diventa un \textbf{peso}.
+segnali dai \textbf{dendriti}, che ne modificano il potenziale. Superata una \textbf{soglia}, emette un impulso
+(\ingl{spike}). L'impulso si propaga lungo l'\textbf{assone} fino alle \textbf{sinapsi}, dove passa ai neuroni
+successivi. Le sinapsi possono essere \textbf{eccitatorie} o \textbf{inibitorie}, e la loro forza cambia con
+l'apprendimento (\textbf{plasticità}). Nel modello artificiale la forza sinaptica diventa un \textbf{peso}.
 
 \begin{definizione}[Apprendimento hebbiano]
-Una sinapsi si rafforza quando gli input del neurone (e le uscite correlate) si ripetono: lo stimolo in ingresso
+Una sinapsi si rafforza quando gli input del neurone (e le uscite correlate) si ripetono. Lo stimolo in ingresso
 rinforza la sinapsi, quindi \textbf{i pesi si avvicinano agli input}.
 \end{definizione}
 
@@ -55,7 +55,7 @@ dove $\net_i$ è l'\termine{input netto} (che include il bias $w_{i0}$ tramite l
 
 \begin{attenzione}[Notazione dei pesi]
 $w_{ij}$ è il peso \textbf{dell'unità $i$}, cioè della connessione \textbf{dall'input (o unità) $j$ verso l'unità
-$i$}: il primo indice è l'unità che riceve. Alcune fonti e librerie usano la convenzione opposta.
+$i$}. Il primo indice è l'unità che riceve. Alcune fonti e librerie usano la convenzione opposta.
 \end{attenzione}
 
 \begin{figure}[ht]
@@ -102,9 +102,9 @@ $h(\x)=\sum_iw_ix_i$; \textbf{a soglia} (gradino), che dà il \termine{Perceptro
 \section{Reti di unità a soglia e funzioni booleane}
 \label{sec:xor}
 
-Il primo modello di neurone (McCulloch e Pitts) ha due stati, attivo (1) e non attivo (0); ogni sinapsi è
+Il primo modello di neurone (McCulloch e Pitts) ha due stati, attivo (1) e non attivo (0). Ogni sinapsi è
 caratterizzata da un numero reale $w$, positivo per le connessioni \textbf{eccitatorie} e negativo per le
-\textbf{inibitorie}; un neurone si attiva quando la somma dei pesi provenienti dai neuroni attivi, più un bias,
+\textbf{inibitorie}. Un neurone si attiva quando la somma dei pesi provenienti dai neuroni attivi, più un bias,
 supera zero. Con input e output binari è sostanzialmente la LTU. Con $\net = \w\T\x = \sum_{i=0}^nw_ix_i$ e uscita
 1 se $\net>0$, 0 (o $-1$) altrimenti:
 \begin{itemize}
@@ -132,8 +132,8 @@ Per De Morgan $\bar h_1 = \overline{a\wedge b} = \bar a\vee\bar b$. Distribuendo
 perché $\bar a\wedge a$ e $\bar b\wedge b$ sono sempre falsi.
 \end{proof}
 
-Si ottiene una rete a \textbf{due strati}: due unità nascoste calcolano $h_1$ (AND) e $h_2$ (OR), e l'unità di
-uscita calcola $\bar h_1\wedge h_2$ con pesi $-1$ da $h_1$, $+1$ da $h_2$ e bias $-0{,}5$ (\figrif{fig:xor-rete}).
+Si ottiene una rete a \textbf{due strati}. Due unità nascoste calcolano $h_1$ (AND) e $h_2$ (OR). L'unità di
+uscita calcola $\bar h_1\wedge h_2$, con pesi $-1$ da $h_1$, $+1$ da $h_2$ e bias $-0{,}5$ (\figrif{fig:xor-rete}).
 
 \begin{figure}[ht]
 \centering
@@ -173,10 +173,9 @@ diventa linearmente separabile (retta rossa $h_2 = h_1 + 0{,}5$).}
 
 \begin{idea}[Lo strato nascosto come rappresentazione]
 Lo strato nascosto produce una \textbf{ri-rappresentazione interna} degli input che rende facile il compito
-dello strato di uscita. Questa composizione si estende su \textbf{molti strati di astrazione} e, a differenza di
-qui (dove i pesi sono scelti a mano), nelle reti neurali queste rappresentazioni \textbf{si apprendono}. È il
-fattore chiave delle reti neurali, alla base del \emph{representation learning} e del deep learning
-(capitolo~\ref{cap:deep}).
+dello strato di uscita. Questa composizione si estende su \textbf{molti strati di astrazione}. Qui i pesi sono
+scelti a mano; nelle reti neurali invece queste rappresentazioni \textbf{si apprendono}. È il fattore chiave
+delle reti neurali, alla base del \emph{representation learning} e del deep learning (capitolo~\ref{cap:deep}).
 \end{idea}
 
 \begin{proprieta}{Reti di unità a soglia}
@@ -210,8 +209,8 @@ $\sign(\w\T\x) = d$ per ogni esempio. L'algoritmo è \textbf{on-line}.
 \begin{algoritmo}[Perceptron Learning Algorithm]
 \begin{enumerate}
   \item Inizializzare i pesi (a zero o a piccoli valori casuali); scegliere un learning rate $\eta\in(0,1)$.
-  \item Finché non vale la condizione di arresto (ad esempio i pesi non cambiano più), per ogni esempio $(\x,d)$
-        con $d\in\{+1,-1\}$:
+  \item Ripetere, finché un'epoca intera passa senza errori (da lì in poi i pesi non cambiano più), per ogni
+        esempio $(\x,d)$ con $d\in\{+1,-1\}$:
         \begin{itemize}
           \item calcolare $\out = \sign(\w\T\x)$;
           \item se $\out = d$, \textbf{non cambiare i pesi};
@@ -220,7 +219,13 @@ $\sign(\w\T\x) = d$ per ogni esempio. L'algoritmo è \textbf{on-line}.
 \end{enumerate}
 \end{algoritmo}
 
-In pratica si aggiunge $\eta\x$ se $\w\T\x\le0$ e $d=+1$ (falso negativo) e si sottrae $\eta\x$ se $\w\T\x>0$ e
+\begin{attenzione}[Il caso $\w\T\x = 0$]
+Un esempio sta \emph{sul} confine quando $\w\T\x = 0$, e il segno non decide nulla. Si conviene di contarlo
+\textbf{sempre come errore}: un esempio è classificato bene solo se $d\,\w\T\x > 0$. È la convenzione usata nella
+dimostrazione di convergenza. Con $\w(0)=\vv0$, ad esempio, il primo esempio è sempre un errore.
+\end{attenzione}
+
+In pratica si aggiunge $\eta\x$ se $\w\T\x\le0$ e $d=+1$ (falso negativo) e si sottrae $\eta\x$ se $\w\T\x\ge0$ e
 $d=-1$ (falso positivo). In forma equivalente
 \[
 \w_{\mathit{new}} = \w + \tfrac12\eta\,(d-\out)\,\x ,
@@ -250,15 +255,16 @@ correttamente.}
 \label{fig:perceptron-geometria}
 \end{figure}
 
-Geometricamente (\figrif{fig:perceptron-geometria}) $\w$ punta verso la regione positiva; se un esempio con
-$d=+1$ è classificato male, $\w$ viene spostato un po' nella sua direzione (somma vettoriale $\w+\eta d\x$); se un
+Geometricamente (\figrif{fig:perceptron-geometria}) $\w$ punta verso la regione positiva. Se un esempio con
+$d=+1$ è classificato male, $\w$ viene spostato un po' nella sua direzione (somma vettoriale $\w+\eta d\x$). Se un
 esempio con $d=-1$ è classificato male, $\w$ viene allontanato da esso.
 
 \subsubsection{Due letture della regola}
 \begin{itemize}
   \item $\w_{\mathit{new}} = \w+\eta\,d\,\x$ è un \textbf{apprendimento hebbiano}: $\w$ si muove verso $\x$.
-  \item $\w_{\mathit{new}} = \w+\eta\,(d-\out)\,\x = \w + \eta\,\delta\,\x$ è una regola di \textbf{correzione
-        dell'errore} (delta rule): la modifica di un peso è proporzionale al prodotto del segnale d'errore per il
+  \item $\w_{\mathit{new}} = \w+\tfrac12\eta\,(d-\out)\,\x = \w + \eta'\,\delta\,\x$, con $\delta = d-\out$ e
+        $\eta' = \eta/2$ (il fattore $\tfrac12$ si assorbe nel learning rate). È una regola di \textbf{correzione
+        dell'errore} (delta rule). La modifica di un peso è proporzionale al prodotto del segnale d'errore per il
         segnale di input della connessione.
 \end{itemize}
 Il calcolo è facile perché il segnale d'errore $\delta$ è \textbf{direttamente misurabile}: si conosce la risposta
@@ -271,10 +277,10 @@ seguente garantisce che riesce anche a \textbf{impararli}: il Perceptron apprend
 \label{sec:convergenza-perceptron}
 
 \begin{teorema}[Convergenza del Perceptron]
-Se il problema è \textbf{linearmente separabile}, l'algoritmo del Perceptron converge, classificando correttamente
-tutti gli esempi, in un \textbf{numero finito di passi}, qualunque sia il punto di partenza (la soluzione finale
-non è unica e dipende dal punto di partenza). Se il problema non è separabile l'algoritmo può essere instabile e
-sviluppare \textbf{cicli}, con pesi non necessariamente ottimali.
+Se il problema è \textbf{linearmente separabile}, l'algoritmo del Perceptron converge in un \textbf{numero finito
+di passi}, classificando correttamente tutti gli esempi. Questo vale qualunque sia il punto di partenza; la
+soluzione finale non è unica e dipende dal punto di partenza. Se il problema non è separabile, l'algoritmo può
+essere instabile e sviluppare \textbf{cicli}, con pesi non necessariamente ottimali.
 \end{teorema}
 
 Nella dimostrazione si omette la $\T$ nei prodotti scalari.
@@ -285,22 +291,30 @@ soluzione $\w^*$ con
 \[
 d_i\,(\w^*\x_i)\ge\alpha,\qquad \alpha = \min_i d_i\,(\w^*\x_i) > 0 .
 \]
-Definendo $\x'_i = d_i\x_i$, si ha $\w^*\x'_i = d_i(\w^*\x_i)\ge\alpha$: \textbf{$\w^*$ risolve il problema
-originale se e solo se risolve il problema $(\x'_i,+1)$} con tutti i target positivi (il ragionamento vale nei
-due versi, perché $d_i^2=1$). Basta quindi dimostrare il teorema per un problema con \textbf{soli esempi positivi}:
-``ribaltare'' gli esempi negativi non cambia nulla.
+Si definisca $\x'_i = d_i\x_i$. Allora $\w^*\x'_i = d_i(\w^*\x_i)\ge\alpha$: \textbf{$\w^*$ risolve il problema
+originale se e solo se risolve il problema $(\x'_i,+1)$}, con tutti i target positivi. Il ragionamento vale nei
+due versi, perché $d_i^2=1$. Anche l'\textbf{algoritmo} si comporta allo stesso modo sui due problemi. Sbaglia
+su $(\x_i,d_i)$ se e solo se $d_i(\w\x_i)\le0$, cioè se e solo se $\w\x'_i\le0$. E l'aggiornamento
+$\w+\eta\,d_i\x_i$ coincide con $\w+\eta\,\x'_i$. Le due esecuzioni producono quindi la stessa sequenza di pesi.
+Basta allora dimostrare il teorema per un problema con \textbf{soli esempi positivi}: ``ribaltare'' gli esempi
+negativi non cambia nulla.
 
 \subsubsection{Passo 2: i pesi dopo $q$ errori}
-Si assume $\w(0) = \vv0$, $\eta=1$ e si definisce $\beta = \max_i\norm{\x_i}^2$. Con soli esempi positivi la regola
-diventa $\w(j) = \w(j-1)+\x_{i_j}$ a ogni errore, dove $i_j$ è l'indice del $j$-esimo esempio classificato male
-(lo stesso esempio può comparire più volte). Dopo $q$ errori
+Si assume $\w(0) = \vv0$, $\eta=1$ e si definisce $\beta = \max_i\norm{\x_i}^2$. Con $\w(0)=\vv0$ la scelta
+$\eta=1$ non è una restrizione. Ogni vettore dei pesi è una somma di termini $\eta\,\x_i$, quindi un altro $\eta$
+moltiplica tutti i pesi per la stessa costante positiva. I segni di $\w\T\x$ non cambiano, e nemmeno la sequenza
+degli errori. Il caso $\w(0)\neq\vv0$, incluso nell'enunciato, richiede di adattare i due limiti e qui non
+è svolto.
+
+Con soli esempi positivi la regola diventa $\w(j) = \w(j-1)+\x_{i_j}$ a ogni errore. Qui $i_j$ è l'indice del
+$j$-esimo esempio classificato male (lo stesso esempio può comparire più volte). Dopo $q$ errori
 \[
 \w(q) = \sum_{j=1}^{q}\x_{i_j}.
 \]
 
 \subsubsection{Idea}
 Si trovano un \textbf{limite inferiore} a $\norm{\w(q)}^2$ che cresce come $q^2$ e un \textbf{limite superiore}
-che cresce come $q$. Poiché una funzione quadratica supera prima o poi una lineare, i due limiti sono compatibili
+che cresce come $q$. Una funzione quadratica supera prima o poi una lineare. I due limiti sono quindi compatibili
 solo per $q$ fino a un valore massimo: il numero di errori, e quindi di aggiornamenti, è finito
 (\figrif{fig:convergenza}).
 
@@ -337,8 +351,8 @@ Con lo sviluppo \eqref{eq:quadrato-norma}:
 \[
 \norm{\w(q)}^2 = \norm{\w(q-1)+\x_{i_q}}^2 = \norm{\w(q-1)}^2 + 2\,\w(q-1)\,\x_{i_q} + \norm{\x_{i_q}}^2 .
 \]
-Poiché $\x_{i_q}$ è stato classificato male (è il $q$-esimo errore), $\w(q-1)\,\x_{i_q}\le0$; eliminando questo
-termine non positivo
+Poiché $\x_{i_q}$ è stato classificato male (è il $q$-esimo errore), $\w(q-1)\,\x_{i_q}\le0$, per la convenzione
+sul caso $\w\T\x=0$. Eliminando questo termine non positivo
 \[
 \norm{\w(q)}^2 \le \norm{\w(q-1)}^2 + \norm{\x_{i_q}}^2 ,
 \]
@@ -354,28 +368,29 @@ q\,\beta \;\ge\; \norm{\w(q)}^2 \;\ge\; \frac{(q\alpha)^2}{\norm{\w^*}^2}
 \quad\Longrightarrow\quad
 \boxed{\;q \le \frac{\beta\,\norm{\w^*}^2}{\alpha^2}\;}
 \]
-Il numero di errori, e quindi di aggiornamenti, è limitato da una costante: l'algoritmo converge in un numero
-finito di passi. \hfill\qedsymbol
+Il numero di errori, e quindi di aggiornamenti, è limitato da una costante. Dopo l'ultimo errore l'algoritmo
+compie un'epoca intera senza errori e si ferma: converge in un numero finito di passi. \hfill\qedsymbol
 
 \begin{idea}[Interpretazione del bound]
-Il numero di passi cresce con $\beta$ (quanto sono ``grandi'' gli esempi) e decresce con $\alpha^2$, che misura
-quanto il problema è ``ben separato'' (il margine minimo della soluzione $\w^*$). Problemi con classi vicine
-all'iperpiano separatore richiedono più passi. L'idea di \textbf{margine} è centrale nelle SVM
+Il numero di passi cresce con $\beta$, cioè con quanto sono ``grandi'' gli esempi. Decresce con $\alpha^2$, che
+misura quanto il problema è ``ben separato'' (il margine minimo della soluzione $\w^*$). Problemi con classi
+vicine all'iperpiano separatore richiedono più passi. L'idea di \textbf{margine} è centrale nelle SVM
 (capitolo~\ref{cap:svm}).
 \end{idea}
 
 \section{Perceptron contro LMS}
 
-Le due regole hanno la stessa forma, $\w_{\mathit{new}} = \w+\eta\,\delta\,\x$, ma
+Le due regole hanno la stessa forma, $\w_{\mathit{new}} = \w+\eta\,\delta\,\x$ (nel Perceptron il fattore
+$\tfrac12$ è assorbito in $\eta$), ma
 \begin{itemize}
   \item l'LMS è derivato dal gradiente \textbf{senza} soglia, minimizzando l'errore dell'unità lineare:
         $\delta = d - \w\T\x$;
   \item il Perceptron usa l'uscita con soglia: $\delta = d-\sign(\w\T\x)$.
 \end{itemize}
 Una conseguenza importante: \textbf{l'LMS può classificare male anche problemi linearmente separabili}. L'LMS non
-minimizza il numero di errori della LTU ma l'errore quadratico, e modifica i pesi \textbf{anche per gli esempi già
-classificati correttamente}: un esempio corretto ma lontano dall'iperpiano (con $\w\T\x$ molto maggiore di 1)
-produce comunque un errore quadratico grande che ``tira'' l'iperpiano (\figrif{fig:lms-perceptron}).
+minimizza il numero di errori della LTU, ma l'errore quadratico. Modifica quindi i pesi \textbf{anche per gli
+esempi già classificati correttamente}. Un esempio corretto ma lontano dall'iperpiano (con $\w\T\x$ molto maggiore
+di 1) produce comunque un errore quadratico grande, che ``tira'' l'iperpiano (\figrif{fig:lms-perceptron}).
 
 \begin{figure}[ht]
 \centering
@@ -453,8 +468,8 @@ denominatore per $e^{ax/2}$ si ottiene $\frac{e^{ax/2}-e^{-ax/2}}{e^{ax/2}+e^{-a
 Vicino a zero la sigmoide è quasi lineare (\textbf{semi-linearità}). Per $a\to0$ tende a una funzione
 \textbf{lineare} molto piatta, per $a\to\infty$ alla funzione \textbf{a gradino}. Per la classificazione, con la
 logistica un'uscita $\ge0{,}5$ corrisponde alla classe positiva e $<0{,}5$ a quella negativa (per la tanh la
-soglia è 0). La soglia si può spostare (studiando l'effetto su falsi positivi e negativi, ad esempio con una curva
-ROC) e si può definire una \textbf{zona di rifiuto} attorno alla soglia per evitare decisioni fragili.
+soglia è 0). La soglia si può spostare, studiando l'effetto su falsi positivi e negativi, ad esempio con una curva
+ROC. Si può anche definire una \textbf{zona di rifiuto} attorno alla soglia, per evitare decisioni fragili.
 
 \subsubsection{Altre funzioni di attivazione}
 \begin{itemize}
@@ -471,8 +486,9 @@ Molte funzioni di attivazione hanno prestazioni simili in pratica.
 
 \subsection{Derivate}
 
-La derivata dell'identità è 1; quella della funzione a gradino \textbf{non è definita} in zero ed è nulla altrove,
-ed è esattamente il motivo per cui non si può usare con la discesa del gradiente. Per le sigmoidi (con $a=1$):
+La derivata dell'identità è 1. Quella della funzione a gradino \textbf{non è definita} in zero ed è nulla
+altrove: è esattamente il motivo per cui non si può usare con la discesa del gradiente. Per le sigmoidi (con
+$a=1$):
 \begin{equation}\label{eq:derivata-sigmoide}
 \boxed{\;\frac{df_\sigma(x)}{dx} = f_\sigma(x)\big(1-f_\sigma(x)\big), \qquad \frac{d\tanh(x)}{dx} = 1-\tanh^2(x)\;}
 \end{equation}
@@ -535,7 +551,7 @@ discesa del gradiente è identica a quella per l'unità lineare, con un nuovo de
 \end{itemize}
 
 \begin{idea}[Un ponte tra LMS e Perceptron]
-Quando un esempio è classificato correttamente ``con decisione'' (uscita satura vicino al target),
+Si consideri un esempio classificato correttamente ``con decisione'', con uscita satura vicino al target. Allora
 $f'_\sigma\approx0$ e la correzione è quasi nulla, proprio come nel Perceptron, che non corregge gli esempi
 corretti. Con $f_\sigma$ si approssima quindi non solo la LTU, ma anche l'algoritmo del Perceptron.
 \end{idea}

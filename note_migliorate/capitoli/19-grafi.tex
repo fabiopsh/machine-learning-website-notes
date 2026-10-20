@@ -2,66 +2,74 @@
 \label{cap:grafi}
 
 \begin{inbreve}
-L'ultimo capitolo estende l'apprendimento ai grafi. Si formula il problema delle trasduzioni su grafi, si presenta il
-\emph{message passing} delle Deep Graph Networks nelle sue due famiglie (a strati e ricorsiva), si discutono i problemi
-legati alla profondità (over-smoothing, over-squashing, eterofilia) con alcuni strumenti di analisi, e si chiude con i
-kernel per strutture.
+L'ultimo capitolo estende l'apprendimento ai grafi. Formula il problema delle trasduzioni su grafi. Presenta il
+\emph{message passing} delle Deep Graph Networks nelle sue due famiglie, a strati e ricorsiva. Discute i problemi
+legati alla profondità (over-smoothing, over-squashing, eterofilia), con alcuni strumenti di analisi. Si chiude con
+i kernel per strutture.
 \end{inbreve}
+
+\begin{attenzione}[Notazione]
+In questo capitolo $\x_v$ è l'etichetta (il vettore delle feature) del nodo $v$ e $\h_v^{(l)}$ il suo stato dopo $l$
+passi di message passing, con $l=1,\dots,L$. $A$ è la matrice di adiacenza e $\mathcal N(v)$ l'insieme dei vicini di
+$v$. Le formule con una matrice $H$ hanno una riga per nodo.
+\end{attenzione}
 
 \section{Perché i grafi}
 
 I dati hanno spesso \textbf{relazioni}: astrazioni di immagini e comprensione di scene, social network e knowledge
 graph, alberi sintattici del linguaggio, reti di trasporto, piccole molecole (\ingl{drug design}) e reti biologiche,
-termini logici, reti cerebrali. Il corso ha seguito una progressione nel dominio di input: dai \textbf{vettori} (reti
-feedforward) alle \textbf{sequenze} (RNN) alle \textbf{strutture} (alberi, grafi). L'obiettivo qui è ottenere modelli
-\textbf{profondi ed efficienti} per i dati strutturati, combinando la stratificazione (più livelli di astrazione) con
-l'efficienza degli approcci randomizzati o incrementali.
+termini logici, reti cerebrali. Il corso ha seguito una progressione nel dominio di input. Si è passati dai
+\textbf{vettori} (reti feedforward) alle \textbf{sequenze} (RNN), e ora alle \textbf{strutture} (alberi, grafi).
+L'obiettivo qui è ottenere modelli \textbf{profondi ed efficienti} per i dati strutturati. Si combina la
+stratificazione (più livelli di astrazione) con l'efficienza degli approcci randomizzati o incrementali.
 
 \subsection{I grafi considerati}
 
-Si considerano \textbf{grafi etichettati}: ogni \textbf{nodo} $v$ ha un'\textbf{etichetta vettoriale} $\vv l(v)$ (ad esempio
-$[1,0,1,0{,}7]$); gli archi possono avere un'etichetta ed essere orientati; possono esserci \textbf{cicli}. $A$ è la
-\termine{matrice di adiacenza} e $\mathcal N(v)$ l'insieme dei vicini di $v$.
+Si considerano \textbf{grafi etichettati}. Ogni \textbf{nodo} $v$ ha un'\textbf{etichetta vettoriale} $\x_v$, ad
+esempio $[1,0,1,0{,}7]$. Gli archi possono avere un'etichetta ed essere orientati, e possono esserci
+\textbf{cicli}. $A$ è la \termine{matrice di adiacenza}: $A_{uv}=1$ se c'è un arco tra $u$ e $v$, 0 altrimenti.
 
 \subsection{Il problema della rappresentazione}
 
-Non esisteva un modo \textbf{sistematico}, valido per qualunque task, per estrarre feature da esempi strutturati: è un
-caso di representation learning (\rif{sec:representation}) esteso ai domini strutturati.
+Non esisteva un modo \textbf{sistematico}, valido per qualunque task, per estrarre feature da esempi strutturati. È
+un caso di representation learning (\rif{sec:representation}) esteso ai domini strutturati.
 \begin{itemize}
   \item Le rappresentazioni basate su \textbf{feature} scelte a mano sono incomplete o dipendenti dal task (ad esempio
         gli indici topologici in chimica).
-  \item Le rappresentazioni di dimensione fissa (ad esempio la matrice di adiacenza come vettore) soffrono di
-        sovra-dimensionamento o incompletezza (spreco con il padding, perdita di informazione), del problema
-        dell'\textbf{allineamento} tra grafi diversi (quale nodo di un grafo corrisponde a quale dell'altro?) e
-        dell'ordine dei nodi, che rende difficile generalizzare.
+  \item Le rappresentazioni di dimensione fissa (ad esempio la matrice di adiacenza come vettore) hanno tre
+        problemi. Soffrono di sovra-dimensionamento o incompletezza: spreco con il padding, perdita di
+        informazione. Hanno il problema dell'\textbf{allineamento} tra grafi diversi: quale nodo di un grafo
+        corrisponde a quale dell'altro? Dipendono infine dall'ordine dei nodi, e questo rende difficile
+        generalizzare.
 \end{itemize}
 
 \begin{idea}[Portare i modelli ai dati]
-Trattare la natura propria dei dati di input è la chiave per applicare con successo il ML. Invece di \textbf{portare i
-dati ai modelli} (trasformare grafi in vettori, alberi in sequenze, con problemi di allineamento e perdita di
-informazione), si \textbf{portano i modelli ai dati}.
+Trattare la natura propria dei dati di input è la chiave per applicare con successo il ML. Invece di \textbf{portare
+i dati ai modelli}, si \textbf{portano i modelli ai dati}. Trasformare grafi in vettori o alberi in sequenze porta
+infatti problemi di allineamento e perdita di informazione.
 \end{idea}
 
 \begin{esempio}[Molecole]
-Nel QSPR/QSAR si vuole correlare la struttura chimica delle molecole con le loro proprietà,
-$\text{Proprietà} = T(\text{Struttura})$: un valore numerico (regressione) o ``tossico sì/no'' (classificazione). Le
-molecole non sono vettori: sono rappresentate più naturalmente da grafi di dimensione variabile, e si vuole predire
-direttamente dalla struttura.
+Nel QSPR/QSAR si vuole correlare la struttura chimica delle molecole con le loro proprietà:
+$\text{Proprietà} = T(\text{Struttura})$. La proprietà può essere un valore numerico (regressione) o ``tossico
+sì/no'' (classificazione). Le molecole non sono vettori: sono rappresentate più naturalmente da grafi di
+dimensione variabile, e si vuole predire direttamente dalla struttura.
 \end{esempio}
 
 \section{Deep Graph Networks}
 
 \subsection{Trasduzioni su grafi}
 
-Si vuole apprendere una \textbf{trasduzione} $T$ da un dominio di grafi (di dimensione variabile) a uno spazio discreto o
-continuo, a partire da esempi $(\text{grafo}_i,\text{target}_i)$. Un encoder $T_{\mathit{enc}}$ calcola un
-\textbf{embedding} $\h_v$ di ogni nodo (lo spazio latente); da qui
+Si vuole apprendere una \textbf{trasduzione} $T$ da un dominio di grafi (di dimensione variabile) a uno spazio
+discreto o continuo, a partire da esempi $(\text{grafo}_i,\text{target}_i)$. Un encoder $T_{\mathit{enc}}$ calcola un
+\textbf{embedding} $\h_v$ di ogni nodo (lo spazio latente). Da qui
 \begin{itemize}
-  \item un'uscita \textbf{per ogni nodo} dà i compiti \textbf{a livello di nodo} (trasduzioni struttura-struttura
-        isomorfe, come la classificazione dei nodi);
-  \item una funzione di \textbf{readout} che aggrega gli embedding dei nodi in un embedding del grafo $\h_g$ dà i
-        compiti \textbf{a livello di grafo} (regressione o classificazione di grafi);
-  \item esistono anche trasduzioni non isomorfe e compiti \textbf{sugli archi} (ad esempio la \ingl{link prediction}).
+  \item un'uscita \textbf{per ogni nodo} dà i compiti \textbf{a livello di nodo}: trasduzioni struttura-struttura
+        isomorfe, come la classificazione dei nodi;
+  \item una funzione di \textbf{readout} aggrega gli embedding dei nodi in un embedding del grafo $\h_g$. Dà i
+        compiti \textbf{a livello di grafo}: regressione o classificazione di grafi;
+  \item esistono anche trasduzioni non isomorfe e compiti \textbf{sugli archi}, ad esempio la \ingl{link
+        prediction}.
 \end{itemize}
 
 \subsection{Il message passing}
@@ -69,15 +77,15 @@ continuo, a partire da esempi $(\text{grafo}_i,\text{target}_i)$. Un encoder $T_
 Il funzionamento di una \termine{Deep Graph Network} (DGN) si descrive con il \termine{message passing}: i nodi si
 scambiano messaggi per diventare consapevoli della struttura circostante (\figrif{fig:message-passing}).
 \begin{enumerate}
-  \item Ogni nodo calcola un \textbf{messaggio}, funzione della propria etichetta, dei vicini e degli archi, e lo invia ai
-        vicini.
-  \item I nodi \textbf{aggregano} i messaggi ricevuti con una funzione \textbf{invariante per permutazione} (l'ordine di
-        arrivo non conta).
+  \item Ogni nodo calcola un \textbf{messaggio}, funzione della propria etichetta, dei vicini e degli archi, e lo
+        invia ai vicini.
+  \item I nodi \textbf{aggregano} i messaggi ricevuti con una funzione \textbf{invariante per permutazione}: l'ordine
+        di arrivo non conta.
   \item Ogni nodo \textbf{aggiorna} il proprio stato combinando i messaggi con i parametri liberi $W$.
 \end{enumerate}
 \textbf{Iterando} il message passing l'informazione si \textbf{diffonde} da ogni nodo agli altri. Infine si emette
-un'uscita per ogni nodo, oppure per l'intero grafo tramite un'aggregazione invariante per permutazione delle
-rappresentazioni dei nodi, il \termine{global pooling} (ad esempio somma o media).
+un'uscita per ogni nodo, oppure per l'intero grafo. Per il grafo si usa un'aggregazione invariante per
+permutazione delle rappresentazioni dei nodi, il \termine{global pooling} (ad esempio somma o media).
 
 \begin{figure}[ht]
 \centering
@@ -96,29 +104,30 @@ rappresentazioni dei nodi, il \termine{global pooling} (ad esempio somma o media
 
 \subsection{Il legame con le CNN}
 
-Sia le CNN sia le reti convoluzionali per grafi visitano ogni posizione dei dati con gli stessi pesi, ma in una
-\textbf{griglia} (un'immagine) i vicini di un pixel sono \textbf{ordinati e in numero fisso}, mentre in un \textbf{grafo}
-sono \textbf{non ordinati e in numero variabile}. Per questo sui grafi si limita il campo recettivo ai vicini, si
-condividono i pesi in modo \textbf{invariante per permutazione} e si estende il vicinato con la
+Sia le CNN sia le reti convoluzionali per grafi visitano ogni posizione dei dati con gli stessi pesi. In una
+\textbf{griglia} (un'immagine) però i vicini di un pixel sono \textbf{ordinati e in numero fisso}. In un
+\textbf{grafo} sono \textbf{non ordinati e in numero variabile}. Per questo sui grafi si limita il campo recettivo ai
+vicini, si condividono i pesi in modo \textbf{invariante per permutazione}, e si estende il vicinato con la
 \textbf{stratificazione}.
 
 \subsection{La formula generale}
 
 \begin{equation}\label{eq:dgn}
-\boxed{\;\h_v^{(l)} = \mathrm{AGG}_{W^{(l)}}\Big(\vv L_v,\ \h_v^{(l-1)},\ \{\h_u^{(l-1)} : u\in\mathcal N(v)\}\Big),\qquad l = 1,\dots,L\;}
+\boxed{\;\h_v^{(l)} = \mathrm{AGG}_{W^{(l)}}\Big(\x_v,\ \h_v^{(l-1)},\ \{\h_u^{(l-1)} : u\in\mathcal N(v)\}\Big),\qquad l = 1,\dots,L\;}
 \end{equation}
-dove $\mathrm{AGG}$ aggrega i messaggi dei vicini con un operatore invariante per permutazione (ad esempio una somma),
-$W^{(l)}$ sono i parametri liberi, $\vv L_v$ l'etichetta del nodo e $\mathcal N$ è dato dalla matrice di adiacenza.
-Applicare il calcolo a ogni nodo è una \textbf{visita parallela e non ordinata} del grafo. Alcune varianti:
+dove $\mathrm{AGG}$ aggrega i messaggi dei vicini con un operatore invariante per permutazione (ad esempio una
+somma), e $W^{(l)}$ sono i parametri liberi. $\mathcal N$ è dato dalla matrice di adiacenza. Applicare il calcolo a
+ogni nodo è una \textbf{visita parallela e non ordinata} del grafo. Alcune varianti, scritte con la matrice
+$H^{(l)}$ che ha per riga $v$ lo stato $\h_v^{(l)}$:
 \begin{itemize}
-  \item \textbf{GCN}: $\h^{(l)} = \mathrm{ReLU}\big(\hat A\,\h^{(l-1)}W^{(l)}\big)$, con $\hat A$ matrice di adiacenza
+  \item \textbf{GCN}: $H^{(l)} = \mathrm{ReLU}\big(\hat A\,H^{(l-1)}W^{(l)}\big)$, con $\hat A$ matrice di adiacenza
         normalizzata per grado;
-  \item \textbf{GraphConv}: $\h^{(l)} = f\big(W_1^{(l)}\h^{(l-1)} + W_2^{(l)}A\,\h^{(l-1)}\big)$;
-  \item \textbf{GAT}: aggregazione basata sull'attenzione.
+  \item \textbf{GraphConv}: $H^{(l)} = f\big(H^{(l-1)}W_1^{(l)} + A\,H^{(l-1)}W_2^{(l)}\big)$;
+  \item \textbf{GAT}: aggregazione basata sull'attenzione (\rif{sec:transformer}).
 \end{itemize}
 
 \begin{idea}[Le DGN sono intrinsecamente profonde]
-Il processo non è locale: iterando sugli strati, la rappresentazione di un nodo include progressivamente
+Il processo non è locale. Iterando sugli strati, la rappresentazione di un nodo include progressivamente
 l'informazione di contesto di nodi sempre più lontani (\figrif{fig:contesto}). La \textbf{profondità serve a far
 crescere il contesto}.
 \end{idea}
@@ -146,60 +155,67 @@ dal nodo stesso, poi dai vicini diretti, poi dai vicini dei vicini.}
 
 \subsection{Approccio a strati: GCN e NN4G}
 
-Nelle reti convoluzionali per grafi (GCN, NN4G) \textbf{ogni iterazione del message passing è un nuovo strato} (con pesi
-propri), e il contesto di ogni nodo si \textbf{compone} attraverso gli strati: il campo recettivo si estende di strato in
-strato e addestrando il modello si impara come rappresentare il grafo (end-to-end per le GCN; strato per strato, in modo
-incrementale, per NN4G). \textbf{NN4G} calcola uno stato per ogni strato e ogni nodo:
+Nelle reti convoluzionali per grafi (GCN, NN4G) \textbf{ogni iterazione del message passing è un nuovo strato}, con
+pesi propri. Il contesto di ogni nodo si \textbf{compone} attraverso gli strati: il campo recettivo si estende di
+strato in strato. Addestrando il modello si impara come rappresentare il grafo. Le GCN si addestrano end-to-end; NN4G
+strato per strato, in modo incrementale. \textbf{NN4G} calcola uno stato scalare per ogni strato e ogni nodo (con
+$x_{v,0}=1$ per il bias):
 \[
 \begin{gathered}
-h_v^{(1)} = f\Big(\sum_{j=0}^{\abs{L_v}}\bar w_{1j}\,L_j(v)\Big),\\
-h_v^{(l)} = f\left(\underbrace{\sum_{j=0}^{\abs{L_v}}\bar w_{lj}\,L_j(v)}_{\text{etichetta di }v} +
-\underbrace{\sum_{j=1}^{l-1}\hat w_{lj}\sum_{u\in\mathcal N(v)}h_u^{(j)}}_{\text{vicini, strati precedenti}}\right),\quad l = 2,\dots,N.
+h_v^{(1)} = f\Big(\sum_{j=0}^{n}\bar w_{1j}\,x_{v,j}\Big),\\
+h_v^{(l)} = f\left(\underbrace{\sum_{j=0}^{n}\bar w_{lj}\,x_{v,j}}_{\text{etichetta di }v} +
+\underbrace{\sum_{i=1}^{l-1}\hat w_{li}\sum_{u\in\mathcal N(v)}h_u^{(i)}}_{\text{vicini, strati precedenti}}\right),\quad l = 2,\dots,L.
 \end{gathered}
 \]
-Non è ricorsiva: ogni strato usa gli stati degli strati \textbf{precedenti}. Le unità si aggiungono una alla volta (in
-stile Cascade Correlation, \rif{sec:unita-nascoste}), con numero di strati automatico e senza vanishing gradient
-attraverso gli strati, e le uscite dei vari strati si combinano per produrre il risultato sul grafo.
+Non è ricorsiva: ogni strato usa gli stati degli strati \textbf{precedenti}. Le unità si aggiungono una alla volta,
+in stile Cascade Correlation (\rif{sec:unita-nascoste}). Il numero di strati è quindi automatico, e non c'è
+vanishing gradient attraverso gli strati. Le uscite dei vari strati si combinano per produrre il risultato sul
+grafo.
 
 \subsection{Approccio ricorsivo: GNN e GraphESN}
 
-Negli approcci \textbf{ricorsivi} la diffusione è simile, ma $l$ conta le \textbf{iterazioni sullo stesso strato} (pesi
-condivisi). È un \textbf{sistema dinamico}: si richiede la \textbf{convergenza a un punto fisso}, usato come embedding del
-grafo, e per questo la dinamica del message passing deve essere \textbf{contrattiva}. Nella \textbf{GNN} l'embedding è
-addestrato; nella \textbf{GraphESN} (estensione delle Echo State Network) la funzione di message passing \textbf{non è
-addestrata}: è un reservoir casuale di cui si controllano i parametri dinamici,
+Negli approcci \textbf{ricorsivi} la diffusione è simile, ma $l$ conta le \textbf{iterazioni sullo stesso strato},
+con pesi condivisi. È un \textbf{sistema dinamico}. Si richiede la \textbf{convergenza a un punto fisso}, usato come
+embedding del grafo. Per questo la dinamica del message passing deve essere \textbf{contrattiva} (\rif{sec:esn}).
+Nella \textbf{GNN} l'embedding è addestrato. Nella \textbf{GraphESN} (estensione delle Echo State Network) la funzione
+di message passing \textbf{non è addestrata}. È un reservoir casuale di cui si controllano i parametri dinamici:
 \[
-\h_v^{(l)} = \tanh\Big(\sum_{j=0}^{\abs{L_v}}\bar w_{lj}\,L_j(v) + \sum_{u\in\mathcal N(v)}\hat W\,\h_u^{(l-1)}\Big),
+\h_v^{(l)} = \tanh\Big(W_{\mathit{in}}\,\x_v + \sum_{u\in\mathcal N(v)}\hat W\,\h_u^{(l-1)}\Big),
 \]
-iterata fino a convergenza; l'uscita per un grafo si ottiene con un global pooling $X$ e un \textbf{readout lineare}
-addestrato (pseudoinversa o ridge regression): $y(g) = W_{\mathit{out}}\,X(\h(g))$.
+con $W_{\mathit{in}}$ e $\hat W$ uguali a ogni iterazione. La formula si itera fino a convergenza. L'uscita per un
+grafo $g$ si ottiene con un global pooling $\chi$ e un \textbf{readout lineare}, addestrato con pseudoinversa o
+ridge regression: $o(g) = W_{\mathit{out}}\,\chi(\h(g))$.
 
 \section{Problemi aperti}
 
 \subsection{Efficienza}
 
-L'addestramento end-to-end con backpropagation è costoso su grafi molto grandi. La GraphESN per la classificazione di
-nodi ottiene accuratezze pari o superiori a quelle di molti modelli addestrati end-to-end, con un'accelerazione fino a 10
-volte, e scala oltre i 100\,000 nodi. NN4G+ costruisce la rete \textbf{incrementalmente}, addestrando un'unità alla volta:
-uno strato si espande finché l'accuratezza di validazione migliora e si aggiungono strati finché migliora, ottenendo
-architetture adatte al task in minuti invece che ore.
+L'addestramento end-to-end con backpropagation è costoso su grafi molto grandi. La GraphESN per la classificazione
+di nodi ottiene accuratezze pari o superiori a quelle di molti modelli addestrati end-to-end. Lo fa con
+un'accelerazione fino a 10 volte, e scala oltre i 100\,000 nodi. NN4G+ costruisce la rete
+\textbf{incrementalmente}, addestrando un'unità alla volta. Uno strato si espande finché l'accuratezza di
+validazione migliora, e si aggiungono strati finché migliora. Si ottengono architetture adatte al task in minuti
+invece che ore.
 
 \subsection{I problemi della profondità}
 
 \begin{itemize}
-  \item \termine{Over-smoothing}: l'accuratezza tipicamente cala oltre 4--5 strati, perché il message passing agisce come
-        una \textbf{diffusione} e le rappresentazioni dei nodi negli strati profondi \textbf{collassano}, diventando tutte
-        simili.
-  \item \termine{Over-squashing}: un \textbf{collo di bottiglia}. Il campo recettivo cresce \textbf{esponenzialmente} con la
-        profondità, ma tutta quell'informazione va compressa in un embedding di dimensione fissa per nodo: la
-        \textbf{sensibilità} della rappresentazione di un nodo all'input di nodi lontani, misurata dallo Jacobiano
-        $\partial\h_v^{(L)}/\partial\x_u$, decresce esponenzialmente con il numero di strati.
-  \item Per l'addestramento end-to-end, la difficoltà di \textbf{retropropagare il gradiente} attraverso molti strati.
+  \item \termine{Over-smoothing}: l'accuratezza tipicamente cala oltre 4--5 strati. Il message passing agisce come
+        una \textbf{diffusione}, e le rappresentazioni dei nodi negli strati profondi \textbf{collassano},
+        diventando tutte simili.
+  \item \termine{Over-squashing}: un \textbf{collo di bottiglia}. Il campo recettivo cresce
+        \textbf{esponenzialmente} con la profondità, ma tutta quell'informazione va compressa in un embedding di
+        dimensione fissa per nodo. Si misura la \textbf{sensibilità} della rappresentazione di un nodo all'input di
+        nodi lontani con lo Jacobiano $\partial\h_v^{(L)}/\partial\x_u$ (\rif{sec:tecniche-deep}). Questa
+        sensibilità decresce esponenzialmente con il numero di strati.
+  \item Per l'addestramento end-to-end c'è la difficoltà di \textbf{retropropagare il gradiente} attraverso molti
+        strati.
 \end{itemize}
-Gli effetti sono l'\termine{under-reaching} (non si ottiene il campo recettivo necessario per apprendere interazioni tra
-nodi lontani) e la difficoltà con l'\termine{eterofilia}: nei grafi \textbf{omofili} i nodi vicini condividono per lo più
-la stessa classe, in quelli \textbf{eterofili} i nodi della stessa classe sono in genere lontani, e predizioni basate sui
-vicini immediati possono essere fuorvianti (\figrif{fig:omofilia}).
+Gli effetti sono due. Il primo è l'\termine{under-reaching}: non si ottiene il campo recettivo necessario per
+apprendere interazioni tra nodi lontani. Il secondo è la difficoltà con l'\termine{eterofilia}. Nei grafi
+\textbf{omofili} i nodi vicini condividono per lo più la stessa classe. In quelli \textbf{eterofili} i nodi della
+stessa classe sono in genere lontani, e predizioni basate sui vicini immediati possono essere fuorvianti
+(\figrif{fig:omofilia}).
 
 \begin{figure}[ht]
 \centering
@@ -222,70 +238,86 @@ standard.}
 
 \subsection{Strumenti di analisi}
 
-Modelli come NN4G (incrementale, senza propagare il gradiente attraverso gli strati) e GraphESN (nessun addestramento
-dell'embedding) permettono di \textbf{separare il bias del message passing dai problemi dell'addestramento end-to-end}.
-Nella GraphESN si controlla direttamente la norma spettrale $\norm{W}$, cioè la costante di Lipschitz della funzione di
-message passing. Poiché
-\[
-\left\lVert\frac{\partial\h_v^{(L)}}{\partial\x_u}\right\rVert \le \prod_{l=1}^{L}\norm{W^{(l)}}\cdot\big(A^L\big)_{u,v},
-\]
-imporre $\norm W>1$ impedisce che la sensibilità rispetto all'input svanisca esponenzialmente (over-squashing).
+Modelli come NN4G e GraphESN permettono di \textbf{separare il bias del message passing dai problemi
+dell'addestramento end-to-end}. NN4G è incrementale e non propaga il gradiente attraverso gli strati. GraphESN non
+addestra affatto l'embedding.
 
-Un secondo strumento è l'\textbf{analisi spettrale}. La ``frequenza'' di un segnale su un grafo (etichette, embedding) è
-la sua variabilità tra nodi vicini, misurata dall'\termine{energia di Dirichlet}
+Nella GraphESN si controlla direttamente la \textbf{norma spettrale} $\norm{W}$ dei pesi. È il massimo fattore di
+cui la matrice può allungare un vettore. Coincide con la \textbf{costante di Lipschitz} della funzione di message
+passing, cioè il massimo rapporto tra la variazione dell'uscita e la variazione dell'input. Vale
 \[
-E(\h) = \sum_v\sum_{u\in\mathcal N_v}\norm{\h_v-\h_u}^2 ,
+\left\lVert\frac{\partial\h_v^{(L)}}{\partial\x_u}\right\rVert \le \prod_{l=1}^{L}\norm{W^{(l)}}\cdot\big(A^L\big)_{u,v}.
 \]
-che dice quanto il segnale varia sul grafo e, tramite la trasformata di Fourier su grafo (ottenuta dalla decomposizione
-del Laplaciano $L = D-A$, con $D$ matrice diagonale dei gradi), come il segnale si distribuisce sulle frequenze: un
-segnale liscio ha bassa energia. I grafi eterofili hanno segnali ad \textbf{alta frequenza}, e i task eterofili richiedono
-di \textbf{preservare le alte frequenze}. Su un benchmark eterofilo (una rete di pagine Wikipedia), NN4G e GraphESN
-preservano meglio l'energia attraverso gli strati e mantengono l'accuratezza all'aumentare dei passi di message passing,
-mentre quella di GCN, GAT e GraphConv cala.
+È un limite \textbf{superiore}. Se ogni $\norm{W^{(l)}}$ è minore di 1, il prodotto decresce esponenzialmente con
+$L$: la sensibilità rispetto all'input dei nodi lontani è \textbf{costretta} a svanire (over-squashing). Imporre
+$\norm W>1$ toglie questo vincolo: il limite non obbliga più la sensibilità a svanire esponenzialmente. Non
+garantisce però che non svanisca per altri motivi. C'è anche una tensione con la contrattività chiesta sopra
+all'approccio ricorsivo. La contrattività ($\norm W<1$) garantisce la convergenza a un punto fisso, ma è proprio la
+condizione che costringe la sensibilità a svanire. Controllare direttamente $\norm W$ permette di studiare questo
+compromesso.
+
+Un secondo strumento è l'\textbf{analisi spettrale}. La ``frequenza'' di un segnale su un grafo (etichette,
+embedding) è la sua variabilità tra nodi vicini. Si misura con l'\termine{energia di Dirichlet}
+\[
+E(\h) = \sum_v\sum_{u\in\mathcal N(v)}\norm{\h_v-\h_u}^2 .
+\]
+L'energia dice quanto il segnale varia sul grafo: un segnale liscio ha bassa energia. Si usa anche il
+\termine{Laplaciano} del grafo, $\mathcal L = D-A$, con $D$ matrice diagonale dei gradi (il numero di vicini di
+ogni nodo). Dalla decomposizione di $\mathcal L$ nei suoi autovettori si ottiene la trasformata di Fourier su grafo.
+Dice come il segnale si distribuisce sulle frequenze. I grafi eterofili hanno segnali ad \textbf{alta frequenza}, e
+i task eterofili richiedono di \textbf{preservare le alte frequenze}. Su un benchmark eterofilo (una rete di pagine
+Wikipedia), NN4G e GraphESN preservano meglio l'energia attraverso gli strati. Mantengono l'accuratezza
+all'aumentare dei passi di message passing, mentre quella di GCN, GAT e GraphConv cala.
 
 \subsection{Estensioni}
 
-Grafi \textbf{dinamici} (relazioni o valori che evolvono nel tempo, trattati ad esempio con reservoir multistrato),
-\textbf{generazione} di grafi (apprendere la distribuzione $p(G)$ per campionarne di nuovi, ad esempio molecole),
-\textbf{spiegabilità} (individuare le sotto-strutture che determinano una predizione), \textbf{network quantification}
-(predire la prevalenza delle classi tra i nodi non etichettati), applicazioni in \textbf{bioinformatica}.
+\begin{itemize}
+  \item Grafi \textbf{dinamici}, con relazioni o valori che evolvono nel tempo, trattati ad esempio con reservoir
+        multistrato.
+  \item \textbf{Generazione} di grafi: apprendere la distribuzione $p(G)$ per campionarne di nuovi, ad esempio
+        molecole.
+  \item \textbf{Spiegabilità}: individuare le sotto-strutture che determinano una predizione.
+  \item \textbf{Network quantification}: predire la prevalenza delle classi tra i nodi non etichettati.
+  \item Applicazioni in \textbf{bioinformatica}.
+\end{itemize}
 
 \section{Kernel per strutture}
 \label{sec:kernel-strutture}
 
-I metodi kernel (\rif{sec:metodi-kernel}) si estendono facilmente a sequenze, alberi e grafi, perché basta definire un
-prodotto scalare $k(x,x') = \langle\phi(x),\phi(x')\rangle$, cioè una \textbf{similarità} tra oggetti di qualsiasi tipo,
-con un embedding implicito in uno spazio euclideo.
+I metodi kernel (\rif{sec:metodi-kernel}) si estendono facilmente a sequenze, alberi e grafi. Basta definire un
+prodotto scalare $k(s,s') = \langle\phi(s),\phi(s')\rangle$, cioè una \textbf{similarità} tra oggetti $s,s'$ di
+qualsiasi tipo, con un embedding implicito in uno spazio euclideo.
 \begin{itemize}
-  \item \textbf{Kernel marginalizzati}: la similarità tra due grafi si basa sui cammini di etichette comuni ottenuti con
-        random walk; il kernel è il prodotto scalare dei vettori di conteggio, mediato su tutti i cammini (costo
-        tipicamente quadratico nella dimensione del grafo).
-  \item \textbf{Kernel di convoluzione}: si decompongono gli oggetti in \textbf{sotto-strutture} e si definisce il kernel
-        combinando kernel tra le sotto-strutture.
+  \item \textbf{Kernel marginalizzati}: la similarità tra due grafi si basa sui cammini di etichette comuni,
+        ottenuti con random walk. Il kernel è il prodotto scalare dei vettori di conteggio, mediato su tutti i
+        cammini. Il costo è tipicamente quadratico nella dimensione del grafo.
+  \item \textbf{Kernel di convoluzione}: si decompongono gli oggetti in \textbf{sotto-strutture}, e si definisce il
+        kernel combinando kernel tra le sotto-strutture.
 \end{itemize}
 
 \begin{attenzione}[Limiti dei kernel per strutture]
 \begin{itemize}
   \item \textbf{Efficienza}: la scomposizione in sotto-strutture rende il costo critico.
-  \item \textbf{Adattività}: la similarità è \textbf{fissata prima dell'apprendimento}, quindi la codifica non è appresa
-        (con il vantaggio di poter usare la conoscenza a priori sul problema).
-  \item Per i domini strutturati non si conosce l'\textbf{universalità}: la scelta del kernel è critica, e calcolare un
-        kernel \textbf{completo} per grafi è difficile almeno quanto il problema dell'\textbf{isomorfismo di grafi}.
+  \item \textbf{Adattività}: la similarità è \textbf{fissata prima dell'apprendimento}, quindi la codifica non è
+        appresa. Il vantaggio è che si può usare la conoscenza a priori sul problema.
+  \item Per i domini strutturati non si conosce l'\textbf{universalità}: la scelta del kernel è critica. Calcolare
+        un kernel \textbf{completo} per grafi è difficile almeno quanto il problema dell'\textbf{isomorfismo di
+        grafi}.
 \end{itemize}
 \end{attenzione}
 
 \begin{idea}[Conclusione]
-Se i dati hanno relazioni (seriali, gerarchiche, reti), non conviene usare una rappresentazione piatta. Il deep learning
-su grafi si può fare anche \textbf{in modo efficiente}, senza un addestramento completamente end-to-end; la profondità
-nelle DGN è necessaria (fa crescere il contesto) ma causa problemi (over-smoothing, over-squashing, difficoltà di
-addestramento) che sono oggetto di ricerca.
+Se i dati hanno relazioni (seriali, gerarchiche, reti), non conviene usare una rappresentazione piatta. Il deep
+learning su grafi si può fare anche \textbf{in modo efficiente}, senza un addestramento completamente end-to-end.
+La profondità nelle DGN è necessaria, perché fa crescere il contesto. Causa però problemi (over-smoothing,
+over-squashing, difficoltà di addestramento) che sono oggetto di ricerca.
 \end{idea}
 
 \begin{puntichiave}
 \begin{itemize}
   \item Trasduzioni su grafi: livello di nodo, di grafo, di arco.
   \item Message passing: messaggio, aggregazione invariante per permutazione, aggiornamento;
-        $\h_v^{(l)} = \mathrm{AGG}_{W^{(l)}}(\vv L_v,\h_v^{(l-1)},\{\h_u^{(l-1)}\}_{u\in\mathcal N(v)})$.
+        $\h_v^{(l)} = \mathrm{AGG}_{W^{(l)}}(\x_v,\h_v^{(l-1)},\{\h_u^{(l-1)}\}_{u\in\mathcal N(v)})$.
   \item A strati (GCN, NN4G: ogni iterazione è uno strato) o ricorsivo (GNN, GraphESN: iterazioni contrattive fino al
         punto fisso).
   \item Over-smoothing, over-squashing, under-reaching, eterofilia.

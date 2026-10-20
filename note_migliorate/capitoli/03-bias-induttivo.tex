@@ -2,10 +2,11 @@
 \label{cap:bias}
 
 \begin{inbreve}
-Inferire una funzione da un numero finito di esempi è un problema mal posto: senza assunzioni sulla funzione
+Inferire una funzione da un numero finito di esempi è un problema mal posto. Senza assunzioni sulla funzione
 cercata, gli esempi non dicono nulla sui casi non visti. Il capitolo lo mostra in uno spazio di ipotesi
-discreto (funzioni booleane), dimostra che un learner senza bias non può generalizzare e distingue i due modi di
-introdurre un bias: vincolare il linguaggio delle ipotesi o vincolare la strategia di ricerca.
+discreto, quello delle funzioni booleane. Dimostra poi che un learner senza bias non può generalizzare. Infine
+distingue i due modi di introdurre un bias: vincolare il linguaggio delle ipotesi o vincolare la strategia di
+ricerca.
 \end{inbreve}
 
 \section{Un problema mal posto}
@@ -32,12 +33,12 @@ Può riguardare
 \end{itemize}
 \end{definizione}
 
-Il ruolo del bias si vede con chiarezza imparando un \textbf{concetto}, cioè una funzione booleana (ad esempio
-$h_{\mathit{gatto}}(\x)=1$ se l'animale descritto da $\x$ è un gatto, $0$ altrimenti).
+Il ruolo del bias si vede con chiarezza imparando un \textbf{concetto}, cioè una funzione booleana. Ad esempio
+$h_{\mathit{gatto}}(\x)=1$ se l'animale descritto da $\x$ è un gatto, $0$ altrimenti.
 
 \section{Imparare una funzione booleana}
 
-Si vuole imparare una funzione booleana sconosciuta $y = f(x_1,x_2,x_3,x_4)$ dai 7 esempi della
+Si vuole imparare una funzione booleana sconosciuta $d = f(x_1,x_2,x_3,x_4)$ dai 7 esempi della
 Tabella~\ref{tab:booleana}.
 
 \begin{table}[ht]
@@ -46,7 +47,7 @@ Tabella~\ref{tab:booleana}.
 \label{tab:booleana}
 \begin{tabular}{ccccc|c}
 \toprule
-Esempio & $x_1$ & $x_2$ & $x_3$ & $x_4$ & $y$ \\
+Esempio & $x_1$ & $x_2$ & $x_3$ & $x_4$ & $d$ \\
 \midrule
 1 & 0 & 0 & 1 & 0 & 0\\
 2 & 0 & 1 & 0 & 0 & 0\\
@@ -62,30 +63,30 @@ Esempio & $x_1$ & $x_2$ & $x_3$ & $x_4$ & $y$ \\
 \subsubsection{Quante sono le ipotesi possibili}
 Con 4 input binari esistono $2^4=16$ istanze di input distinte. Una funzione booleana assegna a ciascuna un output
 in $\{0,1\}$, quindi le funzioni possibili sono $2^{16}=65\,536$. Sapere quale sia quella corretta richiede di
-vedere \textbf{tutte} le coppie input-output: dopo 7 esempi le 9 istanze non viste possono avere output
-qualsiasi, e restano $2^9 = 512$ funzioni compatibili con i dati. In generale, con input e output binari e
+vedere \textbf{tutte} le coppie input-output. Dopo 7 esempi le 9 istanze non viste possono avere output
+qualsiasi: restano $2^9 = 512$ funzioni compatibili con i dati. In generale, con input e output binari e
 dimensione dell'input $n$:
 \begin{equation}\label{eq:numero-booleane}
 \abs{H} = 2^{\#\text{istanze di input}} = 2^{2^n}.
 \end{equation}
 
-Un modello che usa tutto questo spazio è una \termine{lookup table}: un \ingl{rote learner} che memorizza gli
-esempi e classifica $\x$ solo se coincide con un esempio già visto (altrimenti non risponde).
+Un modello che usa tutto questo spazio è una \termine{lookup table}, un \ingl{rote learner}. Memorizza gli
+esempi e classifica $\x$ solo se coincide con un esempio già visto; altrimenti non risponde.
 \uline{Nessun bias induttivo, nessuna generalizzazione.}
 
 \section{Restringere lo spazio: le regole congiuntive}
 
 Si introduce un \textbf{language bias}: si considerano solo \termine{regole congiuntive}, cioè congiunzioni
-(AND) di letterali, come $h_1 = l_2$, $h_2 = l_1\wedge l_2$, $h_3 = \mathit{true}$, $h_4 = \neg l_1\wedge l_2$.
+(AND) di letterali, come $h_1 = x_2$, $h_2 = x_1\wedge x_2$, $h_3 = \mathit{true}$, $h_4 = \neg x_1\wedge x_2$.
 Ad esempio $h_1$ significa ``se $x_2=1$ allora $h(\x)=1$, altrimenti $0$''.
 
 \begin{proprieta}{Numero di regole congiuntive}
 Con $n$ variabili binarie le ipotesi congiuntive semanticamente distinte sono $3^n + 1$.
 \end{proprieta}
 \begin{proof}
-In una congiunzione, per ciascuna delle $n$ variabili ci sono tre possibilità: compare come $l_i$, compare come
-$\neg l_i$, oppure non compare (``non importa''). Le scelte sono indipendenti, quindi si ottengono $3^n$
-congiunzioni. Tutte le congiunzioni che contengono una coppia $l_i\wedge\neg l_i$ valgono sempre 0: sono
+In una congiunzione, per ciascuna delle $n$ variabili ci sono tre possibilità: compare come $x_i$, compare come
+$\neg x_i$, oppure non compare (``non importa''). Le scelte sono indipendenti, quindi si ottengono $3^n$
+congiunzioni. Tutte le congiunzioni che contengono una coppia $x_i\wedge\neg x_i$ valgono sempre 0. Sono
 equivalenti tra loro e alla funzione $\mathit{false}$, che va aggiunta come una sola ipotesi in più. Totale
 $3^n+1$.
 \end{proof}
@@ -104,7 +105,7 @@ essere rappresentato. ``Se $x_1=1$ \emph{oppure} $x_2=1$ allora 1'' non è una c
 
 \section{L'unbiased learner}
 
-L'idea opposta è scegliere un $H$ capace di esprimere \textbf{ogni concetto insegnabile}: l'insieme di tutti i
+L'idea opposta è scegliere un $H$ capace di esprimere \textbf{ogni concetto insegnabile}. È l'insieme di tutti i
 sottoinsiemi dello spazio degli input $X$, cioè l'insieme delle parti $\mathcal{P}(X)$ (disgiunzioni,
 congiunzioni, negazioni). Con $n=10$ input binari, $\abs{X} = 2^{10} = 1024$ e
 $\abs{\mathcal{P}(X)} = 2^{1024}\approx 10^{308}$ concetti. $H$ contiene sicuramente il concetto target. Che
@@ -112,7 +113,7 @@ cosa succede alla generalizzazione?
 
 \begin{teorema}[Un learner senza bias non può generalizzare]
 Con un \ingl{unbiased learner} le uniche istanze classificate in modo non ambiguo dal version space sono gli
-esempi di training stessi: si ottiene di nuovo una lookup table.
+esempi di training stessi. Si ottiene di nuovo una lookup table.
 \end{teorema}
 \begin{proof}
 Sia $x_i$ un'istanza non presente nel training set e sia $h\in VS$.
@@ -124,8 +125,8 @@ Sia $x_i$ un'istanza non presente nel training set e sia $h\in VS$.
   \item La corrispondenza $h\mapsto h'$ accoppia ogni ipotesi del VS che classifica $x_i$ come positivo con una che
         lo classifica negativo, e viceversa.
 \end{enumerate}
-Quindi ogni istanza non vista è classificata 1 da esattamente metà delle ipotesi del VS e 0 dall'altra metà:
-il version space non può dare alcuna risposta su $x_i$.
+Quindi ogni istanza non vista è classificata 1 da esattamente metà delle ipotesi del VS e 0 dall'altra metà. Il
+version space non può dare alcuna risposta su $x_i$.
 \end{proof}
 
 \begin{esempio}[Un solo input]
@@ -136,18 +137,19 @@ d=0$. Il version space è $\{x, 0\}$: entrambe valgono 0 in $x=0$. Sull'istanza 
 
 \begin{idea}[Futilità dell'apprendimento senza bias]
 Un learner che non fa \textbf{alcuna assunzione a priori} sull'identità del concetto target \textbf{non ha alcuna
-base razionale} per classificare istanze non viste: dovrebbe vedere come esempio ogni singola istanza di $X$. Il
+base razionale} per classificare istanze non viste. Dovrebbe vedere come esempio ogni singola istanza di $X$. Il
 bias, di restrizione o di preferenza, non serve solo all'efficienza: \uline{è necessario per la
 generalizzazione}. Il bias però non dice ancora \emph{quale} soluzione generalizza meglio.
 \end{idea}
 
 \section{Sistemi induttivi e deduttivi equivalenti}
 
-Un sistema induttivo (un algoritmo di apprendimento che, usando lo spazio $H$, riceve gli esempi e una nuova
-istanza e produce una classificazione o ``non so'') è \textbf{equivalente a un sistema deduttivo}, cioè a un
-dimostratore di teoremi che riceve gli stessi esempi e la stessa istanza \textbf{più il bias induttivo come
-assioma aggiuntivo} (\figrif{fig:induttivo-deduttivo}). Il bias induttivo è quindi esattamente l'insieme di
-assunzioni che rende \emph{logicamente deducibile} la classificazione prodotta dal learner.
+Un sistema induttivo è un algoritmo di apprendimento che usa lo spazio $H$. Riceve gli esempi e una nuova
+istanza, e produce una classificazione o ``non so''. Un sistema induttivo è \textbf{equivalente a un sistema
+deduttivo}, cioè a un dimostratore di teoremi. Il dimostratore riceve gli stessi esempi e la stessa istanza,
+\textbf{più il bias induttivo come assioma aggiuntivo} (\figrif{fig:induttivo-deduttivo}). Il bias induttivo è
+quindi esattamente l'insieme di assunzioni che rende \emph{logicamente deducibile} la classificazione prodotta dal
+learner.
 
 \begin{figure}[ht]
 \centering
@@ -175,10 +177,10 @@ assunzioni che rende \emph{logicamente deducibile} la classificazione prodotta d
 \section{Language bias o search bias?}
 
 Nel ML moderno si preferisce in genere il \textbf{search bias}. Si usano modelli flessibili, con spazi di
-ipotesi molto espressivi e capacità di approssimazione universale (reti neurali, alberi di decisione), evitando
-il language bias e quindi \textbf{senza escludere a priori} la funzione target. Il bias induttivo resta, ma è
-affidato alla \textbf{strategia di ricerca}, cioè a una ricerca \textbf{incompleta} che privilegia certe
-soluzioni rispetto ad altre.
+ipotesi molto espressivi e capacità di approssimazione universale (reti neurali, alberi di decisione). Così si
+evita il language bias e \textbf{non si esclude a priori} la funzione target. Il bias induttivo resta, ma è
+affidato alla \textbf{strategia di ricerca}: una ricerca \textbf{incompleta} che privilegia certe soluzioni
+rispetto ad altre.
 
 \begin{puntichiave}
 \begin{itemize}

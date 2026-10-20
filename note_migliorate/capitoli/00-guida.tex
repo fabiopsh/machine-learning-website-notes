@@ -56,16 +56,21 @@ Simbolo & Significato \\
 \midrule
 $x$, $\x$, $X$ & scalare, vettore (colonna, in grassetto), matrice \\
 $\x\T\vv{y}$ & prodotto scalare; $\T$ indica la trasposta \\
-$l$ & numero di esempi del dataset (nel capitolo sulle SVM: $N$) \\
-$n$ & dimensione dell'input, cioè numero di feature (nel capitolo sulle SVM: $m$) \\
+$l$ & numero di esempi del dataset, in tutti i capitoli \\
+$n$ & dimensione dell'input, cioè numero di feature \\
 $\x_p$, $x_{p,i}$ & $p$-esimo esempio (riga del dataset), sua componente $i$ \\
-$d_p$ (o $y_p$, $t_p$) & target dell'esempio $p$ \\
+$d_p$ & target dell'esempio $p$ (da \ingl{desired}, la risposta desiderata) \\
+$o$ & uscita di un'unità o della rete \\
 $h$, $H$ & ipotesi, spazio delle ipotesi \\
+$\h$ & stato nascosto (strato nascosto, stato di una rete ricorrente o di un nodo di un grafo) \\
 $f$ & funzione target (sconosciuta); nelle reti: funzione di attivazione \\
 $\w$, $w_0$ & pesi (parametri liberi), bias (indicato anche con $b$) \\
-$L$, $E$ & loss sul singolo esempio, errore (media o somma delle loss) \\
+$L$, $E$ & loss sul singolo esempio; errore (somma o media delle loss, come indicato caso per caso; con il fattore
+$\frac12$ nella backpropagation) \\
 $R$, $\Remp$ & rischio (errore vero), rischio empirico \\
-$\eta$, $\lambda$, $\alpha$ & learning rate, coefficiente di regolarizzazione, momentum \\
+$K$, $k$ & numero di gruppi (fold, cluster, classi, modelli di un comitato); numero di vicini nel K-NN \\
+$\eta$, $\lambda$, $\alpha$ & learning rate, coefficiente di regolarizzazione, momentum (nelle SVM $\alpha_i$ sono i
+moltiplicatori di Lagrange) \\
 TR, VL, TS & training set, validation set, test set \\
 \bottomrule
 \end{tabularx}

@@ -3,31 +3,32 @@
 
 \begin{inbreve}
 La SLT spiega underfitting e overfitting con la complessità del modello e il numero di dati. La decomposizione
-bias-varianza dà un punto di vista complementare: il training set è \emph{una} delle possibili realizzazioni dei
+bias-varianza dà un punto di vista complementare. Il training set è \emph{una} delle possibili realizzazioni dei
 dati, e l'errore atteso si scompone in bias, varianza e rumore. Da qui si arriva agli ensemble (bagging,
-boosting), che sfruttano la riduzione della varianza, e a qualche cenno sulla feature selection.
+boosting), che sfruttano la riduzione della varianza. Il capitolo chiude con qualche cenno sulla feature
+selection.
 \end{inbreve}
 
 \section{L'idea}
 
 Training set diversi, estratti dalla stessa distribuzione, producono ipotesi diverse. L'errore atteso in un
-punto $\x$ (mediato sui training set) si scompone in tre parti:
+punto $\x$, mediato sui training set, si scompone in tre parti:
 \begin{itemize}
   \item \textbf{bias}: la discrepanza tra la funzione vera e la predizione $h(\x)$ \emph{media}. È alto se $H$ è
         troppo piccolo, cioè se il modello è troppo rigido;
-  \item \textbf{varianza}: la variabilità della risposta del modello al variare del training set, dovuta a
+  \item \textbf{varianza}: la variabilità della risposta del modello al variare del training set. È dovuta a
         un'eccessiva flessibilità;
-  \item \textbf{rumore}: le etichette contengono un errore casuale (per uno stesso $\x$ ci possono essere più
-        valori di $d$).
+  \item \textbf{rumore}: le etichette contengono un errore casuale, quindi per uno stesso $\x$ ci possono essere
+        più valori di $d$.
 \end{itemize}
-Si studia la regressione con target $y$ e loss quadratica.
+Si studia la regressione con target $d$ e loss quadratica.
 
 \begin{esempio}[20 punti e 50 rette]
-Sia $y = x + 2\sin(1{,}5x) + \eps$ con $\eps$ rumore gaussiano di media zero (varianza $0{,}2$), e si adatti ai
-dati una retta $h(x) = w_1x+w_0$ ai minimi quadrati. Due fatti:
+Sia $d = x + 2\sin(1{,}5x) + \eps$, con $\eps$ rumore gaussiano di media zero (varianza $0{,}2$). Si adatti ai
+dati una retta $h(x) = w_1x+w_0$ ai minimi quadrati. Si osservano due fatti:
 \begin{enumerate}
   \item la classe di ipotesi (rette) commette per questa $f$ un \textbf{errore sistematico};
-  \item a seconda del dataset, i parametri trovati \textbf{sono diversi}: ripetendo con 50 dataset di 20 punti si
+  \item a seconda del dataset, i parametri trovati \textbf{sono diversi}. Ripetendo con 50 dataset di 20 punti si
         ottengono 50 rette diverse (\figrif{fig:bv-rette}).
 \end{enumerate}
 \end{esempio}
@@ -37,7 +38,7 @@ dati una retta $h(x) = w_1x+w_0$ ai minimi quadrati. Due fatti:
 \begin{tikzpicture}
 \begin{groupplot}[group style={group size=2 by 1, horizontal sep=0.5cm}, scatola, width=6.4cm, height=4.6cm,
   xmin=0, xmax=10, ymin=-2, ymax=13, xtick={0,5,10}, ytick={0,5,10}, xlabel={$x$}]
-\nextgroupplot[ylabel={$y$}]
+\nextgroupplot[ylabel={$d$}]
 \addplot[thick, verde] table {dati/bv_vera.dat};
 \addplot[only marks, mark=*, mark size=1.4pt, blu] table {dati/bv_punti.dat};
 \addplot[thick, rosso] table {dati/bv_prima.dat};
@@ -48,7 +49,7 @@ dati una retta $h(x) = w_1x+w_0$ ai minimi quadrati. Due fatti:
 \end{groupplot}
 \end{tikzpicture}
 \caption{A sinistra un dataset di 20 punti, la funzione vera (verde) e la retta adattata (rosso). A destra le 50
-rette ottenute da 50 dataset diversi (grigio) e la loro media $\bar h$ (rosso): la distanza tra $\bar h$ e la
+rette ottenute da 50 dataset diversi (grigio) e la loro media $\bar h$ (rosso). La distanza tra $\bar h$ e la
 funzione vera è il bias, la dispersione delle rette attorno a $\bar h$ la varianza.}
 \label{fig:bv-rette}
 \end{figure}
@@ -59,10 +60,16 @@ funzione vera è il bias, la dispersione delle rette attorno a $\bar h$ la varia
 Si assume che i dati siano estratti in modo \textbf{i.i.d.} da un'unica distribuzione $P$. Per un punto $\x$
 arbitrario si vuole calcolare l'\textbf{errore di predizione atteso}
 \[
-\E_P\big[(y-h(\x))^2\big],
+\E_P\big[(d-h(\x))^2\big],
 \]
-dove $y$ è il target di $\x$ che potrebbe comparire in un dataset e l'aspettativa è \textbf{su tutti i training
-set} estratti secondo $P$: a ogni training set corrisponde un'ipotesi $h$ diversa (e un $y$ diverso). Sia
+dove $d$ è il target di $\x$ che potrebbe comparire in un dataset. Il simbolo $\E_P$ indica una media su due
+fonti di casualità, entrambe governate da $P$:
+\begin{itemize}
+  \item il \textbf{training set}, estratto secondo $P$: a ogni training set corrisponde un'ipotesi $h$ diversa;
+  \item il \textbf{rumore} nel target $d$ del punto $\x$, che è un dato nuovo, estratto indipendentemente dal
+        training set.
+\end{itemize}
+Sia
 \[
 \bar h(\x) = \E_P[h(\x)]
 \]
@@ -70,31 +77,31 @@ la \textbf{predizione media} in $\x$ delle ipotesi addestrate su dati estratti d
 
 \begin{teorema}[Decomposizione bias-varianza]
 \begin{equation}\label{eq:bias-varianza}
-\boxed{\;\E_P\big[(y-h(\x))^2\big] = \underbrace{\E_P\big[(h(\x)-\bar h(\x))^2\big]}_{\text{varianza}}
-+ \underbrace{\big(\bar h(\x)-f(\x)\big)^2}_{\text{bias}^2} + \underbrace{\E_P\big[(y-f(\x))^2\big]}_{\text{rumore}^2 \;=\;\sigma^2}\;}
+\boxed{\;\E_P\big[(d-h(\x))^2\big] = \underbrace{\E_P\big[(h(\x)-\bar h(\x))^2\big]}_{\text{varianza}}
++ \underbrace{\big(\bar h(\x)-f(\x)\big)^2}_{\text{bias}^2} + \underbrace{\E_P\big[(d-f(\x))^2\big]}_{\text{rumore}^2 \;=\;\sigma^2}\;}
 \end{equation}
 \end{teorema}
 \begin{proof}
 \begin{enumerate}
   \item \textbf{Si sviluppa il quadrato} e si usa la linearità del valore atteso:
         \[
-        \E_P\big[(y-h(\x))^2\big] = \E_P\big[h(\x)^2 - 2y\,h(\x) + y^2\big] = \E_P\big[h(\x)^2\big] + \E_P\big[y^2\big] - 2\,\E_P[y\,h(\x)].
+        \E_P\big[(d-h(\x))^2\big] = \E_P\big[h(\x)^2 - 2d\,h(\x) + d^2\big] = \E_P\big[h(\x)^2\big] + \E_P\big[d^2\big] - 2\,\E_P[d\,h(\x)].
         \]
-  \item \textbf{Termine misto.} $y$ è il target di un dato nuovo, mentre $h$ dipende solo dal training set:
-        le due variabili sono indipendenti, quindi $\E_P[y\,h(\x)] = \E_P[y]\,\E_P[h(\x)] = \E_P[y]\,\bar h(\x)$.
-        Inoltre $\E_P[y] = \E_P[f(\x)+\eps] = f(\x)$, perché il rumore ha media zero. Il termine misto vale
-        $-2f(\x)\bar h(\x)$.
+  \item \textbf{Termine misto.} $d$ è il target di un dato nuovo, mentre $h$ dipende solo dal training set. Il
+        rumore del dato nuovo non dipende dal training set, quindi le due variabili sono indipendenti:
+        $\E_P[d\,h(\x)] = \E_P[d]\,\E_P[h(\x)] = \E_P[d]\,\bar h(\x)$. Inoltre $\E_P[d] = \E_P[f(\x)+\eps] = f(\x)$,
+        perché il rumore ha media zero. Il termine misto vale $-2f(\x)\bar h(\x)$.
   \item \textbf{Primo termine}, con il lemma della varianza (\rif{sec:probabilita}) applicato a $Z = h(\x)$:
         \[
         \E_P\big[h(\x)^2\big] = \E_P\big[(h(\x)-\bar h(\x))^2\big] + \bar h(\x)^2 .
         \]
-  \item \textbf{Secondo termine}, con il lemma applicato a $Z = y$, la cui media è $f(\x)$:
+  \item \textbf{Secondo termine}, con il lemma applicato a $Z = d$, la cui media è $f(\x)$:
         \[
-        \E_P\big[y^2\big] = \E_P\big[(y-f(\x))^2\big] + f(\x)^2 .
+        \E_P\big[d^2\big] = \E_P\big[(d-f(\x))^2\big] + f(\x)^2 .
         \]
   \item \textbf{Si raccoglie}:
         \begin{align*}
-        \E_P\big[(y-h(\x))^2\big] &= \E_P\big[(h(\x)-\bar h(\x))^2\big] + \underbrace{\bar h(\x)^2 - 2f(\x)\bar h(\x) + f(\x)^2}_{=\,(\bar h(\x)-f(\x))^2} + \E_P\big[(y-f(\x))^2\big]\\
+        \E_P\big[(d-h(\x))^2\big] &= \E_P\big[(h(\x)-\bar h(\x))^2\big] + \underbrace{\bar h(\x)^2 - 2f(\x)\bar h(\x) + f(\x)^2}_{=\,(\bar h(\x)-f(\x))^2} + \E_P\big[(d-f(\x))^2\big]\\
         &= \Var[h(\x)] + \Bias[h(\x)]^2 + \E_P[\eps^2] ,
         \end{align*}
         e $\E_P[\eps^2] = \sigma^2$ è la varianza del rumore. \qedhere
@@ -108,7 +115,7 @@ In parole: \textbf{errore di predizione atteso = varianza + bias$^2$ + rumore$^2
         troppo rigido.
   \item \textbf{Varianza}: variabilità della risposta del modello sui diversi training set, dovuta a una
         \textbf{flessibilità eccessiva}.
-  \item \textbf{Rumore}: anche la soluzione ottima sbaglia; è \textbf{irriducibile}, non dipende dal modello e
+  \item \textbf{Rumore}: anche la soluzione ottima sbaglia. È \textbf{irriducibile}: non dipende dal modello e
         rappresenta una tolleranza $\sigma$ sulla risposta.
 \end{itemize}
 
@@ -126,8 +133,8 @@ In parole: \textbf{errore di predizione atteso = varianza + bias$^2$ + rumore$^2
 \draw[<->, thick, densely dashed] (5.08,1.55) -- (8.33,2.38) node[midway, above, font=\footnotesize, sloped] {rumore};
 \draw[<->, blu] (1.0,0.1) -- (3.0,0.1) node[midway, below, font=\footnotesize] {varianza};
 \end{tikzpicture}
-\caption{Vista grafica della decomposizione: training set diversi producono soluzioni diverse (punti blu, la cui
-dispersione è la varianza); la loro media $\bar h$ dista dalla miglior soluzione ottenibile (bias); la soluzione
+\caption{Vista grafica della decomposizione. Training set diversi producono soluzioni diverse (punti blu, la cui
+dispersione è la varianza). La loro media $\bar h$ dista dalla miglior soluzione ottenibile (bias). La soluzione
 ottima stessa dista dai dati a causa del rumore.}
 \label{fig:bv-grafica}
 \end{figure}
@@ -161,12 +168,12 @@ training set diverso.}
 
 Con la loss regolarizzata (\rif{sec:tikhonov})
 \[
-\mathrm{Loss}(\w) = \sum_p\big(d_p-o(\x_p)\big)^2 + \lambda\norm{\w}^2
+\mathrm{Loss}(\w) = \sum_p\big(d_p-h(\x_p)\big)^2 + \lambda\norm{\w}^2
 \]
-(l'intercetta è tipicamente esclusa dalla penalità), variando $\lambda$ si ottengono soluzioni meno regolarizzate
+l'intercetta è tipicamente esclusa dalla penalità. Variando $\lambda$ si ottengono soluzioni meno regolarizzate
 (complesse, $\lambda$ basso) o più regolarizzate (semplici, $\lambda$ alto). Nell'esperimento della
-\figrif{fig:bv-lambda} si estraggono 25 dataset da 25 punti dalla sinusoide $\sin(2\pi x)$ con rumore, e su
-ciascuno si addestra un modello con 24 funzioni di base gaussiane per tre valori di $\lambda$.
+\figrif{fig:bv-lambda} si estraggono 25 dataset da 25 punti dalla sinusoide $\sin(2\pi x)$ con rumore. Su
+ciascuno si addestra un modello con 24 funzioni di base gaussiane, per tre valori di $\lambda$.
 
 \begin{figure}[ht]
 \centering
@@ -192,16 +199,16 @@ ciascuno si addestra un modello con 24 funzioni di base gaussiane per tre valori
 \end{groupplot}
 \end{tikzpicture}
 \caption{Effetto di $\lambda$ su bias e varianza. A sinistra le ipotesi apprese da dataset diversi, a destra la
-loro media (rosso) e la funzione vera (verde). Con $\lambda$ alto (in alto) le curve si somigliano ma la media è
-lontana dalla sinusoide; con $\lambda$ basso (in basso) le curve sono molto diverse ma la media coincide quasi con
-la sinusoide.}
+loro media (rosso) e la funzione vera (verde). Con $\lambda$ alto (in alto) le curve si somigliano, ma la media è
+lontana dalla sinusoide. Con $\lambda$ basso (in basso) le curve sono molto diverse, ma la media coincide quasi
+con la sinusoide.}
 \label{fig:bv-lambda}
 \end{figure}
 
 \begin{itemize}
   \item \textbf{$\lambda$ alto}: \textbf{alto bias, bassa varianza}. La penalità domina, il modello dipende poco
         dai dati ed è troppo rigido.
-  \item \textbf{$\lambda$ medio}: bias più basso, varianza più alta: si dipende di più dal particolare training
+  \item \textbf{$\lambda$ medio}: bias più basso, varianza più alta. Si dipende di più dal particolare training
         set.
   \item \textbf{$\lambda$ molto basso}: \textbf{basso bias, alta varianza}. L'errore di test di un singolo
         modello può essere alto (per la varianza), ma \emph{in media} le ipotesi sono corrette.
@@ -220,18 +227,18 @@ bias$^2$ + varianza coincide circa con il minimo dell'errore di test (\figrif{fi
 \addplot[thick, inchiostro, densely dashed, y filter/.expression={y-0.09}] table[x=lnl, y=test] {dati/bv_tradeoff.dat}; \addlegendentry{errore di test $-\ \sigma^2$}
 \end{axis}
 \end{tikzpicture}
-\caption{Bias$^2$, varianza e loro somma al variare di $\ln\lambda$, stimati su 100 dataset; la curva tratteggiata
+\caption{Bias$^2$, varianza e loro somma al variare di $\ln\lambda$, stimati su 100 dataset. La curva tratteggiata
 è l'errore di test medio meno la varianza del rumore ($\sigma^2 = 0{,}09$). Attenzione: qui la complessità è più
 alta a \textbf{sinistra}, al contrario dei grafici usuali.}
 \label{fig:bv-tradeoff}
 \end{figure}
 
 \begin{idea}[Il collegamento con la SLT]
-Bias e varianza sono un'altra faccia del compromesso tra adattamento ai dati e complessità: il bias corrisponde
-all'incapacità del modello di rappresentare la funzione (alto $\Remp$, underfitting), la varianza alla sensibilità
-ai dati specifici (alta VC-confidence, overfitting). Una conseguenza pratica per la valutazione: a parità di
-complessità l'errore di test varia molto da un training set all'altro, soprattutto per i modelli complessi, e
-una singola misura può essere ``fortunata'' o ``sfortunata'' (capitolo~\ref{cap:validazione}).
+Bias e varianza sono un'altra faccia del compromesso tra adattamento ai dati e complessità. Il bias corrisponde
+all'incapacità del modello di rappresentare la funzione (alto $\Remp$, underfitting). La varianza corrisponde alla
+sensibilità ai dati specifici (alta VC-confidence, overfitting). C'è una conseguenza pratica per la valutazione.
+A parità di complessità l'errore di test varia molto da un training set all'altro, soprattutto per i modelli
+complessi. Una singola misura può quindi essere ``fortunata'' o ``sfortunata'' (capitolo~\ref{cap:validazione}).
 \end{idea}
 
 \section{Ensemble learning}
@@ -256,7 +263,7 @@ dei singoli modelli:
 \end{teorema}
 
 \begin{esempio}[Due modelli]
-Target $t=5$. Due modelli che predicono 2 e 4: media degli errori $\frac{(5-2)^2+(5-4)^2}{2} = 5$, errore del
+Target $d=5$. Due modelli che predicono 2 e 4: media degli errori $\frac{(5-2)^2+(5-4)^2}{2} = 5$, errore del
 comitato ($o=3$) pari a $(5-3)^2 = 4$. Con predizioni 6 e 4: media degli errori $\frac{1+1}{2}=1$, errore del
 comitato $(5-5)^2 = 0$.
 \end{esempio}
@@ -279,19 +286,21 @@ AdaBoost) li differenzia di proposito:
         peso alle istanze sbagliate dal primo (ad esempio sono più probabili nel suo training set), e così via;
   \item combina i risultati con un \textbf{voto pesato}, dando più peso ai classificatori con errore più basso.
 \end{enumerate}
-Se non lo si ferma, il boosting impara a classificare correttamente \textbf{tutte} le istanze di training usando
-\termine{weak learner} (classificatori appena migliori del caso, con errore $<1/2$ nel caso binario), e
-costruisce in modo incrementale modelli complessi. Può migliorare molto learner deboli, riduce il bias senza
-aumentare la varianza (resiste all'overfitting) e, come il bagging, tende a produrre separazioni a margine
-ampio. Però \textbf{soffre con dati rumorosi} (che vengono pesati sempre di più) e non risolve di per sé il
+Il boosting usa \termine{weak learner}, cioè classificatori appena migliori del caso (con errore $<1/2$ nel caso
+binario). Se non lo si ferma, impara a classificare correttamente \textbf{tutte} le istanze di training e
+costruisce in modo incrementale modelli complessi. Può migliorare molto learner deboli. Riduce il bias senza
+aumentare la varianza: per questo resiste all'overfitting anche quando l'errore di training arriva a zero. Come il
+bagging, tende a produrre separazioni a margine ampio. La resistenza all'overfitting però vale solo se i dati sono
+poco rumorosi. Il boosting \textbf{soffre con dati rumorosi}: gli esempi rumorosi sono sbagliati di continuo,
+ricevono pesi sempre maggiori e il modello finisce per adattarsi al rumore. Per questo non risolve di per sé il
 problema underfitting/overfitting.
 
 \section{Feature selection (cenni)}
 \label{sec:feature-selection}
 
-Trovare il sottoinsieme delle feature più informative porta grandi benefici: \textbf{riduzione della
-dimensionalità} (con effetti sulla VC-dimension e sulla maledizione della dimensionalità), filtraggio di
-informazione irrilevante e rumore, \textbf{interpretabilità}. Però:
+Trovare il sottoinsieme delle feature più informative porta grandi benefici. C'è la \textbf{riduzione della
+dimensionalità}, con effetti sulla VC-dimension e sulla maledizione della dimensionalità. C'è il filtraggio di
+informazione irrilevante e di rumore. C'è l'\textbf{interpretabilità}. Però:
 \begin{itemize}
   \item è \textbf{computazionalmente difficile}: i sottoinsiemi possibili sono moltissimi e ogni valutazione
         richiede di riaddestrare il modello;
@@ -303,7 +312,7 @@ informazione irrilevante e rumore, \textbf{interpretabilità}. Però:
 
 \begin{puntichiave}
 \begin{itemize}
-  \item $\E_P[(y-h(\x))^2] = \Var[h(\x)] + \Bias[h(\x)]^2 + \sigma^2$; il rumore è irriducibile.
+  \item $\E_P[(d-h(\x))^2] = \Var[h(\x)] + \Bias[h(\x)]^2 + \sigma^2$; il rumore è irriducibile.
   \item Modelli rigidi (o molto regolarizzati): alto bias, bassa varianza; modelli flessibili (poco regolarizzati):
         basso bias, alta varianza.
   \item Un comitato non è peggiore della media dei suoi membri. Bagging: media di modelli ad alta varianza, che

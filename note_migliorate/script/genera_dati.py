@@ -80,9 +80,27 @@ def polinomi():
         # E = 1/2 sum (t - Aw)^2 + lam/2 ||w||^2  ->  (A^T A + lam I) w = A^T t
         return np.linalg.solve(A.T @ A + lam * np.eye(M + 1), A.T @ t) if lam > 0 else np.linalg.lstsq(A, t, rcond=None)[0]
 
+    coeff = {}
     for M in (0, 1, 3, 9):
         w = fit(xs, ts, M)
+        coeff[M] = w
         save(f"poly_M{M}.dat", zip(grid, design(grid, M) @ w), "x y")
+    # tabelle dei coefficienti (capitolo 5): righe w_0 ... w_9, una colonna per modello
+    cella = lambda w, j: f"${num(w[j], 2)}$" if j < len(w) else ""  # noqa: E731
+    def tabella(nome, intest, colonne, nota):
+        with open(OUT / nome, "w", encoding="utf-8") as f:
+            f.write(f"% generato da script/genera_dati.py: {nota}\n")
+            f.write("\\begin{tabular}{l" + "r" * len(colonne) + "}\n\\toprule\n" + intest + " \\\\\n\\midrule\n")
+            for j in range(10):
+                f.write(f"$w_{j}^*$ & " + " & ".join(cella(w, j) for w in colonne) + " \\\\\n")
+            f.write("\\bottomrule\n\\end{tabular}\n")
+
+    tabella("poly_coeff_M.tex", " & $M=0$ & $M=1$ & $M=3$ & $M=9$", [coeff[M] for M in (0, 1, 3, 9)],
+            "coefficienti dei polinomi della figura (M = 0, 1, 3, 9)")
+    reg = [coeff[9]] + [fit(xs, ts, 9, np.exp(lnl)) for lnl in (-18, 0)]
+    tabella("poly_coeff_lambda.tex",
+            " & $\\ln\\lambda=-\\infty$ ($\\lambda=0$) & $\\ln\\lambda=-18$ & $\\ln\\lambda=0$", reg,
+            "coefficienti del polinomio di grado 9 (lambda = 0, e^-18, 1)")
 
     rng = np.random.default_rng(7)
     xt = rng.random(1000)

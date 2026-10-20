@@ -2,11 +2,24 @@
 
 Versione riorganizzata degli appunti di `notes/Appunti/`, pensata per lo studio: gli argomenti sono disposti in un
 ordine in cui ogni concetto è definito una sola volta, senza parti storiche o organizzative, con le dimostrazioni
-svolte passo per passo e le figure ridisegnate (TikZ/pgfplots). Il risultato è `Machine_Learning_Note_Migliorate.pdf`.
+svolte passo per passo e le figure ridisegnate (TikZ/pgfplots).
+
+## Versioni
+
+| PDF | Contenuto |
+|---|---|
+| `Machine_Learning_Note_Migliorate.pdf` | versione 1 (16 ottobre 2026) |
+| `Machine_Learning_Note_Migliorate_v2.pdf` | versione 2 (17 ottobre 2026): errori corretti, notazione unica, frasi più brevi (vedi `ANALISI-DIDATTICA.md`, sezione 8) |
+
+Il numero di versione sta in `versione.tex` ed è scritto in copertina. `build.sh` produce
+`Machine_Learning_Note_Migliorate_v<N>.pdf` e non tocca i PDF delle versioni precedenti: per una nuova versione si
+aumenta il numero in `versione.tex`.
 
 ## Contenuto della cartella
 
 - `main.tex`, `preambolo.tex` — documento e stile (XeTeX via tectonic; font XCharter e Fira Sans).
+- `versione.tex` — numero di versione (copertina e nome del PDF).
+- `ANALISI-DIDATTICA.md` — analisi didattica capitolo per capitolo e modifiche applicate nella versione 2.
 - `capitoli/` — un file per capitolo (00 guida, 01–19).
 - `script/genera_dati.py` — calcola i dati delle figure "vere" (fit polinomiali, K-NN, SVM, rete con weight decay,
   bias-varianza, K-means, SOM, ...) e scrive `dati/*.dat` e `dati/valori.tex` (i numeri citati nelle didascalie).
@@ -20,7 +33,8 @@ svolte passo per passo e le figure ridisegnate (TikZ/pgfplots). Il risultato è 
    ./build.sh
    ```
 
-   Uscita attesa: l'ultima riga è `PDF: .../Machine_Learning_Note_Migliorate.pdf`.
+   Uscita attesa: l'ultima riga è `PDF: .../Machine_Learning_Note_Migliorate_v2.pdf` (il numero viene da
+   `versione.tex`).
 
 2. Solo se si vogliono rigenerare i dati delle figure (serve `uv`, che installa numpy, scipy, scikit-learn,
    matplotlib in un ambiente temporaneo):

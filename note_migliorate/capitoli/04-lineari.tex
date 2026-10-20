@@ -3,8 +3,8 @@
 
 \begin{inbreve}
 Il modello lineare è il primo modello con uno spazio delle ipotesi \emph{continuo}, parametrizzato da numeri
-reali. Il capitolo ricava i parametri ottimi ai minimi quadrati in due modi --- in forma chiusa (equazioni normali)
-e iterativamente (discesa del gradiente, \emph{delta rule}) --- prima per la regressione, poi per la
+reali. Il capitolo ricava i parametri ottimi ai minimi quadrati in due modi: in forma chiusa (equazioni normali)
+e iterativamente (discesa del gradiente, \emph{delta rule}). Lo fa prima per la regressione, poi per la
 classificazione. Si chiude con i limiti del modello (separabilità lineare, XOR) e con la sua estensione tramite
 espansione in basi.
 \end{inbreve}
@@ -12,7 +12,7 @@ espansione in basi.
 \section{Regressione lineare univariata}
 \label{sec:lms-univariata}
 
-Nel caso univariato (una variabile di input $x$, una di output $y$) si assume il modello
+Nel caso univariato (una variabile di input $x$, una di output $d$) si assume il modello
 \[
 h_\w(x) = w_1x + w_0 ,
 \]
@@ -22,16 +22,16 @@ retta. Lo spazio delle ipotesi è infinito, perché $\w$ varia con continuità.
 \subsection{Il criterio dei minimi quadrati}
 
 Addestrare significa trovare il $\w$ che \textbf{minimizza l'errore empirico} sui dati di training (il controllo
-della complessità è l'argomento del capitolo~\ref{cap:regolarizzazione}). Dati $l$ esempi $(x_p,y_p)$, si cerca
+della complessità è l'argomento del capitolo~\ref{cap:regolarizzazione}). Dati $l$ esempi $(x_p,d_p)$, si cerca
 la retta che minimizza la \textbf{somma dei quadrati dei residui}:
 \begin{equation}\label{eq:lms-univariata}
-E(\w) = \sum_{p=1}^{l}\big(y_p - h_\w(x_p)\big)^2 = \sum_{p=1}^{l}\big(y_p - (w_1x_p+w_0)\big)^2 .
+E(\w) = \sum_{p=1}^{l}\big(d_p - h_\w(x_p)\big)^2 = \sum_{p=1}^{l}\big(d_p - (w_1x_p+w_0)\big)^2 .
 \end{equation}
 Dividendo per $l$ si ottiene la media. È il metodo dei \termine{minimi quadrati} (\ingl{Least (Mean) Squares},
 LMS): $\argmin_\w E(\w)$ in norma $L^2$.
 
 \begin{idea}[Perché i minimi quadrati]
-Ogni retta candidata produce dei \textbf{residui}, le distanze verticali tra i punti $(x_p,y_p)$ e la retta
+Ogni retta candidata produce dei \textbf{residui}, le distanze verticali tra i punti $(x_p,d_p)$ e la retta
 (\figrif{fig:mse}). Minimizzare la somma dei loro quadrati è un modo naturale di trovare la retta che meglio
 approssima i dati. In generale, i minimi quadrati sono il metodo standard per risolvere in modo approssimato i
 \textbf{sistemi sovradeterminati}, con più equazioni (gli esempi) che incognite (i parametri).
@@ -46,29 +46,29 @@ $\partial E/\partial w_0 = 0$ e $\partial E/\partial w_1 = 0$.
 \begin{teorema}[Retta ai minimi quadrati]
 Il minimo di \eqref{eq:lms-univariata} si ha per
 \begin{equation}\label{eq:retta-lms}
-w_1 = \frac{\sum_p x_py_p - \frac1l\sum_p x_p\sum_p y_p}{\sum_p x_p^2 - \frac1l\big(\sum_p x_p\big)^2}
-= \frac{\Cov[x,y]}{\Var[x]}, \qquad w_0 = \bar y - w_1\bar x ,
+w_1 = \frac{\sum_p x_pd_p - \frac1l\sum_p x_p\sum_p d_p}{\sum_p x_p^2 - \frac1l\big(\sum_p x_p\big)^2}
+= \frac{\Cov[x,d]}{\Var[x]}, \qquad w_0 = \bar d - w_1\bar x ,
 \end{equation}
-con $\bar x = \frac1l\sum_p x_p$ e $\bar y = \frac1l\sum_py_p$.
+con $\bar x = \frac1l\sum_p x_p$ e $\bar d = \frac1l\sum_pd_p$.
 \end{teorema}
 \begin{proof}
 Si deriva ogni termine con la regola $\partial f^2/\partial w = 2f\,\partial f/\partial w$
 (\rif{sec:regole-derivazione}).
 \begin{enumerate}
-  \item \textbf{Derivata rispetto a $w_0$}: $\dfrac{\partial E}{\partial w_0} = -2\sum_p\big(y_p - w_1x_p-w_0\big)
-        = 0 \iff \sum_py_p - w_1\sum_px_p - l\,w_0 = 0$. Dividendo per $l$:
-        $\boxed{w_0 = \bar y - w_1\bar x}$.
-  \item \textbf{Derivata rispetto a $w_1$}: $\dfrac{\partial E}{\partial w_1} = -2\sum_p\big(y_p - w_1x_p-w_0\big)x_p
-        = 0 \iff \sum_px_py_p - w_1\sum_px_p^2 - w_0\sum_px_p = 0$.
+  \item \textbf{Derivata rispetto a $w_0$}: $\dfrac{\partial E}{\partial w_0} = -2\sum_p\big(d_p - w_1x_p-w_0\big)
+        = 0 \iff \sum_pd_p - w_1\sum_px_p - l\,w_0 = 0$. Dividendo per $l$:
+        $\boxed{w_0 = \bar d - w_1\bar x}$.
+  \item \textbf{Derivata rispetto a $w_1$}: $\dfrac{\partial E}{\partial w_1} = -2\sum_p\big(d_p - w_1x_p-w_0\big)x_p
+        = 0 \iff \sum_px_pd_p - w_1\sum_px_p^2 - w_0\sum_px_p = 0$.
   \item \textbf{Sostituzione} di $w_0$ dal passo 1:
-        $\sum_px_py_p - w_1\sum_px_p^2 - (\bar y - w_1\bar x)\sum_px_p = 0$, cioè
+        $\sum_px_pd_p - w_1\sum_px_p^2 - (\bar d - w_1\bar x)\sum_px_p = 0$, cioè
         \[
-        \sum_px_py_p - \bar y\sum_px_p = w_1\Big(\sum_px_p^2 - \bar x\sum_px_p\Big).
+        \sum_px_pd_p - \bar d\sum_px_p = w_1\Big(\sum_px_p^2 - \bar x\sum_px_p\Big).
         \]
-  \item Poiché $\bar y\sum_px_p = \frac1l\sum_px_p\sum_py_p$ e $\bar x\sum_px_p = \frac1l(\sum_px_p)^2$, si ottiene
+  \item Poiché $\bar d\sum_px_p = \frac1l\sum_px_p\sum_pd_p$ e $\bar x\sum_px_p = \frac1l(\sum_px_p)^2$, si ottiene
         la prima forma di $w_1$ in \eqref{eq:retta-lms}.
   \item Dividendo numeratore e denominatore per $l$: il numeratore diventa
-        $\frac1l\sum_px_py_p - \bar x\bar y = \Cov[x,y]$ e il denominatore $\frac1l\sum_px_p^2-\bar x^2 = \Var[x]$
+        $\frac1l\sum_px_pd_p - \bar x\bar d = \Cov[x,d]$ e il denominatore $\frac1l\sum_px_p^2-\bar x^2 = \Var[x]$
         (lemma della varianza, \rif{sec:probabilita}). \qedhere
 \end{enumerate}
 \end{proof}
@@ -80,7 +80,7 @@ saperla \textbf{ricavare} imponendo il gradiente nullo, come sopra.
 
 \begin{esempio}[Esercizio svolto]
 Con i dati $(1;2{,}1)$, $(2;3{,}9)$, $(3;6{,}1)$, $(4;8{,}4)$, $(5;9{,}8)$: $l=5$, $\bar x = 3$,
-$\bar y = 6{,}06$, $\sum_px_py_p = 2{,}1+7{,}8+18{,}3+33{,}6+49 = 110{,}8$, $\sum_px_p^2 = 55$. Quindi
+$\bar d = 6{,}06$, $\sum_px_pd_p = 2{,}1+7{,}8+18{,}3+33{,}6+49 = 110{,}8$, $\sum_px_p^2 = 55$. Quindi
 \[
 w_1 = \frac{110{,}8 - 5\cdot3\cdot6{,}06}{55-5\cdot3^2} = \frac{110{,}8-90{,}9}{10} = 1{,}99, \qquad
 w_0 = 6{,}06 - 1{,}99\cdot3 = 0{,}09 .
@@ -90,13 +90,13 @@ La retta $h(x)\approx1{,}99x+0{,}09$ conferma l'intuizione $h(x)=2x$.
 
 \subsection{Il gradiente su un singolo esempio}
 
-Per un solo esempio $(x,y)$, con $E = (y-h_\w(x))^2$:
+Per un solo esempio $(x,d)$, con $E = (d-h_\w(x))^2$:
 \[
-\frac{\partial E}{\partial w_i} = 2\big(y-h_\w(x)\big)\frac{\partial\big(y-(w_1x+w_0)\big)}{\partial w_i}
+\frac{\partial E}{\partial w_i} = 2\big(d-h_\w(x)\big)\frac{\partial\big(d-(w_1x+w_0)\big)}{\partial w_i}
 \quad\Longrightarrow\quad
-\frac{\partial E}{\partial w_0} = -2\big(y-h_\w(x)\big),\quad \frac{\partial E}{\partial w_1} = -2\big(y-h_\w(x)\big)\,x .
+\frac{\partial E}{\partial w_0} = -2\big(d-h_\w(x)\big),\quad \frac{\partial E}{\partial w_1} = -2\big(d-h_\w(x)\big)\,x .
 \]
-La quantità $\delta = y-h(x)$, l'errore sull'esempio, si chiama \termine{delta}. Con $l$ esempi basta sommare.
+La quantità $\delta = d-h(x)$, l'errore sull'esempio, si chiama \termine{delta}. Con $l$ esempi basta sommare.
 
 \section{Input multidimensionali}
 
@@ -116,46 +116,46 @@ incluso in $\w$ in questo modo.
 \section{Soluzione diretta: le equazioni normali}
 \label{sec:equazioni-normali}
 
-Con $X$ la matrice $l\times(n+1)$ che ha per righe gli $\x_p\T$ e $\y$ il vettore dei target, l'errore
+Con $X$ la matrice $l\times(n+1)$ che ha per righe gli $\x_p\T$ e $\dd$ il vettore dei target, l'errore
 quadratico è
 \[
-E(\w) = \sum_{p=1}^{l}\big(y_p-\x_p\T\w\big)^2 = \norm{\y - X\w}^2 .
+E(\w) = \sum_{p=1}^{l}\big(d_p-\x_p\T\w\big)^2 = \norm{\dd - X\w}^2 .
 \]
 
 \subsubsection{Il gradiente}
 Derivando rispetto a una componente $w_j$:
 \[
-\frac{\partial E(\w)}{\partial w_j} = \sum_{p=1}^{l}2\big(y_p-\x_p\T\w\big)\frac{\partial\big(y_p-\x_p\T\w\big)}{\partial w_j}.
+\frac{\partial E(\w)}{\partial w_j} = \sum_{p=1}^{l}2\big(d_p-\x_p\T\w\big)\frac{\partial\big(d_p-\x_p\T\w\big)}{\partial w_j}.
 \]
 Nel prodotto scalare $\x_p\T\w = x_{p,0}w_0 + x_{p,1}w_1+\dots$ l'unico termine che dipende da $w_j$ è
 $x_{p,j}w_j$, la cui derivata è $x_{p,j}$. Quindi
 \begin{equation}\label{eq:gradiente-lms}
-\boxed{\;\frac{\partial E(\w)}{\partial w_j} = -2\sum_{p=1}^{l}\big(y_p-\x_p\T\w\big)\,x_{p,j} = -2\sum_{p=1}^{l}\delta_p\,x_{p,j}\;}
-\qquad \delta_p = y_p - \x_p\T\w .
+\boxed{\;\frac{\partial E(\w)}{\partial w_j} = -2\sum_{p=1}^{l}\big(d_p-\x_p\T\w\big)\,x_{p,j} = -2\sum_{p=1}^{l}\delta_p\,x_{p,j}\;}
+\qquad \delta_p = d_p - \x_p\T\w .
 \end{equation}
 Questa forma (errore dell'esempio per input del peso) tornerà identica nelle reti neurali. In forma vettoriale,
-raccogliendo le componenti: $\nabla E(\w) = -2X\T(\y - X\w)$.
+raccogliendo le componenti: $\nabla E(\w) = -2X\T(\dd - X\w)$.
 
 \subsubsection{Le equazioni normali}
-Imponendo $\nabla E(\w) = \vv0$: $X\T\y - X\T X\w = \vv0$, cioè
+Imponendo $\nabla E(\w) = \vv0$: $X\T\dd - X\T X\w = \vv0$, cioè
 \begin{equation}\label{eq:normali}
-\boxed{\;(X\T X)\,\w = X\T\y\;}
+\boxed{\;(X\T X)\,\w = X\T\dd\;}
 \end{equation}
 
 \begin{teorema}[Soluzione ai minimi quadrati]
 Se $X\T X$ è non singolare la soluzione è unica:
 \[
-\w = (X\T X)^{-1}X\T\y = X^+\y ,
+\w = (X\T X)^{-1}X\T\dd = X^+\dd ,
 \]
 dove $X^+$ è la \termine{pseudoinversa di Moore-Penrose} (definita anche quando $X$ non è invertibile). Se
 $X\T X$ è singolare le soluzioni sono infinite, e si può scegliere quella a \textbf{norma minima} di $\w$.
 \end{teorema}
 
 In pratica si usa la \termine{decomposizione ai valori singolari} (SVD): $X = U\Sigma V\T$ implica
-$X^+ = V\Sigma^+U\T$, dove $\Sigma^+$ si ottiene sostituendo ogni elemento diagonale non nullo di $\Sigma$ con il
-suo reciproco (e trasponendo). Calcolare $\w = X^+\y$ tramite SVD dà direttamente la soluzione a norma minima:
-\textbf{è questo l'algoritmo di apprendimento} dell'approccio diretto, presente in tutte le librerie numeriche
-con varianti per efficienza e stabilità.
+$X^+ = V\Sigma^+U\T$. La matrice $\Sigma^+$ si ottiene sostituendo ogni elemento diagonale non nullo di $\Sigma$
+con il suo reciproco (e trasponendo). Calcolare $\w = X^+\dd$ tramite SVD dà direttamente la soluzione a norma
+minima. \textbf{È questo l'algoritmo di apprendimento} dell'approccio diretto, presente in tutte le librerie
+numeriche con varianti per efficienza e stabilità.
 
 \section{Soluzione iterativa: la discesa del gradiente}
 \label{sec:discesa}
@@ -247,7 +247,7 @@ dove $\eta$ è il \termine{learning rate} (\ingl{step size}), che regola l'ampie
   \item \textbf{On-line} (o \textbf{stocastica}, SGD): i pesi si aggiornano dopo \textbf{ogni} esempio, con il
         gradiente del singolo esempio
         \[
-        \frac{\partial E_p(\w)}{\partial w_j} = -2\big(y_p-\x_p\T\w\big)\,x_{p,j} = -\Delta_pw_j .
+        \frac{\partial E_p(\w)}{\partial w_j} = -2\big(d_p-\x_p\T\w\big)\,x_{p,j} = -\Delta_pw_j .
         \]
         L'uscita sul secondo esempio è calcolata con i pesi già aggiornati dal primo, e così via. Fa progressi a
         ogni esempio e può essere più veloce, ma richiede un $\eta$ più piccolo.
@@ -274,7 +274,7 @@ buona scende rapidamente e si stabilizza (andamenti qualitativi).}
 
 Ricapitolando, nella versione batch
 \begin{equation}\label{eq:delta-rule}
-\Delta w_j = 2\sum_{p=1}^{l}\underbrace{\big(y_p-\x_p\T\w\big)}_{\delta_p}\,x_{p,j}, \qquad \w_{\mathit{new}} = \w + \eta\,\Delta\w
+\Delta w_j = 2\sum_{p=1}^{l}\underbrace{\big(d_p-\x_p\T\w\big)}_{\delta_p}\,x_{p,j}, \qquad \w_{\mathit{new}} = \w + \eta\,\Delta\w
 \end{equation}
 (la costante 2 si può assorbire in $\eta$). È una regola di \textbf{correzione dell'errore}, detta
 \termine{regola di Widrow-Hoff} o \termine{delta rule}: ogni $w_j$ cambia \textbf{in proporzione all'errore}
@@ -299,7 +299,7 @@ corretta.
 \begin{idea}[Perché la discesa del gradiente è così importante]
 È un metodo di ricerca locale semplice ed efficace che esplora uno spazio delle ipotesi \textbf{infinito e
 continuo}. Si applica ogni volta che $H$ è continuo e la loss è differenziabile, \textbf{non solo ai modelli
-lineari}: è la base dell'addestramento di reti neurali e deep learning. Esistono molti miglioramenti (metodi di
+lineari}. È la base dell'addestramento di reti neurali e deep learning. Esistono molti miglioramenti (metodi di
 Newton e quasi-Newton, gradiente coniugato, \dots).
 \end{idea}
 
@@ -391,22 +391,22 @@ spam.
 
 \subsection{Il problema di apprendimento per la classificazione}
 
-Dati $l$ esempi $(\x_p,y_p)$ con $y_p\in\{0,1\}$ o $\{-1,+1\}$, si cerca $\w$ che minimizzi
+Dati $l$ esempi $(\x_p,d_p)$ con $d_p\in\{0,1\}$ o $\{-1,+1\}$, si cerca $\w$ che minimizzi
 \[
-\Remp = \frac1l\sum_{p=1}^{l}L\big(h(\x_p),y_p\big).
+\Remp = \frac1l\sum_{p=1}^{l}L\big(h(\x_p),d_p\big).
 \]
-Usare direttamente la loss 0/1 su $\sign(\w\T\x)$ rende il problema difficile: la funzione è \textbf{costante a
-tratti}, quindi il gradiente è nullo quasi ovunque e non indica dove muoversi; si finisce in problemi
+Usare direttamente la loss 0/1 su $\sign(\w\T\x)$ rende il problema difficile. La funzione è \textbf{costante a
+tratti}, quindi il gradiente è nullo quasi ovunque e non indica dove muoversi. Si finisce in problemi
 combinatori.
 
 \begin{idea}[Sostituire la loss con una funzione liscia]
 Si minimizza invece l'errore quadratico applicato all'\textbf{uscita lineare} $\w\T\x$ (non a $h(\x)$, che
 contiene il segno):
 \[
-E(\w) = \sum_{p=1}^{l}\big(y_p-\x_p\T\w\big)^2 = \norm{\y-X\w}^2 .
+E(\w) = \sum_{p=1}^{l}\big(d_p-\x_p\T\w\big)^2 = \norm{\dd-X\w}^2 .
 \]
-Con target $y_p=1$, minimizzare $(1-\x_p\T\w)^2$ spinge $\x_p\T\w$ verso $1$, quindi a valori positivi: nessun
-errore di classificazione. Con $y_p=-1$ lo spinge verso $-1$. Le due loss sono minimizzate nella stessa zona
+Con target $d_p=1$, minimizzare $(1-\x_p\T\w)^2$ spinge $\x_p\T\w$ verso $1$, quindi a valori positivi: nessun
+errore di classificazione. Con $d_p=-1$ lo spinge verso $-1$. Le due loss sono minimizzate nella stessa zona
 (\figrif{fig:loss-liscia}). La funzione è quadratica, quindi un minimo esiste sempre (non necessariamente unico).
 \end{idea}
 
@@ -419,7 +419,7 @@ errore di classificazione. Con $y_p=-1$ lo spinge verso $-1$. Le due loss sono m
 \addplot[very thick, blu, const plot] coordinates {(-2.2,1) (0,1) (0,0) (3.2,0)}; \addlegendentry{0/1 su $\sign(\w\T\x)$}
 \end{axis}
 \end{tikzpicture}
-\caption{Loss 0/1 e loss quadratica per un esempio con target $y=1$: entrambe sono minime nella zona
+\caption{Loss 0/1 e loss quadratica per un esempio con target $d=1$: entrambe sono minime nella zona
 $\w\T\x>0$, ma solo la seconda ha un gradiente utile.}
 \label{fig:loss-liscia}
 \end{figure}
@@ -440,9 +440,10 @@ discesa del gradiente --- si applicano senza modifiche. In sintesi:
 \label{sec:due-classi}
 
 Si considerino 200 punti in $\R^2$, 100 per ciascuna di due classi, generati da una distribuzione sconosciuta
-(\figrif{fig:htf-lineare}). Codificando le classi come $0$ e $1$ e addestrando con LMS, il confine
-$\{\x\mid\x\T\w = 0{,}5\}$ è lineare e lascia molti punti dal lato sbagliato. È una cattiva soluzione? Dipende da
-come sono stati generati i dati:
+(\figrif{fig:htf-lineare}). Qui le classi sono codificate come $0$ e $1$ invece che come $-1$ e $+1$. Con questa
+codifica la soglia naturale non è più 0 ma $0{,}5$, il punto medio tra i due target: si assegna la classe 1 quando
+$\x\T\w\ge0{,}5$. Addestrando con LMS, il confine $\{\x\mid\x\T\w = 0{,}5\}$ è lineare e lascia molti punti dal
+lato sbagliato. È una cattiva soluzione? Dipende da come sono stati generati i dati:
 \begin{itemize}
   \item \textbf{scenario 1}: ogni classe è generata da una gaussiana con componenti scorrelate, stessa varianza e
         medie diverse. La regola lineare è \textbf{quasi ottima}: la sovrapposizione tra le classi è
@@ -490,12 +491,12 @@ Con $K>2$ classi gli approcci semplici sono:
   \item \termine{OVA} (\ingl{one-vs-all}): $K$ classificatori binari, ciascuno distingue una classe da tutte le
         altre; vince la classe del classificatore con l'uscita più alta;
   \item \termine{AVA} (\ingl{all-vs-all}, \ingl{one-vs-one}): un classificatore per ogni coppia di classi,
-        $K(K-1)/2$ in tutto, ciascuno addestrato su meno dati; vince la classe con la massima somma di uscite o
+        $K(K-1)/2$ in tutto, ciascuno addestrato su meno dati. Vince la classe con la massima somma di uscite o
         con più voti.
 \end{itemize}
 Con molte classi può verificarsi il \textbf{mascheramento} (una classe ``nascosta'' dalle altre). Esistono
 modelli con uscite multiple native e altri classificatori lineari noti, come la \textbf{Linear Discriminant
-Analysis} e la \textbf{regressione logistica} (che modella direttamente $P(y\mid\x)$).
+Analysis} e la \textbf{regressione logistica} (che modella direttamente $P(d\mid\x)$).
 
 \section{Limiti: la separabilità lineare}
 \label{sec:separabilita}
@@ -509,9 +510,9 @@ $n-1$) che li separa completamente; nel piano, una singola retta.
 \end{definizione}
 
 Il confine di decisione lineare dà soluzioni esatte \textbf{solo} per insiemi linearmente separabili. Il modello
-lineare può rappresentare ad esempio le \textbf{congiunzioni}: $x_1\wedge x_2\wedge x_4$ si realizza con
-$1\cdot x_1+1\cdot x_2+0\cdot x_3+1\cdot x_4\ge 2{,}5$ (vero solo se i tre input valgono 1), l'AND di due
-variabili con $x_1+x_2\ge1{,}5$. Ma non tutto è separabile (\figrif{fig:separabilita}):
+lineare può rappresentare ad esempio le \textbf{congiunzioni}. $x_1\wedge x_2\wedge x_4$ si realizza con
+$1\cdot x_1+1\cdot x_2+0\cdot x_3+1\cdot x_4\ge 2{,}5$, vero solo se i tre input valgono 1. L'AND di due
+variabili si realizza con $x_1+x_2\ge1{,}5$. Ma non tutto è separabile (\figrif{fig:separabilita}):
 \begin{itemize}
   \item \textbf{3 punti}: per ogni assegnazione delle etichette esiste un iperpiano separatore, \textbf{se non
         sono allineati}. Se sono allineati, l'etichettatura con il punto centrale di classe diversa non è
@@ -551,7 +552,7 @@ variabili con $x_1+x_2\ge1{,}5$. Ma non tutto è separabile (\figrif{fig:separab
 \end{figure}
 
 Contare quante etichettature di un insieme di punti un modello riesce a separare è esattamente l'idea della
-VC-dimension (capitolo~\ref{cap:slt}): una retta nel piano separa tutte le etichettature di 3 punti non
+VC-dimension (capitolo~\ref{cap:slt}). Una retta nel piano separa tutte le etichettature di 3 punti non
 allineati, ma non di 4.
 
 \section{Espansione in basi lineare}
@@ -578,7 +579,7 @@ Esempi di $\phi$: rappresentazioni \textbf{polinomiali} ($\phi(\x)=x_j^2$, $\phi
 trasformazioni non lineari di singoli input ($\log x_j$, $\sqrt{x_j}$); trasformazioni di più input
 ($\phi(\x) = \norm{\x}$); spline. Ad esempio
 $h(\x) = w_1x_1+w_2x_2+w_3\log x_2+w_4\log x_3+w_5\,x_2x_3+w_0$. Tipicamente il numero di parametri diventa
-$K>n$. Il modello è lineare nei parametri (e nelle $\phi$), non in $\x$: lo stesso algoritmo vale per la
+$K>n$. Il modello è lineare nei parametri (e nelle $\phi$), non in $\x$. Lo stesso algoritmo vale quindi per la
 regressione e per la classificazione (applicando la soglia a $\sum_kw_k\phi_k(\x)$).
 
 \begin{attenzione}[Pro e contro della LBE]
@@ -598,8 +599,8 @@ regressione e per la classificazione (applicando la soglia a $\sum_kw_k\phi_k(\x
 
 \begin{puntichiave}
 \begin{itemize}
-  \item LMS: $E(\w)=\norm{\y-X\w}^2$, gradiente $\partial E/\partial w_j = -2\sum_p\delta_px_{p,j}$.
-  \item Soluzione diretta: $(X\T X)\w = X\T\y$, cioè $\w=X^+\y$ (SVD). Soluzione iterativa:
+  \item LMS: $E(\w)=\norm{\dd-X\w}^2$, gradiente $\partial E/\partial w_j = -2\sum_p\delta_px_{p,j}$.
+  \item Soluzione diretta: $(X\T X)\w = X\T\dd$, cioè $\w=X^+\dd$ (SVD). Soluzione iterativa:
         $\w\leftarrow\w+\eta\Delta\w$ (delta rule), batch o on-line.
   \item Classificazione: si addestra con LMS su $\w\T\x$, si classifica con $\sign(\w\T\x)$.
   \item Solo problemi linearmente separabili hanno una soluzione esatta; lo XOR non lo è.

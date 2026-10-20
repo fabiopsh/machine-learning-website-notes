@@ -4,21 +4,22 @@
 \begin{inbreve}
 La validazione stima empiricamente l'errore di generalizzazione, per due scopi distinti: scegliere il modello
 (\emph{model selection}) e stimarne il rischio (\emph{model assessment}). Il capitolo presenta hold-out e K-fold
-cross-validation, la ricerca degli iperparametri, gli schemi formali che combinano selezione e valutazione, gli
-errori più frequenti e le misure d'errore per classificazione e regressione. Gli aspetti specifici delle reti
-neurali (epoche, early stopping, inizializzazioni) sono nel \rif{sec:validazione-reti}.
+cross-validation e la ricerca degli iperparametri. Segue gli schemi formali che combinano selezione e
+valutazione. Chiude con gli errori più frequenti e le misure d'errore per classificazione e regressione. Gli
+aspetti specifici delle reti neurali (epoche, early stopping, inizializzazioni) sono nel
+\rif{sec:validazione-reti}.
 \end{inbreve}
 
 \section{Perché validare}
 
 La prestazione di un sistema di ML è la sua \textbf{accuratezza predittiva} su dati nuovi. Le prestazioni sui
-dati di training danno una valutazione \textbf{troppo ottimistica}: all'inizio dell'addestramento c'è troppo
-bias (underfitting, errore di training alto), alla fine troppa varianza (errore di training basso ma
+dati di training danno una valutazione \textbf{troppo ottimistica}. All'inizio dell'addestramento c'è troppo
+bias (underfitting, errore di training alto); alla fine c'è troppa varianza (errore di training basso ma
 overfitting). Inoltre, a parità di complessità, l'errore di test varia molto da un training set all'altro
-(\rif{sec:bv-lambda}). Se un iperparametro $\theta$ (implicito o esplicito) regola la complessità del modello,
-si vuole il valore di $\theta$ che minimizza l'errore di test: servono metodi per \textbf{stimare l'errore
-atteso} di un modello o di una classe di modelli. Oltre ai metodi analitici (\rif{sec:rischio}) ci sono i metodi
-\textbf{empirici}, basati sul ricampionamento dei dati: \textbf{cross-validation} e \textbf{bootstrap}.
+(\rif{sec:bv-lambda}). Un iperparametro $\theta$, implicito o esplicito, può regolare la complessità del modello.
+Si vuole allora il valore di $\theta$ che minimizza l'errore di test. Servono quindi metodi per \textbf{stimare
+l'errore atteso} di un modello o di una classe di modelli. Oltre ai metodi analitici (\rif{sec:rischio}) ci sono
+i metodi \textbf{empirici}, basati sul ricampionamento dei dati: \textbf{cross-validation} e \textbf{bootstrap}.
 
 \section{Model selection e model assessment}
 
@@ -26,7 +27,7 @@ atteso} di un modello o di una classe di modelli. Oltre ai metodi analitici (\ri
 Dopo aver addestrato i modelli sul training set:
 \begin{itemize}
   \item \termine{model selection}: stimare le prestazioni (errore di generalizzazione) di diversi modelli per
-        \textbf{scegliere il migliore}; include la ricerca dei migliori \textbf{iperparametri} (grado del
+        \textbf{scegliere il migliore}. Include la ricerca dei migliori \textbf{iperparametri} (grado del
         polinomio, numero di unità di una rete, $\lambda$, $\eta$, \dots). \emph{Restituisce un modello.}
   \item \termine{model assessment}: scelto il modello finale, \textbf{stimarne l'errore di predizione} (rischio)
         su dati di test nuovi, come misura della sua qualità. \emph{Restituisce una stima.}
@@ -41,15 +42,15 @@ per scegliere il modello, la stima finale non è più affidabile (è ottimistica
 \subsection{Hold-out}
 
 Nel mondo ideale si avrebbero un grande training set, un grande validation set e un test set esterno molto
-grande. Se i dati sono sufficienti, la tecnica di base, l'\termine{hold-out}, divide il dataset in tre insiemi
-\textbf{disgiunti} (ad esempio 50\% TR, 25\% VL, 25\% TS):
+grande. Se i dati sono sufficienti, si usa la tecnica di base, l'\termine{hold-out}. Divide il dataset in tre
+insiemi \textbf{disgiunti} (ad esempio 50\% TR, 25\% VL, 25\% TS):
 \begin{itemize}
   \item \textbf{training set (TR)}: per adattare il modello, cioè minimizzare il $\Remp$ della SLT
         [\emph{training}];
   \item \textbf{validation set (VL)}, o \emph{selection set}: per scegliere il modello migliore tra modelli e
         configurazioni di iperparametri diversi [\emph{model selection}];
   \item \textbf{test set (TS)}: per stimare l'errore di generalizzazione del modello finale, cioè stimare $R$
-        [\emph{model assessment}]; non si usa mai per scegliere o regolare $h$.
+        [\emph{model assessment}]. Non si usa mai per scegliere o regolare $h$.
 \end{itemize}
 TR e VL insieme formano il \termine{development} o \termine{design set}, usato per costruire il modello finale
 (\figrif{fig:tr-vl-ts}).
@@ -81,17 +82,17 @@ del modello rilasciato.}
 \end{enumerate}
 \end{attenzione}
 
-Usare il test set in un ciclo di progettazione ripetuto (provo, guardo il test, cambio, riprovo) è
-\textbf{model selection}, non una valutazione: non si potrebbe fare lo stesso sugli esempi futuri, e l'errore sul
-test così usato è una \textbf{stima troppo ottimistica}. È come un esercizio d'esame di cui si sono viste le
-soluzioni. Da qui il concetto di \termine{blind test set} (test cieco), usato nelle competizioni.
+Si pensi a un ciclo di progettazione ripetuto: provo, guardo il test, cambio, riprovo. Usare il test set in
+questo modo è \textbf{model selection}, non una valutazione. Sugli esempi futuri non si potrebbe fare lo stesso, e
+l'errore sul test così usato è una \textbf{stima troppo ottimistica}. È come un esercizio d'esame di cui si sono
+viste le soluzioni. Da qui il concetto di \termine{blind test set} (test cieco), usato nelle competizioni.
 
 \section{Un controesempio istruttivo}
 \label{sec:controesempio}
 
 \begin{esempio}[Il target casuale]
 Si hanno 20--30 esempi con \textbf{1000 variabili di input} a valori casuali e un target \textbf{casuale}
-$0/1$. Si seleziona il modello che usa \textbf{una sola} variabile di input, quella che per puro caso
+$0/1$. Si seleziona il modello che usa \textbf{una sola} variabile di input. È quella che per puro caso
 ``indovina'' il target al 99\% (o 100\%) su qualsiasi successiva suddivisione in TR, VL e TS. Risultato perfetto?
 No: la vera accuratezza è il \textbf{50\%}, perché il target è casuale e nessun modello può fare meglio di una
 moneta. Su un test set davvero nuovo la stessa variabile darebbe accuratezze del tutto casuali (ad esempio 100\%,
@@ -99,7 +100,7 @@ moneta. Su un test set davvero nuovo la stessa variabile darebbe accuratezze del
 \end{esempio}
 
 Con 1000 variabili casuali e soli 20 esempi è quasi certo che una variabile coincida per caso con il target sulla
-maggior parte degli esempi; poiché la scelta è fatta guardando \textbf{tutti} i dati, quella variabile
+maggior parte degli esempi. La scelta è fatta guardando \textbf{tutti} i dati. Per questo quella variabile
 ``funziona'' su ogni partizione successiva. Gli errori sono due:
 \begin{enumerate}
   \item[(1)] la stima dell'errore su TR e VL \textbf{non è} una buona stima del rischio;
@@ -116,13 +117,13 @@ altre tecniche \textbf{non} risolvono il problema se la selezione è fatta prima
 \section{K-fold cross-validation}
 \label{sec:kfold}
 
-L'hold-out richiede dati sufficienti per tre partizioni significative (quanti dipende dalla complessità del
-modello e dal rapporto segnale/rumore) e dipende dalla \textbf{particolare partizione} scelta. Con pochi dati
-sfrutta male l'informazione disponibile.
+L'hold-out richiede dati sufficienti per tre partizioni significative. Quanti ne servano dipende dalla
+complessità del modello e dal rapporto segnale/rumore. Il risultato dipende inoltre dalla \textbf{particolare
+partizione} scelta. Con pochi dati l'hold-out sfrutta male l'informazione disponibile.
 
 \begin{definizione}[K-fold cross-validation]
-Si divide il dataset $D$ in $K$ sottoinsiemi mutuamente esclusivi $D_1,\dots,D_K$ (i \termine{fold}); per ogni
-$i$ si addestra su $D\setminus D_i$ e si valuta su $D_i$; si combinano i $K$ risultati.
+Si divide il dataset $D$ in $K$ sottoinsiemi mutuamente esclusivi $D_1,\dots,D_K$, i \termine{fold}. Per ogni
+$i$ si addestra su $D\setminus D_i$ e si valuta su $D_i$. Infine si combinano i $K$ risultati.
 \end{definizione}
 
 \begin{figure}[ht]
@@ -142,21 +143,22 @@ da training.}
 \end{figure}
 
 Così tutti i dati vengono usati sia per l'addestramento sia per la valutazione. Non si ottiene un \textbf{unico
-modello} (ce n'è uno per fold), ma si ottiene anche una \textbf{varianza} dei risultati sui fold: il risultato si
-riporta come \textbf{media $\pm$ deviazione standard}. Si può usare sia per il validation set sia per il test set.
-Le questioni aperte sono il numero di fold (3, 5, 10, fino al \termine{leave-one-out}, con $K=l$), il costo
-computazionale e la combinazione con altri schemi (\rif{sec:schemi-combinati}).
+modello}: ce n'è uno per fold. Si ottiene però anche una \textbf{varianza} dei risultati sui fold, e il risultato
+si riporta come \textbf{media $\pm$ deviazione standard}. Si può usare sia per il validation set sia per il test
+set. Restano tre questioni aperte. La prima è il numero di fold: 3, 5, 10, fino al \termine{leave-one-out}, con
+$K=l$. La seconda è il costo computazionale. La terza è la combinazione con altri schemi
+(\rif{sec:schemi-combinati}).
 
-Il termine ``cross-validation'' indica sia un \textbf{approccio} alla model selection basato sulla stima
-diretta dell'errore tramite ricampionamento (anziché analitica), sia le \textbf{implementazioni} che stabiliscono
-come dividere i dati, come la K-fold CV. Un'altra tecnica di ricampionamento è il \termine{bootstrap}:
-campionamento casuale \textbf{con reinserimento}, ripetuto per ottenere sottoinsiemi diversi di validazione o di
-test.
+Il termine ``cross-validation'' ha due significati. Indica un \textbf{approccio} alla model selection, basato sulla
+stima diretta dell'errore tramite ricampionamento (anziché analitica). Indica anche le \textbf{implementazioni}
+che stabiliscono come dividere i dati, come la K-fold CV. Un'altra tecnica di ricampionamento è il
+\termine{bootstrap}: un campionamento casuale \textbf{con reinserimento}, ripetuto per ottenere sottoinsiemi
+diversi di validazione o di test.
 
 \section{Ricerca degli iperparametri}
 \label{sec:grid-search}
 
-Gli \termine{iperparametri} sono i parametri non appresi direttamente dall'algoritmo di apprendimento; si fissano
+Gli \termine{iperparametri} sono i parametri non appresi direttamente dall'algoritmo di apprendimento. Si fissano
 cercando nello spazio degli iperparametri, tramite model selection su un validation set.
 
 \subsection{Grid search}
@@ -174,29 +176,29 @@ Unità $\backslash$ $\lambda$ & $0{,}1$ & $0{,}01$ & $0{,}001$\\
 \end{tabular}
 \end{center}
 Se il risultato migliore sul validation set è Res3, vince la configurazione (100 unità, $\lambda=0{,}1$). La
-ricerca va \textbf{automatizzata} ed è facile da \textbf{parallelizzare} (le prove sono indipendenti). Il costo
-è il prodotto cartesiano dei valori, $(\#\text{valori})^{\#\text{iperparametri}}$: con 3 valori per 2
-iperparametri sono $3^2=9$ prove, con 5--6 iperparametri da 10 valori diventa proibitivo. Per questo:
+ricerca va \textbf{automatizzata} ed è facile da \textbf{parallelizzare}, perché le prove sono indipendenti. Il
+costo è il prodotto cartesiano dei valori, $(\#\text{valori})^{\#\text{iperparametri}}$. Con 3 valori per 2
+iperparametri sono $3^2=9$ prove; con 5--6 iperparametri da 10 valori il costo diventa proibitivo. Per questo:
 \begin{itemize}
   \item si possono fissare in una fase preliminare gli iperparametri che risultano poco rilevanti (con cautela,
         \rif{sec:errori-validazione});
-  \item si usano \textbf{grid search annidate}: prima una ricerca \textbf{grossolana} su tutte le combinazioni
-        (ad esempio con valori a crescita esponenziale) per trovare le regioni buone, poi ricerche \textbf{più
-        fini} su intervalli sempre più piccoli, sempre considerando \textbf{tutti} gli iperparametri
-        significativi insieme.
+  \item si usano \textbf{grid search annidate}. Prima si fa una ricerca \textbf{grossolana} su tutte le
+        combinazioni, ad esempio con valori a crescita esponenziale, per trovare le regioni buone. Poi si fanno
+        ricerche \textbf{più fini} su intervalli sempre più piccoli. Si considerano sempre \textbf{tutti} gli
+        iperparametri significativi insieme.
 \end{itemize}
 
 \subsection{Alternative}
 
 La grid search è molto utile per \textbf{osservare il comportamento} del modello al variare degli iperparametri,
-ma scala male. Le alternative sono la \termine{random search} e la ricerca \textbf{automatica} (approcci
-bayesiani, evolutivi, metodi come Hyperband), verso l'\ingl{AutoML}; le librerie ne includono molte, ma non vanno
+ma scala male. Le alternative sono la \termine{random search} e la ricerca \textbf{automatica}: approcci
+bayesiani, evolutivi, metodi come Hyperband, verso l'\ingl{AutoML}. Le librerie ne includono molte, ma non vanno
 usate acriticamente.
 
 \begin{idea}[Perché la random search funziona]
-Se solo uno di due iperparametri conta davvero, una griglia $10\times10$ ne prova appena \textbf{10 valori
-distinti} (le altre 90 prove ripetono gli stessi valori variando l'iperparametro inutile), mentre 100 prove
-casuali ne provano \textbf{100} (\figrif{fig:grid-random}). La ricerca casuale permette anche di fissare il
+Si supponga che solo uno di due iperparametri conti davvero. Una griglia $10\times10$ ne prova appena \textbf{10
+valori distinti}: le altre 90 prove ripetono gli stessi valori, variando l'iperparametro inutile. 100 prove
+casuali ne provano invece \textbf{100} (\figrif{fig:grid-random}). La ricerca casuale permette anche di fissare il
 \textbf{budget} di prove indipendentemente dal numero di iperparametri.
 \end{idea}
 
@@ -223,31 +225,32 @@ provati per l'iperparametro importante (10 contro 100).}
 \label{sec:schemi}
 
 Una notazione precisa evita ambiguità e mostra dove verrebbero commessi gli errori del controesempio. Gli schemi
-valgono per la selezione tra configurazioni di iperparametri $\theta$ ma anche tra \textbf{modelli diversi}
-($\theta$ può indicare il tipo di modello).
+valgono per la selezione tra configurazioni di iperparametri $\theta$, ma anche tra \textbf{modelli diversi}:
+$\theta$ può indicare il tipo di modello.
 
 \begin{definizione}[Notazione]
 \begin{itemize}
-  \item \textbf{Dati}: $Z_1,\dots,Z_l$ campione i.i.d.\ di una distribuzione sconosciuta $p(z)$;
+  \item \textbf{Dati}: $z_1,\dots,z_l$ campione i.i.d.\ di una distribuzione sconosciuta $p(z)$;
         $D_r = \{z_1,\dots,z_r\}$ è un insieme di $r$ elementi.
-  \item \textbf{Task}: classificazione, $Z = (X,Y)\in\R^n\times\{-1,+1\}$; regressione, $Z=(X,Y)\in\R^n\times\R$.
-  \item \textbf{Loss}: classificazione $L((x,y),h) = 0$ se $h(x)=y$, $1$ altrimenti; regressione
-        $L((x,y),h) = (h(x)-y)^2$.
+  \item \textbf{Task}: ogni dato è una coppia $z = (\x,d)$. Per la classificazione $z\in\R^n\times\{-1,+1\}$, per
+        la regressione $z\in\R^n\times\R$.
+  \item \textbf{Loss}: classificazione $L((\x,d),h) = 0$ se $h(\x)=d$, $1$ altrimenti; regressione
+        $L((\x,d),h) = (h(\x)-d)^2$.
   \item \textbf{Rischio atteso} e ipotesi ottima:
-        $R(h) = \E_Z[L(z,h)] = \int_Z L(z,h)\,p(z)\,dz$, \quad $h^* = \argmin_{h\in H}R(h)$.
+        $R(h) = \E_z[L(z,h)] = \int L(z,h)\,p(z)\,dz$, \quad $h^* = \argmin_{h\in H}R(h)$.
   \item \textbf{Rischio empirico} su un insieme finito: $\Remp(h,D_r) = \frac1r\sum_{i=1}^{r}L(z_i,h)$.
 \end{itemize}
 \end{definizione}
 
 \begin{attenzione}
-Qui $\Remp$ è inteso in senso generale, come \textbf{surrogato di $R$} su un insieme finito, usato per il
-training, la selezione o la valutazione a seconda della partizione. Il $\Remp$ della SLT (l'errore di training)
+Qui $\Remp$ è inteso in senso generale, come \textbf{surrogato di $R$} su un insieme finito. Si usa per il
+training, la selezione o la valutazione, a seconda della partizione. Il $\Remp$ della SLT (l'errore di training)
 è, in questa notazione, $\Remp(h,D_{TR})$.
 \end{attenzione}
 
-Prima si identifica l'obiettivo: il \textbf{miglior modello} ottenibile dal dataset (model selection), le
-\textbf{prestazioni attese} di un modello ottenuto minimizzando il rischio empirico (model assessment), o
-\textbf{entrambi}.
+Prima si identifica l'obiettivo. Può essere il \textbf{miglior modello} ottenibile dal dataset (model
+selection). Può essere la stima delle \textbf{prestazioni attese} di un modello ottenuto minimizzando il rischio
+empirico (model assessment). Oppure possono servire \textbf{entrambi}.
 
 \subsection{Model selection}
 
@@ -267,7 +270,8 @@ Prima si identifica l'obiettivo: il \textbf{miglior modello} ottenibile dal data
 \end{algoritmo}
 
 La stima di $R$ sul VL serve solo alla scelta e \textbf{non viene restituita} come stima del rischio: farlo
-sarebbe l'errore (1) del controesempio.
+sarebbe l'errore (1) del controesempio. Il motivo è che quella stima è ottimistica. Ogni errore di validazione è
+affetto da rumore, e si è scelto proprio il più basso tra molti: il minimo tende a essere stato ``fortunato''.
 
 \begin{algoritmo}[Model selection con K-fold CV]
 \begin{enumerate}
@@ -286,9 +290,9 @@ sarebbe l'errore (1) del controesempio.
 \end{algoritmo}
 
 \begin{attenzione}[Ogni iterazione riparte da zero]
-Addestramento e stima sono locali a ciascuna suddivisione. Se ad esempio si usasse il modello addestrato nello
-split 1 per valutare lo split 2, si userebbe come validazione dello split 2 una parte ($D_2$) già usata per
-addestrare nello split 1.
+Addestramento e stima sono locali a ciascuna suddivisione. Si supponga di usare il modello addestrato nello split
+1 per valutare lo split 2. Si userebbe come validazione dello split 2 una parte ($D_2$) già usata per addestrare
+nello split 1.
 \end{attenzione}
 
 \subsection{Model assessment}
@@ -343,15 +347,15 @@ Quando servono sia il modello migliore sia la stima del suo rischio si combinano
 \end{enumerate}
 \end{algoritmo}
 
-Un esempio completo di questo schema: si divide il dataset in TR e TS; per ogni cella di una grid search (ad
-esempio $\lambda=0{,}1$ e 20 unità) si esegue un'intera K-fold CV dentro il TR e si sceglie la configurazione con
-il miglior errore medio di validazione; si riaddestra sull'intero TR e si valuta sul TS esterno.
+Ecco un esempio completo di questo schema. Si divide il dataset in TR e TS. Per ogni cella di una grid search
+(ad esempio $\lambda=0{,}1$ e 20 unità) si esegue un'intera K-fold CV dentro il TR. Si sceglie la configurazione
+con il miglior errore medio di validazione. Si riaddestra sull'intero TR e si valuta sul TS esterno.
 
 \subsubsection{K-fold esterna per il test, hold-out interno per la selezione}
-In ogni iterazione della K-fold esterna un fold fa da test e il resto viene diviso (a caso, con shuffling) in TR
-e VL per la model selection (\figrif{fig:kfold-holdout}). Questo processo \textbf{non fornisce un modello
-finale}: ogni riga può selezionare un modello diverso, quindi si ottiene solo una stima del rischio della
-\textbf{classe} di modelli considerata.
+In ogni iterazione della K-fold esterna un fold fa da test. Il resto viene diviso a caso (con shuffling) in TR e
+VL per la model selection (\figrif{fig:kfold-holdout}). Questo processo \textbf{non fornisce un modello finale}:
+ogni riga può selezionare un modello diverso. Si ottiene solo una stima del rischio della \textbf{classe} di
+modelli considerata.
 
 \begin{figure}[ht]
 \centering
@@ -410,38 +414,38 @@ seleziona gli iperparametri; il ``test set'' della CV interna è in realtà un v
 \label{fig:double-cv}
 \end{figure}
 
-Anche la double CV \textbf{non dà un modello finale unico}, perché ogni ciclo esterno può scegliere iperparametri
-diversi: dà una stima del rischio della classe di modelli (cioè dell'algoritmo con la sua procedura di
-selezione), con la sua \textbf{varianza} sui fold. Se serve un modello finale si esegue una \textbf{model selection
-separata} (hold-out o K-fold CV) con riaddestramento. Non si violano le regole: la stima di test è già stata fatta
-e i risultati di test non vengono mai usati per la selezione. Non è quindi vero in assoluto che ``il test viene
+Anche la double CV \textbf{non dà un modello finale unico}: ogni ciclo esterno può scegliere iperparametri
+diversi. Dà una stima del rischio della classe di modelli, cioè dell'algoritmo con la sua procedura di selezione,
+con la sua \textbf{varianza} sui fold. Se serve un modello finale si esegue una \textbf{model selection separata}
+(hold-out o K-fold CV) con riaddestramento. Non si violano le regole: la stima di test è già stata fatta, e i
+risultati di test non vengono mai usati per la selezione. Non è quindi vero in assoluto che ``il test viene
 sempre per ultimo'': qui avviene \emph{prima} dell'ultima model selection. La double CV sfrutta meglio tutti i
-dati sia per la selezione sia per la valutazione, al prezzo di un costo computazionale elevato.
+dati, sia per la selezione sia per la valutazione. Il prezzo è un costo computazionale elevato.
 
 \begin{idea}[Si può riaddestrare su tutto $D_l$?]
 Sì: il riaddestramento finale su tutti i dati (TR+VL+TS) non usa i risultati del test per alcuna scelta. Il
-modello finale avrà in generale prestazioni pari o migliori della stima (ha più dati), che resta valida come
-stima, leggermente pessimistica, del rischio della procedura. L'importante è che il test non abbia influenzato
-nessuna decisione.
+modello finale avrà in generale prestazioni pari o migliori della stima, perché ha più dati. La stima resta
+valida come stima, leggermente pessimistica, del rischio della procedura. L'importante è che il test non abbia
+influenzato nessuna decisione.
 \end{idea}
 
 \section{Errori frequenti e buone pratiche}
 \label{sec:errori-validazione}
 
 \subsection{Riprogettare in base al test}
-Riprogettare il modello in base al risultato sul test \textbf{non è corretto} (a meno di disporre di nuovi dati
-per un nuovo test set). Ripetendo il procedimento sugli stessi dati si può ottenere qualunque risultato: il
-modello si adatta a quel dataset, e \textbf{non si sta più stimando il rischio}. Non bisogna regolare il predittore
-(a mano o automaticamente) sulla base dell'errore di test, perché non si potrebbe fare sugli esempi futuri; la
-valutazione su un test interno resta utile per \textbf{verificare il proprio approccio}. Per fare un buon modello
-serve una buona model selection; per stimare le prestazioni reali serve una stima rigorosa sul test.
+Riprogettare il modello in base al risultato sul test \textbf{non è corretto}, a meno di disporre di nuovi dati
+per un nuovo test set. Ripetendo il procedimento sugli stessi dati si può ottenere qualunque risultato: il
+modello si adatta a quel dataset, e \textbf{non si sta più stimando il rischio}. Non bisogna regolare il
+predittore sulla base dell'errore di test, né a mano né automaticamente: sugli esempi futuri non si potrebbe
+fare. La valutazione su un test interno resta utile per \textbf{verificare il proprio approccio}. Per fare un buon
+modello serve una buona model selection. Per stimare le prestazioni reali serve una stima rigorosa sul test.
 
 \subsection{La cross-validation può andare in overfitting}
 Un uso intensivo della CV può portare a overfitting. Con 20--30 record e 1000 attributi si provano 1000 modelli
-di regressione lineare con un solo attributo ciascuno: il migliore dei 1000 sembra buono sul validation set, ma lo
-sarebbe sembrato anche con un output \textbf{puramente casuale}. Oppure: approssimando un target casuale con una
-K-fold CV per il test, dopo aver scelto le feature per massima correlazione con il target, si trova un errore
-del 3\% invece del vero 50\%, perché la selezione è stata fatta su \textbf{tutti} gli esempi. Rimedi:
+di regressione lineare, con un solo attributo ciascuno. Il migliore dei 1000 sembra buono sul validation set. Ma
+lo sarebbe sembrato anche con un output \textbf{puramente casuale}. Un secondo esempio: si approssima un target
+casuale e si usa una K-fold CV per il test. Prima però si scelgono le feature per massima correlazione con il
+target, guardando \textbf{tutti} gli esempi. Si trova allora un errore del 3\% invece del vero 50\%. Rimedi:
 \begin{itemize}
   \item tenere da parte un \textbf{test set aggiuntivo} prima di qualsiasi model selection, e verificare che il
         modello migliore funzioni anche su di esso;
@@ -452,8 +456,8 @@ del 3\% invece del vero 50\%, perché la selezione è stata fatta su \textbf{tut
 
 \subsection{Selezione sequenziale degli iperparametri}
 \begin{attenzione}
-Selezionare gli iperparametri \textbf{uno alla volta}, in sequenza, introduce un \textbf{bias legato all'ordine}:
-ad esempio scegliere il miglior $\eta$ con 10 unità e poi usarlo anche con 100 unità.
+Selezionare gli iperparametri \textbf{uno alla volta}, in sequenza, introduce un \textbf{bias legato all'ordine}.
+Un esempio è scegliere il miglior $\eta$ con 10 unità e poi usarlo anche con 100 unità.
 \end{attenzione}
 Il procedimento corretto:
 \begin{enumerate}
@@ -469,7 +473,7 @@ Bisogna però ragionare e selezionare gli aspetti rilevanti, senza affidarsi sol
 
 \begin{table}[ht]
 \centering\small
-\caption{Confronto tra le tecniche (con $R$ fold).}
+\caption{Confronto tra le tecniche (con $K$ fold).}
 \begin{tabularx}{0.95\linewidth}{lXX}
 \toprule
  & Svantaggi & Vantaggi \\
@@ -478,7 +482,7 @@ Hold-out (test set) & varianza: stima inaffidabile delle prestazioni future (for
 Leave-one-out & costoso; comportamenti anomali & non spreca dati \\
 10-fold & spreca il 10\% dei dati; 10 volte più costoso dell'hold-out & spreca solo il 10\%; 10 volte più costoso invece di $l$ volte \\
 3-fold & spreca più dati della 10-fold & leggermente meglio dell'hold-out \\
-$R$-fold con $R=l$ & identico al leave-one-out & \\
+$K$-fold con $K=l$ & identico al leave-one-out & \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -489,14 +493,14 @@ attenzione con pochi dati.
 
 \subsection{Esempi di model selection}
 \begin{itemize}
-  \item \textbf{Modelli diversi}: si sceglie la classe di modelli con il miglior errore di CV (ad esempio 10-fold),
-        la si riaddestra su tutti i dati e quello è il modello da usare. Si guarda \textbf{solo l'errore di
-        validazione}, non quello di training né una loro media.
-  \item \textbf{Numero di unità nascoste}: l'errore di training decresce sempre con il numero di unità, quello di CV
-        ha un minimo (in pratica si provano valori come 10, 20, 30, \dots).
-  \item \textbf{$k$ del K-NN}: si usa la \textbf{leave-one-out}, perché per i metodi non parametrici costa quanto
-        una normale predizione (non c'è un modello da addestrare). Non c'è garanzia che un ottimo locale di $k$
-        rispetto alla LOOCV sia globale (la relazione può essere irregolare); per esplorare molti valori si usano
+  \item \textbf{Modelli diversi}: si sceglie la classe di modelli con il miglior errore di CV (ad esempio
+        10-fold). La si riaddestra su tutti i dati, e quello è il modello da usare. Si guarda \textbf{solo
+        l'errore di validazione}, non quello di training né una loro media.
+  \item \textbf{Numero di unità nascoste}: l'errore di training decresce sempre con il numero di unità. Quello di
+        CV ha un minimo (in pratica si provano valori come 10, 20, 30, \dots).
+  \item \textbf{$k$ del K-NN}: si usa la \textbf{leave-one-out}. Per i metodi non parametrici costa quanto una
+        normale predizione, perché non c'è un modello da addestrare. Non c'è garanzia che un ottimo locale di $k$
+        rispetto alla LOOCV sia globale: la relazione può essere irregolare. Per esplorare molti valori si usano
         valori a crescita esponenziale ($k = 1,2,4,8,16,\dots$) o una ricerca \ingl{hill-climbing}.
 \end{itemize}
 
@@ -506,14 +510,14 @@ attenzione con pochi dati.
         stesse proporzioni del dataset completo.
   \item Controllare la composizione dei fold: l'\textbf{ordine dei dati} può avere un significato (dati ordinati
         per classe o per tempo).
-  \item \textbf{Hold-out o CV ripetuti} con campionamenti casuali diversi, mediando i risultati: utile
+  \item \textbf{Hold-out o CV ripetuti} con campionamenti casuali diversi, mediando i risultati. Sono utili
         soprattutto per \textbf{confrontare modelli diversi}.
-  \item Con pochissimi dati, evitare (o tenere in conto) classi o feature mancanti nel training, classi speciali
-        non campionate in TR o TS, outlier che influenzano la media dei risultati, la selezione di soli casi
-        ``facili''.
-  \item Anche un \textbf{blind test set} può essere fuorviante se proviene da una distribuzione diversa, è misurato
-        con scale o tolleranze diverse, non è pre-elaborato come i dati di training o richiede
-        \textbf{estrapolazione} (dati fuori range).
+  \item Con pochissimi dati bisogna evitare, o almeno tenere in conto, alcune situazioni: classi o feature
+        mancanti nel training, classi speciali non campionate in TR o TS, outlier che influenzano la media dei
+        risultati, la selezione di soli casi ``facili''.
+  \item Anche un \textbf{blind test set} può essere fuorviante. Succede se proviene da una distribuzione diversa,
+        se è misurato con scale o tolleranze diverse, se non è pre-elaborato come i dati di training. Succede anche
+        se richiede \textbf{estrapolazione} (dati fuori range).
 \end{itemize}
 
 \section{Misure d'errore}
@@ -551,9 +555,9 @@ Un falso positivo equivale a un \textbf{falso allarme}.
 \end{attenzione}
 
 La \termine{curva ROC} mostra il True Positive rate (sensibilità) in funzione del False Positive rate
-($1-$specificità) al variare della \textbf{soglia di decisione} del classificatore (\figrif{fig:roc}). La
-diagonale corrisponde al classificatore casuale; le curve migliori salgono rapidamente verso l'angolo in alto a
-sinistra e hanno un'\termine{AUC} (\ingl{Area Under the Curve}) più alta: il classificatore ideale ha AUC $=1$,
+($1-$specificità), al variare della \textbf{soglia di decisione} del classificatore (\figrif{fig:roc}). La
+diagonale corrisponde al classificatore casuale. Le curve migliori salgono rapidamente verso l'angolo in alto a
+sinistra e hanno un'\termine{AUC} (\ingl{Area Under the Curve}) più alta. Il classificatore ideale ha AUC $=1$,
 quello casuale $0{,}5$.
 
 \begin{figure}[ht]
@@ -575,14 +579,14 @@ alto a sinistra, maggiore è l'area sottesa.}
 
 \subsection{Regressione}
 
-Con residuo $r_i = y_i - o_i$ ($y$ target, $o$ uscita del modello):
+Con errore $e_i = d_i - o_i$ ($d$ target, $o$ uscita del modello):
 \begin{itemize}
-  \item \textbf{MSE} $=\mathrm{mean}_i[r_i^2]$ e la sua radice, \textbf{RMS} (o $S$);
-  \item \termine{errore assoluto medio} (MAE) $=\mathrm{mean}_i[\abs{r_i}]$;
-  \item \textbf{errore assoluto massimo} $=\max_i\abs{r_i}$;
-  \item \termine{coefficiente di correlazione} $R$ e \termine{coefficiente di determinazione} $R^2$, ad esempio
-        $R = \sqrt{1-S^2/S_y^2}$, con $S_y^2 = \mathrm{mean}_i[(y_i-\bar y)^2]$ varianza del target: misura il
-        grado di dipendenza lineare tra $y$ e $o$, in $[0,1]$, dove 1 è il meglio;
+  \item \textbf{MSE} $=\mathrm{mean}_i[e_i^2]$ e la sua radice, \textbf{RMS} (o $S$);
+  \item \termine{errore assoluto medio} (MAE) $=\mathrm{mean}_i[\abs{e_i}]$;
+  \item \textbf{errore assoluto massimo} $=\max_i\abs{e_i}$;
+  \item \termine{coefficiente di correlazione} $r$ e \termine{coefficiente di determinazione} $r^2$ (scritto anche
+        $R^2$). Ad esempio $r = \sqrt{1-S^2/S_d^2}$, con $S_d^2 = \mathrm{mean}_i[(d_i-\bar d)^2]$ varianza del
+        target. Misura il grado di dipendenza lineare tra $d$ e $o$, in $[0,1]$, dove 1 è il meglio;
   \item grafici delle \textbf{uscite contro i target}; test statistici e analisi di significatività.
 \end{itemize}
 

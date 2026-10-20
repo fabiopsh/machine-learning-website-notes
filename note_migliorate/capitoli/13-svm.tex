@@ -4,34 +4,34 @@
 \input{dati/svm_soft.tex}
 
 \begin{inbreve}
-Le Support Vector Machines (SVM) realizzano il secondo approccio alla Structural Risk Minimization: fissato
-l'errore di training, minimizzano automaticamente la VC-confidence scegliendo, tra tutti gli iperpiani
-separatori, quello a \emph{margine massimo}. Il capitolo procede in quattro passi: SVM lineare \emph{hard
-margin} (con la risoluzione tramite moltiplicatori di Lagrange), \emph{soft margin} per dati non separabili,
-\emph{kernel} per confini non lineari, SVM per la regressione. Si chiude con una visione critica dell'uso pratico
-e con i metodi kernel in generale.
+Le Support Vector Machines (SVM) realizzano il secondo approccio alla Structural Risk Minimization. Fissato
+l'errore di training, minimizzano automaticamente la VC-confidence: tra tutti gli iperpiani separatori scelgono
+quello a \emph{margine massimo}. Il capitolo procede in quattro passi. Prima la SVM lineare \emph{hard margin}, con
+la risoluzione tramite moltiplicatori di Lagrange. Poi il \emph{soft margin} per dati non separabili. Poi i
+\emph{kernel} per confini non lineari. Infine le SVM per la regressione. Si chiude con una visione critica dell'uso
+pratico e con i metodi kernel in generale.
 \end{inbreve}
 
 \begin{attenzione}[Notazione]
-In questo capitolo $N$ è il numero di esempi (indici $i$, $j$), $m$ la dimensione dell'input e si scrive $b$
-invece di $w_0$ per il bias. Le parti segnate con $^*$ (i dettagli della risoluzione con i moltiplicatori di
-Lagrange) sono utili per completezza ma non indispensabili per usare il modello.
+In questo capitolo si scrive $b$ invece di $w_0$ per il bias. Gli esempi sono indicizzati con $i$ e $j$, da 1 a
+$l$. Le parti segnate con $^*$ (i dettagli della risoluzione con i moltiplicatori di Lagrange) sono utili per
+completezza, ma non indispensabili per usare il modello.
 \end{attenzione}
 
 \section{SVM lineare: il margine massimo}
 
-Una SVM è una \textbf{macchina lineare} (come la LTU) che \textbf{massimizza il margine di separazione} e così
+Una SVM è una \textbf{macchina lineare} (come la LTU) che \textbf{massimizza il margine di separazione}. Così
 realizza una \textbf{Structural Risk Minimization}. Inizialmente (\termine{hard margin}) si assume che il problema
 sia \textbf{linearmente separabile} e senza errori nei dati.
 
-Dato il training set $T = \{(\x_i,d_i)\}_{i=1}^{N}$ con $d_i\in\{-1,+1\}$, si cerca un iperpiano $\w\T\x+b=0$ con
+Dato il training set $T = \{(\x_i,d_i)\}_{i=1}^{l}$ con $d_i\in\{-1,+1\}$, si cerca un iperpiano $\w\T\x+b=0$ con
 \[
 \w\T\x_i + b\ge0\ \text{ se } d_i=+1,\qquad \w\T\x_i+b<0\ \text{ se } d_i=-1 .
 \]
 $g(\x) = \w\T\x+b$ è la \termine{funzione discriminante} e $h(\x) = \sign(g(\x))$ l'ipotesi.
 
 \begin{definizione}[Margine di separazione]
-Se l'iperpiano è alla stessa distanza dal più vicino esempio positivo e dal più vicino negativo, il
+Si consideri un iperpiano alla stessa distanza dal più vicino esempio positivo e dal più vicino negativo. Il
 \termine{margine di separazione} $\rho$ è il doppio della distanza tra l'iperpiano e il punto più vicino: una
 ``zona di sicurezza'' attorno al confine. L'\termine{iperpiano ottimo} $\w_o\T\x+b_o=0$ è quello che
 \textbf{massimizza il margine}.
@@ -45,15 +45,15 @@ $\rho = 2/\norm{\w}$, quindi
 
 \subsection{Rappresentazione canonica e support vector}
 
-Per la \textbf{libertà di scala} (moltiplicando $\w$ e $b$ per una costante l'iperpiano non cambia) si possono
-riscalare $\w$ e $b$ in modo che i punti più vicini all'iperpiano soddisfino $\abs{g(\x_i)} = \abs{\w\T\x_i+b} = 1$.
-Allora
+Moltiplicando $\w$ e $b$ per una costante l'iperpiano non cambia: è la \textbf{libertà di scala}. Si possono
+quindi riscalare $\w$ e $b$ in modo che i punti più vicini all'iperpiano soddisfino
+$\abs{g(\x_i)} = \abs{\w\T\x_i+b} = 1$. Allora
 \[
 \w\T\x_i+b\ge1\ \text{ se } d_i=+1,\qquad \w\T\x_i+b\le-1\ \text{ se } d_i=-1,
 \]
 cioè, in forma compatta,
 \begin{equation}\label{eq:vincoli-svm}
-\boxed{\;d_i\,(\w\T\x_i+b)\ge1\qquad\forall i=1,\dots,N\;}
+\boxed{\;d_i\,(\w\T\x_i+b)\ge1\qquad\forall i=1,\dots,l\;}
 \end{equation}
 
 \begin{definizione}[Support vector]
@@ -98,8 +98,8 @@ funzione discriminante:
 \[
 g(\x) = \w_o\T\x_p + b_o + r\,\w_o\T\frac{\w_o}{\norm{\w_o}} = \underbrace{g(\x_p)}_{=0} + r\,\frac{\norm{\w_o}^2}{\norm{\w_o}} = r\,\norm{\w_o},
 \]
-perché $\x_p$ sta sull'iperpiano. Quindi $r = g(\x)/\norm{\w_o}$. Per un support vector positivo $g(\x^{(s)})=1$,
-quindi la sua distanza dall'iperpiano è $1/\norm{\w_o}$; essa è metà del margine, $\rho/2 = 1/\norm{\w_o}$, da cui
+perché $\x_p$ sta sull'iperpiano. Quindi $r = g(\x)/\norm{\w_o}$. Per un support vector positivo $g(\x^{(s)})=1$:
+la sua distanza dall'iperpiano è $1/\norm{\w_o}$. Essa è metà del margine, $\rho/2 = 1/\norm{\w_o}$, da cui
 $\rho = 2/\norm{\w_o}$.
 \end{proof}
 
@@ -123,23 +123,23 @@ $\rho = 2/\norm{\w_o}$.
 \subsection{Il problema di ottimizzazione}
 
 \begin{definizione}[Problema primale --- hard margin]
-Dato $T = \{(\x_i,d_i)\}_{i=1}^N$, trovare $\w$ e $b$ che minimizzano
+Dato $T = \{(\x_i,d_i)\}_{i=1}^l$, trovare $\w$ e $b$ che minimizzano
 \[
 \Psi(\w) = \frac12\,\w\T\w \qquad(\text{cioè minimizzare }\norm{\w})
 \]
-soggetto ai vincoli (zero errori di classificazione) $d_i(\w\T\x_i+b)\ge1$ per ogni $i=1,\dots,N$.
+soggetto ai vincoli (zero errori di classificazione) $d_i(\w\T\x_i+b)\ge1$ per ogni $i=1,\dots,l$.
 \end{definizione}
 
-La funzione obiettivo è \textbf{quadratica e convessa} in $\w$ e i vincoli sono \textbf{lineari} in $\w$: è un
-problema di \termine{programmazione quadratica} (QP), che si considera risolto da pacchetti esistenti. Interessa
-capire come è formulato, la relazione tra support vector e moltiplicatori, e la forma della soluzione. Risolverlo
-in questa forma scala con la dimensione dell'input $m$.
+La funzione obiettivo è \textbf{quadratica e convessa} in $\w$, e i vincoli sono \textbf{lineari} in $\w$. È quindi
+un problema di \termine{programmazione quadratica} (QP), che si considera risolto da pacchetti esistenti.
+Interessa capire come è formulato, la relazione tra support vector e moltiplicatori, e la forma della soluzione.
+Risolverlo in questa forma scala con la dimensione dell'input $n$.
 
 \subsection{Soluzione con i moltiplicatori di Lagrange$^*$}
 
 Si costruisce la \textbf{lagrangiana}
 \begin{equation}\label{eq:lagrangiana}
-J(\w,b,\balpha) = \frac12\,\w\T\w - \sum_{i=1}^{N}\alpha_i\big(d_i(\w\T\x_i+b)-1\big),
+J(\w,b,\balpha) = \frac12\,\w\T\w - \sum_{i=1}^{l}\alpha_i\big(d_i(\w\T\x_i+b)-1\big),
 \end{equation}
 con un \textbf{moltiplicatore di Lagrange} $\alpha_i\ge0$ per ogni vincolo. $J$ va minimizzata rispetto a $\w$ e
 $b$ e massimizzata rispetto ad $\balpha$: la soluzione è un \textbf{punto di sella} di $J$.
@@ -147,8 +147,8 @@ $b$ e massimizzata rispetto ad $\balpha$: la soluzione è un \textbf{punto di se
 \subsubsection{Condizioni di ottimalità}
 Derivando $J$ e uguagliando a zero:
 \begin{align}
-\frac{\partial J}{\partial\w} &= \w - \sum_{i=1}^N\alpha_id_i\x_i = \vv0 &&\Longrightarrow\quad \w = \sum_{i=1}^{N}\alpha_i\,d_i\,\x_i , \label{eq:w-alfa}\\
-\frac{\partial J}{\partial b} &= -\sum_{i=1}^N\alpha_id_i = 0 &&\Longrightarrow\quad \sum_{i=1}^{N}\alpha_i\,d_i = 0 . \label{eq:somma-alfa}
+\frac{\partial J}{\partial\w} &= \w - \sum_{i=1}^l\alpha_id_i\x_i = \vv0 &&\Longrightarrow\quad \w = \sum_{i=1}^{l}\alpha_i\,d_i\,\x_i , \label{eq:w-alfa}\\
+\frac{\partial J}{\partial b} &= -\sum_{i=1}^l\alpha_id_i = 0 &&\Longrightarrow\quad \sum_{i=1}^{l}\alpha_i\,d_i = 0 . \label{eq:somma-alfa}
 \end{align}
 
 \subsubsection{Condizioni di Kuhn-Tucker}
@@ -156,7 +156,7 @@ Nel punto di sella vale, per ogni $i$,
 \[
 \alpha_i\big(d_i(\w\T\x_i+b)-1\big) = 0 .
 \]
-Quindi: se $\alpha_i>0$ allora $d_i(\w\T\x_i+b) = 1$, cioè $\x_i$ è un \textbf{support vector}; se $\x_i$ non è un
+Quindi: se $\alpha_i>0$ allora $d_i(\w\T\x_i+b) = 1$, cioè $\x_i$ è un \textbf{support vector}. Se $\x_i$ non è un
 support vector allora $\alpha_i=0$.
 
 \begin{idea}[L'iperpiano dipende solo dai support vector]
@@ -171,36 +171,37 @@ J = \frac12\,\w\T\w - \sum_i\alpha_id_i\,\w\T\x_i - b\sum_i\alpha_id_i + \sum_i\
 \]
 \begin{enumerate}
   \item Per \eqref{eq:somma-alfa} il terzo termine è nullo.
-  \item Per \eqref{eq:w-alfa}, $\w\T\w = \sum_i\sum_j\alpha_i\alpha_jd_id_j\,\x_i\T\x_j$, e anche il secondo termine
+  \item Per \eqref{eq:w-alfa}, $\w\T\w = \sum_i\sum_j\alpha_i\alpha_jd_id_j\,\x_i\T\x_j$. Anche il secondo termine
         vale $\sum_i\alpha_id_i\big(\sum_j\alpha_jd_j\x_j\big)\T\x_i = \sum_i\sum_j\alpha_i\alpha_jd_id_j\,\x_i\T\x_j$.
   \item Quindi $J = \frac12S - S + \sum_i\alpha_i$, con $S = \sum_{i,j}\alpha_i\alpha_jd_id_j\,\x_i\T\x_j$, e resta una
         funzione dei soli moltiplicatori.
 \end{enumerate}
 
 \begin{definizione}[Problema duale --- hard margin]
-Trovare $\{\alpha_i\}_{i=1}^N$ che massimizzano
+Trovare $\{\alpha_i\}_{i=1}^l$ che massimizzano
 \[
-Q(\balpha) = \sum_{i=1}^{N}\alpha_i - \frac12\sum_{i=1}^{N}\sum_{j=1}^{N}\alpha_i\alpha_j\,d_id_j\,\x_i\T\x_j
+Q(\balpha) = \sum_{i=1}^{l}\alpha_i - \frac12\sum_{i=1}^{l}\sum_{j=1}^{l}\alpha_i\alpha_j\,d_id_j\,\x_i\T\x_j
 \]
-soggetto a $\alpha_i\ge0$ per ogni $i$ e $\sum_{i=1}^N\alpha_id_i = 0$.
+soggetto a $\alpha_i\ge0$ per ogni $i$ e $\sum_{i=1}^l\alpha_id_i = 0$.
 \end{definizione}
 
 Gli $\alpha$ si trovano con la programmazione quadratica o con approcci più efficienti (ad esempio \textbf{SMO},
-\ingl{Sequential Minimal Optimization}). Il duale scala con il \textbf{numero di esempi $N$}, meno con la dimensione
+\ingl{Sequential Minimal Optimization}). Il duale scala con il \textbf{numero di esempi $l$}, meno con la dimensione
 dell'input. Si noti che i dati compaiono \textbf{solo tramite prodotti scalari} $\x_i\T\x_j$: è la chiave dei kernel.
 
 \begin{algoritmo}[Ricavare iperpiano e bias]
 \begin{enumerate}
   \item Risolvere il duale, ottenendo $\{\alpha_{o,i}\}$.
-  \item Calcolare $\w_o = \sum_{i=1}^N\alpha_{o,i}\,d_i\,\x_i$.
-  \item Calcolare $b_o = 1 - \w_o\T\x^{(s)}$ per un support vector positivo $\x^{(s)}$ (perché
-        $\w_o\T\x^{(s)}+b_o = 1$), cioè $b_o = 1-\sum_i\alpha_{o,i}d_i\,\x_i\T\x^{(s)}$.
+  \item Calcolare $\w_o = \sum_{i=1}^l\alpha_{o,i}\,d_i\,\x_i$.
+  \item Calcolare $b_o = d^{(s)} - \w_o\T\x^{(s)}$ per un support vector $\x^{(s)}$, perché
+        $d^{(s)}(\w_o\T\x^{(s)}+b_o) = 1$ e $d^{(s)}=\pm1$. Per un support vector positivo è $b_o = 1-\w_o\T\x^{(s)}$,
+        cioè $b_o = 1-\sum_i\alpha_{o,i}d_i\,\x_i\T\x^{(s)}$.
 \end{enumerate}
 \end{algoritmo}
 
 Non serve conoscere esplicitamente $\w_o$: dato un pattern $\x$ si calcola
 \[
-g(\x) = \sum_{i=1}^{N}\alpha_{o,i}\,d_i\,\underbrace{\x_i\T\x}_{\text{prodotto scalare}} + b_o
+g(\x) = \sum_{i=1}^{l}\alpha_{o,i}\,d_i\,\underbrace{\x_i\T\x}_{\text{prodotto scalare}} + b_o
 \]
 (la somma si restringe ai support vector) e si classifica con il segno di $g(\x)$.
 
@@ -208,30 +209,30 @@ g(\x) = \sum_{i=1}^{N}\alpha_{o,i}\,d_i\,\underbrace{\x_i\T\x}_{\text{prodotto s
 \label{sec:svm-srm}
 
 Su un problema separabile l'errore di training è \textbf{fissato} (a zero). Minimizzare $\norm{\w}$ equivale allora
-a \textbf{minimizzare la VC-dimension}, e quindi la VC-confidence nel bound $R\le\Remp+\eps(\VC,N,\delta)$
+a \textbf{minimizzare la VC-dimension}, e quindi la VC-confidence nel bound $R\le\Remp+\eps(\VC,l,\delta)$
 (\rif{sec:vc-bound}).
 
 \begin{teorema}[Vapnik]
-Sia $D$ il diametro della più piccola sfera che contiene i dati $\x_1,\dots,\x_N$. Per la classe degli iperpiani
+Sia $D$ il diametro della più piccola sfera che contiene i dati $\x_1,\dots,\x_l$. Per la classe degli iperpiani
 separatori con margine $\rho$ la VC-dimension è limitata da
 \[
-\VC \le \min\left(\left\lceil\frac{D^2}{\rho^2}\right\rceil,\ m_0\right) + 1 ,
+\VC \le \min\left(\left\lceil\frac{D^2}{\rho^2}\right\rceil,\ n\right) + 1 ,
 \]
-dove $m_0$ è la dimensione dell'input.
+dove $n$ è la dimensione dell'input.
 \end{teorema}
 
-Poiché $D^2/\rho^2\propto\text{Raggio}^2\,\norm{\w}^2$, restringendo la ricerca agli iperpiani a margine massimo la
-VC-dimension può essere \textbf{minore di $m_0+1$} (quella degli iperpiani generici): \uline{più il margine è grande,
-più la VC-dimension è piccola}, indipendentemente dalla dimensione dello spazio. L'iperpiano a margine massimo fornisce
-quindi
+Sia $R_s = D/2$ il raggio della sfera. Con $\rho = 2/\norm{\w}$ si ha $D^2/\rho^2 = R_s^2\,\norm{\w}^2$. Restringendo
+la ricerca agli iperpiani a margine massimo, la VC-dimension può quindi essere \textbf{minore di $n+1$}, quella
+degli iperpiani generici. \uline{Più il margine è grande, più la VC-dimension è piccola}, indipendentemente dalla
+dimensione dello spazio. L'iperpiano a margine massimo fornisce quindi
 \begin{itemize}
   \item una \textbf{soluzione unica} (a differenza del Perceptron) con \textbf{zero errori} (a differenza dell'LMS);
   \item una \textbf{SRM automatica}, che minimizza la VC-confidence dentro l'ottimizzazione, \textbf{senza
         iperparametri} nel caso separabile;
   \item la risoluzione con la programmazione quadratica vincolata invece della discesa del gradiente, con una forma
         duale che mette in luce i support vector e i prodotti scalari;
-  \item una soluzione concentrata su esempi ``selezionati'', i support vector: un pregio, perché non dipende dai
-        punti lontani dal confine; un difetto, perché i punti sul confine potrebbero essere i più rumorosi.
+  \item una soluzione concentrata su esempi ``selezionati'', i support vector. È un pregio, perché non dipende dai
+        punti lontani dal confine. È un difetto, perché i punti sul confine potrebbero essere i più rumorosi.
 \end{itemize}
 
 \section{Soft margin: dati non separabili}
@@ -245,11 +246,12 @@ d_i(\w\T\x_i+b)\ge1-\xi_i\qquad\forall i .
 \]
 \begin{itemize}
   \item $\xi_i=0$: il punto è fuori dal margine o sul bordo;
-  \item $0<\xi_i\le1$: il punto è dentro il margine ma classificato correttamente;
+  \item $0<\xi_i<1$: il punto è dentro il margine ma classificato correttamente;
+  \item $\xi_i=1$: il punto sta esattamente sull'iperpiano ($g(\x_i)=0$);
   \item $\xi_i>1$: il punto è classificato male.
 \end{itemize}
-Un support vector soddisfa ora $d_i(\w\T\x_i+b) = 1-\xi_i$. Il teorema di Vapnik \textbf{non vale più}, perché
-l'hard margin non ammette punti nel margine.
+Un support vector soddisfa ora $d_i(\w\T\x_i+b) = 1-\xi_i$. Il teorema di Vapnik \textbf{non vale più}: è
+dimostrato per iperpiani senza alcun punto dentro il margine, e il soft margin toglie proprio questa ipotesi.
 
 \begin{figure}[ht]
 \centering
@@ -273,13 +275,13 @@ arrivano al bordo del margine della loro classe; la loro lunghezza è $\xi_i/\no
 \begin{definizione}[Problema primale --- soft margin]
 Trovare $\w$ e $b$ che minimizzano
 \[
-\Psi(\w,\bxi) = \frac12\,\w\T\w + C\sum_{i=1}^{N}\xi_i
+\Psi(\w,\bxi) = \frac12\,\w\T\w + C\sum_{i=1}^{l}\xi_i
 \]
 soggetto a $d_i(\w\T\x_i+b)\ge1-\xi_i$ e $\xi_i\ge0$ per ogni $i$.
 \end{definizione}
 
-$C$ è un \textbf{iperparametro di regolarizzazione} (si perde la SRM completamente automatica): regola il compromesso
-tra minimizzazione del rischio empirico e del termine di capacità.
+$C$ è un \textbf{iperparametro di regolarizzazione}: si perde la SRM completamente automatica. Regola il
+compromesso tra minimizzazione del rischio empirico e del termine di capacità.
 \begin{itemize}
   \item \textbf{$C$ basso}: molti errori di training ammessi, margine ampio, possibile \textbf{underfitting}.
   \item \textbf{$C$ alto}: nessun errore ammesso, margine più piccolo, possibile \textbf{overfitting}. Per
@@ -289,7 +291,7 @@ tra minimizzazione del rischio empirico e del termine di capacità.
 \begin{definizione}[Problema duale --- soft margin$^*$]
 Trovare $\{\alpha_i\}$ che massimizzano
 \[
-Q(\balpha) = \sum_{i=1}^{N}\alpha_i - \frac12\sum_{i=1}^{N}\sum_{j=1}^{N}\alpha_i\alpha_j\,d_id_j\,\x_i\T\x_j
+Q(\balpha) = \sum_{i=1}^{l}\alpha_i - \frac12\sum_{i=1}^{l}\sum_{j=1}^{l}\alpha_i\alpha_j\,d_id_j\,\x_i\T\x_j
 \]
 soggetto a $\sum_i\alpha_id_i=0$ e $0\le\alpha_i\le C$ per ogni $i$.
 \end{definizione}
@@ -299,11 +301,11 @@ diventano
 \[
 \alpha_i\big(d_i(\w\T\x_i+b)+\xi_i-1\big) = 0,\qquad \mu_i\,\xi_i = 0,
 \]
-dove i $\mu_i$ sono i moltiplicatori dei vincoli $\xi_i\ge0$. Ne segue: se $0<\alpha_i<C$ allora $\xi_i=0$ e il
-punto è \textbf{sul bordo} del margine; se $\alpha_i = C$ allora $\xi_i\ge0$ e il punto è \textbf{dentro} il margine
-(o dal lato sbagliato). La soluzione è $\w_o = \sum_i\alpha_{o,i}d_i\x_i$ e
-$b_o = d_j - \sum_i\alpha_{o,i}d_i\,\x_i\T\x_j$ per un esempio $j$ con $0<\alpha_j<C$ (o la media su tutti questi,
-per stabilità numerica); i moltiplicatori non nulli corrispondono ai support vector. L'uso è come prima:
+dove i $\mu_i$ sono i moltiplicatori dei vincoli $\xi_i\ge0$. Ne segue che se $0<\alpha_i<C$ allora $\xi_i=0$, e il
+punto è \textbf{sul bordo} del margine. Se $\alpha_i = C$ allora $\xi_i\ge0$, e il punto è \textbf{dentro} il
+margine (o dal lato sbagliato). La soluzione è $\w_o = \sum_i\alpha_{o,i}d_i\x_i$. Il bias è
+$b_o = d_j - \sum_i\alpha_{o,i}d_i\,\x_i\T\x_j$ per un esempio $j$ con $0<\alpha_j<C$, oppure la media su tutti
+questi, per stabilità numerica. I moltiplicatori non nulli corrispondono ai support vector. L'uso è come prima:
 $h(\x) = \sign\big(\sum_i\alpha_{o,i}d_i\,\x_i\T\x + b_o\big)$.
 
 \section{Kernel: SVM non lineari}
@@ -315,10 +317,10 @@ L'idea è mappare i dati dallo spazio degli input a uno \textbf{spazio delle fea
 diventano linearmente separabili (si ricordi la LBE, \rif{sec:lbe}).
 
 \begin{esempio}[Da $\R^2$ a $\R^3$]
-Con $\Phi:\R^2\to\R^3$, $(x_1,x_2)\T\mapsto(x_1^2,\ \sqrt2\,x_1x_2,\ x_2^2)\T$ (i monomi di secondo grado), due
-classi separate da un'ellisse nello spazio di input diventano separabili da un \textbf{piano} nello spazio delle
-feature (\figrif{fig:phi}): l'equazione dell'ellisse $x_1^2/a^2 + x_2^2/c^2 = 1$ diventa $z_1/a^2 + z_3/c^2 = 1$,
-lineare nelle nuove coordinate.
+Si usi $\Phi:\R^2\to\R^3$, $(x_1,x_2)\T\mapsto(x_1^2,\ \sqrt2\,x_1x_2,\ x_2^2)\T$, cioè i monomi di secondo grado.
+Due classi separate da un'ellisse nello spazio di input diventano separabili da un \textbf{piano} nello spazio delle
+feature (\figrif{fig:phi}). L'equazione dell'ellisse $x_1^2/a^2 + x_2^2/c^2 = 1$ diventa infatti
+$z_1/a^2 + z_3/c^2 = 1$, lineare nelle nuove coordinate.
 \end{esempio}
 
 \begin{figure}[ht]
@@ -344,41 +346,43 @@ di input, diventano separabili da un piano (grigio) nello spazio delle feature.}
 \label{fig:phi}
 \end{figure}
 
-La mappa dell'esempio è costruita apposta per il problema; trovare la trasformazione migliore \textbf{non è
+La mappa dell'esempio è costruita apposta per il problema. Trovare la trasformazione migliore \textbf{non è
 automatico} (a meno di conoscenza a priori), e spesso si usano trasformazioni generali. \uline{La scelta di $\Phi$ è
-il punto critico delle SVM.} Il procedimento è: (1) mappare i pattern in uno spazio delle feature ad alta
-dimensione; (2) cercare l'iperpiano ottimo in quello spazio. Il passo (1) è giustificato dal teorema seguente.
+il punto critico delle SVM.} Il procedimento ha due passi: (1) mappare i pattern in uno spazio delle feature ad
+alta dimensione; (2) cercare l'iperpiano ottimo in quello spazio. Il passo (1) è giustificato dal teorema
+seguente.
 
 \begin{teorema}[Cover]
-Un problema complesso di classificazione di pattern, proiettato in modo non lineare in uno spazio ad alta
-dimensione, ha più probabilità di essere linearmente separabile che in uno spazio a bassa dimensione, purché lo
-spazio non sia densamente popolato.
+Si proietti in modo non lineare un problema complesso di classificazione di pattern in uno spazio ad alta
+dimensione. Lì il problema ha più probabilità di essere linearmente separabile che in uno spazio a bassa
+dimensione, purché lo spazio non sia densamente popolato.
 \end{teorema}
 
-Ad esempio, con una mappa deterministica, $l$ esempi possono essere portati sui vertici di un simplesso di dimensione
-$l-1$ (il ``triangolo'' generalizzato): lì \textbf{ogni} partizione binaria degli esempi è linearmente separabile.
+Un esempio: con una mappa deterministica, $l$ esempi possono essere portati sui vertici di un simplesso di
+dimensione $l-1$, il ``triangolo'' generalizzato. Lì \textbf{ogni} partizione binaria degli esempi è linearmente
+separabile.
 
-Spazi delle feature molto grandi possono però essere \textbf{computazionalmente infattibili} e portare a
-\textbf{overfitting} se non si controlla la complessità. L'approccio kernel gestisce lo spazio delle feature
-\textbf{implicitamente} e in un contesto regolarizzato, in cui la complessità è regolata dal \textbf{margine} e
-non dalla dimensione dello spazio. Con $\Phi:\R^{m_0}\to\R^{m_1}$ il training set diventa $\{(\Phi(\x_i),d_i)\}$ e
-l'iperpiano $\w\T\Phi(\x)+b=0$; includendo il bias ($w_0=b$, $\phi_0(\x)=1$), $\w\T\Phi(\x)=0$ è un'espansione
+Spazi delle feature molto grandi possono però essere \textbf{computazionalmente infattibili}. Possono anche portare
+a \textbf{overfitting} se non si controlla la complessità. L'approccio kernel gestisce lo spazio delle feature
+\textbf{implicitamente} e in un contesto regolarizzato: la complessità è regolata dal \textbf{margine}, non dalla
+dimensione dello spazio. Con $\Phi:\R^{n}\to\R^{n_\Phi}$ il training set diventa $\{(\Phi(\x_i),d_i)\}$ e
+l'iperpiano $\w\T\Phi(\x)+b=0$. Includendo il bias ($w_0=b$, $\phi_0(\x)=1$), $\w\T\Phi(\x)=0$ è un'espansione
 lineare in basi in cui la dimensione dello spazio può essere grandissima. Con \eqref{eq:w-alfa} nello spazio delle
-feature, $\w = \sum_i\alpha_id_i\Phi(\x_i)$, e l'iperpiano diventa
+feature si ha $\w = \sum_i\alpha_id_i\Phi(\x_i)$, e l'iperpiano diventa
 \[
-\sum_{i=1}^{N}\alpha_i\,d_i\,\underbrace{\Phi\T(\x_i)\,\Phi(\x)}_{\text{prodotto scalare}} = 0 .
+\sum_{i=1}^{l}\alpha_i\,d_i\,\underbrace{\Phi\T(\x_i)\,\Phi(\x)}_{\text{prodotto scalare}} = 0 .
 \]
 Il prodotto scalare è ora nello spazio delle feature, dove calcolare $\Phi(\x)$ potrebbe essere intrattabile.
 
 \subsection{Il kernel trick}
 
-Sotto certe condizioni \textbf{non serve calcolare $\Phi(\x)$}, e nemmeno conoscere lo spazio delle feature: basta una
-funzione che calcoli direttamente il prodotto scalare in quello spazio.
+Sotto certe condizioni \textbf{non serve calcolare $\Phi(\x)$}, e nemmeno conoscere lo spazio delle feature. Basta
+una funzione che calcoli direttamente il prodotto scalare in quello spazio.
 
 \begin{definizione}[Kernel]
 Un \termine{kernel} (\ingl{inner product kernel}) è una funzione
 \[
-k:\R^{m_0}\times\R^{m_0}\to\R,\qquad k(\x_i,\x) = \Phi\T(\x_i)\,\Phi(\x),
+k:\R^{n}\times\R^{n}\to\R,\qquad k(\x_i,\x) = \Phi\T(\x_i)\,\Phi(\x),
 \]
 \textbf{simmetrica}: $k(\x_i,\x) = k(\x,\x_i)$.
 \end{definizione}
@@ -393,25 +397,25 @@ dai pattern di input (2D).
 \end{esempio}
 
 I prodotti scalari tra le immagini degli esempi di training formano la \termine{matrice kernel} (o \termine{matrice di
-Gram}) $N\times N$, $K = \{k(\x_i,\x_j)\}_{i,j=1}^N$, simmetrica. Non ogni funzione calcola un prodotto scalare in
-qualche spazio: per il \termine{teorema di Mercer} ciò vale per i kernel che producono matrici kernel
-\textbf{semidefinite positive} (con autovalori non negativi). Se $k_1$ e $k_2$ sono kernel, lo sono anche
-$k_1+k_2$, $\alpha k_1$ (con $\alpha>0$) e $k_1k_2$.
+Gram}) $l\times l$, $K = \{k(\x_i,\x_j)\}_{i,j=1}^l$, simmetrica. Non ogni funzione calcola un prodotto scalare in
+qualche spazio. Per il \termine{teorema di Mercer} ciò vale per i kernel che producono matrici kernel
+\textbf{semidefinite positive}, cioè con autovalori non negativi. Se $k_1$ e $k_2$ sono kernel, lo sono anche
+$k_1+k_2$, $c\,k_1$ (con $c>0$) e $k_1k_2$.
 
 \subsection{SVM con kernel}
 
-Il primale nello spazio delle feature è il soft margin con $\Phi(\x_i)$ al posto di $\x_i$, ma $\w$ vive nello
-spazio delle feature e il problema può essere intrattabile. Il \textbf{duale} invece resta trattabile:
+Il primale nello spazio delle feature è il soft margin con $\Phi(\x_i)$ al posto di $\x_i$. Ma $\w$ vive nello
+spazio delle feature, e il problema può essere intrattabile. Il \textbf{duale} invece resta trattabile:
 
 \begin{definizione}[Problema duale nello spazio delle feature]
 Trovare $\{\alpha_i\}$ che massimizzano
 \[
-Q(\balpha) = \sum_{i=1}^{N}\alpha_i - \frac12\sum_{i,j=1}^{N}\alpha_i\alpha_j\,d_id_j\,\underbrace{k(\x_i,\x_j)}_{K_{ij}}
+Q(\balpha) = \sum_{i=1}^{l}\alpha_i - \frac12\sum_{i,j=1}^{l}\alpha_i\alpha_j\,d_id_j\,\underbrace{k(\x_i,\x_j)}_{K_{ij}}
 \]
 soggetto a $\sum_i\alpha_id_i = 0$ e $0\le\alpha_i\le C$.
 \end{definizione}
 
-Il kernel incorpora la mappa. La dipendenza da $N$ (invece che dalla dimensione dello spazio) diventa un
+Il kernel incorpora la mappa. La dipendenza da $l$ (invece che dalla dimensione dello spazio) diventa un
 \textbf{vantaggio}, perché lo spazio delle feature può avere dimensione altissima o infinita.
 
 \begin{algoritmo}[SVM con kernel]
@@ -420,13 +424,13 @@ Il kernel incorpora la mappa. La dipendenza da $N$ (invece che dalla dimensione 
   \item Calcolare la matrice kernel $K$.
   \item Risolvere il problema di ottimizzazione (programmazione quadratica), trovando $\{\alpha_i\}$.
   \item Calcolare il bias $b$ dai moltiplicatori e dalla matrice kernel.
-  \item Per un nuovo pattern $\x$: $\w\T\Phi(\x) = \sum_i\alpha_id_i\,k(\x,\x_i) + b$, senza mai calcolare $\w$, e
-        classificare con il segno.
+  \item Per un nuovo pattern $\x$ calcolare $\w\T\Phi(\x) + b = \sum_i\alpha_id_i\,k(\x,\x_i) + b$, senza mai
+        calcolare $\w$, e classificare con il segno.
 \end{enumerate}
 \end{algoritmo}
 
 La soluzione è \textbf{sparsa} negli $\alpha$: i moltiplicatori dei non-support vector sono nulli. In fase di test
-$h(\x) = \sign\big(\sum_i\alpha_id_i\,k(\x,\x_i)+b\big)$ e si memorizzano solo i support vector (che ricorda il
+$h(\x) = \sign\big(\sum_i\alpha_id_i\,k(\x,\x_i)+b\big)$, e si memorizzano solo i support vector (che ricorda il
 K-NN).
 
 \begin{figure}[ht]
@@ -446,15 +450,15 @@ ciascuna calcola il kernel tra l'input e il proprio support vector.}
 \label{fig:svm-architettura}
 \end{figure}
 
-Il numero di ``unità nascoste'' di questa vista è pari al \textbf{numero di support vector}, ma non sono unità di
-una rete neurale: in una rete le unità nascoste hanno \textbf{parametri adattivi}, qui i ``centri'' sono i support
-vector stessi e la funzione è fissata dal kernel (\figrif{fig:svm-architettura}).
+Il numero di ``unità nascoste'' di questa vista è pari al \textbf{numero di support vector}. Non sono però unità
+di una rete neurale. In una rete le unità nascoste hanno \textbf{parametri adattivi}. Qui i ``centri'' sono i
+support vector stessi, e la funzione è fissata dal kernel (\figrif{fig:svm-architettura}).
 
 \subsubsection{Esempi di kernel}
 \begin{itemize}
   \item \textbf{Polinomiale}: $k(\x,\x_i) = (\x\T\x_i+1)^p$, con $p$ scelto dall'utente.
   \item \textbf{RBF} (\ingl{Radial Basis Function}, kernel gaussiano):
-        $k(\x,\x_i) = \exp\!\big(-\frac{1}{2\sigma^2}\norm{\x-\x_i}^2\big)$, con $\sigma^2$ scelto dall'utente; si
+        $k(\x,\x_i) = \exp\!\big(-\frac{1}{2\sigma^2}\norm{\x-\x_i}^2\big)$, con $\sigma^2$ scelto dall'utente. Si
         scrive anche con $\gamma = 1/(2\sigma^2)$. Con kernel molto ``stretti'' ($\sigma$ piccolo) la risposta su
         $\x_i$ è solo $d_i$, come nel 1-NN.
   \item \textbf{Perceptron a due strati}: $k(\x,\x_i) = \tanh(\beta_0\,\x\T\x_i+\beta_1)$, con $\beta_0>0$ e
@@ -462,41 +466,47 @@ vector stessi e la funzione è fissata dal kernel (\figrif{fig:svm-architettura}
 \end{itemize}
 
 \begin{attenzione}
-Il kernel polinomiale e l'RBF sono \textbf{sempre} kernel validi (prodotti scalari), mentre per il perceptron a due
-strati il teorema di Mercer vale solo per alcune scelte di $\beta_0$ e $\beta_1$. Un kernel RBF corrisponde a uno
-spazio delle feature di \textbf{dimensione infinita}.
+Il kernel polinomiale e l'RBF sono \textbf{sempre} kernel validi (prodotti scalari). Per il perceptron a due
+strati invece il teorema di Mercer vale solo per alcune scelte di $\beta_0$ e $\beta_1$. Un kernel RBF corrisponde
+a uno spazio delle feature di \textbf{dimensione infinita}.
 \end{attenzione}
 
 \section{SVM per la regressione}
 
-Si ha $d = f(\x)+v$, con $f$ sconosciuta e rumore $v$ indipendente da $\x$, e si stima $d$ con un'espansione lineare
-di funzioni non lineari:
+Si ha $d = f(\x)+v$, con $f$ sconosciuta e rumore $v$ indipendente da $\x$. Si stima $d$ con un'espansione
+lineare di funzioni non lineari:
 \[
-y = h(\x) = \w\T\Phi(\x),\qquad \w = (b,w_1,\dots,w_{m_1})\T,\quad \Phi(\x) = (1,\phi_1(\x),\dots,\phi_{m_1}(\x))\T .
+h(\x) = \w\T\Phi(\x),\qquad \w = (b,w_1,\dots,w_{n_\Phi})\T,\quad \Phi(\x) = (1,\phi_1(\x),\dots,\phi_{n_\Phi}(\x))\T .
 \]
+
+\begin{attenzione}[Dove sta il bias]
+In questa forma il bias è la componente $w_0=b$ di $\w$, con $\phi_0(\x)=1$. Il termine $\frac12\w\T\w$ del
+problema qui sotto penalizza quindi anche $b$, e $b$ si ottiene insieme agli altri pesi. Se invece si tiene $b$
+fuori da $\w$, come nella classificazione, va calcolato a parte dopo aver risolto il duale.
+\end{attenzione}
 
 \begin{definizione}[Loss $\eps$-insensitive]
 \[
-L_\eps(d,y) = \begin{cases}\abs{d-y}-\eps & \text{se }\abs{d-y}\ge\eps\\ 0 & \text{altrimenti.}\end{cases}
+L_\eps(d,h(\x)) = \begin{cases}\abs{d-h(\x)}-\eps & \text{se }\abs{d-h(\x)}\ge\eps\\ 0 & \text{altrimenti.}\end{cases}
 \]
 \end{definizione}
 
-Gli errori più piccoli di $\eps$ \textbf{non costano nulla}: si forma un \textbf{tubo} di ampiezza $\eps$ attorno alla
-predizione e solo i punti fuori dal tubo contribuiscono alla loss (\figrif{fig:eps}). Di nuovo \textbf{solo i support
-vector guidano la soluzione}: nella classificazione erano i punti sul bordo o oltre il margine, qui i punti sul bordo o
-fuori dal tubo.
+Gli errori più piccoli di $\eps$ \textbf{non costano nulla}. Si forma un \textbf{tubo} di ampiezza $\eps$ attorno alla
+predizione, e solo i punti fuori dal tubo contribuiscono alla loss (\figrif{fig:eps}). Di nuovo \textbf{solo i
+support vector guidano la soluzione}. Nella classificazione erano i punti sul bordo o oltre il margine; qui sono i
+punti sul bordo o fuori dal tubo.
 
 \begin{figure}[ht]
 \centering
 \begin{tikzpicture}
 \begin{axis}[stile, width=5.4cm, height=4cm, xmin=-2.2, xmax=2.2, ymin=0, ymax=1.6, xtick={-0.6,0.6},
-  xticklabels={$-\eps$,$\eps$}, ytick=\empty, xlabel={$d-y$}, ylabel={$L_\eps$}]
+  xticklabels={$-\eps$,$\eps$}, ytick=\empty, xlabel={$d-h(\x)$}, ylabel={$L_\eps$}]
 \addplot[very thick, blu] coordinates {(-2.1,1.5) (-0.6,0) (0.6,0) (2.1,1.5)};
 \end{axis}
 \end{tikzpicture}\hspace{0.6cm}
 \begin{tikzpicture}
 \begin{axis}[stile, width=7cm, height=4.2cm, domain=0:6.3, samples=100, xmin=0, xmax=6.4, ymin=-1.9, ymax=1.9,
-  xtick=\empty, ytick=\empty, xlabel={$x$}, ylabel={$y$}]
+  xtick=\empty, ytick=\empty, xlabel={$x$}, ylabel={$d$}]
 \addplot[name path=su, thin, densely dashed] {sin(deg(x))+0.45};
 \addplot[name path=giu, thin, densely dashed] {sin(deg(x))-0.45};
 \addplot[grigiochiaro] fill between[of=su and giu];
@@ -519,7 +529,7 @@ $-\xi'_i-\eps\le d_i-\w\T\Phi(\x_i)\le\eps+\xi_i$.
 \begin{definizione}[Problema primale --- regressione]
 Minimizzare
 \[
-\Psi(\w,\bxi,\bxi') = \frac12\,\w\T\w + C\sum_{i=1}^{N}(\xi_i+\xi'_i)
+\Psi(\w,\bxi,\bxi') = \frac12\,\w\T\w + C\sum_{i=1}^{l}(\xi_i+\xi'_i)
 \]
 soggetto a $d_i - \w\T\Phi(\x_i)\le\eps+\xi_i$, $\ \w\T\Phi(\x_i)-d_i\le\eps+\xi'_i$, $\ \xi_i\ge0$, $\ \xi'_i\ge0$.
 \end{definizione}
@@ -527,26 +537,27 @@ soggetto a $d_i - \w\T\Phi(\x_i)\le\eps+\xi_i$, $\ \w\T\Phi(\x_i)-d_i\le\eps+\xi
 \begin{definizione}[Problema duale --- regressione$^*$]
 Trovare $\{\alpha_i\}$ e $\{\alpha'_i\}$ che massimizzano
 \[
-Q(\balpha,\balpha') = \sum_{i=1}^{N}d_i(\alpha_i-\alpha'_i) - \eps\sum_{i=1}^{N}(\alpha_i+\alpha'_i)
-- \frac12\sum_{i,j=1}^{N}(\alpha_i-\alpha'_i)(\alpha_j-\alpha'_j)\,k(\x_i,\x_j)
+Q(\balpha,\balpha') = \sum_{i=1}^{l}d_i(\alpha_i-\alpha'_i) - \eps\sum_{i=1}^{l}(\alpha_i+\alpha'_i)
+- \frac12\sum_{i,j=1}^{l}(\alpha_i-\alpha'_i)(\alpha_j-\alpha'_j)\,k(\x_i,\x_j)
 \]
 soggetto a $\sum_i(\alpha_i-\alpha'_i) = 0$ e $0\le\alpha_i,\alpha'_i\le C$.
 \end{definizione}
 
 Dalla soluzione, con $\gamma_i = \alpha_i-\alpha'_i$,
 \[
-\w = \sum_{i=1}^{N}\gamma_i\,\Phi(\x_i),\qquad h(\x) = \sum_{i=1}^{N}\gamma_i\,\Phi\T(\x_i)\Phi(\x) = \sum_{i=1}^{N}\gamma_i\,k(\x_i,\x),
+\w = \sum_{i=1}^{l}\gamma_i\,\Phi(\x_i),\qquad h(\x) = \sum_{i=1}^{l}\gamma_i\,\Phi\T(\x_i)\Phi(\x) = \sum_{i=1}^{l}\gamma_i\,k(\x_i,\x),
 \]
-e i \textbf{support vector} corrispondono ai $\gamma_i$ non nulli. La procedura è la stessa della classificazione:
-scegliere $C$, $\eps$ e il kernel; calcolare $K$; risolvere il duale; calcolare il bias; la funzione stimata è una
-combinazione lineare di prodotti scalari in uno spazio delle feature che non serve conoscere.
+e i \textbf{support vector} corrispondono ai $\gamma_i$ non nulli. La procedura è la stessa della classificazione.
+Si scelgono $C$, $\eps$ e il kernel; si calcola $K$; si risolve il duale; si calcola il bias, se è tenuto fuori da
+$\w$. La funzione stimata è una combinazione lineare di prodotti scalari in uno spazio delle feature che non serve
+conoscere.
 
 \section{Le SVM nella pratica}
 
 \begin{idea}[Pregi]
 \begin{itemize}
-  \item \textbf{Regolarizzazione incorporata} nel problema di ottimizzazione (il margine) e approssimazione della SRM
-        (il bound sulla VC-dimension è minimizzato dalla soluzione, nel caso hard margin senza kernel).
+  \item \textbf{Regolarizzazione incorporata} nel problema di ottimizzazione (il margine) e approssimazione della SRM:
+        il bound sulla VC-dimension è minimizzato dalla soluzione, nel caso hard margin senza kernel.
   \item \textbf{Problema convesso}: l'addestramento trova sempre il \textbf{minimo globale}, a differenza delle reti
         neurali.
   \item Un modello lineare, semplice e compatto, con un ricco insieme di funzioni di decisione non lineari grazie alla
@@ -560,9 +571,9 @@ combinazione lineare di prodotti scalari in uno spazio delle feature che non ser
 \begin{itemize}
   \item Bisogna \textbf{scegliere il kernel e i suoi parametri}.
   \item È un algoritmo \textbf{batch}.
-  \item La matrice kernel è $N\times N$: problemi molto grandi (oltre circa 20\,000 esempi) erano difficili da
-        risolvere esattamente con gli approcci standard; oggi esistono molte soluzioni, anche basate sulla discesa del
-        gradiente.
+  \item La matrice kernel è $l\times l$. Problemi molto grandi (oltre circa 20\,000 esempi) erano difficili da
+        risolvere esattamente con gli approcci standard. Oggi esistono molte soluzioni, anche basate sulla discesa
+        del gradiente.
 \end{itemize}
 \end{attenzione}
 
@@ -594,10 +605,10 @@ $\valsvmrbfTest$, support vector $\valsvmrbfSV\%$. Errore di Bayes $\valbayesErr
 \label{fig:svm-pratica}
 \end{figure}
 
-Sul problema a due classi (\figrif{fig:svm-pratica}) il kernel radiale dà il risultato migliore, come ci si può
-aspettare visto che i dati provengono da miscele di gaussiane, e si comporta in modo simile alla rete regolarizzata
-della \figrif{fig:weight-decay}. I support vector sono i punti sul margine (slack nulla) o dalla parte sbagliata del
-margine (slack positiva).
+Sul problema a due classi (\figrif{fig:svm-pratica}) il kernel radiale dà il risultato migliore. È quello che ci
+si può aspettare, visto che i dati provengono da miscele di gaussiane. Si comporta in modo simile alla rete
+regolarizzata della \figrif{fig:weight-decay}. I support vector sono i punti sul margine (slack nulla) o dalla
+parte sbagliata del margine (slack positiva).
 
 \begin{attenzione}[I support vector possono essere tanti]
 La teoria immagina pochi support vector, ma \textbf{non è sempre vero}: qui sono circa la metà dei dati. La sparsità
@@ -608,11 +619,11 @@ della soluzione non è garantita.
 
 Non esiste una teoria che garantisca che una data famiglia di SVM abbia alta accuratezza su un dato problema. Le
 proprietà del caso hard margin \textbf{non si estendono} direttamente al soft margin e ai kernel: $C$ e il kernel
-possono portare a una VC-dimension anche \textbf{infinita}. Una SVM con kernel gaussiano di larghezza $\sigma$
-\textbf{abbastanza piccola} classifica correttamente un numero arbitrario di punti (come il 1-NN: contribuisce solo il
-support vector più vicino), quindi ha VC-dimension infinita, a meno di regolarizzare; con una larghezza
-\textbf{grande} contribuiscono tutti i support vector e si ottiene una sorta di media globale, con VC-dimension bassa.
-\uline{Controllando la larghezza del kernel si controlla la VC-dimension.}
+possono portare a una VC-dimension anche \textbf{infinita}. Si prenda una SVM con kernel gaussiano di larghezza
+$\sigma$ \textbf{abbastanza piccola}. Classifica correttamente un numero arbitrario di punti, come il 1-NN, perché
+contribuisce solo il support vector più vicino. Ha quindi VC-dimension infinita, a meno di regolarizzare. Con una
+larghezza \textbf{grande} invece contribuiscono tutti i support vector. Si ottiene una sorta di media globale, con
+VC-dimension bassa. \uline{Controllando la larghezza del kernel si controlla la VC-dimension.}
 
 \begin{figure}[ht]
 \centering
@@ -631,31 +642,31 @@ problema a due classi: il valore migliore di $C$ cambia con $\gamma$.}
 \label{fig:svm-C-gamma}
 \end{figure}
 
-Con kernel stretti ($\gamma$ grande) conviene un $C$ basso (più regolarizzazione); con $\gamma$ piccoli l'ottimo si
-sposta verso $C$ più alti (\figrif{fig:svm-C-gamma}). \textbf{Il miglior valore di $C$ dipende dagli iperparametri del
-kernel}: vanno selezionati \textbf{insieme} (grid search), con una validazione rigorosa (validation e test set, oppure
-double CV), perché la loro regolazione può introdurre overfitting.
+Con kernel stretti ($\gamma$ grande) conviene un $C$ basso, cioè più regolarizzazione. Con $\gamma$ piccoli l'ottimo
+si sposta verso $C$ più alti (\figrif{fig:svm-C-gamma}). \textbf{Il miglior valore di $C$ dipende dagli
+iperparametri del kernel}: vanno selezionati \textbf{insieme} (grid search). Serve una validazione rigorosa
+(validation e test set, oppure double CV), perché la loro regolazione può introdurre overfitting.
 
 \begin{attenzione}[Luoghi comuni da sfatare]
 \begin{enumerate}
   \item \emph{``La SVM si può usare con i valori di default.''} No: $C$ e i parametri del kernel sono critici.
   \item \emph{``Scelgo la SVM perché non va in overfitting.''} No: con soft margin e kernel la VC-dimension può essere
-        altissima; l'overfitting dipende da $C$ e dal kernel.
+        altissima. L'overfitting dipende da $C$ e dal kernel.
   \item \emph{``La SVM risolve la maledizione della dimensionalità.''} No: gestisce bene l'alta dimensione dello
         \textbf{spazio delle feature}, non dello \textbf{spazio di input}.
-  \item \emph{``La SVM trova da sola il numero di unità.''} Il numero di support vector è determinato dalla soluzione,
-        ma dipende da $C$ e dal kernel, che vanno scelti, e non è detto che sia piccolo.
+  \item \emph{``La SVM trova da sola il numero di unità.''} Il numero di support vector è determinato dalla
+        soluzione. Ma dipende da $C$ e dal kernel, che vanno scelti, e non è detto che sia piccolo.
 \end{enumerate}
 \end{attenzione}
 
 \section{Metodi kernel}
 \label{sec:metodi-kernel}
 
-Il kernel trick si usa anche senza SVM: è la \termine{kernelizzazione} di approcci tradizionali. Ogni volta che in un
-modello compare un \textbf{prodotto scalare} o una \textbf{misura di similarità}, lo si può sostituire con un kernel,
-facendo operare il modello in un nuovo spazio implicito ad alta dimensione semplicemente specificando il kernel. È
-un'espansione in basi fissa e ad alta dimensione ma efficiente; la scelta delle basi è \textbf{modulare} (si cambia il
-kernel senza cambiare la macchina di apprendimento) e il quadro teorico è unificato.
+Il kernel trick si usa anche senza SVM: è la \termine{kernelizzazione} di approcci tradizionali. Si supponga che in
+un modello compaia un \textbf{prodotto scalare} o una \textbf{misura di similarità}. Lo si può sostituire con un
+kernel. Il modello opera allora in un nuovo spazio implicito ad alta dimensione, semplicemente specificando il
+kernel. È un'espansione in basi fissa e ad alta dimensione, ma efficiente. La scelta delle basi è
+\textbf{modulare}: si cambia il kernel senza cambiare la macchina di apprendimento. E il quadro teorico è unificato.
 
 \begin{proprieta}{Kernel e distanza}
 Un kernel induce una distanza nello spazio delle feature:
@@ -673,17 +684,18 @@ Il kernel è quindi una misura di \textbf{similarità}: oggetti simili (distanza
 kernel.
 
 \begin{idea}[L'idea dei kernel]
-Concentrarsi sulla rappresentazione dei \textbf{confronti tra coppie} di oggetti, invece che sulla rappresentazione
-di un singolo oggetto: in alcuni domini è più facile confrontare due oggetti che definire uno spazio di feature in
-cui rappresentarne uno. La conoscenza di dominio sta tutta nel kernel, \textbf{separata dal risolutore}.
+Ci si concentra sulla rappresentazione dei \textbf{confronti tra coppie} di oggetti, invece che sulla
+rappresentazione di un singolo oggetto. In alcuni domini è più facile confrontare due oggetti che definire uno
+spazio di feature in cui rappresentarne uno. La conoscenza di dominio sta tutta nel kernel, \textbf{separata dal
+risolutore}.
 \end{idea}
 
-Un kernel è buono quando raggruppa nello spazio delle feature gli oggetti della stessa classe, cioè riflette la
-similarità rilevante per il task; è cattivo quando la similarità che induce non ha a che fare con il task (ad esempio
-se tutti gli oggetti risultano ugualmente simili o ugualmente diversi). Una SVM è caratterizzata in gran parte dalla
-scelta del kernel, mentre nelle reti neurali le funzioni di base si \textbf{adattano} ai dati: la scelta del kernel
-migliore per un problema è un tema di ricerca (kernel adattivi). La progettazione di kernel si estende a oggetti
-non vettoriali, come stringhe, alberi e grafi (\rif{sec:kernel-strutture}).
+Un kernel è buono quando raggruppa nello spazio delle feature gli oggetti della stessa classe, cioè quando riflette
+la similarità rilevante per il task. È cattivo quando la similarità che induce non ha a che fare con il task, ad
+esempio se tutti gli oggetti risultano ugualmente simili o ugualmente diversi. Una SVM è caratterizzata in gran
+parte dalla scelta del kernel. Nelle reti neurali invece le funzioni di base si \textbf{adattano} ai dati. La
+scelta del kernel migliore per un problema è un tema di ricerca (kernel adattivi). La progettazione di kernel si
+estende a oggetti non vettoriali, come stringhe, alberi e grafi (\rif{sec:kernel-strutture}).
 
 \begin{puntichiave}
 \begin{itemize}
@@ -691,7 +703,7 @@ non vettoriali, come stringhe, alberi e grafi (\rif{sec:kernel-strutture}).
         $\frac12\w\T\w$.
   \item Duale: $\max\sum\alpha_i - \frac12\sum\alpha_i\alpha_jd_id_j\,\x_i\T\x_j$; $\w = \sum\alpha_id_i\x_i$ dipende solo
         dai support vector ($\alpha_i>0$).
-  \item Teorema di Vapnik: VC $\le\min(\lceil D^2/\rho^2\rceil,m_0)+1$; margine grande, VC piccola.
+  \item Teorema di Vapnik: VC $\le\min(\lceil D^2/\rho^2\rceil,n)+1$; margine grande, VC piccola.
   \item Soft margin: slack $\xi_i$, penalità $C\sum\xi_i$, duale con $0\le\alpha_i\le C$.
   \item Kernel $k(\x,\y) = \Phi\T(\x)\Phi(\y)$ (Mercer: matrice semidefinita positiva); RBF di dimensione infinita.
   \item Regressione: loss $\eps$-insensitive, $h(\x) = \sum\gamma_ik(\x_i,\x)$.
