@@ -376,6 +376,31 @@ a.sidebar__lesson:hover {
   cursor: default;
 }
 
+.bug-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s var(--ease),
+    background-color 0.15s var(--ease),
+    color 0.15s var(--ease);
+}
+.bug-btn:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
 kbd {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -542,6 +567,17 @@ kbd {
   }
 }
 
+@media (max-width: 1180px) {
+  .bug-btn {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .bug-btn__text {
+    display: none;
+  }
+}
+
 @media (max-width: 1023px) {
   .shell {
     grid-template-columns: minmax(0, 1fr);
@@ -589,7 +625,8 @@ kbd {
 }
 
 @media (max-width: 720px) {
-  .search-btn {
+  .search-btn,
+  .bug-btn {
     width: 36px;
     padding: 0;
     justify-content: center;

@@ -9,3 +9,5 @@ declare module 'virtual:lesson-index' {
   const index: { it: Record<string, Entry>; en: Record<string, Entry>; easy: Record<string, Entry>; easyEn: Record<string, Entry> }
   export default index
 }
+
+declare const __BUILD_COMMIT__: string

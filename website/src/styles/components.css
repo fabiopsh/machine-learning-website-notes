@@ -467,6 +467,56 @@
   color: var(--ink-3) !important;
 }
 
+/* bottone flottante di segnalazione bug sul testo selezionato */
+.bug-pop {
+  position: fixed;
+  z-index: 85;
+  transform: translate(-50%, 0);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-elev);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 520;
+  white-space: nowrap;
+  animation: bug-pop-in 0.14s var(--ease-out);
+  transition:
+    border-color 0.15s var(--ease),
+    color 0.15s var(--ease),
+    background-color 0.15s var(--ease);
+}
+.bug-pop svg {
+  color: var(--accent-ink);
+  flex: none;
+}
+.bug-pop:hover {
+  border-color: var(--accent-line);
+  color: var(--accent-ink);
+}
+.bug-pop.is-above {
+  transform: translate(-50%, -100%);
+  animation-name: bug-pop-in-above;
+}
+@keyframes bug-pop-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+}
+@keyframes bug-pop-in-above {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 4px));
+  }
+}
+
 /* ------------------------------------------------------------------ figure */
 
 .fig {

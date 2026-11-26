@@ -78,7 +78,7 @@ lezione. Lezione modello: la 02 (`lessons-en/02-curricula.mdx`, `widgets/l02/*`)
 | vicinato · vicini · grafo · arco · nodo | neighborhood · neighbors · graph · edge · node |
 | a.a. · CFU · laurea magistrale | a.y. · ECTS · Master’s degree |
 | Sintesi · Idea chiave · Attenzione (etichette, automatiche) | Summary · Key idea · Warning |
-| Possibili domande d’esame · traccia di risposta | Possible exam questions · answer outline |
+| Domande per esercitarsi · traccia di risposta | Practice questions · answer outline |
 | «Prova a…» · «Come si legge» · «Il ragionamento» | “Try it…” · “How to read it” · “The reasoning” |
 | Esercizi · Esempio svolto | Exercises · Worked example |
 | trascina · passa sopra · clicca/tocca · cursore | drag · hover over · click/tap · slider |

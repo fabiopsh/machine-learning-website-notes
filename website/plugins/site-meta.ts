@@ -124,13 +124,13 @@ export function pages(lang: Lang = 'it') {
       ? {
           path: prefix,
           title: 'Interactive Machine Learning notes — University of Pisa',
-          description: `The ${lessons.length} lessons of the Machine Learning course of the University of Pisa as pages to explore: formulas explained symbol by symbol, ${figures} figures to manipulate, a glossary and exam questions with answer outlines.`,
+          description: `The ${lessons.length} lessons of the Machine Learning course of the University of Pisa as pages to explore: formulas explained symbol by symbol, ${figures} figures to manipulate, a glossary and practice questions with answer outlines.`,
           image,
         }
       : {
           path: prefix,
           title: 'Appunti interattivi di Machine Learning — Università di Pisa',
-          description: `Le ${lessons.length} lezioni del corso di Machine Learning dell’Università di Pisa in pagine da esplorare: formule spiegate simbolo per simbolo, ${figures} figure da manipolare, glossario e domande d’esame con traccia di risposta.`,
+          description: `Le ${lessons.length} lezioni del corso di Machine Learning dell’Università di Pisa in pagine da esplorare: formule spiegate simbolo per simbolo, ${figures} figure da manipolare, glossario e domande per esercitarsi con traccia di risposta.`,
           image,
         }
   const glossary =

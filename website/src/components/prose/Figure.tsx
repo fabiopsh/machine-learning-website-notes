@@ -78,13 +78,13 @@ export function Tasks({ items }: { items: Task[] }) {
   )
 }
 
-/** Domande d'esame con traccia di risposta nascosta. */
+/** Domande per esercitarsi con traccia di risposta nascosta. */
 export function Exam({ children }: { children: ReactNode }) {
   return (
-    <section className="exam" aria-label={tx("Possibili domande d'esame", 'Possible exam questions')}>
+    <section className="exam" aria-label={tx('Domande per esercitarsi', 'Practice questions')}>
       <div className="exam__head">
         <span className="exam__label">
-          <Icon name="question" size={15} /> {tx('Possibili domande d’esame', 'Possible exam questions')}
+          <Icon name="question" size={15} /> {tx('Domande per esercitarsi', 'Practice questions')}
         </span>
         <span className="exam__hint">{tx('Prova a rispondere, poi apri la traccia', 'Try to answer, then open the outline')}</span>
       </div>

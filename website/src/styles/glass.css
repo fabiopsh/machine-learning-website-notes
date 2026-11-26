@@ -197,6 +197,7 @@
 :root[data-style='glass'] .toc__inner,
 :root[data-style='glass'] .palette__box,
 :root[data-style='glass'] .term-pop,
+:root[data-style='glass'] .bug-pop,
 :root[data-style='glass'] .sheet__panel {
   background: var(--glass);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -254,13 +255,20 @@
   background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #7aa7ff));
 }
 :root[data-style='glass'] .icon-btn,
-:root[data-style='glass'] .search-btn {
+:root[data-style='glass'] .search-btn,
+:root[data-style='glass'] .bug-btn {
   border-radius: 999px;
 }
-:root[data-style='glass'] .search-btn {
+:root[data-style='glass'] .search-btn,
+:root[data-style='glass'] .bug-btn {
   background: var(--glass-inner);
   border-color: var(--glass-edge);
   box-shadow: var(--glass-rim);
+}
+:root[data-style='glass'] .bug-btn:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
 }
 :root[data-style='glass'] .lang-switch {
   border-radius: 999px;

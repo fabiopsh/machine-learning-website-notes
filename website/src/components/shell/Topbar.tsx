@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getLesson, hasEasy, partOf } from '../../content/lessons'
+import { openBugReport } from '../../lib/bugReport'
 import { lang, setLang, tx, type Lang } from '../../lib/i18n'
 import { setMode, useMode } from '../../lib/mode'
 import { clearProgress, useProgress } from '../../lib/progress'
@@ -160,6 +161,17 @@ export function Topbar({ route, onMenu, onSearch, onToc }: Props) {
           title={theme === 'dark' ? tx('Tema chiaro', 'Light theme') : tx('Tema scuro', 'Dark theme')}
         >
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
+        </button>
+        <button
+          type="button"
+          className="bug-btn"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => openBugReport(route)}
+          aria-label={tx('Segnala un bug o un errore su GitHub', 'Report a bug or issue on GitHub')}
+          title={tx('Segnala un bug o un errore (apre GitHub)', 'Report a bug or issue (opens GitHub)')}
+        >
+          <Icon name="bug" size={16} />
+          <span className="bug-btn__text">{tx('Segnala bug', 'Report bug')}</span>
         </button>
       </div>
       {isLesson && <div className="topbar__progress" style={{ transform: `scaleX(${pct})` }} />}

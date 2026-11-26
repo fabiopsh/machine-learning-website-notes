@@ -178,6 +178,18 @@ export function hasEasy(id: string) {
   return Boolean(getLesson(id)?.loadEasy)
 }
 
+/** Percorso nel repository del file MDX mostrato per `id` (lingua e modalità correnti). */
+export function lessonSourcePath(id: string, mode: Mode = 'full'): string | undefined {
+  if (id === PREREQ_ID) return `website/src/content/${isEn ? 'extra-en' : 'extra'}/${PREREQ_ID}.mdx`
+  const pick = (map: Record<string, unknown>, prefix: string) => Object.keys(map).find((k) => k.startsWith(prefix))
+  const rel =
+    (mode === 'easy' &&
+      ((isEn && pick(loadersEasyEn, `./lessons-easy-en/${id}-`)) || pick(loadersEasy, `./lessons-easy/${id}-`))) ||
+    (isEn && pick(loadersEn, `./lessons-en/${id}-`)) ||
+    pick(loaders, `./lessons/${id}-`)
+  return rel ? `website/src/content/${rel.slice(2)}` : undefined
+}
+
 export function partOf(id: string) {
   return parts.find((p) => p.lessons.some((l) => l.id === id))
 }

@@ -21,6 +21,10 @@ function load(): Mode {
 
 let mode: Mode = load()
 
+export function getMode(): Mode {
+  return mode
+}
+
 export function setMode(next: Mode) {
   if (next === mode) return
   mode = next

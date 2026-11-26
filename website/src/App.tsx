@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { SelectionBugButton } from './components/shell/BugReport'
 import { CommandPalette } from './components/shell/CommandPalette'
 import { GlassBackdrop } from './components/shell/GlassBackdrop'
 import { Sidebar } from './components/shell/Sidebar'
@@ -70,6 +71,7 @@ export default function App() {
         </main>
       </div>
       {search && <CommandPalette onClose={() => setSearch(false)} />}
+      <SelectionBugButton route={route} />
     </div>
   )
 }
